@@ -20,6 +20,7 @@ use App\Services\AIService;
 use App\Services\AiProviderEvaluationService;
 use App\Services\AudioDurationService;
 use App\Services\ChallengePositionService;
+use App\Services\CareerRoleSuggestionService;
 use App\Services\EvidenceBasedCoachingService;
 use App\Services\LearningGameCertificateService;
 use App\Services\LocalSpeechAssessmentService;
@@ -63,6 +64,46 @@ class InterviewController extends Controller
  private const VOICE_RECORDING_MAX_KILOBYTES = 25600;
 
  private const VOICE_RECORDING_MIME_TYPES = 'audio/webm,audio/mp4,audio/mpeg,audio/mpga,audio/m4a,audio/x-m4a,audio/wav,audio/x-wav,audio/ogg,video/webm,video/mp4,application/octet-stream';
+
+ public function suggestRoles(Request $request, CareerRoleSuggestionService $suggestions)
+ {
+  if (! SystemSettings::userCan('view_interview_content')) {
+   abort(403);
+  }
+
+  foreach (['skills', 'interests'] as $field) {
+   if (is_string($request->input($field))) {
+    $request->merge([$field => preg_split('/[,;\n]+/', (string) $request->input($field), -1, PREG_SPLIT_NO_EMPTY) ?: []]);
+   }
+  }
+
+  $validated = $request->validate([
+   'skills' => ['nullable', 'array', 'max:12'],
+   'skills.*' => ['string', 'max:60'],
+   'interests' => ['nullable', 'array', 'max:12'],
+   'interests.*' => ['string', 'max:60'],
+   'qualifications' => ['nullable', 'string', 'max:500'],
+   'experience_level' => ['nullable', Rule::in(['entry', 'mid', 'senior'])],
+  ]);
+
+  foreach (['skills', 'interests'] as $field) {
+   $validated[$field] = array_values(array_unique(array_filter(array_map(
+    fn ($value): string => trim((string) $value),
+    $validated[$field] ?? []
+   ))));
+  }
+  $validated['qualifications'] = trim((string) ($validated['qualifications'] ?? ''));
+  $validated['experience_level'] = (string) ($validated['experience_level'] ?? '');
+
+  if ($validated['skills'] === [] && $validated['interests'] === [] && $validated['qualifications'] === '') {
+   return response()->json([
+    'message' => 'Enter at least one skill, interest, or qualification to find role suggestions.',
+    'errors' => ['skills' => ['Enter a skill, interest, or qualification.']],
+   ], 422);
+  }
+
+  return response()->json($suggestions->suggest($validated));
+ }
 
  public function start(Request $request)
  {
@@ -136,8 +177,13 @@ class InterviewController extends Controller
  }
 
  $position = trim((string) $validated['target_position']);
- if ($position === 'Other' &&! empty($validated['custom_position'])) {
- $position = trim((string) $validated['custom_position']);
+ if (strcasecmp($position, 'Other') === 0) {
+  $position = trim((string) ($validated['custom_position']?? ''));
+  if ($position === '') {
+   return back()
+    ->withErrors(['custom_position' => 'Enter the job title you want to practise for.'])
+    ->withInput();
+  }
  }
 
  if ($message = $this->scenarioTargetMismatchMessage($category, $position)) {
@@ -4425,11 +4471,23 @@ return response()->json([
 
  $targetKind = $this->targetScenarioKind($position);
 
- if ($scenarioKind === 'job' && $targetKind!== 'job') {
- return 'Job Interview accepts job-related target positions only. Enter a dataset-trained job role like '.QuestionDatasetProvider::targetPositionExamples().'.';
+ if ($scenarioKind === 'job' && $targetKind!== 'job' && ! $this->isSpecificCustomJobTitle($position)) {
+ return 'Job Interview accepts specific job titles only. Enter a role such as '.QuestionDatasetProvider::targetPositionExamples().', or type another job title.';
  }
 
  return null;
+ }
+
+ private function isSpecificCustomJobTitle(string $position): bool
+ {
+  $normalized = $this->normalizeScenarioTargetText($position);
+  if ($normalized === '' || preg_match('/\b(bs|ba|bsc|bachelor|college|course|degree|program|school|study|studies|practice|improvement|better|skills?|communication|confidence|leadership|learning)\b/', $normalized)) {
+   return false;
+  }
+
+  $words = preg_split('/\s+/', $normalized)?: [];
+
+  return count($words) >= 1 && count($words) <= 8 && strlen($normalized) >= 5;
  }
 
  private function vagueTargetRecommendation(string $position):?array

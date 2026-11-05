@@ -184,6 +184,7 @@ Route::middleware(['auth', 'user', 'auth.session'])->group(function () {
         return mobile_view('interview.session');
     })->name('interview.session');
 
+    Route::post('/interview/suggest-roles', [InterviewController::class, 'suggestRoles'])->middleware('throttle:ai-expensive')->name('interview.suggestRoles');
     Route::post('/interview/start', [InterviewController::class, 'start'])->middleware('throttle:ai-expensive')->name('interview.start');
     Route::post('/interview/answer', [InterviewController::class, 'answer'])->middleware('throttle:ai')->name('interview.answer');
     Route::post('/interview/chat-reply', [InterviewController::class, 'chatReply'])->middleware('throttle:ai')->name('interview.chatReply');

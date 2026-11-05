@@ -3,6 +3,7 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=18') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=1') }}" data-page-style="interview-role-discovery">
 @endpush
 
 @section('content')
@@ -58,7 +59,7 @@
  'summary_label' => 'Position:',
  'placeholder' => 'Choose a target position',
  'required_message' => 'Enter the target position before continuing.',
- 'calibration_title' => 'Dataset-trained role-calibrated practice',
+ 'calibration_title' => 'Role-focused interview practice',
  ],
  ];
  $targetFieldCopy = $targetFieldCopies[$targetFieldMode];
@@ -203,13 +204,17 @@
  <span class="setup-target-trigger-text {{ $targetPositionDefault === ''? 'setup-target-placeholder': '' }}" id="targetPositionDropdownLabel">{{ $targetPositionDefault !== ''? $targetPositionDefault: $targetFieldCopy['placeholder'] }}</span>
  <i class="fa-solid fa-chevron-down setup-target-trigger-icon" aria-hidden="true"></i>
  </button>
- <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="list" aria-labelledby="targetPositionLabelText" hidden>
+ <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="group" aria-labelledby="targetPositionLabelText" hidden>
+ <label class="visually-hidden" for="targetPositionSearch">Search target positions</label>
+ <input type="search" id="targetPositionSearch" class="oinp setup-target-search" placeholder="Search positions" autocomplete="off" aria-controls="targetPositionChoices">
+ <div id="targetPositionChoices">
  @foreach(['job' => $jobPositionOptionGroups] as $targetKind => $targetGroups)
- @foreach($targetGroups as $targetChoices)
- <div class="setup-target-choice-group" data-target-dropdown-group-kind="{{ $targetKind }}" {{ $targetFieldMode === $targetKind? '': 'hidden' }}>
+ @foreach($targetGroups as $targetCategory => $targetChoices)
+ <div class="setup-target-choice-group" data-target-dropdown-group-kind="{{ $targetKind }}" data-target-category="{{ $targetCategory }}" {{ $targetFieldMode === $targetKind? '': 'hidden' }}>
+ <div class="setup-target-choice-heading">{{ $targetCategory }}</div>
  <div class="setup-target-choice-list">
  @foreach($targetChoices as $targetChoice)
- <button type="button" class="setup-target-choice" data-target-dropdown-choice-kind="{{ $targetKind }}" data-target-dropdown-choice-value="{{ $targetChoice }}" aria-pressed="{{ $targetFieldMode === $targetKind && strcasecmp($targetPositionDefault, $targetChoice) === 0? 'true': 'false' }}">
+ <button type="button" class="setup-target-choice" data-target-dropdown-choice-kind="{{ $targetKind }}" data-target-dropdown-choice-value="{{ $targetChoice }}" data-target-category="{{ $targetCategory }}" aria-pressed="{{ $targetFieldMode === $targetKind && strcasecmp($targetPositionDefault, $targetChoice) === 0? 'true': 'false' }}">
  <span>{{ $targetChoice }}</span>
  <i class="fa-solid fa-check" aria-hidden="true"></i>
  </button>
@@ -219,9 +224,46 @@
  @endforeach
  @endforeach
  </div>
+ <p class="setup-target-empty" id="targetPositionEmpty" hidden>No positions match. You can enter your own role.</p>
+ <button type="button" class="setup-target-custom-choice" id="targetPositionCustomChoice">My role isn’t listed</button>
+ </div>
+ </div>
+ <div class="setup-custom-position-wrap" id="customPositionWrap" hidden>
+ <label for="customPositionInput">Enter your target role</label>
+ <input type="text" class="oinp setup-input" name="custom_position" id="customPositionInput" value="{{ old('custom_position', '') }}" maxlength="255" placeholder="e.g. Pharmacy Assistant" autocomplete="organization-title">
+ <small>Use a specific job title so your interview questions can match it.</small>
  </div>
  <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>{{ $targetFieldCopy['required_message'] }}</div>
  </div>
+
+ <div class="setup-card-field setup-category-field">
+ <label class="setup-card-label" for="jobCategoryFilter">Job Category</label>
+ <div class="setup-select-wrap">
+ <select class="oinp" id="jobCategoryFilter" name="role_category_filter" aria-describedby="jobCategoryHelp">
+ <option value="">All job categories</option>
+ @foreach($jobPositionOptionGroups->keys() as $targetCategory)
+ <option value="{{ $targetCategory }}">{{ $targetCategory }}</option>
+ @endforeach
+ </select>
+ </div>
+ <small id="jobCategoryHelp">Filter positions by the kind of work you want to practice.</small>
+ </div>
+
+ <details class="setup-role-finder" id="roleFinderPanel">
+ <summary><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Help me find a role <span>Optional</span></summary>
+ <div class="setup-role-finder-body">
+ <p>Tell us what you can do and what interests you. We’ll suggest roles to explore for interview practice.</p>
+ <div class="setup-role-finder-fields">
+ <div><label for="roleSkills">Skills</label><input class="oinp" id="roleSkills" name="role_skills" type="text" maxlength="500" placeholder="e.g. customer service, spreadsheets"><small>Separate multiple skills with commas.</small></div>
+ <div><label for="roleInterests">Interests</label><input class="oinp" id="roleInterests" name="role_interests" type="text" maxlength="500" placeholder="e.g. healthcare, helping people"><small>Separate multiple interests with commas.</small></div>
+ <div><label for="roleQualifications">Qualifications or certifications</label><input class="oinp" id="roleQualifications" name="role_qualifications" type="text" maxlength="500" placeholder="e.g. NC II, nursing degree"></div>
+ <div><label for="roleExperience">Experience level</label><select class="oinp" id="roleExperience" name="role_experience"><option value="">Select if relevant</option><option value="entry">Entry level</option><option value="mid">Some experience</option><option value="senior">Experienced</option></select></div>
+ </div>
+ <button type="button" class="setup-role-suggest-btn" id="suggestRolesButton">Suggest positions</button>
+ <p class="setup-role-suggest-status" id="suggestRolesStatus" role="status" aria-live="polite"></p>
+ <div class="setup-role-results" id="suggestedRoles" aria-label="Suggested positions"></div>
+ </div>
+ </details>
 
  <div class="setup-calibrated-simple">
  <div class="setup-calibrated-icon" aria-hidden="true">
@@ -631,7 +673,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const setupScenarioMismatchMessages = {
  job: {
  title: 'Use a job target',
- message: @json('Job Interview accepts job-related target positions only. Enter a dataset-trained job role like '.$targetPositionExamples.'.'),
+ message: @json('Enter a specific job role, such as '.$targetPositionExamples.', or type a role that is not listed.'),
  },
  };
  const setupVagueTargetRecommendations = [
@@ -651,7 +693,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  placeholder: 'Choose a target position',
  requiredTitle: 'Target position required',
  requiredMessage: 'Enter the target position before continuing.',
- calibrationTitle: 'Dataset-trained role-calibrated practice',
+ calibrationTitle: 'Role-focused interview practice',
  },
  };
  const setupTargetChoiceGroups = @json([
@@ -787,13 +829,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (vagueRecommendation && vagueRecommendation.kind === 'job') {
  return vagueRecommendation.jobScenario;
  }
-
- const targetKind = targetSetupScenarioKind();
-
- if (targetKind !== 'job') {
- return setupScenarioMismatchMessages.job;
- }
-
  return null;
  }
 
@@ -817,6 +852,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  menu.hidden = !open;
 
  if (open) {
+ filterSetupTargetChoices();
  window.setTimeout(() => menu.scrollIntoView({ block: 'nearest', inline: 'nearest' }), 0);
  }
  }
@@ -832,9 +868,19 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const previousValue = previousKind === targetKind? String(positionField.value || positionField.dataset.selectedTarget || '').trim(): '';
  const availableValues = flattenSetupTargetChoices(choiceGroups);
 
- positionField.value = previousValue && availableValues.includes(previousValue)? previousValue: '';
+ positionField.value = previousValue;
  positionField.dataset.selectedTarget = positionField.value;
  positionField.dataset.targetKind = targetKind;
+
+ const customWrap = document.getElementById('customPositionWrap');
+ const customInput = document.getElementById('customPositionInput');
+ const wasCustomMode = customWrap?.dataset.active === 'true';
+ const isCustom = Boolean(previousValue && !availableValues.includes(previousValue)) || wasCustomMode;
+ if (customWrap) {
+ customWrap.hidden = !isCustom;
+ customWrap.dataset.active = isCustom? 'true': 'false';
+ }
+ if (isCustom && customInput && previousValue && !wasCustomMode && customInput.value !== previousValue) customInput.value = previousValue;
 
  const selectedValue = String(positionField.value || '').trim();
  const trigger = document.getElementById('targetPositionDropdownButton');
@@ -861,6 +907,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  choice.classList.toggle('setup-target-choice-selected', isSelected);
  choice.setAttribute('aria-pressed', isSelected? 'true': 'false');
  });
+ filterSetupTargetChoices();
  }
 
  function syncSetupTargetFieldCopy() {
@@ -1134,6 +1181,44 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  const targetPositionDropdown = document.querySelector('[data-target-dropdown]');
  const targetPositionDropdownButton = document.getElementById('targetPositionDropdownButton');
+ const targetPositionSearch = document.getElementById('targetPositionSearch');
+ const jobCategoryFilter = document.getElementById('jobCategoryFilter');
+ const customPositionWrap = document.getElementById('customPositionWrap');
+ const customPositionInput = document.getElementById('customPositionInput');
+
+ function filterSetupTargetChoices() {
+ const query = String(document.getElementById('targetPositionSearch')?.value || '').trim().toLocaleLowerCase();
+ const category = document.getElementById('jobCategoryFilter')?.value || '';
+ let visibleCount = 0;
+ document.querySelectorAll('[data-target-dropdown-group-kind]').forEach((group) => {
+ const groupMatches = !category || group.dataset.targetCategory === category;
+ let groupCount = 0;
+ group.querySelectorAll('[data-target-dropdown-choice-value]').forEach((choice) => {
+ const matches = groupMatches && (!query || String(choice.dataset.targetDropdownChoiceValue || '').toLocaleLowerCase().includes(query));
+ choice.hidden = !matches;
+ if (matches) groupCount += 1;
+ });
+ group.hidden = groupCount === 0;
+ visibleCount += groupCount;
+ });
+ const empty = document.getElementById('targetPositionEmpty');
+ if (empty) empty.hidden = visibleCount > 0;
+ }
+
+ function chooseCustomSetupTarget(title = '') {
+ const positionField = document.getElementById('valPosition');
+ if (!positionField || !customPositionWrap || !customPositionInput) return;
+ const value = String(title || '').trim().slice(0, 255);
+ customPositionWrap.dataset.active = 'true';
+ customPositionWrap.hidden = false;
+ customPositionInput.value = value;
+ positionField.value = value;
+ positionField.dataset.selectedTarget = value;
+ syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
+ positionField.dispatchEvent(new Event('change', { bubbles: true }));
+ setSetupTargetDropdownOpen(false);
+ customPositionInput.focus();
+ }
 
  function chooseSetupTargetValue(choice) {
  const targetKind = 'job';
@@ -1145,6 +1230,12 @@ Begin Interview <i class="fa-solid fa-play"></i>
  positionField.value = choice.dataset.targetDropdownChoiceValue || '';
  positionField.dataset.selectedTarget = positionField.value;
  positionField.dataset.targetKind = targetKind;
+ if (customPositionWrap) {
+ customPositionWrap.dataset.active = 'false';
+ customPositionWrap.hidden = true;
+ }
+ if (customPositionInput) customPositionInput.value = '';
+ if (jobCategoryFilter && choice.dataset.targetCategory) jobCategoryFilter.value = choice.dataset.targetCategory;
  syncSetupTargetDropdown(positionField, targetKind, currentSetupTargetFieldCopy());
  positionField.dispatchEvent(new Event('change', { bubbles: true }));
  setSetupTargetDropdownOpen(false);
@@ -1155,6 +1246,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const willOpen = targetPositionDropdownButton.getAttribute('aria-expanded') !== 'true';
  syncSetupTargetFieldCopy();
  setSetupTargetDropdownOpen(willOpen);
+ if (willOpen) window.setTimeout(() => targetPositionSearch?.focus(), 0);
  });
 
  targetPositionDropdownButton?.addEventListener('keydown', (event) => {
@@ -1162,7 +1254,105 @@ Begin Interview <i class="fa-solid fa-play"></i>
  event.preventDefault();
  syncSetupTargetFieldCopy();
  setSetupTargetDropdownOpen(true);
- window.setTimeout(() => visibleSetupTargetChoices()[0]?.focus(), 0);
+ window.setTimeout(() => targetPositionSearch?.focus(), 0);
+ });
+
+ targetPositionSearch?.addEventListener('input', filterSetupTargetChoices);
+ targetPositionSearch?.addEventListener('keydown', (event) => {
+ if (event.key === 'Escape') {
+ event.preventDefault();
+ setSetupTargetDropdownOpen(false);
+ targetPositionDropdownButton?.focus();
+ } else if (event.key === 'ArrowDown') {
+ event.preventDefault();
+ visibleSetupTargetChoices()[0]?.focus();
+ } else if (event.key === 'Enter') {
+ event.preventDefault();
+ const first = visibleSetupTargetChoices()[0];
+ if (first) chooseSetupTargetValue(first);
+ else chooseCustomSetupTarget(targetPositionSearch.value);
+ }
+ });
+ jobCategoryFilter?.addEventListener('change', filterSetupTargetChoices);
+ document.getElementById('targetPositionCustomChoice')?.addEventListener('click', () => chooseCustomSetupTarget(targetPositionSearch?.value));
+ customPositionInput?.addEventListener('input', () => {
+ const positionField = document.getElementById('valPosition');
+ if (!positionField) return;
+ positionField.value = customPositionInput.value.trim();
+ positionField.dataset.selectedTarget = positionField.value;
+ positionField.dispatchEvent(new Event('change', { bubbles: true }));
+ });
+
+ const suggestRolesButton = document.getElementById('suggestRolesButton');
+ const suggestRolesStatus = document.getElementById('suggestRolesStatus');
+ const suggestedRoles = document.getElementById('suggestedRoles');
+ const roleTags = (id) => String(document.getElementById(id)?.value || '')
+ .split(',').map(value => value.trim()).filter(Boolean);
+
+ suggestRolesButton?.addEventListener('click', async () => {
+ const payload = {
+ skills: roleTags('roleSkills'),
+ interests: roleTags('roleInterests'),
+ qualifications: String(document.getElementById('roleQualifications')?.value || '').trim(),
+ experience_level: document.getElementById('roleExperience')?.value || '',
+ };
+ if (payload.skills.length > 12 || payload.interests.length > 12 || [...payload.skills, ...payload.interests].some(value => value.length > 60)) {
+ suggestRolesStatus.textContent = 'Use up to 12 skills and 12 interests, with no more than 60 characters per item.';
+ return;
+ }
+ if (!payload.skills.length && !payload.interests.length && !payload.qualifications) {
+ suggestRolesStatus.textContent = 'Add a skill, interest, or qualification to find matching roles.';
+ return;
+ }
+
+ suggestRolesButton.disabled = true;
+ suggestRolesStatus.textContent = 'Finding roles that match your background…';
+ suggestedRoles.replaceChildren();
+ try {
+ const response = await fetch(@json(route('interview.suggestRoles')), {
+ method: 'POST',
+ headers: {
+ 'Accept': 'application/json',
+ 'Content-Type': 'application/json',
+ 'X-CSRF-TOKEN': document.querySelector('#setupForm input[name="_token"]')?.value || '',
+ },
+ credentials: 'same-origin',
+ body: JSON.stringify(payload),
+ });
+ const data = await response.json();
+ if (!response.ok) {
+ const firstError = Object.values(data.errors || {}).flat()[0];
+ throw new Error(firstError || data.message || 'We could not suggest roles right now. Please try again.');
+ }
+ const roles = Array.isArray(data.roles)? data.roles: [];
+ suggestRolesStatus.textContent = roles.length? 'Choose a position to use in this interview.': 'No close matches yet. Try a different skill or enter your own role.';
+ roles.forEach((role) => {
+ const title = String(role.title || '').trim();
+ if (!title) return;
+ const button = document.createElement('button');
+ button.type = 'button';
+ button.className = 'setup-role-result';
+ const heading = document.createElement('strong');
+ heading.textContent = title;
+ const category = document.createElement('span');
+ category.textContent = String(role.category || 'Suggested role');
+ const reason = document.createElement('small');
+ reason.textContent = String(role.reason || 'This role may fit your background.');
+ button.append(heading, category, reason);
+ button.addEventListener('click', () => {
+ const catalogChoice = Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]'))
+ .find(choice => choice.dataset.targetDropdownChoiceValue?.toLocaleLowerCase() === title.toLocaleLowerCase());
+ if (catalogChoice) chooseSetupTargetValue(catalogChoice);
+ else chooseCustomSetupTarget(title);
+ suggestRolesStatus.textContent = `${title} is selected as your target position.`;
+ });
+ suggestedRoles.appendChild(button);
+ });
+ } catch (error) {
+ suggestRolesStatus.textContent = error.message || 'We could not suggest roles right now. Please try again.';
+ } finally {
+ suggestRolesButton.disabled = false;
+ }
  });
 
  document.querySelectorAll('[data-target-dropdown-choice-value]').forEach((choice) => {
@@ -1222,6 +1412,9 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const setupDraftApi = window.SpeakReadyInterviewSetupDraft;
  const setupDraftFormElement = document.getElementById('setupForm');
  const restoredSetupDraft = setupDraftApi?.restore(setupDraftFormElement);
+ if (['role_skills', 'role_interests', 'role_qualifications', 'role_experience'].some(name => String(restoredSetupDraft?.values?.[name] || '').trim())) {
+ document.getElementById('roleFinderPanel').open = true;
+ }
  if (Array.isArray(restoredSetupDraft?.visited_step_ids)) {
  restoredSetupDraft.visited_step_ids.forEach(stepId => visitedSetupStepIds.add(stepId));
  }

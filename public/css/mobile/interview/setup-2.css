@@ -587,6 +587,245 @@ html.interview-setup-page-root,
     }
 }
 
+/* Role discovery on the interview details step. */
+html body #sec-interview-setup #panel-basic .setup-optional-label {
+    margin-left: 5px;
+    color: #64748b;
+    font-size: 0.75em;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-menu-search {
+    position: sticky;
+    top: -8px;
+    z-index: 4;
+    padding-bottom: 4px;
+    background: #fff;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-menu-search .oinp {
+    width: 100% !important;
+    min-height: 44px !important;
+    height: auto !important;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-empty {
+    margin: 4px 8px;
+    color: #64748b;
+    font-size: 0.82rem;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-empty[hidden],
+html body #sec-interview-setup #panel-basic .setup-custom-position[hidden] {
+    display: none !important;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-custom-action {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1px dashed #93c5fd;
+    border-radius: 10px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    text-align: left;
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+html body #sec-interview-setup #panel-basic .setup-custom-position {
+    display: grid;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery {
+    grid-column: 1 / -1;
+    min-width: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 14px;
+    background: #f8fafc;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 48px;
+    padding: 12px 14px;
+    color: #1e3a5f;
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
+    list-style: none;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery > summary::-webkit-details-marker {
+    display: none;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery > summary span {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery > summary > i {
+    transition: transform 0.18s ease;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery[open] > summary > i {
+    transform: rotate(180deg);
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery-body {
+    display: grid;
+    gap: 14px;
+    padding: 0 14px 14px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery-body > p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.84rem;
+    line-height: 1.45;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery-grid > div {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery-grid label {
+    color: #334155;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-discovery-grid small {
+    color: #64748b;
+    font-size: 0.75rem;
+}
+
+html body #sec-interview-setup #panel-basic .setup-suggest-roles-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px;
+    border: 0;
+    border-radius: 11px;
+    background: linear-gradient(120deg, #2563eb, #06b6d4);
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 800;
+}
+
+html body #sec-interview-setup #panel-basic .setup-suggest-roles-button:disabled {
+    opacity: 0.65;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-status {
+    margin: 0;
+    color: #475569;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-status:empty {
+    display: none;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-status.is-error {
+    color: #b91c1c;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-results {
+    display: grid;
+    gap: 9px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-result {
+    display: grid;
+    gap: 3px;
+    width: 100%;
+    min-height: 60px;
+    padding: 11px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #1e293b;
+    text-align: left;
+    cursor: pointer;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-result strong {
+    font-size: 0.88rem;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-result small {
+    color: #2563eb;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-result span {
+    color: #64748b;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+html body #sec-interview-setup #panel-basic :is(.setup-target-custom-action, .setup-suggest-roles-button, .setup-role-result):focus-visible,
+html body #sec-interview-setup #panel-basic .setup-role-discovery > summary:focus-visible {
+    outline: 3px solid #38bdf8;
+    outline-offset: 2px;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-discovery {
+    border-color: #334155;
+    background: #111827;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic :is(.setup-role-discovery > summary, .setup-role-discovery-grid label, .setup-role-result) {
+    color: #f8fafc;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic :is(.setup-role-discovery-body > p, .setup-role-status, .setup-role-result span, .setup-role-discovery-grid small, .setup-target-empty, .setup-optional-label) {
+    color: #cbd5e1;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-target-menu-search {
+    background: #111827;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-target-custom-action {
+    border-color: #3b82f6;
+    background: #172554;
+    color: #bfdbfe;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-result {
+    border-color: #334155;
+    background: #1e293b;
+}
+
 @media (max-width: 380px) {
     body.user-mobile-shell #mob-content #sec-interview-setup .summary-row,
     body.interview-setup-page #mob-content #sec-interview-setup .summary-row,

@@ -495,11 +495,96 @@ class UserSideHardeningTest extends TestCase
  $this->assertDatabaseCount('interview_sessions', 0);
  }
 
+ public function test_role_suggestions_use_the_users_background(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+ $response = $this->actingAs($user)->postJson(route('interview.suggestRoles'), [
+ 'skills' => ['customer service', 'communication'],
+ 'interests' => ['helping customers'],
+ 'qualifications' => 'Senior high school graduate',
+ 'experience_level' => 'entry',
+ ]);
+
+ $response->assertOk()->assertJsonStructure([
+ 'roles' => [['title', 'category', 'reason']],
+ 'source',
+ ]);
+ $roles = $response->json('roles');
+ $this->assertNotEmpty($roles);
+ $this->assertLessThanOrEqual(5, count($roles));
+ $this->assertSame(count($roles), count(array_unique(array_column($roles, 'title'))));
+ $this->assertContains('Customer and Sales', array_column($roles, 'category'));
+ }
+
+ public function test_role_suggestions_require_a_skill_interest_or_qualification(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+
+ $this->actingAs($user)
+ ->postJson(route('interview.suggestRoles'), ['experience_level' => 'entry'])
+ ->assertUnprocessable()
+ ->assertJsonValidationErrors('skills');
+ }
+
+ public function test_interview_start_accepts_an_unlisted_custom_role(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category(['title' => 'Job Interview']);
+
+ $this->actingAs($user)
+ ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+ 'target_position' => 'Other',
+ 'custom_position' => 'Maritime Safety Officer',
+ ]))
+ ->assertRedirect(route('interview.session'));
+
+ $this->assertDatabaseHas('interview_sessions', [
+ 'user_id' => $user->id,
+ 'target_position' => 'Maritime Safety Officer',
+ ]);
+ }
+
+ public function test_interview_start_accepts_an_unlisted_single_word_role(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category(['title' => 'Job Interview']);
+
+ $this->actingAs($user)
+ ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+ 'target_position' => 'Florist',
+ 'custom_position' => 'Florist',
+ ]))
+ ->assertRedirect(route('interview.session'));
+
+ $this->assertDatabaseHas('interview_sessions', [
+ 'user_id' => $user->id,
+ 'target_position' => 'Florist',
+ ]);
+ }
+
+ public function test_interview_start_requires_a_title_for_other_role(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category(['title' => 'Job Interview']);
+
+ $this->actingAs($user)
+ ->from(route('interview.setup'))
+ ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+ 'target_position' => 'Other',
+ 'custom_position' => ' ',
+ ]))
+ ->assertRedirect(route('interview.setup'))
+ ->assertSessionHasErrors('custom_position');
+
+ $this->assertDatabaseCount('interview_sessions', 0);
+ }
+
  public function test_interview_start_rejects_school_program_target_for_job_interview_scenario(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Job Interview']);
- $invalidTargetMessage = 'Job Interview accepts job-related target positions only. Enter a dataset-trained job role like '.QuestionDatasetProvider::targetPositionExamples().'.';
+ $invalidTargetMessage = 'Job Interview accepts specific job titles only. Enter a role such as '.QuestionDatasetProvider::targetPositionExamples().', or type another job title.';
 
  $this->actingAs($user)
  ->from(route('interview.setup'))
@@ -518,7 +603,7 @@ class UserSideHardeningTest extends TestCase
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Job Interview']);
- $invalidTargetMessage = 'Job Interview accepts job-related target positions only. Enter a dataset-trained job role like '.QuestionDatasetProvider::targetPositionExamples().'.';
+ $invalidTargetMessage = 'Job Interview accepts specific job titles only. Enter a role such as '.QuestionDatasetProvider::targetPositionExamples().', or type another job title.';
 
  $this->actingAs($user)
  ->from(route('interview.setup'))
@@ -741,9 +826,9 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('id="targetPositionDropdownButton"', false)
  ->assertSee('id="targetPositionDropdownMenu"', false)
  ->assertSee('Choose a target position')
- ->assertSee('Dataset-trained role-calibrated practice')
+ ->assertSee('Role-focused interview practice')
  ->assertSee('data-target-dropdown-choice-value="'.e($expectedPosition).'"', false)
- ->assertDontSee('<div class="setup-target-choice-group-title">', false)
+ ->assertSee('id="jobCategoryFilter"', false)
  ->assertDontSee('<div class="setup-target-choice-group-title">College Programs - Version 1</div>', false)
  ->assertDontSee('Choose a target program')
  ->assertDontSee('data-target-dropdown-choice-value="BS Information Technology"', false)
@@ -777,7 +862,7 @@ class UserSideHardeningTest extends TestCase
  foreach ([$desktopResponse, $mobileResponse] as $response) {
  $response
  ->assertSee('Use a job target')
- ->assertSee('Job Interview accepts job-related target positions only. Enter a dataset-trained job role like')
+ ->assertSee('Enter a specific job')
  ->assertSee('Use a specific job target')
  ->assertSee('Clean is too broad for a target position. Recommendation: use a specific job target such as Cleaner, Janitor, Housekeeping Attendant, or Janitorial Services, then proceed with Job Interview.')
  ->assertDontSee('Proceed with School Admission')
@@ -833,10 +918,10 @@ class UserSideHardeningTest extends TestCase
  $response
  ->assertSee('data-target-dropdown-choice-value="Call Center Agent"', false)
  ->assertSee('data-target-dropdown-choice-value="Administrative Assistant"', false)
- ->assertSee('Dataset-trained role-calibrated practice')
- ->assertDontSee('<div class="setup-target-choice-group-title">', false)
+ ->assertSee('Role-focused interview practice')
+ ->assertSee('id="jobCategoryFilter"', false)
  ->assertDontSee('data-target-dropdown-choice-value="Robotics Field Technician"', false)
- ->assertDontSee('<div class="setup-target-choice-group-title">Local Government / Office</div>', false);
+ ->assertSee('Local Government / Office');
  }
  } finally {
  $this->resetQuestionDatasetProviderCache();
@@ -872,36 +957,17 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('data-target-dropdown-menu', false)
  ->assertSee('name="target_position"', false)
  ->assertSee('data-target-dropdown-choice-value="'.e($expectedPosition).'"', false)
- ->assertSee('Dataset-trained role-calibrated practice')
+ ->assertSee('Role-focused interview practice')
  ->assertSee('Choose a target position')
- ->assertDontSee('<div class="setup-target-choice-group-title">', false)
- ->assertDontSee('<select class="oinp setup-input" name="target_position" id="valPosition"', false)
- ->assertDontSee('<option value="Administrative Assistant / LGU Staff"', false)
- ->assertDontSee('<optgroup label="Local Government / Office">', false)
- ->assertDontSee('id="targetPositionChooseButton"', false)
- ->assertDontSee('data-bs-target="#targetPositionChoiceModal"', false)
- ->assertDontSee('id="targetPositionChoiceModal"', false)
- ->assertDontSee('data-target-option-kind="job"', false)
- ->assertDontSee('data-target-option-value=', false)
- ->assertDontSee('STEM')
- ->assertDontSee('TVL - ICT')
- ->assertDontSee('Caregiving')
- ->assertDontSee('Software Engineering')
- ->assertDontSee('type="text" name="target_position" id="valPosition"', false)
- ->assertDontSee('<datalist id="jobPositionOptions"', false)
- ->assertDontSee('aria-autocomplete="list"', false)
- ->assertDontSee('aria-controls="targetSuggestionList"', false)
- ->assertDontSee('id="targetSuggestionList"', false)
- ->assertDontSee('data-target-autocomplete-input', false)
- ->assertDontSee('setupTargetSuggestionEndpoint', false)
- ->assertDontSee('target-suggestions')
- ->assertDontSee('requestAiTargetSuggestions', false)
- ->assertDontSee('fetch(setupTargetSuggestionEndpoint', false)
- ->assertDontSee('setupTargetSuggestions', false)
- ->assertDontSee('renderSetupTargetSuggestionLabel', false)
- ->assertDontSee('targetPositionInput.addEventListener(\'input\'', false)
- ->assertDontSee('setupTargetSuggestionScore', false)
- ->assertDontSee('setupTargetSuggestionAcronym', false);
+ ->assertSee('id="jobCategoryFilter"', false)
+ ->assertSee('id="targetPositionSearch"', false)
+ ->assertSee('name="custom_position"', false)
+ ->assertSee('id="roleSkills"', false)
+ ->assertSee('id="roleInterests"', false)
+ ->assertSee('id="roleQualifications"', false)
+ ->assertSee('Experience level')
+ ->assertSee('id="suggestRolesButton"', false)
+ ->assertDontSee('data-target-dropdown-choice-kind="school"', false);
 
  $content = $response->getContent();
  $this->assertSame($expectedJobChoiceCount, substr_count($content, 'data-target-dropdown-choice-kind="job"'));
@@ -910,7 +976,7 @@ class UserSideHardeningTest extends TestCase
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=11', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=12', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)

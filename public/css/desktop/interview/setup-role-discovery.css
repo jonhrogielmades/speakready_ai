@@ -1,0 +1,240 @@
+/* Role discovery controls in the desktop interview setup. */
+html body #sec-interview-setup #panel-basic .setup-category-field,
+html body #sec-interview-setup #panel-basic .setup-role-finder {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+html body #sec-interview-setup #panel-basic .setup-category-field small,
+html body #sec-interview-setup #panel-basic .setup-custom-position-wrap small,
+html body #sec-interview-setup #panel-basic .setup-role-finder small {
+    display: block;
+    margin-top: 6px;
+    color: #64748b;
+    font-size: .82rem;
+    line-height: 1.4;
+}
+
+html body #sec-interview-setup #panel-basic .setup-category-field .setup-card-label {
+    margin-bottom: 8px;
+}
+
+html body #sec-interview-setup #panel-basic #jobCategoryFilter,
+html body #sec-interview-setup #panel-basic .setup-role-finder .oinp,
+html body #sec-interview-setup #panel-basic #customPositionInput {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #16345a;
+    font-size: .94rem;
+}
+
+html body #sec-interview-setup #panel-basic #targetPositionSearch {
+    position: sticky;
+    top: -8px;
+    z-index: 1;
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #16345a;
+    font-size: .88rem;
+}
+
+html body #sec-interview-setup #panel-basic #targetPositionChoices {
+    display: grid;
+    gap: 8px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-choice-heading {
+    padding: 6px 9px;
+    border-radius: 6px;
+    background: #eff6ff;
+    color: #31567e;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-empty {
+    margin: 2px 6px;
+    color: #64748b;
+    font-size: .86rem;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-empty[hidden],
+html body #sec-interview-setup #panel-basic .setup-custom-position-wrap[hidden] {
+    display: none !important;
+}
+
+html body #sec-interview-setup #panel-basic .setup-target-custom-choice {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px dashed #60a5fa;
+    border-radius: 8px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    text-align: left;
+    font-size: .88rem;
+    font-weight: 700;
+}
+
+html body #sec-interview-setup #panel-basic .setup-custom-position-wrap {
+    margin-top: 10px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-custom-position-wrap label,
+html body #sec-interview-setup #panel-basic .setup-role-finder-fields label {
+    display: block;
+    margin-bottom: 5px;
+    color: #31567e;
+    font-size: .84rem;
+    font-weight: 700;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-finder {
+    border: 1px solid #c7ddf4;
+    border-radius: 12px;
+    background: #f8fbff;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-finder summary {
+    padding: 13px 16px;
+    color: #174575;
+    cursor: pointer;
+    font-size: .94rem;
+    font-weight: 800;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-finder summary i {
+    margin-right: 7px;
+    color: #2563eb;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-finder summary span {
+    margin-left: 8px;
+    color: #64748b;
+    font-size: .74rem;
+    font-weight: 600;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-finder-body {
+    padding: 0 16px 16px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-finder-body > p:first-child {
+    margin: 0 0 12px;
+    color: #546c87;
+    font-size: .86rem;
+    line-height: 1.5;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-finder-fields,
+html body #sec-interview-setup #panel-basic .setup-role-results {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-suggest-btn {
+    margin-top: 14px;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 9px;
+    background: linear-gradient(100deg, #2563eb, #08a9d2);
+    color: #fff;
+    font-size: .9rem;
+    font-weight: 800;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-suggest-btn:disabled {
+    opacity: .65;
+    cursor: wait;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-suggest-status {
+    margin: 10px 0 0;
+    color: #31567e;
+    font-size: .84rem;
+    line-height: 1.4;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-results {
+    margin-top: 10px;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-result {
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid #bfdbfe;
+    border-radius: 9px;
+    background: #fff;
+    color: #16345a;
+    text-align: left;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-result strong,
+html body #sec-interview-setup #panel-basic .setup-role-result span {
+    display: block;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-result span {
+    margin-top: 3px;
+    color: #2563eb;
+    font-size: .76rem;
+}
+
+html body #sec-interview-setup #panel-basic .setup-role-result:hover,
+html body #sec-interview-setup #panel-basic .setup-role-result:focus-visible,
+html body #sec-interview-setup #panel-basic .setup-target-custom-choice:hover,
+html body #sec-interview-setup #panel-basic .setup-target-custom-choice:focus-visible {
+    border-color: #2563eb;
+    outline: 2px solid #bfdbfe;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-finder {
+    border-color: #355272;
+    background: #152740;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-finder summary,
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-custom-position-wrap label,
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-finder-fields label {
+    color: #e2e8f0;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-finder-body > p:first-child,
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-suggest-status,
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-finder small,
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-category-field small,
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-custom-position-wrap small {
+    color: #b8cce5;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic #jobCategoryFilter,
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-finder .oinp,
+html:not(.lm) body #sec-interview-setup #panel-basic #customPositionInput,
+html:not(.lm) body #sec-interview-setup #panel-basic #targetPositionSearch,
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-result {
+    border-color: #47617d;
+    background: #1e314c;
+    color: #f8fafc;
+}
+
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-target-choice-heading,
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-target-custom-choice {
+    border-color: #47617d;
+    background: #1e314c;
+    color: #bfdbfe;
+}
+
+@media (max-width: 700px) {
+    html body #sec-interview-setup #panel-basic .setup-role-finder-fields,
+    html body #sec-interview-setup #panel-basic .setup-role-results {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

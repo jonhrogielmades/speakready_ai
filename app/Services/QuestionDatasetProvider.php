@@ -212,12 +212,51 @@ class QuestionDatasetProvider
  public static function targetPositionOptionGroups(?array $datasets = null): array
  {
  if ($datasets === null && ! app()->runningUnitTests()) {
- return self::cachedTargetPositionOptionGroups();
+ return self::mergeConfiguredTargetPositionGroups(self::cachedTargetPositionOptionGroups());
  }
 
  $datasets??= self::all();
 
- return self::targetPositionOptionGroupsFromDatasets($datasets);
+ return self::mergeConfiguredTargetPositionGroups(self::targetPositionOptionGroupsFromDatasets($datasets));
+ }
+
+ private static function mergeConfiguredTargetPositionGroups(array $datasetGroups): array
+ {
+ $groups = [];
+ $seen = [];
+
+ foreach ((array) config('speakready_scope.job_positions', []) as $category => $positions) {
+  $category = trim((string) $category);
+  if ($category === '') {
+   continue;
+  }
+
+  foreach ((array) $positions as $position) {
+   $role = self::cleanTargetRoleOption((string) $position);
+   $key = self::targetRoleDedupeKey($role);
+   if ($key === '' || isset($seen[$key])) {
+    continue;
+   }
+
+   $groups[$category][] = $role;
+   $seen[$key] = true;
+  }
+ }
+
+ foreach ($datasetGroups as $positions) {
+  foreach ((array) $positions as $position) {
+   $role = self::cleanTargetRoleOption((string) $position);
+   $key = self::targetRoleDedupeKey($role);
+   if ($key === '' || isset($seen[$key])) {
+    continue;
+   }
+
+   $groups['Other Interview Roles'][] = $role;
+   $seen[$key] = true;
+  }
+ }
+
+ return $groups;
  }
 
  private static function cachedTargetPositionOptionGroups(): array

@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=11') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=12') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -58,7 +58,7 @@
  'summary_label' => 'Position:',
  'placeholder' => 'Choose a target position',
  'required_message' => 'Enter the target position before continuing.',
- 'calibration_title' => 'Dataset-trained role-calibrated practice',
+ 'calibration_title' => 'Role-focused interview practice',
  ],
  ];
  $targetFieldCopy = $targetFieldCopies[$targetFieldMode];
@@ -200,20 +200,41 @@
  </div>
 
  <div class="setup-card-field">
+ <label class="setup-card-label" for="jobCategoryFilter">
+ <span class="setup-card-label-icon" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
+ Job Category <span class="setup-optional-label">Optional</span>
+ </label>
+ <div class="setup-select-wrap">
+ <select class="oinp" id="jobCategoryFilter" name="job_category" aria-describedby="jobCategoryHelp">
+ <option value="">All job categories</option>
+ @foreach($jobPositionOptionGroups as $jobCategory => $targetChoices)
+ <option value="{{ $jobCategory }}">{{ $jobCategory }}</option>
+ @endforeach
+ </select>
+ </div>
+ <div class="desc-text" id="jobCategoryHelp">Narrow the positions below by category.</div>
+ </div>
+
+ <div class="setup-card-field">
  <label class="setup-card-label" for="targetPositionDropdownButton">
  <span class="setup-card-label-icon" aria-hidden="true"><i class="fa-solid fa-bullseye-arrow"></i></span>
  <span id="targetPositionLabelText">{{ $targetFieldCopy['label'] }}</span>
  </label>
  <input type="hidden" class="setup-input setup-target-hidden-input" name="target_position" id="valPosition" value="{{ $targetPositionDefault }}" required data-selected-target="{{ $targetPositionDefault }}" data-target-kind="{{ $targetFieldMode }}">
  <div class="setup-target-dropdown" data-target-dropdown>
- <button type="button" class="oinp setup-target-trigger" id="targetPositionDropdownButton" aria-haspopup="true" aria-expanded="false" aria-controls="targetPositionDropdownMenu" aria-describedby="targetPositionError">
+ <button type="button" class="oinp setup-target-trigger" id="targetPositionDropdownButton" aria-haspopup="dialog" aria-expanded="false" aria-controls="targetPositionDropdownMenu" aria-describedby="targetPositionError">
  <span class="setup-target-trigger-text {{ $targetPositionDefault === ''? 'setup-target-placeholder': '' }}" id="targetPositionDropdownLabel">{{ $targetPositionDefault !== ''? $targetPositionDefault: $targetFieldCopy['placeholder'] }}</span>
  <i class="fa-solid fa-chevron-down setup-target-trigger-icon" aria-hidden="true"></i>
  </button>
- <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="list" aria-labelledby="targetPositionLabelText" hidden>
+ <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="dialog" aria-label="Choose target position" hidden>
+ <div class="setup-target-menu-search">
+ <label class="visually-hidden" for="targetPositionSearch">Search target positions</label>
+ <input type="search" class="oinp" id="targetPositionSearch" placeholder="Search positions" autocomplete="off">
+ </div>
  @foreach(['job' => $jobPositionOptionGroups] as $targetKind => $targetGroups)
- @foreach($targetGroups as $targetChoices)
- <div class="setup-target-choice-group" data-target-dropdown-group-kind="{{ $targetKind }}" {{ $targetFieldMode === $targetKind? '': 'hidden' }}>
+ @foreach($targetGroups as $jobCategory => $targetChoices)
+ <div class="setup-target-choice-group" data-target-dropdown-group-kind="{{ $targetKind }}" data-job-category="{{ $jobCategory }}" {{ $targetFieldMode === $targetKind? '': 'hidden' }}>
+ <div class="setup-target-choice-group-title">{{ $jobCategory }}</div>
  <div class="setup-target-choice-list">
  @foreach($targetChoices as $targetChoice)
  <button type="button" class="setup-target-choice" data-target-dropdown-choice-kind="{{ $targetKind }}" data-target-dropdown-choice-value="{{ $targetChoice }}" aria-pressed="{{ $targetFieldMode === $targetKind && strcasecmp($targetPositionDefault, $targetChoice) === 0? 'true': 'false' }}">
@@ -225,10 +246,52 @@
  </div>
  @endforeach
  @endforeach
+ <p class="setup-target-empty" id="targetPositionEmpty" hidden>No matching positions. You can enter your own role below.</p>
+ <button type="button" class="setup-target-custom-action" id="customTargetPositionAction"><i class="fa-solid fa-pen" aria-hidden="true"></i> My role isn’t listed</button>
  </div>
+ </div>
+ <div class="setup-custom-position" id="customTargetPositionWrap" hidden>
+ <label class="setup-card-label" for="customTargetPositionInput">Enter your role</label>
+ <input type="text" class="oinp" id="customTargetPositionInput" name="custom_position" maxlength="255" autocomplete="organization-title" placeholder="e.g. Pharmacy Assistant" aria-describedby="customTargetPositionHelp">
+ <div class="desc-text" id="customTargetPositionHelp">Use a specific job title so your interview questions can match the role.</div>
  </div>
  <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>{{ $targetFieldCopy['required_message'] }}</div>
  </div>
+
+ <details class="setup-role-discovery" id="roleDiscovery">
+ <summary><span><i class="fa-solid fa-compass" aria-hidden="true"></i> Help me find a role</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></summary>
+ <div class="setup-role-discovery-body">
+ <p>Share what you can do and what interests you. We’ll suggest roles to explore and practice for. These are role ideas, not live job openings.</p>
+ <div class="setup-role-discovery-grid">
+ <div>
+ <label for="roleSkills">Skills <span class="setup-optional-label">Optional</span></label>
+ <input type="text" class="oinp" id="roleSkills" name="role_skills" maxlength="500" placeholder="e.g. customer service, spreadsheets" aria-describedby="roleSkillsHelp">
+ <small id="roleSkillsHelp">Separate skills with commas.</small>
+ </div>
+ <div>
+ <label for="roleInterests">Interests <span class="setup-optional-label">Optional</span></label>
+ <input type="text" class="oinp" id="roleInterests" name="role_interests" maxlength="500" placeholder="e.g. helping people, technology" aria-describedby="roleInterestsHelp">
+ <small id="roleInterestsHelp">Separate interests with commas.</small>
+ </div>
+ <div>
+ <label for="roleQualifications">Qualifications or certifications <span class="setup-optional-label">Optional</span></label>
+ <input type="text" class="oinp" id="roleQualifications" name="role_qualifications" maxlength="500" placeholder="e.g. TESDA NC II, nursing degree">
+ </div>
+ <div>
+ <label for="roleExperienceLevel">Experience level <span class="setup-optional-label">Optional</span></label>
+ <select class="oinp" id="roleExperienceLevel" name="role_experience_level">
+ <option value="">Choose an experience level</option>
+ <option value="entry">Student, first job, or entry level</option>
+ <option value="mid">Some professional experience</option>
+ <option value="senior">Senior or specialist experience</option>
+ </select>
+ </div>
+ </div>
+ <button type="button" class="setup-suggest-roles-button" id="suggestRolesButton"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Suggest positions</button>
+ <p class="setup-role-status" id="roleSuggestionStatus" role="status" aria-live="polite"></p>
+ <div class="setup-role-results" id="roleSuggestionResults" aria-label="Suggested positions"></div>
+ </div>
+ </details>
 
  <div class="setup-calibrated-simple">
  <div class="setup-calibrated-icon" aria-hidden="true">
@@ -620,7 +683,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const setupScenarioMismatchMessages = {
  job: {
  title: 'Use a job target',
- message: @json('Job Interview accepts job-related target positions only. Enter a dataset-trained job role like '.$targetPositionExamples.'.'),
+ message: @json('Enter a specific job title, such as '.$targetPositionExamples.'.'),
  },
  };
  const setupVagueTargetRecommendations = [
@@ -640,7 +703,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  placeholder: 'Choose a target position',
  requiredTitle: 'Target position required',
  requiredMessage: 'Enter the target position before continuing.',
- calibrationTitle: 'Dataset-trained role-calibrated practice',
+ calibrationTitle: 'Role-focused interview practice',
  },
  };
  const setupTargetChoiceGroups = @json([
@@ -657,6 +720,11 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (trigger) {
  trigger.classList.toggle('setup-field-invalid', invalid);
  trigger.setAttribute('aria-invalid', invalid? 'true': 'false');
+ }
+ const custom = document.getElementById('customTargetPositionInput');
+ if (custom && !document.getElementById('customTargetPositionWrap')?.hidden) {
+ custom.classList.toggle('setup-field-invalid', invalid);
+ custom.setAttribute('aria-invalid', invalid? 'true': 'false');
  }
  }
  }
@@ -708,7 +776,8 @@ Begin Interview <i class="fa-solid fa-play"></i>
  targetPositionAlertVisible = true;
  modalElement.addEventListener('hidden.bs.modal', () => {
  targetPositionAlertVisible = false;
- document.getElementById('targetPositionDropdownButton')?.focus();
+ const customWrap = document.getElementById('customTargetPositionWrap');
+ (customWrap && !customWrap.hidden? document.getElementById('customTargetPositionInput'): document.getElementById('targetPositionDropdownButton'))?.focus();
  }, { once: true });
 
  if (window.bootstrap?.Modal) {
@@ -775,12 +844,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  if (vagueRecommendation && vagueRecommendation.kind === 'job') {
  return vagueRecommendation.jobScenario;
- }
-
- const targetKind = targetSetupScenarioKind();
-
- if (targetKind !== 'job') {
- return setupScenarioMismatchMessages.job;
  }
 
  return null;
@@ -885,6 +948,27 @@ Begin Interview <i class="fa-solid fa-play"></i>
  return Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]')).filter((choice) => !choice.hidden && !choice.closest('[hidden]'));
  }
 
+ function filterSetupTargetChoices() {
+ const category = document.getElementById('jobCategoryFilter')?.value || '';
+ const search = (document.getElementById('targetPositionSearch')?.value || '').trim().toLocaleLowerCase();
+ let visibleCount = 0;
+ document.querySelectorAll('[data-target-dropdown-group-kind]').forEach((group) => {
+ const categoryMatches = !category || group.dataset.jobCategory === category;
+ let groupVisible = false;
+ group.querySelectorAll('[data-target-dropdown-choice-value]').forEach((choice) => {
+ const matches = categoryMatches && (!search || (choice.dataset.targetDropdownChoiceValue || '').toLocaleLowerCase().includes(search));
+ choice.hidden = !matches;
+ if (matches) {
+ groupVisible = true;
+ visibleCount += 1;
+ }
+ });
+ group.hidden = !groupVisible;
+ });
+ const empty = document.getElementById('targetPositionEmpty');
+ if (empty) empty.hidden = visibleCount > 0;
+ }
+
  function syncSetupTargetDropdown(positionField, targetKind, targetCopy) {
  if (!positionField) return;
  const choiceGroups = setupTargetChoiceGroups[targetKind] || {};
@@ -892,13 +976,15 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const previousValue = previousKind === targetKind? setupTargetFieldValue(positionField): '';
  const availableValues = flattenSetupTargetChoices(choiceGroups);
 
- setSetupTargetInputValue(
- positionField,
- previousValue && availableValues.includes(previousValue)? previousValue: '',
- targetKind
- );
+ setSetupTargetInputValue(positionField, previousValue, targetKind);
 
  const selectedValue = setupTargetFieldValue(positionField);
+ const catalogValue = availableValues.find((value) => value.toLocaleLowerCase() === selectedValue.toLocaleLowerCase());
+ const customWrap = document.getElementById('customTargetPositionWrap');
+ const customInput = document.getElementById('customTargetPositionInput');
+ const isCustom = Boolean(selectedValue && !catalogValue) || positionField.dataset.customTarget === 'true';
+ if (customWrap) customWrap.hidden = !isCustom;
+ if (customInput && isCustom && customInput.value !== selectedValue) customInput.value = selectedValue;
  const trigger = document.getElementById('targetPositionDropdownButton');
  const label = document.getElementById('targetPositionDropdownLabel');
 
@@ -923,6 +1009,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  choice.classList.toggle('setup-target-choice-selected', isSelected);
  choice.setAttribute('aria-pressed', isSelected? 'true': 'false');
  });
+ filterSetupTargetChoices();
  }
 
  function syncSetupTargetFieldCopy() {
@@ -1041,7 +1128,8 @@ Begin Interview <i class="fa-solid fa-play"></i>
  window.setTimeout(() => {
  if (item.type === 'field') {
  if (item.id === 'valPosition') {
- document.getElementById('targetPositionDropdownButton')?.focus();
+ const customWrap = document.getElementById('customTargetPositionWrap');
+ (customWrap && !customWrap.hidden? document.getElementById('customTargetPositionInput'): document.getElementById('targetPositionDropdownButton'))?.focus();
  return;
  }
  document.getElementById(item.id)?.focus();
@@ -1196,20 +1284,161 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const targetPositionDropdown = document.querySelector('[data-target-dropdown]');
  const targetPositionDropdownButton = document.getElementById('targetPositionDropdownButton');
  const targetPositionDropdownMenu = document.getElementById('targetPositionDropdownMenu');
+ const targetPositionSearch = document.getElementById('targetPositionSearch');
+ const jobCategoryFilter = document.getElementById('jobCategoryFilter');
+ const customTargetPositionInput = document.getElementById('customTargetPositionInput');
+
+ function setSetupTargetPosition(value, category = '') {
+ const positionField = document.getElementById('valPosition');
+ if (!positionField) return;
+ const catalogChoice = Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]'))
+ .find((choice) => (choice.dataset.targetDropdownChoiceValue || '').toLocaleLowerCase() === String(value || '').toLocaleLowerCase());
+ const isCustom = Boolean(String(value || '').trim()) && !catalogChoice;
+ positionField.dataset.customTarget = isCustom? 'true': 'false';
+ setSetupTargetInputValue(positionField, value, 'job');
+ if (customTargetPositionInput) customTargetPositionInput.value = isCustom? String(value || ''): '';
+ const selectedCategory = catalogChoice?.closest('[data-job-category]')?.dataset.jobCategory || category;
+ if (selectedCategory && Array.from(jobCategoryFilter?.options || []).some((option) => option.value === selectedCategory)) {
+ jobCategoryFilter.value = selectedCategory;
+ }
+ syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
+ positionField.dispatchEvent(new Event('change', { bubbles: true }));
+ }
 
  function chooseSetupTargetValue(choice) {
  const targetKind = 'job';
  if (!choice || choice.dataset.targetDropdownChoiceKind !== targetKind) return;
 
- const positionField = document.getElementById('valPosition');
- if (!positionField) return;
-
- setSetupTargetInputValue(positionField, choice.dataset.targetDropdownChoiceValue || '', targetKind);
- syncSetupTargetDropdown(positionField, targetKind, currentSetupTargetFieldCopy());
- positionField.dispatchEvent(new Event('change', { bubbles: true }));
+ setSetupTargetPosition(choice.dataset.targetDropdownChoiceValue || '');
  setSetupTargetDropdownOpen(false);
  targetPositionDropdownButton?.focus();
  }
+
+ jobCategoryFilter?.addEventListener('change', () => {
+ const selected = setupTargetFieldValue(document.getElementById('valPosition'));
+ const selectedChoice = Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]'))
+ .find((choice) => (choice.dataset.targetDropdownChoiceValue || '').toLocaleLowerCase() === selected.toLocaleLowerCase());
+ const selectedCategory = selectedChoice?.closest('[data-job-category]')?.dataset.jobCategory || '';
+ if (selectedChoice && jobCategoryFilter.value && selectedCategory !== jobCategoryFilter.value) {
+ setSetupTargetPosition('');
+ }
+ filterSetupTargetChoices();
+ });
+
+ targetPositionSearch?.addEventListener('input', filterSetupTargetChoices);
+ targetPositionSearch?.addEventListener('keydown', (event) => {
+ if (event.key === 'Escape') {
+ event.preventDefault();
+ setSetupTargetDropdownOpen(false);
+ targetPositionDropdownButton?.focus();
+ } else if (event.key === 'ArrowDown') {
+ event.preventDefault();
+ visibleSetupTargetChoices()[0]?.focus();
+ }
+ });
+
+ document.getElementById('customTargetPositionAction')?.addEventListener('click', () => {
+ const positionField = document.getElementById('valPosition');
+ if (!positionField) return;
+ positionField.dataset.customTarget = 'true';
+ setSetupTargetInputValue(positionField, '', 'job');
+ if (customTargetPositionInput) customTargetPositionInput.value = '';
+ syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
+ positionField.dispatchEvent(new Event('change', { bubbles: true }));
+ setSetupTargetDropdownOpen(false);
+ customTargetPositionInput?.focus();
+ });
+
+ customTargetPositionInput?.addEventListener('input', () => {
+ const positionField = document.getElementById('valPosition');
+ if (!positionField) return;
+ positionField.dataset.customTarget = 'true';
+ setSetupTargetInputValue(positionField, customTargetPositionInput.value, 'job');
+ syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
+ positionField.dispatchEvent(new Event('change', { bubbles: true }));
+ });
+
+ const suggestRolesButton = document.getElementById('suggestRolesButton');
+ const roleSuggestionStatus = document.getElementById('roleSuggestionStatus');
+ const roleSuggestionResults = document.getElementById('roleSuggestionResults');
+
+ function splitRoleDiscoveryTerms(value) {
+ return String(value || '').split(',').map((term) => term.trim()).filter(Boolean).slice(0, 12);
+ }
+
+ function setRoleSuggestionStatus(message, isError = false) {
+ if (!roleSuggestionStatus) return;
+ roleSuggestionStatus.textContent = message;
+ roleSuggestionStatus.classList.toggle('is-error', isError);
+ }
+
+ function renderRoleSuggestions(roles) {
+ if (!roleSuggestionResults) return;
+ roleSuggestionResults.replaceChildren();
+ roles.forEach((role) => {
+ const title = String(role?.title || '').trim();
+ if (!title) return;
+ const button = document.createElement('button');
+ button.type = 'button';
+ button.className = 'setup-role-result';
+ const heading = document.createElement('strong');
+ heading.textContent = title;
+ const category = document.createElement('small');
+ category.textContent = String(role?.category || 'Suggested role');
+ const reason = document.createElement('span');
+ reason.textContent = String(role?.reason || 'Explore this role in your interview practice.');
+ button.append(heading, category, reason);
+ button.addEventListener('click', () => {
+ setSetupTargetPosition(title, String(role?.category || ''));
+ setRoleSuggestionStatus(`${title} selected as your target position.`);
+ button.scrollIntoView({ block: 'nearest' });
+ });
+ roleSuggestionResults.appendChild(button);
+ });
+ }
+
+ suggestRolesButton?.addEventListener('click', async () => {
+ const payload = {
+ skills: splitRoleDiscoveryTerms(document.getElementById('roleSkills')?.value),
+ interests: splitRoleDiscoveryTerms(document.getElementById('roleInterests')?.value),
+ qualifications: String(document.getElementById('roleQualifications')?.value || '').trim(),
+ experience_level: String(document.getElementById('roleExperienceLevel')?.value || '').trim(),
+ };
+ if (!payload.skills.length && !payload.interests.length && !payload.qualifications) {
+ setRoleSuggestionStatus('Add at least one skill, interest, or qualification first.', true);
+ document.getElementById('roleSkills')?.focus();
+ return;
+ }
+ suggestRolesButton.disabled = true;
+ suggestRolesButton.setAttribute('aria-busy', 'true');
+ setRoleSuggestionStatus('Finding positions that may fit your background…');
+ roleSuggestionResults?.replaceChildren();
+ try {
+ const response = await fetch(@json(route('interview.suggestRoles')), {
+ method: 'POST',
+ headers: {
+ 'Accept': 'application/json',
+ 'Content-Type': 'application/json',
+ 'X-CSRF-TOKEN': document.querySelector('#setupForm input[name="_token"]')?.value || '',
+ },
+ credentials: 'same-origin',
+ body: JSON.stringify(payload),
+ });
+ const data = await response.json().catch(() => ({}));
+ if (!response.ok) {
+ const firstError = Object.values(data?.errors || {})[0];
+ throw new Error(Array.isArray(firstError)? firstError[0]: (data?.message || 'Could not load suggestions.'));
+ }
+ const roles = Array.isArray(data?.roles)? data.roles: [];
+ renderRoleSuggestions(roles);
+ setRoleSuggestionStatus(roles.length? 'Choose a position to use for interview practice.': 'No suggestions yet. Try adding more specific details.', !roles.length);
+ } catch (error) {
+ setRoleSuggestionStatus(error?.message || 'Could not load suggestions. Please try again.', true);
+ } finally {
+ suggestRolesButton.disabled = false;
+ suggestRolesButton.removeAttribute('aria-busy');
+ }
+ });
 
  targetPositionDropdown?.addEventListener('click', (event) => {
  event.stopPropagation();
@@ -1235,6 +1464,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const willOpen = targetPositionDropdownButton.getAttribute('aria-expanded') !== 'true';
  syncSetupTargetFieldCopy();
  setSetupTargetDropdownOpen(willOpen);
+ if (willOpen) window.setTimeout(() => targetPositionSearch?.focus(), 0);
  });
 
  targetPositionDropdownButton?.addEventListener('keydown', (event) => {
@@ -1242,7 +1472,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  event.preventDefault();
  syncSetupTargetFieldCopy();
  setSetupTargetDropdownOpen(true);
- window.setTimeout(() => visibleSetupTargetChoices()[0]?.focus(), 0);
+ window.setTimeout(() => targetPositionSearch?.focus(), 0);
  });
 
  document.querySelectorAll('[data-target-dropdown-choice-value]').forEach((choice) => {
