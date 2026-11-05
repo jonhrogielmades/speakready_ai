@@ -140,7 +140,7 @@
                     <div class="sr-stat-body">
                         <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
                         <div class="sr-stat-label">Completed sessions</div>
-                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></div>
                     </div>
                 </a>
                 <a href="{{ route('user.feedback') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;" aria-label="Open feedback and average rating details">
@@ -214,7 +214,7 @@
                     <div class="sr-stat-body">
                         <div class="sr-stat-value">{{ $totalSessions ?? 0 }}</div>
                         <div class="sr-stat-label">Completed sessions</div>
-                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i></div>
                     </div>
                 </a>
                 <a href="{{ route('user.feedback') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#22c55e;--meter-value:{{ $ratingMeter }}%;" aria-label="Open feedback and average rating details">
