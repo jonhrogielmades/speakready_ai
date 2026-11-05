@@ -21,6 +21,8 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     libgomp1 \
     libcurl4-openssl-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -37,8 +39,10 @@ RUN apt-get update && apt-get install -y \
     && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip curl opcache
+# Install PHP extensions. JPEG support is required because the account photo
+# cropper submits JPEGs and ProfilePhotoStorage re-encodes every upload.
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip curl opcache
 
 # Allow long-running admin generation requests without PHP-FPM ending the worker first.
 RUN { \

@@ -17,46 +17,67 @@ final class ProfilePhotoStorage
             throw new RuntimeException('Secure profile photo processing requires the GD extension.');
         }
 
-        $contents = file_get_contents($photo->getRealPath());
-        $image = is_string($contents) ? @imagecreatefromstring($contents) : false;
+        $image = null;
+        $outputBufferLevel = ob_get_level();
 
-        if ($image === false) {
-            throw new RuntimeException('The uploaded profile photo could not be decoded safely.');
+        try {
+            $contents = $photo->get();
+            $imageInfo = @getimagesizefromstring($contents);
+            $mime = strtolower((string) ($imageInfo['mime'] ?? ''));
+            $extension = match ($mime) {
+                'image/png' => 'png',
+                'image/gif' => 'gif',
+                'image/jpeg' => 'jpg',
+                default => null,
+            };
+
+            if ($extension === null) {
+                throw new RuntimeException('The uploaded profile photo could not be decoded safely.');
+            }
+
+            $image = @imagecreatefromstring($contents);
+            if (! $image instanceof \GdImage) {
+                throw new RuntimeException('The uploaded profile photo could not be decoded safely.');
+            }
+
+            if ($extension === 'jpg') {
+                $image = $this->orientJpeg($image, $photo);
+            } else {
+                imagealphablending($image, false);
+                imagesavealpha($image, true);
+            }
+
+            ob_start();
+            $encoded = match ($extension) {
+                'png' => @imagepng($image, null, 6),
+                'gif' => @imagegif($image),
+                default => @imagejpeg($image, null, 88),
+            };
+            $sanitized = ob_get_clean();
+
+            if (! $encoded || ! is_string($sanitized) || $sanitized === '') {
+                throw new RuntimeException('The profile photo could not be sanitized.');
+            }
+
+            $path = 'profile-photos/'.Str::uuid().'.'.$extension;
+            if (! Storage::disk(self::DISK)->put($path, $sanitized, ['visibility' => 'public'])) {
+                throw new RuntimeException('The sanitized profile photo could not be stored.');
+            }
+
+            return $path;
+        } catch (RuntimeException $error) {
+            throw $error;
+        } catch (\Throwable $error) {
+            throw new RuntimeException('The profile photo could not be processed safely.', 0, $error);
+        } finally {
+            while (ob_get_level() > $outputBufferLevel) {
+                ob_end_clean();
+            }
+
+            if ($image instanceof \GdImage) {
+                imagedestroy($image);
+            }
         }
-
-        $mime = strtolower((string) $photo->getMimeType());
-        $extension = match ($mime) {
-            'image/png' => 'png',
-            'image/gif' => 'gif',
-            default => 'jpg',
-        };
-
-        if ($extension === 'jpg') {
-            $image = $this->orientJpeg($image, $photo);
-        } else {
-            imagealphablending($image, false);
-            imagesavealpha($image, true);
-        }
-
-        ob_start();
-        $encoded = match ($extension) {
-            'png' => imagepng($image, null, 6),
-            'gif' => imagegif($image),
-            default => imagejpeg($image, null, 88),
-        };
-        $sanitized = ob_get_clean();
-        imagedestroy($image);
-
-        if (! $encoded || ! is_string($sanitized) || $sanitized === '') {
-            throw new RuntimeException('The profile photo could not be sanitized.');
-        }
-
-        $path = 'profile-photos/'.Str::uuid().'.'.$extension;
-        if (! Storage::disk(self::DISK)->put($path, $sanitized, ['visibility' => 'public'])) {
-            throw new RuntimeException('The sanitized profile photo could not be stored.');
-        }
-
-        return $path;
     }
 
     private function orientJpeg(\GdImage $image, UploadedFile $photo): \GdImage
@@ -90,7 +111,8 @@ final class ProfilePhotoStorage
             return;
         }
 
-        if (! Storage::disk($target['disk'])->delete($target['path'])) {
+        $disk = Storage::disk($target['disk']);
+        if ($disk->exists($target['path']) && ! $disk->delete($target['path'])) {
             throw new RuntimeException('The profile photo could not be deleted.');
         }
     }

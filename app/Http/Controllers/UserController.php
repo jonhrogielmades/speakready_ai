@@ -4695,7 +4695,13 @@ class UserController extends Controller
  $image = $request->file('profile_photo');
  try {
  $newPhotoPath = $photoStorage->store($image);
- } catch (\RuntimeException) {
+ } catch (\RuntimeException $error) {
+ Log::warning('User profile photo processing failed.', [
+ 'user_id' => $user->getKey(),
+ 'exception_type' => $error::class,
+ 'message' => $error->getMessage(),
+ ]);
+
  throw ValidationException::withMessages([
  'profile_photo' => 'The profile photo could not be processed securely. Please choose another image.',
  ]);

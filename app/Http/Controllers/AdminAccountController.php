@@ -10,7 +10,9 @@ use App\Support\SystemSettings;
 use App\Services\ProfilePhotoStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password as PasswordRule;
 
 class AdminAccountController extends Controller
@@ -58,7 +60,19 @@ class AdminAccountController extends Controller
 
         if ($request->hasFile('profile_photo')) {
             $image = $request->file('profile_photo');
-            $newPhotoPath = $photoStorage->store($image);
+            try {
+                $newPhotoPath = $photoStorage->store($image);
+            } catch (\RuntimeException $error) {
+                Log::warning('Admin profile photo processing failed.', [
+                    'admin_id' => $admin->getKey(),
+                    'exception_type' => $error::class,
+                    'message' => $error->getMessage(),
+                ]);
+
+                throw ValidationException::withMessages([
+                    'profile_photo' => 'The profile photo could not be processed securely. Please choose another image.',
+                ]);
+            }
             $admin->profile_photo_path = $newPhotoPath;
         }
 
