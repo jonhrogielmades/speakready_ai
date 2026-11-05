@@ -803,9 +803,6 @@ html[data-theme="dark"] .auth-page-form-side,
    .auth-page-shell[data-auth-mode="register"] .auth-mobile-register-final { display: none; }
    .auth-page-shell[data-auth-mode="register"] form[data-register-step="3"] .auth-mobile-register-final { display: grid; gap: 13px; }
    .auth-support-page .auth-page-submit { min-height: 50px; }
-   .auth-page-shell.auth-support-page {
-      padding-bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 40px));
-   }
    .auth-page-shell.auth-support-page .auth-page-card {
       margin-top: auto;
       margin-bottom: auto;
