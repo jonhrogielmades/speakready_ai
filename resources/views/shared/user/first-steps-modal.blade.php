@@ -52,7 +52,7 @@
                     <div>
                         <p class="sr-first-steps-kicker">First steps</p>
                         <h2 class="modal-title" id="firstStepsOnboardingTitle">Get interview-ready</h2>
-                        <p class="sr-first-steps-subtitle">Complete these four setup steps to unlock your dashboard. Progress follows your account on every device.</p>
+                        <p class="sr-first-steps-subtitle">Finish these four steps to get ready for practice. Your setup progress is saved to your account.</p>
                     </div>
                 </div>
             </div>
@@ -69,8 +69,8 @@
                     <section class="sr-first-steps-step {{ $firstStepsRecoverySaved ? 'is-done' : '' }}" data-sr-onboarding-step="recovery_code_saved">
                         <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsRecoverySaved ? 'fa-check' : 'fa-key' }}" aria-hidden="true"></i></span>
                         <span class="sr-first-steps-step-copy">
-                            <strong>1. {{ $firstStepsRecoveryApplicable ? 'Save your recovery code' : 'Secure your Google sign-in' }}</strong>
-                            <small>{{ $firstStepsRecoveryApplicable ? ($firstStepsRecoverySaved ? 'Your saved-code acknowledgement is attached to this account.' : 'Keep a backup code somewhere private and secure.') : 'This account signs in through Google and does not use a local password or recovery code.' }}</small>
+                            <strong>1. {{ $firstStepsRecoveryApplicable ? 'Save your recovery code' : 'Google sign-in confirmed' }}</strong>
+                            <small>{{ $firstStepsRecoveryApplicable ? ($firstStepsRecoverySaved ? 'You confirmed that you saved your recovery code.' : 'Generate a code in Account, save it securely, and confirm you saved it.') : 'This account signs in through Google and does not use a local password or recovery code.' }}</small>
                         </span>
                         <span class="sr-first-steps-step-actions" data-sr-step-status-actions>
                             @if($firstStepsRecoverySaved)
@@ -122,7 +122,7 @@
                         <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsSetupComplete ? 'fa-check' : 'fa-microphone-lines' }}" aria-hidden="true"></i></span>
                         <span class="sr-first-steps-step-copy">
                             <strong>3. Check your practice tools</strong>
-                            <small>Confirm camera, microphone, and notification access for this account.</small>
+                            <small>Check this device's camera, microphone, and notification permissions, then save your choices.</small>
                         </span>
                         <span class="sr-first-steps-step-actions" data-sr-step-status-actions>
                             @if($firstStepsSetupComplete)<span class="sr-first-steps-status">Complete</span>@endif
@@ -133,12 +133,12 @@
                     <section class="sr-first-steps-step {{ $firstStepsEmailVerified ? 'is-done' : '' }}" data-sr-onboarding-step="email_verified">
                         <span class="sr-first-steps-step-icon"><i class="fa-solid {{ $firstStepsEmailVerified ? 'fa-check' : 'fa-envelope-circle-check' }}" aria-hidden="true"></i></span>
                         <span class="sr-first-steps-step-copy">
-                            <strong>4. Verify your recovery email</strong>
+                            <strong>4. Verify your email</strong>
                             <small>
                                 @if(! $firstStepsEmailVerificationApplicable)
                                     Google has already verified the email used for this account.
                                 @elseif($firstStepsEmailVerified)
-                                    Your recovery email is verified and ready for password recovery.
+                                    Your email is verified and ready for password recovery.
                                 @else
                                     Check {{ $firstStepsUser?->email }} for the verification link, or send a new one.
                                 @endif
@@ -160,7 +160,7 @@
             </div>
 
             <div class="modal-footer">
-                <p class="sr-first-steps-footer-copy" data-sr-first-steps-footer-copy>{{ $firstStepsComplete ? 'Setup complete. Your dashboard is ready.' : 'Complete all four steps to continue to your dashboard.' }}</p>
+                <p class="sr-first-steps-footer-copy" data-sr-first-steps-footer-copy>{{ $firstStepsComplete ? 'Setup complete. Your dashboard is ready.' : 'Finish all four steps or skip setup to continue to your dashboard.' }}</p>
                 <div class="sr-first-steps-footer-actions">
                     <button type="button" class="sr-first-steps-skip" data-sr-first-steps-skip aria-haspopup="dialog">
                         Skip

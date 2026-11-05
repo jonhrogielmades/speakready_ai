@@ -710,29 +710,31 @@
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const stepsMobile = [
- { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, interview progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
+ { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'Review readiness scores, learning and skill progress, interview history, goals, and achievements in one place.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
+ { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Modules you start appear here with their completion percentages. Open a module to continue learning.', side: 'top', align: 'start' }},
  { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
  { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
  { element: '#job-interview-performance', popover: { title: 'Job Interview Performance', description: 'Review your Job Interview average, session count, best score, latest score, and next focus without unrelated categories.', side: 'top', align: 'start' }},
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'top', align: 'start' }},
  { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
- { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
+ { element: '#history-table', popover: { title: 'Interview History', description: 'Recent interviews appear here with a View Feedback button. View Full History appears when you have older sessions.', side: 'top', align: 'start' }},
  { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track practice goals and see the next milestone that will move your preparation forward.', side: 'top', align: 'start' }},
- { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'top', align: 'start' }}
+ { element: '#achievements-badges', popover: { title: 'Achievements', description: 'See which badges you have unlocked and which practice milestones are still ahead.', side: 'top', align: 'start' }}
  ];
 
  const stepsDesktop = [
- { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'This page brings your practice scores, interview progress, history, goals, and achievements into one review hub.', side: 'bottom', align: 'start' }},
+ { element: '#progressModulesLikeHero', popover: { title: 'Interview Progress', description: 'Review readiness scores, learning and skill progress, interview history, goals, and achievements in one place.', side: 'bottom', align: 'start' }},
  { element: '#progress-stats', popover: { title: 'Readiness Snapshot', description: 'Review current readiness, movement from the last scored interview, your streak, and total practice days.', side: 'bottom', align: 'start' }},
+ { element: '#learning-progress', popover: { title: 'Learning Progress', description: 'Modules you start appear here with their completion percentages. Open a module to continue learning.', side: 'top', align: 'start' }},
  { element: '#skill-tracker', popover: { title: 'Skill Improvement', description: 'Watch core interview skills move from earlier scores to your latest session results.', side: 'top', align: 'start' }},
  { element: '#readiness-trend', popover: { title: 'Readiness Trend', description: 'Track how your overall readiness score changes over time as you complete more scored sessions.', side: 'bottom', align: 'start' }},
  { element: '#job-interview-performance', popover: { title: 'Job Interview Performance', description: 'Review your Job Interview average, session count, best score, latest score, and next focus without unrelated categories.', side: 'top', align: 'start' }},
  { element: '#strengths-tracker', popover: { title: 'Strengths & STAR', description: 'Review strengths, areas to improve, STAR method coverage, and the next coaching suggestion.', side: 'left', align: 'start' }},
  { element: '#historySearch', popover: { title: 'Search History', description: 'Filter your interview history when you want to revisit a scenario, date, rating, or score quickly.', side: 'top', align: 'start' }},
- { element: '#history-table', popover: { title: 'Session History', description: 'Open previous interviews and detailed AI feedback from one place.', side: 'top', align: 'start' }},
+ { element: '#history-table', popover: { title: 'Interview History', description: 'Recent interviews appear here with a View Feedback button. View Full History appears when you have older sessions.', side: 'top', align: 'start' }},
  { element: '#goals-milestones', popover: { title: 'Goals & Milestones', description: 'Track practice goals and see the next milestone that will move your preparation forward.', side: 'right', align: 'start' }},
- { element: '#achievements-badges', popover: { title: 'Achievements', description: 'Badges and awards appear here as your practice history grows.', side: 'left', align: 'start' }}
+ { element: '#achievements-badges', popover: { title: 'Achievements', description: 'See which badges you have unlocked and which practice milestones are still ahead.', side: 'left', align: 'start' }}
  ];
 
  window.createSpeakReadyTour({

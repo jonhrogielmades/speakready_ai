@@ -1741,8 +1741,8 @@
             { element: '#welcomeMsg', popover: { title: 'Truthful Coaching', description: 'The coach uses your competency map and verified stories to improve answers without inventing experience.', side: 'bottom', align: 'start' }},
             { element: '#coachAttachBtn', popover: { title: 'Attach Evidence', description: 'Upload a resume, certificate, job description, or supporting file so the coach can tailor feedback to real material.', side: 'top', align: 'center' }},
             { element: '#chatMsg', popover: { title: 'Ask A Question', description: 'Type a draft answer, prep concern, target role, or coaching request here.', side: 'top', align: 'center' }},
-            { element: '#coachVoiceBtn', popover: { title: 'Voice Prompt', description: 'Use the microphone to speak a message when rehearsing out loud is easier than typing.', side: 'top', align: 'center' }},
-            { element: '#chatSendBtn', popover: { title: 'Send To Coach', description: 'Send your prompt or attached context and wait for personalized coaching in the message stream.', side: 'top', align: 'center' }},
+            { element: '#coachVoiceBtn', popover: { title: 'Voice Prompt', description: 'Record a spoken prompt, then review and edit its transcript before sending it to the coach.', side: 'top', align: 'center' }},
+            { element: '#chatSendBtn', popover: { title: 'Send To Coach', description: 'Send your typed or transcribed prompt with any attached context to receive a response in this conversation.', side: 'top', align: 'center' }},
             { element: '.coach-disclaimer', popover: { title: 'Check Advice', description: 'AI can be wrong. Check advice and share only true facts.', side: 'bottom', align: 'center' }}
         ];
 
@@ -1754,8 +1754,8 @@
             { element: '#welcomeMsg', popover: { title: 'Truthful Coaching', description: 'The coach uses your competency map and verified stories to improve answers without inventing experience.', side: 'bottom', align: 'start' }},
             { element: '#coachAttachBtn', popover: { title: 'Attach Evidence', description: 'Upload a resume, certificate, job description, or supporting file so the coach can tailor feedback to real material.', side: 'top', align: 'center' }},
             { element: '#chatMsg', popover: { title: 'Ask A Question', description: 'Type a draft answer, prep concern, target role, or coaching request here.', side: 'top', align: 'center' }},
-            { element: '#coachVoiceBtn', popover: { title: 'Voice Prompt', description: 'Use the microphone to speak a message when rehearsing out loud is easier than typing.', side: 'top', align: 'center' }},
-            { element: '#chatSendBtn', popover: { title: 'Send To Coach', description: 'Send your prompt or attached context and wait for personalized coaching in the message stream.', side: 'top', align: 'center' }},
+            { element: '#coachVoiceBtn', popover: { title: 'Voice Prompt', description: 'Record a spoken prompt, then review and edit its transcript before sending it to the coach.', side: 'top', align: 'center' }},
+            { element: '#chatSendBtn', popover: { title: 'Send To Coach', description: 'Send your typed or transcribed prompt with any attached context to receive a response in this conversation.', side: 'top', align: 'center' }},
             { element: '.coach-disclaimer', popover: { title: 'Check Advice', description: 'AI can be wrong. Check advice and share only true facts.', side: 'bottom', align: 'center' }}
         ];
 

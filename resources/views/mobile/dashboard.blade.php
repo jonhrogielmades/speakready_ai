@@ -928,25 +928,20 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         const stepsMobile = [
-            { element: '#mobTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Use this anytime you want a quick walkthrough of the current page.', side: 'bottom', align: 'end' }},
-            { element: '#mob-bottom-nav', popover: { title: 'Mobile Navigation', description: 'Jump to Home, Progress, Interview, Feedback, or More from the bottom bar.', side: 'top', align: 'center' }},
-            { element: '.sr-readiness-card-grid', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
-            { element: '.sr-mobile-stat-grid:not(.sr-readiness-card-grid)', popover: { title: 'Practice Snapshot', description: 'Track interviews, ratings, XP, and streaks without opening a report.', side: 'top', align: 'start' }},
-            { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'top', align: 'start' }},
-            { element: '#mobThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable view.', side: 'bottom', align: 'end' }}
+            { element: '#mob-bottom-nav', popover: { title: 'Main Navigation', description: 'Use Home, AI Coach, Interview, and Feedback. More opens Challenges, Modules, Progress, Calendar, and Reports and Sessions.', side: 'top', align: 'center' }},
+            { element: '#dashboardCoachImageTrigger', popover: { title: 'Ask the Interview Coach', description: 'Tap the robot to open the coach for interview planning, answer feedback, and your next practice step.', side: 'bottom', align: 'center' }},
+            { element: '.sr-readiness-card-grid', popover: { title: 'Readiness and Goal', description: 'Tap either card to review your overall readiness score and next goal in Progress.', side: 'bottom', align: 'start' }},
+            { element: '.sr-mobile-stat-grid:not(.sr-readiness-card-grid)', popover: { title: 'Practice Snapshot', description: 'These cards link to completed sessions, feedback ratings, XP, and your activity calendar.', side: 'top', align: 'start' }},
+            { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'Compare scores from your latest completed interviews, then open Progress for more detail.', side: 'top', align: 'start' }},
+            { element: '#card-daily-challenge', popover: { title: "Today's Practice Prompt", description: 'Use the suggested answer focus, then tap Start Interview to configure a practice session. Rewards depend on the completed activity.', side: 'top', align: 'start' }},
+            { element: '#card-current-goal', popover: { title: 'Current Goal', description: 'Check progress toward your next readiness target and open Progress to review or update goals.', side: 'top', align: 'start' }},
+            { element: '#mobTutorialBtn', popover: { title: 'Replay This Tutorial', description: 'Tap this button whenever you want to review the current page.', side: 'bottom', align: 'end' }},
+            { element: '#mobThBtn', popover: { title: 'Display Theme', description: 'Switch between light and dark mode.', side: 'bottom', align: 'end' }},
+            { element: '#mobFontSizeBtn', popover: { title: 'Reading Size', description: 'Adjust text size from 50% to 150%, or reset it to 100%.', side: 'bottom', align: 'end' }},
+            { element: '#mobProfileWrap', popover: { title: 'Account Settings', description: 'Open your account, notifications, language, font size settings, and sign-out options.', side: 'bottom', align: 'end' }}
         ];
 
-        const stepsDesktop = [
-            { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Challenges, AI Coach, Progress, Feedback, and Reports.', side: 'right', align: 'start' }},
-            { element: '#dbTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Restart this walkthrough whenever the page changes or you want a quick orientation.', side: 'bottom', align: 'center' }},
-            { element: '.sr-readiness-card-grid', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, average rating, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
-            { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed interviews, ratings, XP, streaks, and active practice days at a glance.', side: 'top', align: 'start' }},
-            { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'left', align: 'start' }},
-            { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: 'bottom', align: 'center' }},
-            { element: '#profileWrap', popover: { title: 'Account And Language', description: 'Manage profile settings, language translation, notifications, and sign-out options.', side: 'bottom', align: 'end' }}
-        ];
+        const stepsDesktop = stepsMobile;
 
         const dashboardTour = window.createSpeakReadyTour({
             completionKey,

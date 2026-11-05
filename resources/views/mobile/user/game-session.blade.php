@@ -3279,15 +3279,22 @@ modelState.failed = true;
  let onboardingTour = null;
  if (typeof window.createSpeakReadyTour === 'function') {
 const stepsMobile = [
-{ element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each challenge question and guides the Learning Game flow.', side: 'bottom', align: 'start' }},
-{ element: '#answerForm', popover: { title: 'Your Response', description: 'Use the voice controls to record each challenge answer.', side: 'top', align: 'start' }},
-{ element: '#mobileCameraCuesButton', popover: { title: 'Body-Language Detection', description: 'Open the camera cues. Camera observations never affect readiness or challenge scoring.', side: 'top', align: 'start' }}
+{ element: '.ai-avatar-panel', popover: { title: 'Challenge Question', description: 'Listen to the interviewer and read the question caption. The timer and target score appear here when the level uses them.', side: 'bottom', align: 'start' }},
+{ element: '#interviewControls', popover: { title: 'Question Controls', description: 'Repeat the question or end the challenge from these controls.', side: 'top', align: 'start' }},
+{ element: '#answerTextarea', popover: { title: 'Your Answer', description: 'Type an answer or record your voice. The transcript appears here after you stop recording, and you can review it before submitting.', side: 'top', align: 'start' }},
+{ element: '#answerTranscriptControls', popover: { title: 'Voice Recording', description: 'Start and stop a recording to add a spoken answer when microphone access is available.', side: 'top', align: 'start' }},
+{ element: '#gameSessionControls', popover: { title: 'Submit Answer', description: 'Submit each answer to continue the challenge. You can also switch the response area to fullscreen.', side: 'top', align: 'start' }},
+{ element: '#mobileCameraCuesButton', popover: { title: 'Optional Camera Cues', description: 'Open private body-language cues if camera coaching is enabled. These cues do not affect challenge scoring.', side: 'top', align: 'start' }}
 ];
 
 const stepsDesktop = [
-{ element: '.ai-avatar-panel', popover: { title: 'Challenge Coach', description: 'The coach presents each challenge question and guides the Learning Game flow.', side: 'right', align: 'start' }},
-{ element: '#answerForm', popover: { title: 'Your Response', description: 'Use the voice controls to record each challenge answer.', side: 'right', align: 'start' }},
-{ element: '#cameraPanel', popover: { title: 'Body-Language Detection', description: 'Camera detection checks visible framing, head, posture, and movement. Camera observations never affect readiness or challenge scoring.', side: 'left', align: 'start' }}
+{ element: '.ai-avatar-panel', popover: { title: 'Challenge Question', description: 'Listen to the interviewer and read the question caption. The timer and target score appear here when the level uses them.', side: 'right', align: 'start' }},
+{ element: '#interviewControls', popover: { title: 'Question Controls', description: 'Repeat the question or end the challenge from these controls.', side: 'bottom', align: 'start' }},
+{ element: '#answerTextarea', popover: { title: 'Your Answer', description: 'Type an answer or record your voice. The transcript appears here after you stop recording, and you can review it before submitting.', side: 'right', align: 'start' }},
+{ element: '#answerTranscriptControls', popover: { title: 'Voice Recording', description: 'Start and stop a recording to add a spoken answer when microphone access is available.', side: 'bottom', align: 'start' }},
+{ element: '#voiceSessionPanel', popover: { title: 'Recorded Answer', description: 'Play back your recording or clear it from the voice session controls before submitting.', side: 'right', align: 'start' }},
+{ element: '#gameSessionControls', popover: { title: 'Submit Answer', description: 'Submit each answer to continue the challenge. You can also switch the response area to fullscreen.', side: 'top', align: 'start' }},
+{ element: '#cameraPanel', popover: { title: 'Optional Camera Cues', description: 'Private framing and posture cues appear when camera coaching is enabled. They do not affect challenge scoring.', side: 'left', align: 'start' }}
 ];
  const visibleTourSteps = steps => steps.filter(step => document.querySelector(step.element));
 

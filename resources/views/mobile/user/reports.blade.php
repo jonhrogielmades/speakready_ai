@@ -264,8 +264,9 @@
  { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the current score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
  { element: '#report-score-breakdown', popover: { title: 'Score Breakdown', description: 'Review metric-level scores for the latest interview, including scenario, date, difficulty, and question count.', side: 'bottom', align: 'start' }},
  { element: '.report-score-list', popover: { title: 'Metric Rows', description: 'Each row shows one scored skill so you can see where the final score came from.', side: 'top', align: 'start' }},
- { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare first and latest scores to see which skills are moving up or down.', side: 'top', align: 'start' }},
- { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records from this report area.', side: 'top', align: 'start' }},
+ { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'When you have multiple scored interviews, compare your first and latest results by skill.', side: 'top', align: 'start' }},
+ { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open a completed interview for detailed review, delete one record, or clear your session history.', side: 'top', align: 'start' }},
+ { element: '#card-recent-sessions .sr-recent-session-pager', popover: { title: 'Browse Sessions', description: 'Move through older completed interviews using these page controls.', side: 'top', align: 'center' }},
  { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock report summaries and score breakdowns.', side: 'top', align: 'start' }}
  ];
 
@@ -274,8 +275,9 @@
  { element: '#report-readiness', popover: { title: 'Report Summary', description: 'See the current score, previous score, readiness change, result level, target role, and question count.', side: 'bottom', align: 'start' }},
  { element: '#report-score-breakdown', popover: { title: 'Score Breakdown', description: 'Review metric-level scores for the latest interview, including scenario, date, difficulty, and question count.', side: 'bottom', align: 'start' }},
  { element: '.report-score-list', popover: { title: 'Metric Rows', description: 'Each row shows one scored skill so you can see where the final score came from.', side: 'top', align: 'start' }},
- { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'Compare first and latest scores to see which skills are moving up or down.', side: 'top', align: 'start' }},
- { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open past interviews, review feedback, or clear old records from this report area.', side: 'top', align: 'start' }},
+ { element: '#report-comparison', popover: { title: 'Performance Comparison', description: 'When you have multiple scored interviews, compare your first and latest results by skill.', side: 'top', align: 'start' }},
+ { element: '#card-recent-sessions', popover: { title: 'Recent Sessions', description: 'Open a completed interview for detailed review, delete one record, or clear your session history.', side: 'top', align: 'start' }},
+ { element: '#card-recent-sessions .sr-recent-session-pager', popover: { title: 'Browse Sessions', description: 'Move through older completed interviews using these page controls.', side: 'top', align: 'center' }},
  { element: '#report-empty-state', popover: { title: 'No Report Yet', description: 'Complete a scored interview to unlock report summaries and score breakdowns.', side: 'top', align: 'center' }}
  ];
 

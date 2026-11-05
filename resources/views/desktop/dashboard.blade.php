@@ -1269,14 +1269,17 @@ document.addEventListener("DOMContentLoaded", function() {
         const stepsMobile = [];
 
         const stepsDesktop = [
-            { element: '#dbSidebar', popover: { title: 'Practice Navigation', description: 'Open Mock Interview, Modules, Challenges, AI Coach, Progress, Feedback, and Reports.', side: 'right', align: 'start' }},
-            { element: '#dbTutorialBtn', popover: { title: 'Replay Tutorial', description: 'Restart this walkthrough whenever the page changes or you want a quick orientation.', side: 'bottom', align: 'center' }},
-            { element: '.sr-score-panel', popover: { title: 'Readiness Summary', description: 'Your readiness score, status, and next target are practice indicators for your current preparation.', side: 'bottom', align: 'start' }},
-            { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'Track completed interviews, ratings, XP, streaks, and active practice days at a glance.', side: 'top', align: 'start' }},
-            { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'See how your score changes across your latest completed sessions.', side: 'top', align: 'start' }},
-            { element: '#card-daily-challenge', popover: { title: "Today's Challenge", description: 'Start a focused interview task for XP, streak progress, and sharper answer structure.', side: 'left', align: 'start' }},
-            { element: '#dbThBtn', popover: { title: 'Theme Toggle', description: 'Switch between light and dark mode for a comfortable viewing experience.', side: 'bottom', align: 'center' }},
-            { element: '#profileWrap', popover: { title: 'Account And Language', description: 'Manage profile settings, language translation, notifications, and sign-out options.', side: 'bottom', align: 'end' }}
+            { element: '#dbSidebar', popover: { title: 'Explore Practice', description: 'Open Interview Practice, Activity Calendar, Challenges, Modules, Interview Coach, Progress, Feedback, and Reports and Sessions.', side: 'right', align: 'start' }},
+            { element: '#dashboardCoachImageTrigger', popover: { title: 'Ask the Interview Coach', description: 'Select the robot to open the coach for interview planning, answer feedback, and help with your next practice step.', side: 'bottom', align: 'center' }},
+            { element: '.sr-score-panel', popover: { title: 'Readiness and Goal', description: 'Open Progress to review your overall readiness score, current status, and next goal.', side: 'bottom', align: 'start' }},
+            { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'These cards link to completed sessions, feedback ratings, XP, and your activity calendar.', side: 'top', align: 'start' }},
+            { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'Compare scores from your latest completed interviews, then open Progress for more detail.', side: 'top', align: 'start' }},
+            { element: '#card-daily-challenge', popover: { title: "Today's Practice Prompt", description: 'Use the suggested answer focus, then select Start Interview to configure a practice session. Rewards depend on the completed activity.', side: 'left', align: 'start' }},
+            { element: '#card-current-goal', popover: { title: 'Current Goal', description: 'Check progress toward your next readiness target and open Progress to review or update goals.', side: 'left', align: 'start' }},
+            { element: '#dbTutorialBtn', popover: { title: 'Replay This Tutorial', description: 'Select this button whenever you want to review the current page.', side: 'bottom', align: 'center' }},
+            { element: '#dbThBtn', popover: { title: 'Display Theme', description: 'Switch between light and dark mode.', side: 'bottom', align: 'center' }},
+            { element: '#dbFontSizeBtn', popover: { title: 'Reading Size', description: 'Adjust text size from 50% to 150%, or reset it to 100%.', side: 'bottom', align: 'center' }},
+            { element: '#profileWrap', popover: { title: 'Account Settings', description: 'Open account management, notifications, language, font size settings, and sign out here.', side: 'bottom', align: 'end' }}
         ];
 
         const dashboardTour = window.createSpeakReadyTour({

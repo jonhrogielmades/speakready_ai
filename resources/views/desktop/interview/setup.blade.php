@@ -2255,16 +2255,18 @@ startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'P
  if (typeof window.createSpeakReadyTour!== 'function') return;
 
  const setupTourSteps = [
- { element: '#setupStepper', popover: { title: 'Setup Roadmap', description: 'Use this stepper to move through details, structure, camera, coaching, and response settings before launching.', side: 'bottom', align: 'center' }},
- { element: '#panel-basic', popover: { title: 'Interview Focus', description: 'Choose the job interview scenario, then anchor it to the target role.', side: 'top', align: 'center' }},
- { element: '#targetPositionDropdownButton', popover: { title: 'Target Role', description: 'Pick the role you are practicing for so the questions match your goal.', side: 'bottom', align: 'start' }},
- { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Set difficulty, number of questions, and timing. Shorter sessions are useful for quick drills; longer ones feel closer to a full interview.', side: 'top', align: 'center' }},
- { element: '#panel-inclusive', popover: { title: 'Camera Detection', description: 'Camera On enables local body-language observations for coaching only. Camera Off keeps the session answer-focused.', side: 'top', align: 'center' }},
- { element: '#feedbackModeGroup', popover: { title: 'Coaching Style', description: 'Choose Coaching On for live help, or Real Interview Mode for a quieter practice run.', side: 'bottom', align: 'start' }},
- { element: '#questionTypeGroup', popover: { title: 'Question Mix', description: 'Select the kinds of questions you want included in this practice session.', side: 'top', align: 'center' }},
- { element: '#panel-response', popover: { title: 'Response Mode', description: 'Use Text for typing, Voice for spoken answers, or Hybrid when you want speech-to-text with manual edits.', side: 'top', align: 'center' }},
- { element: '#panel-summary', popover: { title: 'Live Summary', description: 'Review the generated setup summary so you can catch mismatches before the interview begins.', side: 'top', align: 'center' }},
- { element: '#btn-start-interview', popover: { title: 'Start Interview', description: 'Launch the customized session once the setup matches what you want to practice.', side: 'top', align: 'center' }}
+ { element: '#setupStepper', popover: { title: 'Interview Setup Steps', description: 'Work through Details, Structure, Camera, Scenario, and Response. The summary updates as you make choices.', side: 'bottom', align: 'center' }},
+ { element: '#valScenario', popover: { title: 'Practice Scenario', description: 'Choose the interview scenario that matches the kind of practice you want.', side: 'bottom', align: 'start' }},
+ { element: '#jobCategoryFilter', popover: { title: 'Job Category', description: 'Filter the target role list by category, or keep All job categories to search everything.', side: 'bottom', align: 'start' }},
+ { element: '#targetPositionDropdownButton', popover: { title: 'Target Role', description: 'Search and select a role, or enter your own position if it is not listed. Your questions will use this target.', side: 'bottom', align: 'start' }},
+ { element: '#roleFinderOpenButton', popover: { title: 'Find a Role', description: 'Share skills, interests, qualifications, and experience to get role ideas for interview practice.', side: 'bottom', align: 'start' }},
+ { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Choose difficulty, question count, and a per-question time limit. You can also select No Limit.', side: 'top', align: 'center' }},
+ { element: '#panel-inclusive', popover: { title: 'Camera Detection', description: 'Camera On enables body-language observations such as framing and posture. Camera Off leaves detection off.', side: 'top', align: 'center' }},
+ { element: '#feedbackModeGroup', popover: { title: 'Live Feedback', description: 'Choose Coaching On for help during the session, or Real Interview Mode for a quieter practice run.', side: 'bottom', align: 'start' }},
+ { element: '#questionTypeGroup', popover: { title: 'Question Types', description: 'Select one or more Behavioral, Situational, Technical, or Personal question types.', side: 'top', align: 'center' }},
+ { element: '#panel-response', popover: { title: 'Response Mode', description: 'Text lets you type. Voice records spoken answers without a text transcript. Hybrid turns speech into editable text.', side: 'top', align: 'center' }},
+ { element: '#panel-summary', popover: { title: 'Interview Summary', description: 'Check the scenario, role, timing, camera, feedback, question mix, and response mode before starting.', side: 'top', align: 'center' }},
+ { element: '.setup-stepper-actions', popover: { title: 'Continue and Start', description: 'Use Next to complete the required steps. Start appears when your selections are complete and you reach Response.', side: 'top', align: 'center' }}
  ];
 
  window.createSpeakReadyTour({

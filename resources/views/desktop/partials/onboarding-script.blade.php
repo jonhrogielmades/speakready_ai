@@ -686,9 +686,9 @@
                 actionsTitle: 'Available actions',
                 actionsDescription: 'Use the primary buttons and controls here to continue the workflow for this page.',
                 navigationTitle: 'User navigation',
-                navigationDescription: 'Move between mock interviews, interview coach, progress, feedback, calendar, reports, and account tools.',
+                navigationDescription: 'Move between Interview Practice, Activity Calendar, Interview Challenges, Interview Modules, Interview Coach, Progress, Feedback, Reports and Sessions, and your account.',
                 toolsTitle: 'Page tools',
-                toolsDescription: 'Use search, replay this tutorial, switch fullscreen or theme, check notifications, and manage account or language options.',
+                toolsDescription: 'Replay this tutorial, adjust display and font size, check notifications, and open account or language settings from the page tools.',
                 heroSelectors: [],
                 workspaceSelectors: [],
                 metricsSelectors: [],
@@ -730,7 +730,24 @@
                 });
             }
 
-            if (routeMatches(routeName, ['interview.session', 'interview.review', 'user.review'])) {
+            if (routeMatches(routeName, ['interview.review', 'user.review'])) {
+                return withDefaults({
+                    heroTitle: 'Detailed session review',
+                    heroDescription: 'Check the saved interview context, answer feedback, and the next practice plan. An interview ended early shows responses without a score.',
+                    workspaceTitle: 'Answer review',
+                    workspaceDescription: 'Open each question to compare your response with the available feedback and supporting evidence.',
+                    metricsTitle: 'Evidence and practice plan',
+                    metricsDescription: 'The evidence safeguard describes internal coverage; the practice plan suggests what to work on next.',
+                    actionsTitle: 'Review actions',
+                    actionsDescription: 'Export a PDF or return to the Feedback Center after reading your report.',
+                    heroSelectors: ['.feedback-report-meta', '.review-back-button-wrap'],
+                    workspaceSelectors: ['#answersAccordion', '.answer-review-card'],
+                    metricsSelectors: ['.review-session-reliability', '#review-action-plan-title'],
+                    actionSelectors: ['.feedback-report-actions', '.review-back-button'],
+                });
+            }
+
+            if (routeMatches(routeName, ['interview.session'])) {
                 return withDefaults({
                     heroTitle: 'Interview practice session',
                     heroDescription: 'Answer the AI interviewer, use typed or voice responses, and review trustworthy coaching after each scored session.',
@@ -849,20 +866,54 @@
                 });
             }
 
+            if (routeMatches(routeName, ['user.modules.show'])) {
+                return withDefaults({
+                    heroTitle: 'Interview module lesson',
+                    heroDescription: 'Follow the lesson for this interview skill and track your progress through the module.',
+                    workspaceTitle: 'Chapters and resources',
+                    workspaceDescription: 'Read available chapters, download resources, and use the tabs for quizzes and practice activities. Some chapters unlock after reading time on this page.',
+                    metricsTitle: 'Module progress',
+                    metricsDescription: 'Your progress panel shows the current completion level. If the module has quizzes, pass them before marking it complete.',
+                    actionsTitle: 'Continue the module',
+                    actionsDescription: 'Start or complete the module, then use chapter tabs to move through the available material.',
+                    heroSelectors: ['#module-detail-page .mod-hero', '.module-detail-title'],
+                    workspaceSelectors: ['#moduleTabs', '#chapters', '#resources'],
+                    metricsSelectors: ['.module-progress-panel', '.module-chapter-gate'],
+                    actionSelectors: ['.module-action-row', '#quizzes-tab', '#activities-tab'],
+                });
+            }
+
             if (routeMatches(routeName, ['user.modules'])) {
                 return withDefaults({
                     heroTitle: 'Optional interview prep modules',
                     heroDescription: 'Modules organize lessons, resources, quizzes, and practice activities around job interview skills.',
                     workspaceTitle: 'Module library',
-                    workspaceDescription: 'Search job interview modules, open a prep path, and use chapter tabs to move between content, resources, quizzes, and activities.',
+                    workspaceDescription: 'Choose or change your target position, search by topic, then open a module to explore its chapters, resources, quizzes, and practice.',
                     metricsTitle: 'Interview prep progress',
                     metricsDescription: 'Cards and progress indicators show which modules are started, active, recommended, or completed.',
                     actionsTitle: 'Module actions',
                     actionsDescription: 'Open a module, continue a chapter, take a quiz, or complete a practice activity from the visible controls.',
                     heroSelectors: ['#interview-modules-page .modules-hero', '#interview-modules-page .sr-page-hero', '#modules-hero-title'],
-                    workspaceSelectors: ['#moduleSearchInput', '#modules-list', '#moduleTabs', '#chapters'],
+                    workspaceSelectors: ['#moduleSearchInput', '#moduleTopicSelect', '#moduleResults'],
                     metricsSelectors: ['.module-card', '.module-path-copy', '.module-rec-copy'],
-                    actionSelectors: ['#quizzes-tab', '#activities-tab', 'a[href*="/modules/"]', '.module-card .btn'],
+                    actionSelectors: ['.module-position-change-btn', '.module-card-link'],
+                });
+            }
+
+            if (routeMatches(routeName, ['user.missions'])) {
+                return withDefaults({
+                    heroTitle: 'Real-Life Mission Mode',
+                    heroDescription: 'Practice short speaking tasks for interviews, customer calls, panels, and team conversations.',
+                    workspaceTitle: 'Mission board',
+                    workspaceDescription: 'Enter a practice goal to generate tasks, or select a task from the current mission set.',
+                    metricsTitle: 'Mission feedback',
+                    metricsDescription: 'After you submit an answer, review the score and specific feedback on structure, evidence, tone, and next action.',
+                    actionsTitle: 'Complete a mission',
+                    actionsDescription: 'Read the prompt, type or paste your spoken answer, use the optional timer, then score your answer.',
+                    heroSelectors: ['#mission-mode-page .mission-progress-hero'],
+                    workspaceSelectors: ['#missionGoalInput', '#missionGrid', '#missionTool'],
+                    metricsSelectors: ['#missionResultPanel', '#missionFeedbackList'],
+                    actionSelectors: ['#generateMissionBtn', '#missionTimerBtn', '#scoreMissionBtn'],
                 });
             }
 
@@ -873,7 +924,7 @@
                     workspaceTitle: 'Available perks',
                     workspaceDescription: 'Review each perk, its XP type, cost, unlocked state, and the benefit it adds to your interview practice.',
                     metricsTitle: 'Interview XP overview',
-                    metricsDescription: 'XP totals show communication, evidence, role fit, and problem-solving growth for job interviews.',
+                    metricsDescription: 'XP totals show Leadership, Communication, Technical, and Problem Solving progress from Interview Challenges.',
                     actionsTitle: 'Unlock or return',
                     actionsDescription: 'Unlock affordable perks or return to job interview challenges to earn more XP.',
                     heroSelectors: ['#skill-trees-page .skill-tree-hero', '#skill-trees-page .sr-page-hero'],
@@ -903,11 +954,11 @@
             if (routeMatches(routeName, ['user.account'])) {
                 return withDefaults({
                     heroTitle: 'Account management',
-                    heroDescription: 'Keep your profile, target role, photo, language, password, and account controls up to date.',
+                    heroDescription: 'Keep your profile, target role, experience level, sign-in security, and account preferences up to date.',
                     workspaceTitle: 'Profile details',
-                    workspaceDescription: 'Update your name, email, target position, and profile photo including crop controls when a new image is selected.',
+                    workspaceDescription: 'Update your name, email, target position, experience level, and profile photo. These role details also update your first-steps profile.',
                     metricsTitle: 'Security and preferences',
-                    metricsDescription: 'Password, language, notifications, and account safety controls help keep the practice experience personal.',
+                    metricsDescription: 'Local accounts can manage passwords and recovery codes; Google accounts use Google sign-in. Preferences and account safety controls are available here.',
                     actionsTitle: 'Save changes',
                     actionsDescription: 'Use the save, password, crop, and account-action buttons to apply only the changes you want.',
                     heroSelectors: ['#account-page .sr-page-hero', '#accountProfileForm'],

@@ -445,9 +445,10 @@
  { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'Continue to Modules', description: 'Open preparation modules matched to this position.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
- { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Find A Module', description: 'Search by topic or skill, or filter by module category to narrow the list.', side: 'bottom', align: 'center' }},
- { element: 'body:not(.modal-open) .modules-card-grid', popover: { title: 'Module Library', description: 'Browse the module cards to find concrete preparation work for your next interview.', side: 'top', align: 'center' }},
- { element: 'body:not(.modal-open) .module-card-link', popover: { title: 'Open Action Module', description: 'Open a module to work through its preparation actions and update your progress.', side: 'top', align: 'center' }}
+ { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Search And Filter', description: 'Search modules by topic or skill, choose a category, or clear filters to see the full list.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) .modules-card-grid', popover: { title: 'Module Library', description: 'Each card shows a preparation topic and its difficulty. Choose one that fits your next interview task.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-card-link', popover: { title: 'Open Module', description: 'Open the module for chapters, resources, quizzes, practice activities, and progress controls when available.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-entry-pager', popover: { title: 'More Modules', description: 'Use the page controls to browse more modules while keeping your current search and category.', side: 'top', align: 'center' }}
  ];
 
  const stepsDesktop = [
@@ -456,9 +457,10 @@
  { element: '#modulePositionModal.show .module-position-submit-btn, #modulePositionModal.show .modal-footer .btn-primary', popover: { title: 'Continue to Modules', description: 'Open preparation modules matched to this position.', side: 'top', align: 'center' }},
  { element: 'body:not(.modal-open) #interview-modules-page .modules-page-hero, body:not(.modal-open) #interview-modules-page .modules-hero', popover: { title: 'Interview Modules', description: 'Use modules for focused preparation tasks like planning examples, improving structure, and polishing interview answers.', side: 'bottom', align: 'center' }},
  { element: 'body:not(.modal-open) .module-position-strip', popover: { title: 'Target Position', description: 'This controls which role-specific modules appear. Change it whenever your interview target changes.', side: 'bottom', align: 'center' }},
- { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Find A Module', description: 'Search by topic or skill, or filter by module category to narrow the list.', side: 'bottom', align: 'center' }},
- { element: 'body:not(.modal-open) .modules-card-grid', popover: { title: 'Module Library', description: 'Browse the module cards to find concrete preparation work for your next interview.', side: 'top', align: 'center' }},
- { element: 'body:not(.modal-open) .module-card-link', popover: { title: 'Open Action Module', description: 'Open a module to work through its preparation actions and update your progress.', side: 'top', align: 'center' }}
+ { element: 'body:not(.modal-open) #moduleFiltersForm', popover: { title: 'Search And Filter', description: 'Search modules by topic or skill, choose a category, or clear filters to see the full list.', side: 'bottom', align: 'center' }},
+ { element: 'body:not(.modal-open) .modules-card-grid', popover: { title: 'Module Library', description: 'Each card shows a preparation topic and its difficulty. Choose one that fits your next interview task.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-card-link', popover: { title: 'Open Module', description: 'Open the module for chapters, resources, quizzes, practice activities, and progress controls when available.', side: 'top', align: 'center' }},
+ { element: 'body:not(.modal-open) .module-entry-pager', popover: { title: 'More Modules', description: 'Use the page controls to browse more modules while keeping your current search and category.', side: 'top', align: 'center' }}
  ];
 
  window.createSpeakReadyTour({

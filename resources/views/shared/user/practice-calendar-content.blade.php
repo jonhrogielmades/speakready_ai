@@ -47,21 +47,23 @@
         if (typeof window.createSpeakReadyTour !== 'function') return;
 
         const stepsMobile = [
-            { element: '#practiceCalendarHero', popover: { title: 'Activity Calendar', description: 'Use this page to see how consistently you have practiced this month.', side: 'bottom', align: 'start' }},
-            { element: '#activity-calendar', popover: { title: 'Calendar Panel', description: 'This panel summarizes recent practice activity, streaks, and daily interview completions.', side: 'top', align: 'start' }},
+            { element: '#practiceCalendarHero', popover: { title: 'Practice Activity', description: 'See completed interview activity for the current month and keep track of your practice routine.', side: 'bottom', align: 'start' }},
+            { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'This panel shows your monthly calendar after your first completed interview. Until then, it offers a way to start practice.', side: 'top', align: 'start' }},
             { element: '.activity-summary-grid', popover: { title: 'Activity Summary', description: 'Check active days, this week, current streak, and the latest practice timing at a glance.', side: 'top', align: 'start' }},
-            { element: '.activity-grid', popover: { title: 'Monthly Calendar', description: 'Each calendar cell shows whether practice was recorded on that date.', side: 'top', align: 'start' }},
-            { element: '.activity-legend', popover: { title: 'Practice Again', description: 'Use the legend and shortcut to keep the streak moving with another practice session.', side: 'top', align: 'start' }},
-            { element: '.activity-empty', popover: { title: 'Start Tracking', description: 'Complete your first practice interview to fill the calendar with real activity.', side: 'top', align: 'start' }}
+            { element: '.activity-grid', popover: { title: 'Monthly Calendar', description: 'A highlighted day means you completed an interview. The number on a day shows how many interviews you completed.', side: 'top', align: 'start' }},
+            { element: '.activity-legend', popover: { title: 'Calendar Key', description: 'Use the key to read practice days, interview counts, today, and upcoming days.', side: 'top', align: 'start' }},
+            { element: '.activity-empty', popover: { title: 'Start Tracking', description: 'Complete your first practice interview to start filling this calendar with real activity.', side: 'top', align: 'start' }},
+            { element: '.activity-cta', popover: { title: 'Start a Practice Interview', description: 'Use Start Practice or Practice Again to open interview setup for your next session.', side: 'top', align: 'start' }}
         ];
 
         const stepsDesktop = [
-            { element: '#practiceCalendarHero', popover: { title: 'Activity Calendar', description: 'Use this page to see how consistently you have practiced this month.', side: 'bottom', align: 'start' }},
-            { element: '#activity-calendar', popover: { title: 'Calendar Panel', description: 'This panel summarizes recent practice activity, streaks, and daily interview completions.', side: 'top', align: 'start' }},
+            { element: '#practiceCalendarHero', popover: { title: 'Practice Activity', description: 'See completed interview activity for the current month and keep track of your practice routine.', side: 'bottom', align: 'start' }},
+            { element: '#activity-calendar', popover: { title: 'Activity Calendar', description: 'This panel shows your monthly calendar after your first completed interview. Until then, it offers a way to start practice.', side: 'top', align: 'start' }},
             { element: '.activity-summary-grid', popover: { title: 'Activity Summary', description: 'Check active days, this week, current streak, and the latest practice timing at a glance.', side: 'top', align: 'start' }},
-            { element: '.activity-grid', popover: { title: 'Monthly Calendar', description: 'Each calendar cell shows whether practice was recorded on that date.', side: 'top', align: 'start' }},
-            { element: '.activity-legend', popover: { title: 'Practice Again', description: 'Use the legend and shortcut to keep the streak moving with another practice session.', side: 'top', align: 'start' }},
-            { element: '.activity-empty', popover: { title: 'Start Tracking', description: 'Complete your first practice interview to fill the calendar with real activity.', side: 'top', align: 'start' }}
+            { element: '.activity-grid', popover: { title: 'Monthly Calendar', description: 'A highlighted day means you completed an interview. The number on a day shows how many interviews you completed.', side: 'top', align: 'start' }},
+            { element: '.activity-legend', popover: { title: 'Calendar Key', description: 'Use the key to read practice days, interview counts, today, and upcoming days.', side: 'top', align: 'start' }},
+            { element: '.activity-empty', popover: { title: 'Start Tracking', description: 'Complete your first practice interview to start filling this calendar with real activity.', side: 'top', align: 'start' }},
+            { element: '.activity-cta', popover: { title: 'Start a Practice Interview', description: 'Use Start Practice or Practice Again to open interview setup for your next session.', side: 'top', align: 'start' }}
         ];
 
         window.createSpeakReadyTour({

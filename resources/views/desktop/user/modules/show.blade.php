@@ -289,6 +289,27 @@
         });
 
         // The shared gate script synchronizes reading time with the server.
+
+        if (typeof window.createSpeakReadyTour === 'function') {
+            const steps = [
+                { element: '#module-detail-page .mod-hero', popover: { title: 'Module Overview', description: 'Review the topic, difficulty, and preparation goal before working through this module.', side: 'bottom', align: 'start' }},
+                { element: '.module-progress-panel', popover: { title: 'Module Progress', description: 'Mark the module started here. After you finish the required lesson and any quizzes, you can mark it completed.', side: 'bottom', align: 'start' }},
+                { element: '#moduleTabs', popover: { title: 'Learning Sections', description: 'Switch between chapters and any available resources, quizzes, or practice activities.', side: 'bottom', align: 'start' }},
+                { element: '.chapter-gate-status', popover: { title: 'Chapter Unlocks', description: 'When a chapter timer is shown, keep this page visible to unlock the next chapter after the countdown.', side: 'bottom', align: 'start' }},
+                { element: '#chapters .chapter-card', popover: { title: 'Read The Lesson', description: 'Work through each unlocked chapter and its supporting media before moving to the next one.', side: 'top', align: 'start' }},
+                { element: '#quizzes-tab', popover: { title: 'Check Your Learning', description: 'Open the Quizzes tab and pass every available quiz before marking this module completed.', side: 'bottom', align: 'center' }},
+                { element: '#activities-tab', popover: { title: 'Practice Activities', description: 'Open Practice for exercises that apply the module to your own interview preparation.', side: 'bottom', align: 'center' }},
+                { element: '.module-next-grid', popover: { title: 'Continue Preparing', description: 'Use these recommendations to choose your next module after this one.', side: 'top', align: 'start' }}
+            ];
+
+            window.createSpeakReadyTour({
+                completionKey: 'onboarding_completed_interview_module_detail',
+                serverDetectedMobile: false,
+                stepsMobile: steps,
+                stepsDesktop: steps,
+                autoStart: false,
+            });
+        }
     });
 </script>
 @endpush

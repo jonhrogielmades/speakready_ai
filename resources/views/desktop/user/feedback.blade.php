@@ -203,9 +203,9 @@
 
  const stepsMobile = [
  { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to review completed interviews, proof signals, and practice history.', side: 'bottom', align: 'start' }},
- { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, and focus area.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackAiSummary', popover: { title: 'Evidence-Based Summary', description: 'Review the latest score, rating, scenario, summary, and how many answers have supporting proof.', side: 'bottom', align: 'start' }},
  { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
- { element: '#feedbackReliability', popover: { title: 'Proof And Reliability', description: 'Use this section to check reliability, evidence coverage, and missing points.', side: 'top', align: 'start' }},
+ { element: '#feedbackReliability', popover: { title: 'Proof And Reliability', description: 'Check how reliable this review is, how many answers have evidence quotes, and which points need practice.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
  { element: '#card-practice-history', popover: { title: 'Practice History', description: 'Review completed interviews, scores, and saved feedback using the same session layout as Reports.', side: 'top', align: 'start' }},
@@ -215,9 +215,9 @@
 
  const stepsDesktop = [
  { element: '#feedbackModulesLikeHero', popover: { title: 'Feedback Center', description: 'Use this page to review completed interviews, proof signals, and practice history.', side: 'bottom', align: 'start' }},
- { element: '#feedbackAiSummary', popover: { title: 'Feedback Summary', description: 'See your latest score, rating, scenario, strengths, and focus area.', side: 'bottom', align: 'start' }},
+ { element: '#feedbackAiSummary', popover: { title: 'Evidence-Based Summary', description: 'Review the latest score, rating, scenario, summary, and how many answers have supporting proof.', side: 'bottom', align: 'start' }},
  { element: '.feedback-metric-grid', popover: { title: 'Category Breakdown', description: 'Scan the latest category scores to spot which interview skills are strongest or need attention.', side: 'top', align: 'start' }},
- { element: '#feedbackReliability', popover: { title: 'Proof And Reliability', description: 'Use this section to check reliability, evidence coverage, and missing points.', side: 'top', align: 'start' }},
+ { element: '#feedbackReliability', popover: { title: 'Proof And Reliability', description: 'Check how reliable this review is, how many answers have evidence quotes, and which points need practice.', side: 'top', align: 'start' }},
  { element: '.feedback-summary-actions', popover: { title: 'Act On Feedback', description: 'Start another practice session or open the detailed review for the latest interview.', side: 'top', align: 'start' }},
  { element: '#feedbackAiSummary .feedback-feature-empty', popover: { title: 'Unlock Summary', description: 'Complete a mock interview to generate your AI feedback summary.', side: 'top', align: 'start' }},
  { element: '#card-practice-history', popover: { title: 'Practice History', description: 'Review completed interviews, scores, and saved feedback using the same session layout as Reports.', side: 'top', align: 'start' }},
