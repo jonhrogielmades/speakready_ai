@@ -17,7 +17,9 @@
                         <td style="padding:24px 32px;background-color:#142b4f;border-radius:16px 16px 0 0;">
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
                                 <tr>
-                                    <td valign="middle" style="width:38px;height:38px;background-color:#67e8f9;border-radius:10px;text-align:center;color:#102b4c;font-size:14px;font-weight:800;letter-spacing:-1px;">SR</td>
+                                    <td valign="middle" style="width:38px;height:38px;background-color:#ffffff;border-radius:10px;">
+                                        <img src="{{ $logoUrl }}" alt="{{ config('app.name', 'SpeakReady AI') }} logo" width="38" height="38" style="display:block;width:38px;height:38px;border:0;border-radius:10px;object-fit:contain;background-color:#ffffff;">
+                                    </td>
                                     <td valign="middle" style="padding-left:12px;color:#ffffff;font-size:18px;line-height:24px;font-weight:700;letter-spacing:-.3px;">{{ config('app.name', 'SpeakReady AI') }}</td>
                                 </tr>
                             </table>
@@ -59,7 +61,7 @@
                     <tr>
                         <td style="padding:22px 32px 26px;word-break:break-word;background-color:#f8fafc;border-top:1px solid #e2e8f0;border-radius:0 0 16px 16px;">
                             <p style="margin:0 0 8px;color:#475569;font-size:12px;line-height:19px;">You received this email because your Google account was used to sign in to {{ config('app.name', 'SpeakReady AI') }} for the first time.</p>
-                            <p style="margin:0;color:#64748b;font-size:12px;line-height:19px;">If this was not you, review your Google account access and contact <a href="mailto:admin@speakready.ai" style="color:#1d4ed8;text-decoration:underline;">admin@speakready.ai</a>.</p>
+                            <p style="margin:0;color:#64748b;font-size:12px;line-height:19px;">If this was not you, review your Google account access and contact <a href="mailto:capstonespeakreadyai@gmail.com" style="color:#1d4ed8;text-decoration:underline;">capstonespeakreadyai@gmail.com</a>.</p>
                         </td>
                     </tr>
                 </table>

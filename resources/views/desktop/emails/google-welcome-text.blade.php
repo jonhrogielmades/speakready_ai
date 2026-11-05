@@ -16,4 +16,4 @@ Security practices: {{ $securityUrl }}
 
 You received this email because your Google account was used to sign in to {{ config('app.name', 'SpeakReady AI') }} for the first time.
 
-If this was not you, review your Google account access and contact admin@speakready.ai.
+If this was not you, review your Google account access and contact capstonespeakreadyai@gmail.com.

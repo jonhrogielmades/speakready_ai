@@ -84,13 +84,26 @@ class AuthSupportPresentationTest extends TestCase
 
     public function test_legal_pages_use_the_shared_auth_presentation(): void
     {
-        foreach ([route('legal.privacy'), route('legal.terms')] as $url) {
+        foreach ([route('legal.privacy'), route('legal.terms'), route('legal.security'), route('legal.cookies')] as $url) {
             $this->get($url)
                 ->assertOk()
                 ->assertSee('legal-page-shell', false)
-            ->assertSee('css/shared/auth-page.css?v=36', false)
-                ->assertSee('css/shared/legal-page.css?v=1', false)
+                ->assertSee('css/shared/auth-page.css?v=36', false)
+                ->assertSee('css/shared/legal-page.css?v=2', false)
                 ->assertSee('authPageThemeToggle', false);
+        }
+
+        $this->get(route('legal.privacy'))
+            ->assertOk()
+            ->assertSee('<h1 class="legal-page-title" id="legalPageTitle">Privacy Policy</h1>', false)
+            ->assertDontSee('<p class="legal-page-kicker">Privacy</p>', false)
+            ->assertSee('mailto:capstonespeakreadyai@gmail.com', false)
+            ->assertSee('Last updated: November 5, 2026');
+
+        foreach ([route('legal.security'), route('legal.cookies')] as $url) {
+            $this->get($url)
+                ->assertOk()
+                ->assertSee('mailto:capstonespeakreadyai@gmail.com', false);
         }
     }
 }

@@ -86,6 +86,7 @@ class GoogleWelcomeEmailTest extends TestCase
     {
         config(['services.brevo.api_key' => null]);
         Mail::fake();
+        Setting::setVal('system_logo', 'img/brand-icon.png', 'appearance', 'string');
         $user = User::factory()->google()->create([
             'name' => 'Policy Reader',
             'email' => 'policy.reader@gmail.com',
@@ -97,6 +98,9 @@ class GoogleWelcomeEmailTest extends TestCase
             $html = $mail->render();
 
             return $mail->hasTo($user->email)
+                && str_contains($html, asset('img/brand-icon.png'))
+                && ! str_contains($html, '>SR</td>')
+                && str_contains($html, 'mailto:capstonespeakreadyai@gmail.com')
                 && str_contains($html, route('legal.privacy'))
                 && str_contains($html, route('legal.terms'))
                 && str_contains($html, route('legal.security'));
@@ -123,6 +127,7 @@ class GoogleWelcomeEmailTest extends TestCase
             && str_contains((string) data_get($request->data(), 'htmlContent'), route('legal.privacy'))
             && str_contains((string) data_get($request->data(), 'htmlContent'), route('legal.terms'))
             && str_contains((string) data_get($request->data(), 'textContent'), route('legal.security'))
+            && str_contains((string) data_get($request->data(), 'textContent'), 'capstonespeakreadyai@gmail.com')
         );
         Mail::assertNothingSent();
     }

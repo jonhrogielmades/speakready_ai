@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\User;
+use App\Support\SystemSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
@@ -24,11 +25,14 @@ class GoogleWelcomeMail extends Mailable
         );
     }
 
-    /** @return array{recipientName: string, privacyUrl: string, termsUrl: string, securityUrl: string} */
+    /** @return array{recipientName: string, logoUrl: string, privacyUrl: string, termsUrl: string, securityUrl: string} */
     public function templateData(): array
     {
+        $logoPath = trim((string) SystemSettings::value('system_logo', 'img/logo.png')) ?: 'img/logo.png';
+
         return [
             'recipientName' => trim((string) $this->user->name) ?: 'there',
+            'logoUrl' => asset($logoPath),
             'privacyUrl' => route('legal.privacy'),
             'termsUrl' => route('legal.terms'),
             'securityUrl' => route('legal.security'),
