@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\GoogleWelcomeMail;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 
@@ -10,6 +11,33 @@ class BrevoTransactionalMail
     public function isConfigured(): bool
     {
         return filled(config('services.brevo.api_key'));
+    }
+
+    public function sendGoogleWelcome(User $user, GoogleWelcomeMail $mail): void
+    {
+        $payload = [
+            'sender' => [
+                'name' => config('mail.from.name', config('app.name', 'SpeakReady AI')),
+                'email' => config('mail.from.address'),
+            ],
+            'to' => [
+                array_filter([
+                    'email' => $user->email,
+                    'name' => $user->name,
+                ]),
+            ],
+            'subject' => $mail->envelope()->subject,
+            'htmlContent' => $mail->render(),
+            'textContent' => view('desktop.emails.google-welcome-text', $mail->templateData())->render(),
+        ];
+
+        Http::timeout((int) config('services.brevo.timeout', 15))
+            ->acceptJson()
+            ->withHeaders([
+                'api-key' => config('services.brevo.api_key'),
+            ])
+            ->post(config('services.brevo.endpoint'), $payload)
+            ->throw();
     }
 
     public function sendPasswordReset(User $user, string $token): void

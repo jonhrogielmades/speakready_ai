@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
+use App\Jobs\SendGoogleWelcomeEmail;
 use App\Jobs\SendRecoveryEmailVerification;
 use App\Mail\PasswordRecoveryCodeMail;
 use App\Models\Profile;
@@ -799,6 +800,18 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $this->logAuthenticationActivity($user, 'user_logged_in', 'logged in with Google', $request->ip());
+
+            if ($registeredWithGoogle) {
+                try {
+                    SendGoogleWelcomeEmail::dispatch((int) $user->getKey());
+                } catch (Throwable $error) {
+                    // A mail outage must not turn a completed Google login into an error.
+                    Log::warning('Google welcome email could not be queued.', [
+                        'user_id' => $user->getKey(),
+                        'exception_type' => $error::class,
+                    ]);
+                }
+            }
 
             if ($user->is_admin) {
                 return $this->redirectToRouteWithGoogleLayout($request, 'admin.dashboard');
