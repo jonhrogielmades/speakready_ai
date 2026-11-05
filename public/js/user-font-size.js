@@ -207,6 +207,14 @@
       get: function () {
         return normalizeScale(document.documentElement.dataset.fontScale || scale);
       },
+      open: function () {
+        var wrapper = document.querySelector("[data-font-size-control]");
+        if (!wrapper) return false;
+
+        closeAllMenus(wrapper);
+        setMenuOpen(wrapper, true);
+        return true;
+      },
       set: function (value) {
         scale = applyScale(value, true);
         return scale;
@@ -216,6 +224,24 @@
         return scale;
       }
     };
+
+    document.querySelectorAll("[data-font-size-settings-action]").forEach(function (settingsAction) {
+      settingsAction.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (typeof window.closeMobileProfile === "function") window.closeMobileProfile();
+        if (typeof window.closeUserHeaderDropdowns === "function") window.closeUserHeaderDropdowns();
+
+        if (window.SpeakReadyFontSize && typeof window.SpeakReadyFontSize.open === "function") {
+          window.SpeakReadyFontSize.open();
+          return;
+        }
+
+        var toggle = document.querySelector("[data-font-size-toggle]");
+        if (toggle) toggle.click();
+      });
+    });
   }
 
   if (document.readyState === "loading") {

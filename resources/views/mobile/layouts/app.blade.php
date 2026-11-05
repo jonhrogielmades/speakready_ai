@@ -4882,7 +4882,7 @@
                <div class="mob-profile-settings-row">
                   <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-regular fa-bell"></i><span>Notifications</span></a>
                   <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account</span></a>
-                  <button type="button" class="mob-profile-action" data-pwa-install-action><i class="fa-solid fa-download"></i><span>Install App</span></button>
+                  <button type="button" class="mob-profile-action" data-font-size-settings-action aria-haspopup="dialog"><i class="fa-solid fa-text-height"></i><span>Font Size Settings</span></button>
                   <form action="{{ route('user.language.update') }}" method="POST" class="mob-profile-language">
                      @csrf
                      <label for="mobileProfileLanguageSelect"><i class="fa-solid fa-language"></i>Language</label>
@@ -5021,7 +5021,7 @@
       @include('mobile.partials.language-translation')
       @include('shared.user.first-steps-modal-script')
       <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
-      <script src="{{ asset('js/user-font-size.js?v=3') }}" defer></script>
+      <script src="{{ asset('js/user-font-size.js?v=4') }}" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {
