@@ -492,17 +492,222 @@
             outline-offset: 3px;
          }
 
+         body.terms-accept-shell {
+            height: 100dvh;
+            min-height: 100dvh;
+            overflow: hidden;
+         }
+
+         .terms-mobile-shell {
+            height: 100dvh;
+            min-height: 0;
+         }
+
+         .terms-mobile-topbar {
+            flex: 0 0 auto;
+         }
+
+         .terms-mobile-main {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+            gap: 10px;
+            padding-top: 10px;
+         }
+
+         .terms-mobile-intro {
+            flex: 0 0 auto;
+            padding: 12px;
+            margin-bottom: 0;
+         }
+
+         .terms-mobile-kicker {
+            margin-bottom: 7px;
+         }
+
+         .terms-mobile-title {
+            font-size: 1.3rem;
+            margin-bottom: 7px;
+         }
+
+         .terms-mobile-copy {
+            font-size: 0.8rem;
+            line-height: 1.4;
+         }
+
+         .terms-mobile-progress {
+            padding: 9px;
+            margin-top: 10px;
+         }
+
+         .terms-mobile-progress-head {
+            margin-bottom: 7px;
+         }
+
+         .terms-mobile-progress-step {
+            padding: 7px 6px;
+         }
+
+         .terms-mobile-progress-step span {
+            width: 22px;
+            height: 22px;
+            margin-bottom: 5px;
+         }
+
+         .terms-mobile-progress-step strong {
+            font-size: 0.66rem;
+         }
+
+         .terms-mobile-meta {
+            gap: 8px;
+            margin-top: 10px;
+         }
+
+         .terms-mobile-meta-item {
+            padding: 9px;
+         }
+
+         .terms-mobile-meta-item i {
+            margin-bottom: 5px;
+         }
+
+         .terms-mobile-meta-item strong {
+            font-size: 0.72rem;
+         }
+
+         .terms-mobile-meta-item span {
+            font-size: 0.66rem;
+            line-height: 1.35;
+         }
+
+         .terms-mobile-panel {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+         }
+
+         .terms-mobile-panel-head {
+            flex: 0 0 auto;
+            padding: 12px;
+         }
+
+         .terms-mobile-panel-title {
+            font-size: 0.92rem;
+            margin-bottom: 3px;
+         }
+
+         .terms-mobile-panel-meta {
+            font-size: 0.7rem;
+         }
+
+         .terms-mobile-version {
+            padding: 6px 8px;
+            font-size: 0.66rem;
+         }
+
+         .terms-mobile-sections {
+            flex: 1 1 auto;
+            min-height: 0;
+            max-height: none;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-content: start;
+         }
+
+         .terms-mobile-section {
+            grid-template-columns: 30px minmax(0, 1fr);
+            gap: 8px;
+            padding: 10px;
+         }
+
+         .terms-mobile-section-icon {
+            width: 30px;
+            height: 30px;
+         }
+
+         .terms-mobile-section h2 {
+            font-size: 0.78rem;
+            margin-bottom: 3px;
+         }
+
+         .terms-mobile-section p {
+            font-size: 0.7rem;
+            line-height: 1.35;
+         }
+
+         .terms-mobile-form {
+            flex: 0 0 auto;
+            padding: 10px;
+         }
+
+         .terms-mobile-check {
+            grid-template-columns: 20px minmax(0, 1fr);
+            gap: 8px;
+            padding: 9px;
+         }
+
+         .terms-mobile-check input {
+            width: 18px;
+            height: 18px;
+            margin-top: 1px;
+         }
+
+         .terms-mobile-check label {
+            font-size: 0.72rem;
+            line-height: 1.35;
+         }
+
+         .terms-mobile-submit {
+            min-height: 44px;
+            margin-top: 10px;
+         }
+
+         @media (max-height: 700px) {
+            body.terms-accept-shell {
+               height: auto;
+               min-height: 100vh;
+               overflow: auto;
+            }
+
+            .terms-mobile-shell {
+               height: auto;
+               min-height: 100vh;
+            }
+
+            .terms-mobile-main {
+               display: block;
+               overflow: visible;
+            }
+
+            .terms-mobile-intro {
+               margin-bottom: 10px;
+            }
+
+            .terms-mobile-panel {
+               display: block;
+            }
+
+            .terms-mobile-sections {
+               display: block;
+               max-height: none;
+               overflow: visible;
+            }
+         }
+
          @media (max-width: 359.98px) {
             .terms-mobile-meta {
-               grid-template-columns: 1fr;
+               grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .terms-mobile-progress-track {
-               grid-template-columns: 1fr;
+               grid-template-columns: repeat(3, minmax(0, 1fr));
             }
 
             .terms-mobile-title {
-               font-size: 1.35rem;
+               font-size: 1.2rem;
             }
          }
 

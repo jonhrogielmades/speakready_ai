@@ -527,6 +527,154 @@
             }
          }
 
+         @media (min-width: 992px) {
+            body.terms-accept-shell {
+               height: 100vh;
+               min-height: 0;
+               overflow: hidden;
+            }
+
+            .terms-main {
+               height: calc(100vh - 73px);
+               min-height: 0;
+               padding: 18px 0;
+               overflow: hidden;
+               box-sizing: border-box;
+            }
+
+            .terms-main > .container {
+               height: 100%;
+            }
+
+            .terms-layout {
+               height: 100%;
+               align-items: stretch;
+            }
+
+            .terms-context,
+            .terms-panel {
+               height: 100%;
+               min-height: 0;
+            }
+
+            .terms-context {
+               padding: 20px;
+               gap: 14px;
+               overflow: hidden;
+            }
+
+            .terms-kicker {
+               margin-bottom: 10px;
+            }
+
+            .terms-title {
+               font-size: 2rem;
+               margin-bottom: 10px;
+            }
+
+            .terms-copy {
+               line-height: 1.55;
+            }
+
+            .terms-progress-card {
+               padding: 12px;
+               margin-top: 14px;
+            }
+
+            .terms-progress-title {
+               margin-bottom: 8px;
+            }
+
+            .terms-progress-step {
+               padding: 8px;
+            }
+
+            .terms-progress-step span {
+               width: 26px;
+               height: 26px;
+               margin-bottom: 6px;
+            }
+
+            .terms-summary-grid {
+               gap: 8px;
+            }
+
+            .terms-summary-item {
+               padding: 12px;
+            }
+
+            .terms-summary-item i {
+               margin-bottom: 6px;
+            }
+
+            .terms-summary-item span {
+               font-size: 0.76rem;
+               line-height: 1.4;
+            }
+
+            .terms-panel {
+               display: flex;
+               flex-direction: column;
+            }
+
+            .terms-panel-head {
+               flex: 0 0 auto;
+               padding: 18px 22px 14px;
+            }
+
+            .terms-scroll {
+               flex: 1 1 auto;
+               min-height: 0;
+               max-height: none;
+               overflow: hidden;
+               display: grid;
+               grid-template-columns: repeat(2, minmax(0, 1fr));
+               column-gap: 22px;
+               align-content: start;
+               padding: 0 22px;
+            }
+
+            .terms-section {
+               gap: 10px;
+               padding: 14px 0;
+            }
+
+            .terms-section-icon {
+               width: 36px;
+               height: 36px;
+            }
+
+            .terms-section h2 {
+               font-size: 0.92rem;
+               margin-bottom: 4px;
+            }
+
+            .terms-section p {
+               font-size: 0.8rem;
+               line-height: 1.45;
+            }
+
+            .terms-form {
+               flex: 0 0 auto;
+               padding: 14px 22px 18px;
+            }
+
+            .terms-check {
+               gap: 10px;
+               padding: 12px;
+            }
+
+            .terms-check label {
+               font-size: 0.82rem;
+               line-height: 1.4;
+            }
+
+            .terms-submit {
+               min-height: 46px;
+               margin-top: 12px;
+            }
+         }
+
          @supports not (background: color-mix(in srgb, #fff 50%, transparent)) {
             .terms-topbar,
             .terms-form {
