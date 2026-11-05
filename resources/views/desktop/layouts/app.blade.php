@@ -53,7 +53,7 @@
       <!-- Shared app CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=42') }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
-      <link rel="stylesheet" href="{{ asset('css/shared/user-font-size.css?v=1') }}" />
+      <link rel="stylesheet" href="{{ asset('css/shared/user-font-size.css?v=2') }}" />
       <script src="{{ asset('js/font-size-boot.js?v=1') }}"></script>
       <style>
           :root,
@@ -358,13 +358,13 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=47')),
+            serviceWorkerUrl: @json(asset('sw.js?v=48')),
             csrfToken: @json(csrf_token())
          };
       </script>
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
       <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
-      <script src="{{ asset('js/user-font-size.js?v=1') }}" defer></script>
+      <script src="{{ asset('js/user-font-size.js?v=2') }}" defer></script>
       @include('desktop.partials.language-translation')
       @include('shared.user.first-steps-modal-script')
       <!-- PWA Service Worker Registration -->

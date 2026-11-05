@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'speakready-pwa-';
-const CACHE_NAME = 'speakready-pwa-v47';
+const CACHE_NAME = 'speakready-pwa-v48';
 const OFFLINE_PAGE = '/offline.html';
 const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';
 const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';
