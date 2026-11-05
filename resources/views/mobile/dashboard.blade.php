@@ -162,7 +162,7 @@
                     <div class="sr-stat-body">
                         <div class="sr-stat-value" title="{{ number_format($xpValue) }} XP">{{ $compactXpValue }}</div>
                         <div class="sr-stat-label">Experience points</div>
-                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-ranking-star" aria-hidden="true"></i></div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-medal" aria-hidden="true"></i></div>
                     </div>
                 </a>
                 <a href="{{ route('user.practice.calendar') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;" aria-label="Open activity calendar and streak details">
@@ -236,7 +236,7 @@
                     <div class="sr-stat-body">
                         <div class="sr-stat-value" title="{{ number_format($xpValue) }} XP">{{ $compactXpValue }}</div>
                         <div class="sr-stat-label">Experience points</div>
-                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-ranking-star" aria-hidden="true"></i></div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-medal" aria-hidden="true"></i></div>
                     </div>
                 </a>
                 <a href="{{ route('user.practice.calendar') }}" class="sr-stat-card sr-stat-link-card" style="--accent:#f59e0b;--meter-value:{{ $streakMeter }}%;" aria-label="Open activity calendar and streak details">

@@ -211,7 +211,7 @@
                     <div class="sr-stat-body">
                         <div class="sr-stat-value" title="{{ number_format($xpValue) }} XP">{{ $compactXpValue }}</div>
                         <div class="sr-stat-label">Experience points</div>
-                        <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-medal" aria-hidden="true"></i></div>
                     </div>
                     <div class="sr-stat-foot">
                         <span>Next level</span>
@@ -314,7 +314,7 @@
                     <div class="sr-stat-body">
                         <div class="sr-stat-value" title="{{ number_format($xpValue) }} XP">{{ $compactXpValue }}</div>
                         <div class="sr-stat-label">Experience points</div>
-                        <div class="sr-stat-meter" aria-hidden="true"><span>Lv. {{ $playerLevel }}</span></div>
+                        <div class="sr-stat-meter" aria-hidden="true"><i class="fa-solid fa-medal" aria-hidden="true"></i></div>
                     </div>
                     <div class="sr-stat-foot">
                         <span>Next level</span>
