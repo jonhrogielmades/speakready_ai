@@ -3543,3 +3543,25 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
     color: #fff;
     font-weight: 800;
 }
+
+/* Keep the path selector usable when the mobile shell makes submit buttons full width. */
+@media (max-width: 575.98px) {
+    #learning-games-page .learning-filter-category-controls {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) max-content;
+        align-items: stretch;
+    }
+
+    #learning-games-page .learning-filter-category-controls select {
+        width: 100%;
+        min-width: 0;
+        flex: none;
+    }
+
+    #learning-games-page .learning-filter-category-controls button {
+        width: auto !important;
+        max-width: 100%;
+        flex: none;
+        white-space: nowrap;
+    }
+}
