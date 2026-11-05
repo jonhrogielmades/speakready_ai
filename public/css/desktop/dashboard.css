@@ -10651,3 +10651,21 @@ body.user-desktop-shell:not(.admin-shell) .sr-saas-command-metric:focus-visible 
         min-height: 0;
     }
 }
+
+/* Keep the trend-note glyph large and readable without a filled blue disc. */
+.sr-trend-note i {
+    width: 1.55rem !important;
+    height: 1.55rem !important;
+    flex: 0 0 1.55rem !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #2563eb !important;
+    font-size: 1.35rem !important;
+}
+
+:root:not(.lm) .sr-trend-note i,
+html[data-theme="dark"] .sr-trend-note i,
+body.dm .sr-trend-note i {
+    color: #93c5fd !important;
+}
