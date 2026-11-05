@@ -195,14 +195,13 @@
  <div class="setup-card-field setup-category-field">
  <label class="setup-card-label" for="jobCategoryFilter">Job Category</label>
  <div class="setup-select-wrap">
- <select class="oinp" id="jobCategoryFilter" name="role_category_filter" aria-describedby="jobCategoryHelp">
+ <select class="oinp" id="jobCategoryFilter" name="role_category_filter">
  <option value="">All job categories</option>
  @foreach($jobPositionOptionGroups->keys() as $targetCategory)
  <option value="{{ $targetCategory }}">{{ $targetCategory }}</option>
  @endforeach
  </select>
  </div>
- <small id="jobCategoryHelp">Filter positions by the kind of work you want to practice.</small>
  </div>
 
  <div class="setup-card-field setup-target-position-field">
@@ -248,12 +247,6 @@
  <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>{{ $targetFieldCopy['required_message'] }}</div>
  </div>
 
- <div class="setup-role-finder-launch">
- <button type="button" class="setup-role-finder-open" id="roleFinderOpenButton" data-bs-toggle="modal" data-bs-target="#roleFinderModal" aria-haspopup="dialog" aria-controls="roleFinderModal">
- <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Help me find a role
- </button>
- </div>
-
  <div class="setup-calibrated-simple">
  <div class="setup-calibrated-icon" aria-hidden="true">
  <i class="fa-solid fa-database"></i>
@@ -267,11 +260,18 @@
  </div>
 
  <div class="setup-stepper-actions setup-details-actions" aria-label="Interview setup navigation">
+ <div class="setup-role-finder-launch">
+ <button type="button" class="setup-role-finder-open" id="roleFinderOpenButton" data-bs-toggle="modal" data-bs-target="#roleFinderModal" aria-haspopup="dialog" aria-controls="roleFinderModal">
+ <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Help me find a role
+ </button>
+ </div>
+ <div class="setup-stepper-nav">
  <button type="button" class="setup-step-btn" id="setupStepPrev"><i class="fa-solid fa-arrow-left"></i> Back</button>
  <button type="submit" id="btn-start-interview" class="setup-step-btn setup-start-button btn-shine" aria-label="Start Interview" title="Start Interview" data-default-label='Start <i class="fa-solid fa-play ms-2"></i>' data-loading-label='Starting <i class="fa-solid fa-spinner fa-spin ms-2"></i>' hidden>
  Start <i class="fa-solid fa-play ms-2"></i>
  </button>
  <button type="button" class="setup-step-btn primary" id="setupStepNext">Next <i class="fa-solid fa-arrow-right"></i></button>
+ </div>
  </div>
 
  <!-- Interview Structure -->
