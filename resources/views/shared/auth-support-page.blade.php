@@ -122,31 +122,33 @@
                   <a href="{{ route('login', $layoutQuery) }}">Log in <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
                </div>
             @else
-               <form action="{{ route('password.recovery.send') }}" method="POST" class="auth-page-form auth-page-support-form" data-auth-submit="recovery">
-                  @csrf
-                  <div class="auth-page-field">
-                     <label for="recoveryUsername">Username</label>
-                     <div class="auth-page-input-wrap">
-                        <i class="fa-regular fa-user" aria-hidden="true"></i>
-                        <input class="auth-page-input" id="recoveryUsername" type="text" name="username" value="{{ old('username') }}" placeholder="your_username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+               @unless (session('recovery_code_sent'))
+                  <form action="{{ route('password.recovery.send') }}" method="POST" class="auth-page-form auth-page-support-form" data-auth-submit="recovery">
+                     @csrf
+                     <div class="auth-page-field">
+                        <label for="recoveryUsername">Username</label>
+                        <div class="auth-page-input-wrap">
+                           <i class="fa-regular fa-user" aria-hidden="true"></i>
+                           <input class="auth-page-input" id="recoveryUsername" type="text" name="username" value="{{ old('username') }}" placeholder="your_username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+                        </div>
                      </div>
-                  </div>
 
-                  <div class="auth-page-field">
-                     <label for="recoveryEmail">Recovery email</label>
-                     <div class="auth-page-input-wrap">
-                        <i class="fa-regular fa-envelope" aria-hidden="true"></i>
-                        <input class="auth-page-input" id="recoveryEmail" type="email" name="email" value="{{ old('email') }}" placeholder="you@example.com" autocomplete="email" required>
+                     <div class="auth-page-field">
+                        <label for="recoveryEmail">Recovery email</label>
+                        <div class="auth-page-input-wrap">
+                           <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                           <input class="auth-page-input" id="recoveryEmail" type="email" name="email" value="{{ old('email') }}" placeholder="you@example.com" autocomplete="email" required>
+                        </div>
+                        <small class="auth-page-field-help">This must match the verified email saved on your local account.</small>
                      </div>
-                     <small class="auth-page-field-help">This must match the verified email saved on your local account.</small>
-                  </div>
 
-                  <button type="submit" class="auth-page-submit"><span>Send Recovery Code</span><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
-               </form>
-               <div class="auth-page-switch">
-                  <span>Return to login?</span>
-                  <a href="{{ route('login', $layoutQuery) }}">Log in <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-               </div>
+                     <button type="submit" class="auth-page-submit"><span>Send Recovery Code</span><i class="fa-solid fa-paper-plane" aria-hidden="true"></i></button>
+                  </form>
+                  <div class="auth-page-switch">
+                     <span>Return to login?</span>
+                     <a href="{{ route('login', $layoutQuery) }}">Log in <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+                  </div>
+               @endunless
 
                @if (session('recovery_code_sent'))
                   <div class="auth-page-divider auth-page-support-divider"><span>Enter the one-time code</span></div>

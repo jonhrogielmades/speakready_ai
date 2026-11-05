@@ -305,14 +305,12 @@ class AuthController extends Controller
         if (! $user || blank($user->email)) {
             return redirect()->route('password.request')
                 ->with('status', self::PASSWORD_RECOVERY_REQUEST_MESSAGE)
-                ->with('recovery_code_sent', true)
                 ->withInput($request->only('username', 'email'));
         }
 
         if (! $user->hasVerifiedEmail()) {
             return redirect()->route('password.request')
                 ->with('status', self::PASSWORD_RECOVERY_REQUEST_MESSAGE)
-                ->with('recovery_code_sent', true)
                 ->withInput($request->only('username', 'email'));
         }
 

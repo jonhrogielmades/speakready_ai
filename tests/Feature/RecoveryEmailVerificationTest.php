@@ -349,7 +349,7 @@ class RecoveryEmailVerificationTest extends TestCase
                 'status',
                 'If the username and verified recovery email match a local account, a recovery code will be sent shortly.'
             )
-            ->assertSessionHas('recovery_code_sent', true);
+            ->assertSessionMissing('recovery_code_sent');
 
         Mail::assertNothingSent();
     }

@@ -19,7 +19,7 @@ class AuthSupportPresentationTest extends TestCase
         $recoveryMarkup = $this->get(route('password.request'))
             ->assertOk()
             ->assertSee('auth-support-page', false)
-            ->assertSee('css/shared/auth-page.css?v=33', false)
+            ->assertSee('css/shared/auth-page.css?v=34', false)
             ->assertSee('authPageThemeToggle', false)
             ->assertSee('Send Recovery Code');
 
@@ -66,13 +66,29 @@ class AuthSupportPresentationTest extends TestCase
         }
     }
 
+    public function test_recovery_page_switches_to_the_short_reset_step_after_a_match(): void
+    {
+        $this->get(route('password.request'))
+            ->assertOk()
+            ->assertSee('id="recoveryUsername"', false)
+            ->assertDontSee('id="recoveryCode"', false);
+
+        $this->withSession(['recovery_code_sent' => true])
+            ->get(route('password.request'))
+            ->assertOk()
+            ->assertDontSee('id="recoveryUsername"', false)
+            ->assertSee('id="recoveryCode"', false)
+            ->assertSee('id="recoveryPassword"', false)
+            ->assertSee('id="recoveryPasswordConfirm"', false);
+    }
+
     public function test_legal_pages_use_the_shared_auth_presentation(): void
     {
         foreach ([route('legal.privacy'), route('legal.terms')] as $url) {
             $this->get($url)
                 ->assertOk()
                 ->assertSee('legal-page-shell', false)
-            ->assertSee('css/shared/auth-page.css?v=33', false)
+            ->assertSee('css/shared/auth-page.css?v=34', false)
                 ->assertSee('css/shared/legal-page.css?v=1', false)
                 ->assertSee('authPageThemeToggle', false);
         }
