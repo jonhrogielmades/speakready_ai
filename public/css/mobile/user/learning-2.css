@@ -3565,3 +3565,74 @@ html body #mob-content #learning-games-page #modules-list.level-stepper-mode .le
         white-space: nowrap;
     }
 }
+
+/* Make the score result an edge-to-edge mobile sheet with equal primary actions. */
+@media (max-width: 576px) {
+    html body #learning-games-page .game-result-modal {
+        padding: 0 !important;
+    }
+
+    html body #learning-games-page .game-result-modal .modal-dialog {
+        width: 100% !important;
+        max-width: none !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        min-height: 100vh !important;
+        min-height: 100dvh !important;
+        margin: 0 !important;
+    }
+
+    html body #learning-games-page .game-result-modal .modal-content {
+        width: 100% !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        min-height: 100vh !important;
+        min-height: 100dvh !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+        border-right: 0 !important;
+        border-left: 0 !important;
+        border-radius: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    html body #learning-games-page .game-result-modal .modal-body {
+        min-height: 0 !important;
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    html body #learning-games-page .game-result-modal .modal-footer {
+        flex: 0 0 auto !important;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    html body #learning-games-page .game-result-modal .game-result-actions {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
+        justify-content: initial !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    html body #learning-games-page .game-result-modal .game-result-actions form,
+    html body #learning-games-page .game-result-modal .game-result-actions > .btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    html body #learning-games-page .game-result-modal .game-result-actions .btn {
+        min-width: 0 !important;
+        padding-right: 8px !important;
+        padding-left: 8px !important;
+        white-space: normal;
+    }
+
+    html body #learning-games-page .game-result-modal .game-result-actions > [style*="text-align:right"] {
+        grid-column: 1 / -1;
+    }
+}
