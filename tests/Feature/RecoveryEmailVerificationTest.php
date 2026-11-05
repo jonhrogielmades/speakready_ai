@@ -48,7 +48,7 @@ class RecoveryEmailVerificationTest extends TestCase
         Notification::assertSentTo($user, VerifyEmail::class);
     }
 
-    public function test_google_registration_is_verified_without_sending_a_recovery_email_link(): void
+    public function test_first_google_login_is_verified_without_sending_a_recovery_email_link(): void
     {
         config(['services.brevo.api_key' => null]);
         Notification::fake();
@@ -59,7 +59,7 @@ class RecoveryEmailVerificationTest extends TestCase
             'avatar' => null,
         ]);
 
-        $this->withSession(['google_auth_intent' => 'register'])
+        $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('terms.acceptance.show'));
 

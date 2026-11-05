@@ -463,14 +463,15 @@ class PwaRememberedLoginTest extends TestCase
             ->assertDontSee('id="signupEmailFeedback"', false)
             ->assertDontSee('Gmail recovery email')
             ->assertSee('action="'.route('register.submit').'"', false)
-            ->assertSee(route('auth.google.register'), false)
+            ->assertDontSee(route('auth.google.register'), false)
             ->assertDontSee('name="identifier"', false)
             ->assertDontSee('id="loginIdentifier"', false)
             ->assertDontSee('id="signupIdentifier"', false)
             ->assertSee('id="authTransitionOverlay"', false)
             ->assertSee('id="authTransitionTitle"', false)
             ->assertSee('Creating your account...', false)
-            ->assertSee('data-auth-transition="google-register"', false);
+            ->assertDontSee('data-auth-transition="google-register"', false)
+            ->assertDontSee('Sign up with Google', false);
     }
 
     public function test_registration_validation_alert_stays_on_register_tab_when_name_is_missing(): void
@@ -513,7 +514,7 @@ class PwaRememberedLoginTest extends TestCase
             ->assertSee('Google sign-in is not configured correctly. Please contact the administrator.');
     }
 
-    public function test_google_register_reports_missing_configuration_on_register_tab(): void
+    public function test_legacy_google_register_url_uses_the_login_flow(): void
     {
         config([
             'services.google.client_id' => null,
@@ -522,16 +523,16 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $this->get(route('auth.google.register'))
-            ->assertRedirect(route('register'))
+            ->assertRedirect(route('login'))
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in is not configured correctly. Please contact the administrator.',
             ])
-            ->assertSessionHas('_old_input.auth_tab', 'signup');
+            ->assertSessionHas('_old_input.auth_tab', 'login');
 
-        $this->get(route('register'))
+        $this->get(route('login'))
             ->assertOk()
-            ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="register"', false)
-            ->assertSee('id="signupForm"', false)
+            ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="login"', false)
+            ->assertSee('id="loginForm"', false)
             ->assertSee('Google sign-in is not configured correctly. Please contact the administrator.');
     }
 
@@ -544,20 +545,20 @@ class PwaRememberedLoginTest extends TestCase
             ]);
     }
 
-    public function test_google_register_callback_errors_open_register_tab(): void
+    public function test_legacy_google_register_callback_errors_open_login_page(): void
     {
         $this->withSession(['google_auth_intent' => 'register'])
             ->get(route('auth.google.callback', ['error' => 'access_denied']))
-            ->assertRedirect(route('register'))
+            ->assertRedirect(route('login'))
             ->assertSessionHasErrors([
                 'email' => 'Google sign-in was cancelled. Please choose a Google account and allow access to continue.',
             ])
-            ->assertSessionHas('_old_input.auth_tab', 'signup');
+            ->assertSessionHas('_old_input.auth_tab', 'login');
 
-        $this->get(route('register'))
+        $this->get(route('login'))
             ->assertOk()
-            ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="register"', false)
-            ->assertSee('id="signupForm"', false)
+            ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="login"', false)
+            ->assertSee('id="loginForm"', false)
             ->assertSee('Google sign-in was cancelled. Please choose a Google account and allow access to continue.');
     }
 
@@ -598,7 +599,7 @@ class PwaRememberedLoginTest extends TestCase
             ]);
     }
 
-    public function test_google_login_reports_unregistered_account_on_login_tab(): void
+    public function test_first_google_login_creates_an_account_without_local_registration(): void
     {
         $this->mockGoogleCallback([
             'id' => 'missing-google-login-id',
@@ -609,24 +610,82 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect(route('login', ['auth_alert' => 'google_login_unregistered']))
-            ->assertSessionHasErrors([
-                'email' => 'This Google account is not registered. Please click create account first.',
-            ])
-            ->assertSessionHas('_old_input.auth_tab', 'login')
-            ->assertSessionHas('_old_input.email', 'missing-google-login@example.com');
+            ->assertRedirect(route('terms.acceptance.show'))
+            ->assertSessionHasNoErrors()
+            ->assertSessionMissing('success');
 
-        $this->get(route('login', ['auth_alert' => 'google_login_unregistered']))
+        $user = User::where('google_id', 'missing-google-login-id')->firstOrFail();
+        $this->assertSame('missing-google-login@example.com', $user->email);
+        $this->assertSame(User::AUTH_METHOD_GOOGLE, $user->auth_method);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertAuthenticatedAs($user);
+
+        $this->get(route('terms.acceptance.show'))
             ->assertOk()
-            ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="login"', false)
-            ->assertSee('id="loginForm"', false)
-            ->assertSee('This Google account is not registered. Please click', false)
-            ->assertSee('class="auth-create-account-link"', false)
-            ->assertSee('create account</a> first.', false)
-            ->assertSee(route('register'), false);
+            ->assertDontSee('id="srTermsSuccessModal"', false);
+
+        $this->post(route('terms.acceptance.store'), [
+            'terms_accepted' => '1',
+        ])->assertRedirect(route('dashboard'));
+
+        Auth::logout();
+        $this->mockGoogleCallback([
+            'id' => 'missing-google-login-id',
+            'name' => 'Missing Google Login',
+            'email' => 'missing-google-login@example.com',
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user->fresh());
+        $this->assertSame(1, User::where('google_id', 'missing-google-login-id')->count());
     }
 
-    public function test_legacy_google_unregistered_query_redirects_to_login_page_without_flashed_errors(): void
+    public function test_first_google_login_respects_disabled_new_account_registration(): void
+    {
+        Setting::setVal('acc_registration', false, 'general', 'boolean');
+        $this->mockGoogleCallback([
+            'id' => 'blocked-google-login-id',
+            'name' => 'Blocked Google Login',
+            'email' => 'blocked-google-login@example.com',
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors([
+                'email' => 'New account registration is currently disabled by the administrator.',
+            ]);
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['google_id' => 'blocked-google-login-id']);
+    }
+
+    public function test_google_login_rejects_a_provider_response_without_an_account_id(): void
+    {
+        $this->mockGoogleCallback([
+            'id' => null,
+            'name' => 'Missing Google ID',
+            'email' => 'missing-google-id@example.com',
+            'avatar' => null,
+        ]);
+
+        $this->withSession(['google_auth_intent' => 'login'])
+            ->get(route('auth.google.callback', ['code' => 'test-code']))
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors([
+                'email' => 'Google did not return an account ID. Please try another Google account.',
+            ]);
+
+        $this->assertGuest();
+        $this->assertDatabaseMissing('users', ['email' => 'missing-google-id@example.com']);
+    }
+
+    public function test_legacy_google_unregistered_query_does_not_show_obsolete_registration_message(): void
     {
         $legacyUrl = '/?auth_modal=login&auth_alert=google_login_unregistered';
         $loginUrl = route('login', ['auth_alert' => 'google_login_unregistered']);
@@ -638,10 +697,8 @@ class PwaRememberedLoginTest extends TestCase
             ->assertOk()
             ->assertSee('id="authPage" class="auth-page-shell" data-auth-mode="login"', false)
             ->assertSee('id="loginForm"', false)
-            ->assertSee('This Google account is not registered. Please click', false)
-            ->assertSee('class="auth-create-account-link"', false)
-            ->assertSee('create account</a> first.', false)
-            ->assertSee(route('register'), false);
+            ->assertDontSee('This Google account is not registered. Please click', false)
+            ->assertDontSee('class="auth-create-account-link"', false);
     }
 
     public function test_google_login_uses_picture_fallback_for_profile_photo(): void
@@ -705,7 +762,7 @@ class PwaRememberedLoginTest extends TestCase
             ->assertDontSee('Email verification not completed');
     }
 
-    public function test_google_login_does_not_auto_register_a_matching_local_recovery_email(): void
+    public function test_google_login_creates_a_separate_account_when_a_local_recovery_email_matches(): void
     {
         $user = User::factory()->unverified()->create([
             'username' => 'matching-local-google-user',
@@ -724,16 +781,17 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect(route('login', ['auth_alert' => 'google_login_unregistered']))
-            ->assertSessionHasErrors([
-                'email' => 'This Google account is not registered. Please click create account first.',
-            ]);
+            ->assertRedirect(route('terms.acceptance.show'))
+            ->assertSessionHasNoErrors();
 
         $updatedUser = $user->fresh();
         $this->assertNull($updatedUser->google_id);
         $this->assertNull($updatedUser->email_verified_at);
         $this->assertSame(User::AUTH_METHOD_LOCAL, $updatedUser->auth_method);
-        $this->assertGuest();
+        $googleUser = User::where('google_id', 'selected-google-account-id')->firstOrFail();
+        $this->assertSame(User::AUTH_METHOD_GOOGLE, $googleUser->auth_method);
+        $this->assertSame($updatedUser->email, $googleUser->email);
+        $this->assertAuthenticatedAs($googleUser);
     }
 
     public function test_legacy_local_account_with_a_stale_google_id_still_uses_only_local_authentication(): void
@@ -761,9 +819,17 @@ class PwaRememberedLoginTest extends TestCase
 
         $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
-            ->assertRedirect(route('login', ['auth_alert' => 'google_login_unregistered']))
-            ->assertSessionHasErrors('email');
-        $this->assertGuest();
+            ->assertRedirect(route('terms.acceptance.show'));
+
+        $googleUser = User::where('auth_method', User::AUTH_METHOD_GOOGLE)
+            ->where('google_id', 'stale-google-id')
+            ->firstOrFail();
+        $this->assertNotSame($localUser->id, $googleUser->id);
+        $this->assertSame(User::AUTH_METHOD_LOCAL, $localUser->fresh()->auth_method);
+        $this->assertNull($localUser->fresh()->google_id);
+        $this->assertAuthenticatedAs($googleUser);
+
+        Auth::logout();
 
         $this->post(route('login'), [
             'username' => $localUser->username,
@@ -782,7 +848,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertDatabaseMissing('users', ['id' => $localUser->id]);
     }
 
-    public function test_google_registration_can_use_a_local_recovery_email_as_a_separate_account(): void
+    public function test_first_google_login_can_use_a_local_recovery_email_as_a_separate_account(): void
     {
         $localUser = User::factory()->unverified()->create([
             'username' => 'local-recovery-owner',
@@ -798,7 +864,7 @@ class PwaRememberedLoginTest extends TestCase
             'avatar' => null,
         ]);
 
-        $this->withSession(['google_auth_intent' => 'register'])
+        $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true);
@@ -853,7 +919,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertAuthenticatedAs($localUser);
     }
 
-    public function test_google_registration_creates_verified_email_account(): void
+    public function test_first_google_login_creates_verified_email_account(): void
     {
         $this->mockGoogleCallback([
             'id' => 'google-register-id',
@@ -862,10 +928,11 @@ class PwaRememberedLoginTest extends TestCase
             'avatar' => null,
         ]);
 
-        $this->withSession(['google_auth_intent' => 'register'])
+        $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']))
             ->assertRedirect(route('terms.acceptance.show'))
             ->assertSessionHas('registration_success', true)
+            ->assertSessionMissing('success')
             ->assertSessionMissing('recovery_code');
 
         $user = User::where('email', 'google-register@example.com')->first();
@@ -936,7 +1003,7 @@ class PwaRememberedLoginTest extends TestCase
             ->assertDontSee('class="db-sidebar"', false);
     }
 
-    public function test_google_registration_preserves_mobile_layout_after_oauth_callback(): void
+    public function test_first_google_login_preserves_mobile_layout_after_oauth_callback(): void
     {
         $this->mockGoogleCallback([
             'id' => 'mobile-google-register-id',
@@ -948,7 +1015,7 @@ class PwaRememberedLoginTest extends TestCase
         $desktopLikeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
 
         $this->withSession([
-            'google_auth_intent' => 'register',
+            'google_auth_intent' => 'login',
             'google_auth_layout' => 'mobile',
         ])
             ->withHeader('User-Agent', $desktopLikeUserAgent)
@@ -998,11 +1065,11 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_google_registration_uses_signed_oauth_state_when_session_intent_is_stale(): void
+    public function test_first_google_login_uses_signed_oauth_state_when_session_intent_is_stale(): void
     {
         $desktopLikeUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
         $state = $this->captureGoogleRedirectState(
-            route('auth.google.register', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']),
+            route('auth.google.login', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']),
             $desktopLikeUserAgent
         );
 
@@ -1014,7 +1081,7 @@ class PwaRememberedLoginTest extends TestCase
         ]);
 
         $this->withSession([
-            'google_auth_intent' => 'login',
+            'google_auth_intent' => 'register',
             'google_auth_layout' => 'desktop',
             'sr_layout_preference' => 'desktop',
         ])
@@ -1065,7 +1132,9 @@ class PwaRememberedLoginTest extends TestCase
             ->with(Mockery::on(function (array $parameters) use (&$state): bool {
                 $state = $parameters['state'] ?? null;
 
-                return is_string($state) && str_starts_with($state, 'sr.');
+                return is_string($state)
+                    && str_starts_with($state, 'sr.')
+                    && ! array_key_exists('prompt', $parameters);
             }))
             ->andReturnSelf();
         $provider->shouldReceive('redirect')

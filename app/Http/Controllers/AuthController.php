@@ -12,7 +12,6 @@ use App\Services\AccountDeletionService;
 use App\Services\BrevoTransactionalMail;
 use App\Services\UserSessionRevoker;
 use App\Models\User;
-use App\Support\AccountNotificationSchema;
 use App\Support\PasswordRecovery;
 use App\Support\SystemSettings;
 use GuzzleHttp\Client as GuzzleClient;
@@ -45,10 +44,6 @@ class AuthController extends Controller
 
     private const LOGIN_UNREGISTERED_ACCOUNT_MESSAGE = 'This account is not registered. Please register first.';
 
-    private const GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE = 'This Google account is not registered. Please click create account first.';
-
-    private const GOOGLE_LOGIN_UNREGISTERED_ALERT_KEY = 'google_login_unregistered';
-
     private const GOOGLE_AUTH_INTENT_SESSION_KEY = 'google_auth_intent';
 
     private const GOOGLE_AUTH_LAYOUT_SESSION_KEY = 'google_auth_layout';
@@ -61,7 +56,6 @@ class AuthController extends Controller
 
     private const GOOGLE_AUTH_INTENTS = [
         'login',
-        'register',
         self::GOOGLE_ACCOUNT_DELETE_INTENT,
     ];
 
@@ -588,11 +582,6 @@ class AuthController extends Controller
         return $this->redirectToGoogleWithIntent($request, 'login');
     }
 
-    public function redirectToGoogleRegister(Request $request)
-    {
-        return $this->redirectToGoogleWithIntent($request, 'register');
-    }
-
     public function redirectToGoogleAccountDeletion(Request $request)
     {
         if (! SystemSettings::userCan('delete_own_account')) {
@@ -694,10 +683,6 @@ class AuthController extends Controller
         }
 
         try {
-            if ($intent !== self::GOOGLE_ACCOUNT_DELETE_INTENT) {
-                AccountNotificationSchema::ensureUserColumns();
-            }
-
             $request->session()->forget(self::GOOGLE_AUTH_INTENT_SESSION_KEY);
             $driver = $this->googleDriver();
             $googleUser = $driver->user();
@@ -705,6 +690,10 @@ class AuthController extends Controller
 
             if (blank($googleUser->email)) {
                 return $this->googleAuthFailureResponse($request, 'Google did not return an email address. Please try another Google account.', $intent);
+            }
+
+            if (blank($googleUser->id)) {
+                return $this->googleAuthFailureResponse($request, 'Google did not return an account ID. Please try another Google account.', $intent);
             }
 
             $googleEmail = $this->normalizeEmail($googleUser->email);
@@ -718,25 +707,17 @@ class AuthController extends Controller
                 );
             }
 
-            $user = User::withTrashed()
-                ->where('auth_method', User::AUTH_METHOD_GOOGLE)
+            $googleIdentity = User::withTrashed()
                 ->where('google_id', $googleUser->id)
                 ->first();
+            $user = $googleIdentity?->isGoogleAccount() ? $googleIdentity : null;
 
-            if ($user && $user->trashed() && $intent === 'login') {
+            if ($user && $user->trashed()) {
                 $user->restore();
-            }
-
-            if ($user && $intent === 'register') {
-                return $this->googleAuthFailureResponse($request, 'This Google email is already registered. Please log in with Google instead.', $intent, [
-                    'name' => $googleUser->name ?: 'Google User',
-                    'email' => $googleEmail,
-                ]);
             }
 
             if (
                 ! $user
-                && $intent === 'register'
                 && User::withTrashed()
                     ->where('auth_method', User::AUTH_METHOD_GOOGLE)
                     ->whereRaw('LOWER(email) = ?', [$googleEmail])
@@ -744,18 +725,10 @@ class AuthController extends Controller
             ) {
                 return $this->googleAuthFailureResponse(
                     $request,
-                    'This Google email is already registered. Please log in with Google instead.',
+                    'This Google email is connected to a different Google account. Please contact the administrator.',
                     $intent,
                     ['email' => $googleEmail]
                 );
-            }
-
-            if (! $user && $intent === 'login') {
-                return $this->googleAuthFailureResponse($request, self::GOOGLE_LOGIN_UNREGISTERED_ACCOUNT_MESSAGE, $intent, [
-                    'email' => $googleEmail,
-                ], 'email', [
-                    'auth_alert' => self::GOOGLE_LOGIN_UNREGISTERED_ALERT_KEY,
-                ]);
             }
 
             $registeredWithGoogle = false;
@@ -766,6 +739,12 @@ class AuthController extends Controller
                         'name' => $googleUser->name ?: 'Google User',
                         'email' => $googleEmail,
                     ]);
+                }
+
+                // Legacy local accounts may carry a Google ID even though they use password sign-in.
+                // Clear that unused ID so its unique index does not block the separate Google account.
+                if ($googleIdentity?->isLocalAccount()) {
+                    $googleIdentity->forceFill(['google_id' => null])->save();
                 }
 
                 $userAttributes = [
@@ -781,7 +760,7 @@ class AuthController extends Controller
                     $userAttributes['username'] = $this->uniqueUsernameFromSeed($googleEmail ?: $googleUser->name ?: 'google-user');
                 }
 
-                $user = User::create($userAttributes);
+                $user = new User($userAttributes);
                 $user->forceFill([
                     'email_verified_at' => $googleVerifiedAt,
                 ])->save();
@@ -798,7 +777,7 @@ class AuthController extends Controller
                 );
             } else {
                 $updates = [];
-                if ($this->hasUsernameColumn() && blank($user->username)) {
+                if (blank($user->username) && $this->hasUsernameColumn()) {
                     $updates['username'] = $this->uniqueUsernameFromSeed($googleEmail ?: $googleUser->name ?: 'google-user');
                 }
                 if ($this->shouldSyncGoogleAvatar($user, $googleAvatarUrl)) {
@@ -829,7 +808,6 @@ class AuthController extends Controller
 
             if ($registeredWithGoogle) {
                 return $this->redirectToRouteWithGoogleLayout($request, 'terms.acceptance.show')
-                    ->with('success', 'Registration successful. Welcome to SpeakReady AI!')
                     ->with('registration_success', true);
             }
 
@@ -880,10 +858,10 @@ class AuthController extends Controller
 
         $parameters = [
             'state' => $this->googleAuthState($intent, $layout, $nonce),
-            'prompt' => 'select_account',
         ];
 
         if ($intent === self::GOOGLE_ACCOUNT_DELETE_INTENT) {
+            $parameters['prompt'] = 'select_account';
             $parameters['max_age'] = 0;
         }
 
@@ -1050,12 +1028,11 @@ class AuthController extends Controller
             : [];
     }
 
-    private function redirectToAuthPageWithGoogleLayout(Request $request, string $intent, array $extraQuery = [])
+    private function redirectToAuthPageWithGoogleLayout(Request $request, array $extraQuery = [])
     {
         $query = array_merge($this->googleLayoutQuery($request), $extraQuery);
-        $routeName = $intent === 'register' ? 'register' : 'login';
 
-        return redirect()->route($routeName, $query);
+        return redirect()->route('login', $query);
     }
 
     private function redirectToRouteWithGoogleLayout(Request $request, string $routeName, array $parameters = [])
@@ -1081,14 +1058,14 @@ class AuthController extends Controller
 
             $redirect = Auth::check()
                 ? $this->redirectToRouteWithGoogleLayout($request, 'user.account')
-                : $this->redirectToAuthPageWithGoogleLayout($request, 'login', $homeQuery);
+                : $this->redirectToAuthPageWithGoogleLayout($request, $homeQuery);
 
             return $redirect->withErrors(['account_delete' => $message]);
         }
 
-        return $this->redirectToAuthPageWithGoogleLayout($request, $intent, $homeQuery)
+        return $this->redirectToAuthPageWithGoogleLayout($request, $homeQuery)
             ->withErrors([$field => $message])
-            ->withInput($this->googleAuthOldInput($request, $intent, $input));
+            ->withInput($this->googleAuthOldInput($input));
     }
 
     private function clearGoogleAccountDeletionSession(Request $request): void
@@ -1111,14 +1088,10 @@ class AuthController extends Controller
         return redirect()->back()->withErrors(['account_delete' => $message]);
     }
 
-    private function googleAuthOldInput(Request $request, ?string $intent, array $input): array
+    private function googleAuthOldInput(array $input): array
     {
-        $intent = in_array($intent, ['login', 'register'], true)
-            ? $intent
-            : $this->googleAuthIntent($request);
-
         return array_merge([
-            self::AUTH_TAB_OLD_INPUT_KEY => $intent === 'register' ? 'signup' : 'login',
+            self::AUTH_TAB_OLD_INPUT_KEY => 'login',
         ], $input);
     }
 

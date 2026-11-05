@@ -15,8 +15,7 @@
          register: ['Creating your account...', 'Setting up your interview practice workspace.'],
          recovery: ['Sending recovery details...', 'Opening a secure path back to your account.'],
          reset: ['Updating your password...', 'Securing your account with the new password.'],
-         'google-login': ['Connecting to Google...', 'Opening secure Google sign-in.'],
-         'google-register': ['Signing up with Google...', 'Opening secure Google registration.']
+         'google-login': ['Connecting to Google...', 'Opening secure Google sign-in.']
       };
 
       function showAuthTransition(mode) {

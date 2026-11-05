@@ -1,15 +1,10 @@
 @php
    $googleAuthLayoutQuery = ($isMobile ?? false) ? ['sr_layout' => 'mobile', 'sr_is_mobile' => '1'] : [];
-   $registerPageUrl = route('register', $googleAuthLayoutQuery);
    $authModalRequest = request('auth_modal');
    $authTab = old('auth_tab') ?: (in_array($authModalRequest, ['login', 'signup', 'register'], true) ? $authModalRequest : null);
    $showSignupAuthTab = in_array($authTab, ['signup', 'register'], true) || ($authTab === null && filled(old('name')));
-   $googleUnregisteredMessage = 'This Google account is not registered. Please click create account first.';
-   $authQueryAlert = request('auth_alert') === 'google_login_unregistered'
-      ? $googleUnregisteredMessage
-      : null;
    $loginAuthAlert = ! $showSignupAuthTab
-      ? ($errors->first() ?: $authQueryAlert)
+      ? $errors->first()
       : null;
    $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
 @endphp
@@ -69,11 +64,7 @@
                            <div class="err-msg is-visible" role="alert">
                               <i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i>
                               <span>
-                                 @if($loginAuthAlert === $googleUnregisteredMessage)
-                                    This Google account is not registered. Please click <a href="{{ $registerPageUrl }}" class="auth-inline-link auth-create-account-link">create account</a> first.
-                                 @else
-                                    {{ $loginAuthAlert }}
-                                 @endif
+                                 {{ $loginAuthAlert }}
                               </span>
                            </div>
                         @endif
@@ -173,11 +164,6 @@
                         </div>
                         <button type="submit" class="bgrd btn auth-submit w-100 fw-semibold" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm" aria-hidden="true"></i></button>
                      </form>
-                     <div class="odiv auth-divider">or sign up with</div>
-                     <a href="{{ route('auth.google.register', $googleAuthLayoutQuery) }}" class="oauth auth-oauth" data-auth-transition="google-register">
-                        @include('shared.google-auth-mark')
-                        <span>Sign up with Google</span>
-                     </a>
                      <p class="auth-secure-note"><i class="fa-regular fa-shield-check" aria-hidden="true"></i><span>Your information is safe and secure.</span></p>
                   </div>
                </div>

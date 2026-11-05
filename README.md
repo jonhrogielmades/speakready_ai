@@ -53,7 +53,7 @@ The current system includes separate desktop and mobile Blade experiences, a red
 ### Authentication
 
 - Register, login, logout, and username recovery-code password reset routes are handled by `AuthController`.
-- Google login/register uses Socialite and the `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` environment variables.
+- Registration creates local username-and-password accounts. Google appears only on login; a first Google sign-in creates the account automatically through Socialite, using the `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` environment variables.
 - Deleted or inactive users can request reactivation, and admins can approve those requests.
 
 ### User Workspace

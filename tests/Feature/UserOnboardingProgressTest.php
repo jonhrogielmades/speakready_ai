@@ -868,7 +868,7 @@ class UserOnboardingProgressTest extends TestCase
             ->with('google')
             ->andReturn($provider);
 
-        return $this->withSession(['google_auth_intent' => 'register'])
+        return $this->withSession(['google_auth_intent' => 'login'])
             ->get(route('auth.google.callback', ['code' => 'test-code']));
     }
 }

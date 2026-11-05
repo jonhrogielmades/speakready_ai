@@ -78,9 +78,6 @@
                   </div>
                   <button type="submit" class="bgrd btn w-100 py-3 fw-semibold fs-6" id="signupBtn">Create Free Account <i class="fa-solid fa-arrow-right ms-1 fa-sm"></i></button>
                </form>
-               <div class="odiv">or sign up with</div>
-               <a href="{{ route('auth.google.register') }}" class="oauth" data-auth-transition="google-register" style="text-decoration:none; display:flex; align-items:center; justify-content:center;">@include('shared.google-auth-mark')<span>Sign up with Google</span></a>
-
                <p class="text-center mt-3" style="font-size:.76rem;color:var(--tx3)">Before entering your dashboard, you will review and accept our <a href="{{ route('legal.terms') }}" style="color:var(--pur)">Terms</a> &amp; <a href="{{ route('legal.privacy') }}" style="color:var(--pur)">Privacy Policy</a>.</p>
             </div>
             <!-- Close Button at Bottom -->

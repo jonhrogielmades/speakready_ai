@@ -34,7 +34,8 @@ class GoogleMobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('data-auth-layout="mobile"', false)
             ->assertSee('data-auth-mode="register"', false)
-            ->assertSee(route('auth.google.register', $mobileLayoutQuery))
+            ->assertDontSee(route('auth.google.register', $mobileLayoutQuery))
+            ->assertDontSee('Sign up with Google')
             ->assertSee(route('login', $mobileLayoutQuery))
             ->assertDontSee('href="'.route('auth.google.register').'"', false)
             ->assertDontSee('href="'.route('login').'"', false);

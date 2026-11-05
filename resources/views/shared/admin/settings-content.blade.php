@@ -125,7 +125,7 @@
             <div class="custom-switch-container">
                 <div>
                     <h6 class="mb-1">Enable User Registration</h6>
-                    <small>Allow new users to sign up using password or Google registration.</small>
+                    <small>Allow local registration and first-time Google sign-in to create accounts.</small>
                 </div>
                 <div class="form-check form-switch fs-4 mb-0">
                     <input class="form-check-input" type="checkbox" name="acc_registration" value="true" {{ $checked('acc_registration') }}>

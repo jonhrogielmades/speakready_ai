@@ -4,14 +4,7 @@
    $layoutQuery = ($isMobile ?? false) ? ['sr_layout' => 'mobile', 'sr_is_mobile' => '1'] : [];
    $loginPageUrl = route('login', $layoutQuery);
    $registerPageUrl = route('register', $layoutQuery);
-   $googleAuthUrl = $isRegister
-      ? route('auth.google.register', $layoutQuery)
-      : route('auth.google.login', $layoutQuery);
-   $googleUnregisteredMessage = 'This Google account is not registered. Please click create account first.';
-   $authQueryAlert = request('auth_alert') === 'google_login_unregistered'
-      ? $googleUnregisteredMessage
-      : null;
-   $pageError = $errors->first() ?: $authQueryAlert;
+   $pageError = $errors->first();
    $strongPasswordsRequired = \App\Support\SystemSettings::enabled('sec_strong_pass', true);
    $registerInitialStep = ($errors->has('password') || $errors->has('password_confirmation'))
       ? 3
@@ -69,7 +62,7 @@
                   <h1 id="authPageTitle">{{ $isRegister ? 'Create your account' : 'Log in to your account' }}</h1>
                </div>
             </div>
-            <p class="auth-page-intro">{{ $isRegister ? 'Set up your free practice workspace in a few steps.' : 'Use your Google account.' }}</p>
+            <p class="auth-page-intro">{{ $isRegister ? 'Set up your free practice workspace in a few steps.' : 'Log in with your local account or continue with Google.' }}</p>
 
             @if(session('success'))
                <div class="auth-page-alert auth-page-alert-success" role="status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i><span>{{ session('success') }}</span></div>
@@ -93,24 +86,20 @@
                   <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
                   <div>
                      <strong>{{ $isRegister ? 'Please review your details' : 'We could not log you in' }}</strong>
-                     <p>
-                        @if($pageError === $googleUnregisteredMessage)
-                           This Google account is not registered. Please click <a href="{{ $registerPageUrl }}" class="auth-create-account-link">create account</a> first.
-                        @else
-                           {{ $pageError }}
-                        @endif
-                     </p>
+                     <p>{{ $pageError }}</p>
                   </div>
                </div>
             @endif
 
-            <a href="{{ $googleAuthUrl }}" class="auth-page-google" data-auth-transition="{{ $isRegister ? 'google-register' : 'google-login' }}">
-               @include('shared.google-auth-mark')
-               <span>{{ $isRegister ? 'Sign up with Google' : 'Continue with Google' }}</span>
-               <i class="fa-solid fa-arrow-right auth-page-google-arrow" aria-hidden="true"></i>
-            </a>
+            @unless($isRegister)
+               <a href="{{ route('auth.google.login', $layoutQuery) }}" class="auth-page-google" data-auth-transition="google-login">
+                  @include('shared.google-auth-mark')
+                  <span>Continue with Google</span>
+                  <i class="fa-solid fa-arrow-right auth-page-google-arrow" aria-hidden="true"></i>
+               </a>
 
-            <div class="auth-page-divider"><span>{{ $isRegister ? 'or create an account with your details' : 'or log in with your local account' }}</span></div>
+               <div class="auth-page-divider"><span>or log in with your local account</span></div>
+            @endunless
 
             @if($isRegister)
                <form id="signupForm" class="auth-page-form" action="{{ route('register.submit') }}" method="POST" autocomplete="on" data-auth-submit="register" @if($isMobile) data-register-steps data-register-step="{{ $registerInitialStep }}" @endif>
