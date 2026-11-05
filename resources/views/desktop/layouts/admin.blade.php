@@ -147,6 +147,7 @@
       @stack('styles')
    </head>
    <body class="admin-shell desktop-shell" data-layout-shell="desktop" data-app-surface="admin" data-pwa-auto-install="true">
+      @include('shared.pwa-launch')
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar">

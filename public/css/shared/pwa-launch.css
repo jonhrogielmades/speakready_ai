@@ -1,0 +1,144 @@
+#sr-pwa-launch {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    color: #f7fbff;
+    background:
+        radial-gradient(ellipse 68% 42% at 84% 12%, rgba(29, 91, 159, .42), transparent 100%),
+        radial-gradient(ellipse 58% 42% at 0% 94%, rgba(0, 105, 178, .21), transparent 100%),
+        #071a33;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+
+#sr-pwa-launch::before,
+#sr-pwa-launch::after {
+    position: absolute;
+    width: 120vmax;
+    height: 72vmax;
+    border: 1px solid rgba(123, 192, 255, .08);
+    border-radius: 50%;
+    content: "";
+    pointer-events: none;
+}
+
+#sr-pwa-launch::before {
+    top: 12%;
+    left: 5%;
+    transform: rotate(-12deg);
+}
+
+#sr-pwa-launch::after {
+    right: 9%;
+    bottom: 9%;
+    transform: rotate(14deg);
+}
+
+html.sr-pwa-launching,
+html.sr-pwa-launching body {
+    overflow: hidden;
+}
+
+html.sr-pwa-launching #sr-pwa-launch {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.sr-pwa-launch__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: min(calc(100% - 40px), 520px);
+    margin-top: -6vh;
+}
+
+.sr-pwa-launch__icon {
+    display: block;
+    width: clamp(108px, 32vw, 168px);
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: contain;
+}
+
+.sr-pwa-launch__title {
+    margin-top: 25px;
+    font-size: clamp(27px, 6vw, 32px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -.035em;
+}
+
+.sr-pwa-launch__tagline {
+    margin-top: 9px;
+    color: #bed1e8;
+    font-size: clamp(14px, 3.8vw, 17px);
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.sr-pwa-launch__footer {
+    position: absolute;
+    z-index: 1;
+    right: 20px;
+    bottom: max(38px, calc(env(safe-area-inset-bottom) + 26px));
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    color: #98b4d2;
+    font-size: 10px;
+    letter-spacing: .15em;
+    white-space: nowrap;
+}
+
+.sr-pwa-launch__accent {
+    display: block;
+    width: 36px;
+    height: 3px;
+    border-radius: 99px;
+    background: #45aaff;
+}
+
+@media (min-width: 700px) {
+    .sr-pwa-launch__icon {
+        width: 194px;
+    }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+    .sr-pwa-launch__content {
+        margin-top: -2vh;
+    }
+
+    .sr-pwa-launch__icon {
+        width: min(25vh, 140px);
+    }
+
+    .sr-pwa-launch__title {
+        margin-top: 10px;
+        font-size: 23px;
+    }
+
+    .sr-pwa-launch__footer {
+        bottom: max(12px, env(safe-area-inset-bottom));
+        gap: 8px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #sr-pwa-launch {
+        transition: none;
+    }
+}

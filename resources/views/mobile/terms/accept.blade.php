@@ -514,6 +514,7 @@
       </style>
    </head>
    <body class="terms-accept-shell mobile-shell" data-layout-shell="mobile">
+      @include('shared.pwa-launch')
       @include('mobile.partials.viewport-mobile-cookie')
       <div class="terms-mobile-shell">
          <header class="terms-mobile-topbar">

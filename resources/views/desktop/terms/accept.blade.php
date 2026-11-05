@@ -536,6 +536,7 @@
       </style>
    </head>
    <body class="terms-accept-shell desktop-shell" data-layout-shell="desktop">
+      @include('shared.pwa-launch')
       <header class="terms-topbar py-3">
          <div class="container d-flex align-items-center justify-content-between gap-3">
             <a class="terms-brand" href="{{ url('/') }}">

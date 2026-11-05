@@ -313,6 +313,7 @@
     </style>
 </head>
 <body class="tone-{{ $errorTone }}">
+    @include('shared.pwa-launch')
     <main class="error-shell">
         <section class="error-card" aria-labelledby="error-title">
             <a class="brand" href="{{ url('/') }}" aria-label="Return to {{ $systemName }}">

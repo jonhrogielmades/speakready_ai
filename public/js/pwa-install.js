@@ -2,7 +2,7 @@
     'use strict';
 
     const CONTROLLER_VERSION = '2';
-    const SERVICE_WORKER_URL = '/sw.js?v=50';
+    const SERVICE_WORKER_URL = '/sw.js?v=51';
     const AUTO_PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
     const AUTO_PROMPT_DELAY_MS = 900;
     const INSTALLED_MARKER_MAX_AGE_MS = 365 * 24 * 60 * 60 * 1000;

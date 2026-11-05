@@ -149,6 +149,7 @@
       @stack('styles')
    </head>
    <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user" data-pwa-auto-install="true" data-pwa-suppress-auto-install="{{ request()->routeIs('interview.session') ? 'true' : 'false' }}">
+      @include('shared.pwa-launch')
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar">
@@ -358,7 +359,7 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=50')),
+            serviceWorkerUrl: @json(asset('sw.js?v=51')),
             csrfToken: @json(csrf_token())
          };
       </script>

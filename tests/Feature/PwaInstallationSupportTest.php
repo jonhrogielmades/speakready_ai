@@ -50,14 +50,14 @@ final class PwaInstallationSupportTest extends TestCase
 
         $this->assertSame('/', $manifest['scope'] ?? null);
         $this->assertSame('standalone', $manifest['display'] ?? null);
-        $this->assertSame('#f1f6fb', $manifest['background_color'] ?? null);
-        $this->assertSame('#f1f6fb', $manifest['theme_color'] ?? null);
+        $this->assertSame('#071a33', $manifest['background_color'] ?? null);
+        $this->assertSame('#071a33', $manifest['theme_color'] ?? null);
 
         $expectedIcons = [
-            ['192x192', 'any', '/img/app-icon-192.png'],
-            ['512x512', 'any', '/img/app-icon-512.png'],
-            ['192x192', 'maskable', '/img/app-icon-maskable-192.png'],
-            ['512x512', 'maskable', '/img/app-icon-maskable-512.png'],
+            ['192x192', 'any', '/img/app-icon-192.png?v=5'],
+            ['512x512', 'any', '/img/app-icon-512.png?v=5'],
+            ['192x192', 'maskable', '/img/app-icon-maskable-192.png?v=5'],
+            ['512x512', 'maskable', '/img/app-icon-maskable-512.png?v=5'],
         ];
 
         foreach ($expectedIcons as [$sizes, $purpose, $source]) {
@@ -127,20 +127,58 @@ final class PwaInstallationSupportTest extends TestCase
         }
     }
 
+    public function test_apple_startup_images_exist_at_their_declared_device_resolutions(): void
+    {
+        $source = $this->read('resources/views/shared/pwa-startup-images.blade.php');
+        $this->assertStringContainsString('rel="apple-touch-startup-image"', $source);
+        $this->assertStringContainsString('(orientation: landscape)', $source);
+
+        preg_match_all('/\[(\d+),\s*(\d+),\s*(\d+)\]/', $source, $devices, PREG_SET_ORDER);
+        $this->assertCount(21, $devices);
+
+        $expectedCount = 0;
+        foreach ($devices as [, $deviceWidth, $deviceHeight, $pixelRatio]) {
+            $width = (int) $deviceWidth * (int) $pixelRatio;
+            $height = (int) $deviceHeight * (int) $pixelRatio;
+            $sizes = [[$width, $height]];
+            if ((int) $deviceWidth >= 600) {
+                $sizes[] = [$height, $width];
+            }
+
+            foreach ($sizes as [$imageWidth, $imageHeight]) {
+                $path = $this->projectPath("public/img/pwa-startup/splash-{$imageWidth}x{$imageHeight}.png");
+                $this->assertFileExists($path);
+                $actualSize = getimagesize($path);
+                $this->assertNotFalse($actualSize);
+                $this->assertSame([$imageWidth, $imageHeight], array_slice($actualSize, 0, 2));
+                $expectedCount++;
+            }
+        }
+
+        $this->assertSame($expectedCount, count(glob($this->projectPath('public/img/pwa-startup/splash-*.png'))));
+    }
+
     public function test_shared_pwa_meta_exposes_cross_platform_metadata_and_the_controller(): void
     {
         $meta = $this->read('resources/views/shared/pwa-meta.blade.php');
 
         $this->assertStringContainsString('<meta name="mobile-web-app-capable" content="yes">', $meta);
         $this->assertStringContainsString('<meta name="apple-mobile-web-app-capable" content="yes">', $meta);
-        $this->assertStringContainsString("asset('manifest.json?v=12')", $meta);
+        $this->assertStringContainsString("asset('manifest.json?v=13')", $meta);
         $this->assertStringContainsString('rel="apple-touch-icon" sizes="180x180"', $meta);
         $this->assertStringContainsString("asset('img/apple-touch-icon.png')", $meta);
+        $this->assertStringContainsString("@include('shared.pwa-startup-images')", $meta);
+        $this->assertStringContainsString("asset('css/shared/pwa-launch.css?v=1')", $meta);
         $this->assertStringContainsString("asset('js/pwa-install.js?v=2')", $meta);
         $this->assertStringContainsString('data-sr-pwa-controller', $meta);
 
+        $launch = $this->read('resources/views/shared/pwa-launch.blade.php');
+        $this->assertSame(1, substr_count($launch, '<img '));
+        $this->assertStringContainsString('SpeakReady AI', $launch);
+        $this->assertStringContainsString('Practice with confidence.', $launch);
+
         $controller = $this->read('public/js/pwa-install.js');
-        $this->assertStringContainsString("const SERVICE_WORKER_URL = '/sw.js?v=50';", $controller);
+        $this->assertStringContainsString("const SERVICE_WORKER_URL = '/sw.js?v=51';", $controller);
         $this->assertStringContainsString("windowRef.addEventListener('beforeinstallprompt'", $controller);
         $this->assertStringContainsString("serviceWorker.register(SERVICE_WORKER_URL, { scope: '/' })", $controller);
         $this->assertStringNotContainsString('?.', $controller);
@@ -160,6 +198,11 @@ final class PwaInstallationSupportTest extends TestCase
                 "@include('shared.pwa-install-prompt",
                 $shell,
                 "{$relativePath} must include the shared install prompt."
+            );
+            $this->assertStringContainsString(
+                "@include('shared.pwa-launch')",
+                $shell,
+                "{$relativePath} must include the shared PWA launch screen."
             );
         }
     }
@@ -189,19 +232,20 @@ final class PwaInstallationSupportTest extends TestCase
         }
     }
 
-    public function test_service_worker_v50_scopes_cache_cleanup_and_precaches_install_assets(): void
+    public function test_service_worker_v51_scopes_cache_cleanup_and_precaches_install_assets(): void
     {
         $worker = $this->read('public/sw.js');
 
         $this->assertStringContainsString("const CACHE_PREFIX = 'speakready-pwa-';", $worker);
         $this->assertMatchesRegularExpression(
-            "/const CACHE_NAME = (?:'speakready-pwa-v50'|`\\$\\{CACHE_PREFIX\\}v50`);/",
+            "/const CACHE_NAME = (?:'speakready-pwa-v51'|`\\$\\{CACHE_PREFIX\\}v51`);/",
             $worker
         );
         $this->assertStringContainsString('cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME', $worker);
 
         foreach ([
             '/manifest.json',
+            '/css/shared/pwa-launch.css',
             '/img/app-icon-192.png',
             '/img/app-icon-512.png',
             '/img/app-icon-maskable-192.png',

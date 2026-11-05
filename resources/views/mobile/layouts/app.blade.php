@@ -4798,6 +4798,7 @@
       @include('mobile.partials.user-mobile-side-gutter')
    </head>
    <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user" data-pwa-auto-install="true" data-pwa-suppress-auto-install="{{ request()->routeIs('interview.session') ? 'true' : 'false' }}">
+      @include('shared.pwa-launch')
 
       @php
          $mobileHeaderPageTitle = trim($__env->yieldContent('page-title')) ?: (trim($__env->yieldContent('title')) ?: 'Overview');
@@ -5010,7 +5011,7 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=50')),
+            serviceWorkerUrl: @json(asset('sw.js?v=51')),
             csrfToken: @json(csrf_token())
          };
       </script>

@@ -241,6 +241,7 @@
       </style>
    </head>
    <body class="guest-shell guest-mobile-shell" data-layout-shell="mobile" data-guest-layout="mobile" data-pwa-auto-install="true">
+      @include('shared.pwa-launch')
       @include('mobile.partials.viewport-mobile-cookie')
 <!-- ======================== LANDING PAGE ======================== -->
       <div id="landing">

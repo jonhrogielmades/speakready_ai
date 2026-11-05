@@ -28,6 +28,7 @@
       </style>
    </head>
    <body class="auth-desktop-shell desktop-shell @yield('body_class')" data-layout-shell="desktop" data-auth-layout="desktop">
+      @include('shared.pwa-launch')
       @include('desktop.partials.viewport-mobile-cookie')
       @hasSection('auth_page')
          @yield('auth_page')

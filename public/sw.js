@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'speakready-pwa-';
-const CACHE_NAME = 'speakready-pwa-v50';
+const CACHE_NAME = 'speakready-pwa-v51';
 const OFFLINE_PAGE = '/offline.html';
 const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';
 const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';
@@ -35,6 +35,7 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME).then(cache => cache.addAll([
       OFFLINE_PAGE,
       '/manifest.json',
+      '/css/shared/pwa-launch.css',
       '/img/logo.png',
       '/img/app-icon-192.png',
       '/img/app-icon-512.png',

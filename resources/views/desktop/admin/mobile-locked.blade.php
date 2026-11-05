@@ -13,6 +13,7 @@
       <link rel="stylesheet" href="{{ asset('css/desktop/admin/mobile-locked.css?v=1') }}" data-page-style="admin-mobile-locked">
    </head>
    <body class="desktop-shell" data-layout-shell="desktop">
+      @include('shared.pwa-launch')
       <main class="admin-mobile-lock" role="main" aria-labelledby="adminMobileLockTitle">
          <div class="brand">
             <img src="{{ asset('img/logo.png') }}" alt="SpeakReady AI">

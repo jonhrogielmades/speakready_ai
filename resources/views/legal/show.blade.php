@@ -20,6 +20,7 @@
       <script src="{{ asset('js/auth-page.js?v=5') }}" defer></script>
    </head>
    <body class="auth-page-body auth-desktop-shell legal-page-body" data-layout-shell="desktop" data-auth-layout="desktop">
+      @include('shared.pwa-launch')
       <main id="authPage" class="auth-page-shell legal-page-shell" data-auth-mode="legal">
          <header class="auth-page-topbar">
             <a class="auth-page-brand" href="{{ url('/') }}" aria-label="SpeakReady AI home">
