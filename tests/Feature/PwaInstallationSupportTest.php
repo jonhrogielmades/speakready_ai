@@ -50,8 +50,8 @@ final class PwaInstallationSupportTest extends TestCase
 
         $this->assertSame('/', $manifest['scope'] ?? null);
         $this->assertSame('standalone', $manifest['display'] ?? null);
-        $this->assertSame('#06112d', $manifest['background_color'] ?? null);
-        $this->assertSame('#06112d', $manifest['theme_color'] ?? null);
+        $this->assertSame('#f1f6fb', $manifest['background_color'] ?? null);
+        $this->assertSame('#f1f6fb', $manifest['theme_color'] ?? null);
 
         $expectedIcons = [
             ['192x192', 'any', '/img/app-icon-192.png'],
@@ -134,14 +134,14 @@ final class PwaInstallationSupportTest extends TestCase
 
         $this->assertStringContainsString('<meta name="mobile-web-app-capable" content="yes">', $meta);
         $this->assertStringContainsString('<meta name="apple-mobile-web-app-capable" content="yes">', $meta);
-        $this->assertStringContainsString("asset('manifest.json?v=10')", $meta);
+        $this->assertStringContainsString("asset('manifest.json?v=11')", $meta);
         $this->assertStringContainsString('rel="apple-touch-icon" sizes="180x180"', $meta);
         $this->assertStringContainsString("asset('img/apple-touch-icon-v2.png')", $meta);
         $this->assertStringContainsString("asset('js/pwa-install.js?v=2')", $meta);
         $this->assertStringContainsString('data-sr-pwa-controller', $meta);
 
         $controller = $this->read('public/js/pwa-install.js');
-        $this->assertStringContainsString("const SERVICE_WORKER_URL = '/sw.js?v=48';", $controller);
+        $this->assertStringContainsString("const SERVICE_WORKER_URL = '/sw.js?v=49';", $controller);
         $this->assertStringContainsString("windowRef.addEventListener('beforeinstallprompt'", $controller);
         $this->assertStringContainsString("serviceWorker.register(SERVICE_WORKER_URL, { scope: '/' })", $controller);
         $this->assertStringNotContainsString('?.', $controller);
@@ -190,13 +190,13 @@ final class PwaInstallationSupportTest extends TestCase
         }
     }
 
-    public function test_service_worker_v48_scopes_cache_cleanup_and_precaches_install_assets(): void
+    public function test_service_worker_v49_scopes_cache_cleanup_and_precaches_install_assets(): void
     {
         $worker = $this->read('public/sw.js');
 
         $this->assertStringContainsString("const CACHE_PREFIX = 'speakready-pwa-';", $worker);
         $this->assertMatchesRegularExpression(
-            "/const CACHE_NAME = (?:'speakready-pwa-v48'|`\\$\\{CACHE_PREFIX\\}v48`);/",
+            "/const CACHE_NAME = (?:'speakready-pwa-v49'|`\\$\\{CACHE_PREFIX\\}v49`);/",
             $worker
         );
         $this->assertStringContainsString('cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME', $worker);

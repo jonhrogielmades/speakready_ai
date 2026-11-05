@@ -20,13 +20,13 @@
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "/manifest.json?v=10",
+      "url": "/manifest.json?v=11",
       "id": "/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1"
     }
   ],
   "prefer_related_applications": false,
-  "background_color": "#06112d",
-  "theme_color": "#06112d",
+  "background_color": "#f1f6fb",
+  "theme_color": "#f1f6fb",
   "icons": [
     {
       "src": "/img/app-icon-192.png",
