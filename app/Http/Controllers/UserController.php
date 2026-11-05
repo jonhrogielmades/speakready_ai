@@ -269,11 +269,6 @@ class UserController extends Controller
  ->calculate($dashboardPracticeDates)['current'];
  $experiencePoints = $profile->experience_points?? 0;
 
- $badgesEarned = [];
- if (! empty($profile->badges_earned)) {
- $badgesEarned = is_array($profile->badges_earned)? $profile->badges_earned: json_decode($profile->badges_earned, true)?? [];
- }
-
  // Modules and Progress (Dynamic)
  $learningProgress = LearningProgress::with('learningModule')
  ->where('user_id', $user_id)
@@ -381,7 +376,7 @@ class UserController extends Controller
 
   return $this->mobileView('dashboard', compact(
   'profile', 'totalSessions', 'avgScore', 'scoreTrend', 'dashboardTrend',
- 'radarData', 'aiFeedback', 'currentStreak', 'experiencePoints', 'badgesEarned',
+  'radarData', 'aiFeedback', 'currentStreak', 'experiencePoints',
  'learningLabProgress', 'recentNotifications', 'upcomingGoal',
    'dashboardMockScenarios', 'dashboardBubbleMessages', 'onboardingProgress', 'onboardingState',
    'dashboardTourAutoStart'

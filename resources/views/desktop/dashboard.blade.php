@@ -97,40 +97,6 @@
         ? 'fa-circle-dot'
         : ($trendImprovement < 0 ? 'fa-arrow-trend-down' : 'fa-arrow-trend-up');
     $goalTarget = isset($upcomingGoal) ? max(0, min(100, (int) round($upcomingGoal->target ?? 100))) : 100;
-    $achievementCatalog = [
-        [
-            'name' => 'First Interview',
-            'label' => 'First Interview',
-            'icon' => 'fa-medal',
-            'accent' => '#f59e0b',
-            'earned' => (($totalSessions ?? 0) > 0) || in_array('First Interview', $badgesEarned ?? [], true),
-            'status' => (($totalSessions ?? 0) > 0) ? 'Earned' : 'Start one',
-        ],
-        [
-            'name' => '3-Day Streak',
-            'label' => '3-Day Streak',
-            'icon' => 'fa-fire',
-            'accent' => '#ef4444',
-            'earned' => (($currentStreak ?? 0) >= 3) || in_array('3-Day Streak', $badgesEarned ?? [], true),
-            'status' => (($currentStreak ?? 0) >= 3) ? 'Earned' : max(0, (int) ($currentStreak ?? 0)).'/3 days',
-        ],
-        [
-            'name' => 'STAR Master',
-            'label' => 'STAR Master',
-            'icon' => 'fa-star',
-            'accent' => '#2563eb',
-            'earned' => in_array('STAR Master', $badgesEarned ?? [], true),
-            'status' => in_array('STAR Master', $badgesEarned ?? [], true) ? 'Earned' : 'In Progress',
-        ],
-        [
-            'name' => 'Top Comm',
-            'label' => 'Top Comm',
-            'icon' => 'fa-bullhorn',
-            'accent' => '#22c55e',
-            'earned' => ($scoreVal >= 80) || in_array('Top Comm', $badgesEarned ?? [], true),
-            'status' => ($scoreVal >= 80) ? 'Earned' : 'Locked',
-        ],
-    ];
     $dashboardJobPositionOptions = collect(config('speakready_scope.job_positions', []))
         ->flatten()
         ->map(fn ($position) => trim((string) $position))
@@ -508,32 +474,6 @@
                 @endif
             </section>
             </div>
-
-            <section id="card-achievements" class="sr-card sr-card-pad sr-side-feature sr-achievements-main" style="--side-accent:#f59e0b">
-                <div class="sr-side-feature-header">
-                    <div class="sr-side-title-row">
-                        <div class="sr-side-icon"><i class="fa-solid fa-trophy"></i></div>
-                        <div>
-                            <h5 class="sr-side-title">Achievements</h5>
-                            <p class="sr-side-subtitle">Milestones earned through practice.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View All <i class="fa-solid fa-chevron-right"></i></a>
-                </div>
-                <div class="sr-achievement-showcase">
-                    @foreach($achievementCatalog as $achievement)
-                        @php $earned = (bool) $achievement['earned']; @endphp
-                        <div class="sr-achievement-tile" style="--accent: {{ $achievement['accent'] }}">
-                            <div class="sr-achievement-tile-icon"><i class="fa-solid {{ $achievement['icon'] }}"></i></div>
-                            <div class="sr-achievement-tile-title">{{ $achievement['label'] }}</div>
-                            <div class="sr-achievement-status">
-                                @if(! $earned && $achievement['status'] === 'Locked')<i class="fa-solid fa-lock"></i>@endif
-                                {{ $earned ? 'Earned' : $achievement['status'] }}
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
 
         </main>
     </div>

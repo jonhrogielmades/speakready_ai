@@ -186,6 +186,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('href="'.route('interview.setup').'"', false)
                 ->assertSee('id="card-current-goal"', false)
                 ->assertSee('href="'.route('user.progress').'"', false)
+                ->assertDontSee('id="card-achievements"', false)
                 ->assertDontSee('Sharpen 3 advanced advanced answers', false);
 
             if (str_contains($case['css'], 'mobile/dashboard.css')) {
