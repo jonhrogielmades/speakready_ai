@@ -201,7 +201,7 @@
  <div class="setup-card-field">
  <label class="setup-card-label" for="jobCategoryFilter">
  <span class="setup-card-label-icon" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
- Job Category <span class="setup-optional-label">Optional</span>
+ Job Category
  </label>
  <div class="setup-select-wrap">
  <select class="oinp" id="jobCategoryFilter" name="job_category">
