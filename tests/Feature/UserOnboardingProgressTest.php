@@ -521,6 +521,7 @@ class UserOnboardingProgressTest extends TestCase
                 ->assertSee('window.openSpeakReadyFirstSteps = openFirstSteps', false)
                 ->assertSee('sr-first-steps-skip-confirm-active', false)
                 ->assertSee('backdrop-filter: blur(16px) saturate(0.72)', false)
+                ->assertSee('grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);', false)
                 ->assertSee('js/onboarding-voiceover.js?v=2', false)
                 ->assertSee('window.SpeakReadyOnboardingVoiceover?.create?.({', false)
                 ->assertSee('const tourSavedOrLiveVoiceoverAvailable = Boolean(tourVoiceoverEndpoint);', false)

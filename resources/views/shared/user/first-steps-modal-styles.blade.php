@@ -471,7 +471,7 @@
 
         .sr-first-steps-footer-actions {
             display: grid;
-            grid-template-columns: auto minmax(0, 1fr);
+            grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
             width: 100%;
         }
 
