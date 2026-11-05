@@ -10212,3 +10212,11 @@ body.dm .sr-trend-note i {
     font-size: 1.1rem !important;
     line-height: 1 !important;
 }
+
+/* The mobile shell has a more-specific meter rule earlier in this file;
+   repeat the sizing here so the enlarged contents win in the phone layout. */
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-meter > i,
+body.user-mobile-shell :is(#mob-content, #userAppContent) .sr-dashboard .sr-mobile-stat-grid .sr-stat-meter > span {
+    font-size: 1.1rem !important;
+    line-height: 1 !important;
+}
