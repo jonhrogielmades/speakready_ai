@@ -1,0 +1,141 @@
+.sr-pwa-install-prompt[hidden] {
+    display: none !important;
+}
+
+[data-pwa-install-action][hidden],
+#heroInstallBtn[hidden] {
+    display: none !important;
+}
+
+body.sr-pwa-dialog-open {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
+
+.sr-pwa-install-prompt {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding:
+        max(18px, env(safe-area-inset-top, 0px))
+        max(14px, env(safe-area-inset-right, 0px))
+        max(18px, env(safe-area-inset-bottom, 0px))
+        max(14px, env(safe-area-inset-left, 0px));
+    background: rgba(2, 6, 23, 0.62);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.sr-pwa-install-prompt .pwa-install-dialog {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: min(100%, 410px);
+    max-height: calc(100vh - 36px);
+    max-height: calc(100dvh - 36px);
+    overflow-y: auto;
+    transform: none;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 20px;
+    padding: 24px;
+    background: rgba(8, 15, 29, 0.98);
+    box-shadow: 0 28px 80px rgba(2, 6, 23, 0.5);
+    color: #f8fafc;
+    text-align: center;
+}
+
+.lm .sr-pwa-install-prompt .pwa-install-dialog {
+    border-color: rgba(37, 99, 235, 0.18);
+    background: rgba(255, 255, 255, 0.99);
+    box-shadow: 0 28px 80px rgba(15, 23, 42, 0.2);
+    color: #0f172a;
+}
+
+.sr-pwa-install-prompt .pwa-install-icon {
+    display: block;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 14px;
+    border-radius: 16px;
+    object-fit: cover;
+    box-shadow: 0 12px 32px rgba(37, 99, 235, 0.25);
+}
+
+.sr-pwa-install-prompt h5 {
+    margin: 0 0 8px;
+    color: inherit;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.sr-pwa-install-prompt p {
+    margin: 0 0 20px;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+    line-height: 1.62;
+    white-space: pre-line;
+}
+
+.lm .sr-pwa-install-prompt p {
+    color: #475569;
+}
+
+.sr-pwa-install-prompt .pwa-btn-wrap {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.sr-pwa-install-prompt .pwa-btn-no,
+.sr-pwa-install-prompt .pwa-btn-yes {
+    width: 100%;
+    min-height: 46px;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font: inherit;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.sr-pwa-install-prompt .pwa-btn-no {
+    border: 1px solid rgba(148, 163, 184, 0.38);
+    background: transparent;
+    color: inherit;
+}
+
+.sr-pwa-install-prompt .pwa-btn-yes {
+    border: 0;
+    background: linear-gradient(135deg, #2563eb, #06b6d4);
+    color: #fff;
+}
+
+.sr-pwa-install-prompt[data-mode="manual"] .pwa-btn-no,
+.sr-pwa-install-prompt[data-mode="installed"] .pwa-btn-no,
+.sr-pwa-install-prompt[data-mode="unavailable"] .pwa-btn-no {
+    grid-column: 1 / -1;
+}
+
+.sr-pwa-install-prompt :is(.pwa-btn-no, .pwa-btn-yes):focus-visible {
+    outline: 3px solid rgba(96, 165, 250, 0.45);
+    outline-offset: 3px;
+}
+
+@media (max-width: 420px) {
+    .sr-pwa-install-prompt .pwa-install-dialog {
+        padding: 21px 18px;
+        border-radius: 17px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sr-pwa-install-prompt,
+    .sr-pwa-install-prompt * {
+        scroll-behavior: auto !important;
+        animation: none !important;
+        transition: none !important;
+    }
+}

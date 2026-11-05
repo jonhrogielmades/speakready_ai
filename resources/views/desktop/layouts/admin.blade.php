@@ -8,8 +8,7 @@
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json?v=8') }}">
-      <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
+      @include('shared.pwa-meta')
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <!-- Bootstrap 5.3 -->
@@ -147,7 +146,7 @@
       </style>
       @stack('styles')
    </head>
-   <body class="admin-shell desktop-shell" data-layout-shell="desktop" data-app-surface="admin">
+   <body class="admin-shell desktop-shell" data-layout-shell="desktop" data-app-surface="admin" data-pwa-auto-install="true">
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar">
@@ -239,7 +238,7 @@
                   <i class="fa-solid fa-moon" id="dbMoonI"></i>
                   </button>
                   <div style="position:relative" id="profileWrap">
-                     <div class="db-user-pill" id="userPill" onclick="toggleProfile(event)">
+                     <button class="db-user-pill" id="userPill" type="button" aria-label="Open profile menu" aria-haspopup="true" aria-expanded="false" aria-controls="profileDropdown" onclick="toggleProfile(event)">
                         @if(Auth::check() && Auth::user()->profile_photo_path)
                                 @php
                                     $photoPath = Auth::user()->profile_photo_path;
@@ -255,12 +254,13 @@
                            <div style="font-size:.85rem;font-weight:600;line-height:1.2" id="userName">{{ Auth::user()->name ?? 'Admin' }}</div>
                         </div>
                         <i class="fa-solid fa-chevron-down fa-xs" id="profileChevron" style="color:var(--tx3);margin-left:2px;transition:.3s"></i>
-                     </div>
+                     </button>
                      <!-- Profile Dropdown -->
-                     <div class="db-dropdown profile-dd" id="profileDropdown" style="right:0">
+                     <div class="db-dropdown profile-dd" id="profileDropdown" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="userPill" style="right:0">
                         <div style="padding:8px 0">
                            <a href="{{ route('admin.account') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-user-shield me-2"></i>Account Management</a>
                            <a href="{{ route('admin.settings.index') }}" class="profile-menu-item" style="display:block;text-decoration:none;color:var(--tx2);"><i class="fa-solid fa-gear me-2"></i>System Settings</a>
+                            <button type="button" class="profile-menu-item" data-pwa-install-action style="width:100%;text-align:left;color:var(--tx2);"><i class="fa-solid fa-download me-2"></i>Install App</button>
                            <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                               @csrf
                               <button type="submit" class="profile-menu-item danger" style="width:100%;text-align:left;"><i class="fa-solid fa-right-from-bracket" style="color:#f87171"></i>Log Out</button>
@@ -279,6 +279,7 @@
          </div>
       </div>
       @stack('modals')
+      @include('shared.pwa-install-prompt')
       <!-- ======================== SCRIPTS ======================== -->
       <!-- jQuery -->
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
@@ -359,17 +360,6 @@
             closeDashboardSidebar();
             syncSidebarToggleState();
          });
-
-         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=46').then(function(registration) {
-                  if (!registration) return;
-                  console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
-               }, function(err) {
-                  console.log('ServiceWorker registration failed: ', err);
-               });
-            });
-         }
 
          function setupAdminPageSearch() {
             const form = document.querySelector('[data-admin-page-search-form]');

@@ -139,7 +139,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('data-sr-setup-tool="microphone"', false)
                 ->assertSee('data-sr-setup-tool="camera"', false)
                 ->assertSee('data-sr-setup-tool="notifications"', false)
-                ->assertSee('sw.js?v=46', false)
+                ->assertSee('sw.js?v=47', false)
                 ->assertSee('push-notifications.js?v=7', false)
                 ->assertDontSee('SPEAKREADY_PUSH_NOTIFICATION_RECEIVED', false)
                 ->assertDontSee('has-live-push', false)
@@ -158,12 +158,12 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee("'HTMLUserMediaElement' in window", false)
                 ->assertSee('document.permissionsPolicy || document.featurePolicy', false)
                 ->assertSee("setMediaPermissionIssue(tool, 'policy_blocked')", false)
-                ->assertSee("Site controls > Permissions", false)
+                ->assertSee('Site controls > Permissions', false)
                 ->assertSee('window.isSecureContext === false', false)
                 ->assertSee('navigator.permissions.query({ name: tool })', false)
                 ->assertSee("document.addEventListener('visibilitychange'", false)
                 ->assertSee("window.matchMedia('(display-mode: standalone)')", false)
-                ->assertSee("permissionState === null && verifyGranted", false)
+                ->assertSee('permissionState === null && verifyGranted', false)
                 ->assertSee('input.disabled = true', false)
                 ->assertSee("const blockedTools = finalEnabledTools.filter((tool) => results[tool] !== 'granted');", false)
                 ->assertSee('if (blockedTools.length)', false)
@@ -171,7 +171,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('Some selected tools still need browser permission.', false)
                 ->assertSee('speakready.firstSteps.returnAfterSetup.', false)
                 ->assertDontSee('speakready.firstSteps.returnAfterTour.', false)
-                ->assertDontSee("speakready:dashboard-tour-closed", false)
+                ->assertDontSee('speakready:dashboard-tour-closed', false)
                 ->assertSee('data-sr-auto-start-dashboard-tour="false"', false);
 
             $html = $response->getContent();

@@ -80,11 +80,12 @@ assert(new Set(legalPageStyleVersions).size === 1, `legal-page.css cache version
 const serviceWorkerVersions = [...viewSource.matchAll(/sw\.js\?v=(\d+)/g)].map(match => match[1]);
 assert(serviceWorkerVersions.length > 0, 'No service-worker asset reference was found in the views.');
 assert(new Set(serviceWorkerVersions).size === 1, `Service-worker asset versions are inconsistent: ${[...new Set(serviceWorkerVersions)].join(', ')}`);
+assert(!/beforeinstallprompt|appinstalled/u.test(viewSource), 'Legacy PWA install event handlers remain in a Blade view. Use the shared PWA controller.');
+assert(!/serviceWorker\.register\s*\(/u.test(viewSource), 'A Blade view still registers the service worker directly. Use the shared PWA controller.');
 
 const worker = read('public/sw.js');
 const cacheVersion = worker.match(/const CACHE_NAME = 'speakready-pwa-v(\d+)'/u)?.[1];
-const refreshVersion = worker.match(/const CLIENT_REFRESH_VALUE = 'pwa-v(\d+)'/u)?.[1];
-assert(cacheVersion && cacheVersion === refreshVersion, 'Service-worker cache and client refresh versions do not match.');
+assert(cacheVersion && serviceWorkerVersions.every(version => version === cacheVersion), 'Service-worker cache and asset versions do not match.');
 
 const userUi = read('public/js/user-ui.js');
 const dashboardSetupModal = read('resources/views/shared/user/dashboard-setup-tools-modal.blade.php');
@@ -137,6 +138,7 @@ for (const relativePath of [
     'public/js/main.js',
     'public/js/media-permission-support.js',
     'public/js/onboarding-voiceover.js',
+    'public/js/pwa-install.js',
     'public/js/user-ui.js',
     'public/js/push-notifications.js',
     'public/sw.js',

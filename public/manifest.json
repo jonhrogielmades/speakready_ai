@@ -1,14 +1,27 @@
 {
+  "id": "/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1",
   "name": "SpeakReady AI",
   "short_name": "SpeakReady",
   "description": "Practice interviews with AI coaching and instant feedback.",
-  "start_url": "/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/?sr_pwa=1",
   "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "related_applications": [
     {
       "platform": "webapp",
-      "url": "/manifest.json"
+      "url": "/manifest.json?v=9",
+      "id": "/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1"
     }
   ],
   "prefer_related_applications": false,
@@ -22,19 +35,7 @@
       "purpose": "any"
     },
     {
-      "src": "/img/notification-icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/img/notification-badge.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "monochrome"
-    },
-    {
-      "src": "/img/app-icon-maskable-192.png",
+      "src": "/img/app-icon-maskable-v2-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
@@ -52,8 +53,14 @@
       "purpose": "any"
     },
     {
-      "src": "/img/app-icon-maskable-512.png",
+      "src": "/img/app-icon-maskable-v2-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/img/app-icon-maskable-v2-1024.png",
+      "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "maskable"
     }

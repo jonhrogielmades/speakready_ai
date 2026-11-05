@@ -4,15 +4,12 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#08080f">
-      <meta name="apple-mobile-web-app-capable" content="yes">
-      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <meta name="csrf-token" content="{{ csrf_token() }}">
       <title>Terms and Conditions - SpeakReady AI</title>
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'mobile'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json?v=8') }}">
-      <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
+      @include('shared.pwa-meta', ['pwaStatusBarStyle' => 'black-translucent'])
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -650,5 +647,6 @@
          })();
       </script>
       @include('shared.terms.registration-success-modal')
+      @include('shared.pwa-install-prompt')
    </body>
 </html>

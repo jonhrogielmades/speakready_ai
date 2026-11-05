@@ -63,30 +63,38 @@ class PwaRememberedLoginTest extends TestCase
             ->assertRedirect(route('dashboard', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']));
     }
 
-    public function test_pwa_manifest_starts_in_mobile_layout(): void
+    public function test_pwa_manifest_uses_an_adaptive_start_url_and_preserves_its_existing_identity(): void
     {
         $manifest = json_decode(file_get_contents(public_path('manifest.json')), true);
 
-        $this->assertSame('/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1', $manifest['start_url'] ?? null);
+        $this->assertSame('/?sr_pwa=1', $manifest['start_url'] ?? null);
+        $this->assertSame('/?sr_layout=mobile&sr_is_mobile=1&sr_pwa=1', $manifest['id'] ?? null);
+        $this->assertSame('/', $manifest['scope'] ?? null);
+        $this->assertSame('standalone', $manifest['display'] ?? null);
+        $this->assertSame($manifest['id'], $manifest['related_applications'][0]['id'] ?? null);
+        $this->assertSame('/manifest.json?v=9', $manifest['related_applications'][0]['url'] ?? null);
     }
 
     public function test_pwa_service_worker_cache_version_is_bumped_and_code_assets_are_network_first(): void
     {
         $worker = file_get_contents(public_path('sw.js'));
 
-        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v46';", $worker);
-        $this->assertStringContainsString("const CLIENT_REFRESH_PARAM = 'sr_sw_refresh';", $worker);
-        $this->assertStringContainsString("const CLIENT_REFRESH_VALUE = 'pwa-v46';", $worker);
+        $this->assertStringContainsString("const CACHE_PREFIX = 'speakready-pwa-';", $worker);
+        $this->assertStringContainsString("const CACHE_NAME = 'speakready-pwa-v47';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_ICON = '/img/notification-icon-192.png?v=3';", $worker);
         $this->assertStringContainsString("const NOTIFICATION_BADGE = '/img/notification-badge.png?v=4';", $worker);
-        $this->assertStringContainsString("const DEFAULT_NOTIFICATION_ACTIONS", $worker);
+        $this->assertStringContainsString('const DEFAULT_NOTIFICATION_ACTIONS', $worker);
         $this->assertStringContainsString('notificationVibration(payload)', $worker);
         $this->assertStringContainsString('requireInteraction: payload.requireInteraction === true', $worker);
         $this->assertStringNotContainsString('SPEAKREADY_PUSH_NOTIFICATION_RECEIVED', $worker);
         $this->assertStringNotContainsString('SHOW_ADMIN_ACTIVITY_NOTIFICATION', $worker);
         $this->assertStringContainsString("self.clients.matchAll({ type: 'window', includeUncontrolled: true })", $worker);
-        $this->assertStringContainsString('client.navigate(nextUrl)', $worker);
-        $this->assertStringContainsString('refreshControlledClients()', $worker);
+        $this->assertStringContainsString('cacheName.startsWith(CACHE_PREFIX)', $worker);
+        $this->assertStringContainsString("'/manifest.json'", $worker);
+        $this->assertStringContainsString("'/img/app-icon-maskable-v2-512.png'", $worker);
+        $this->assertStringNotContainsString('client.navigate(nextUrl)', $worker);
+        $this->assertStringNotContainsString('refreshControlledClients()', $worker);
+        $this->assertStringNotContainsString('CLIENT_REFRESH_PARAM', $worker);
         $this->assertStringContainsString('if (isCodeAsset(event.request))', $worker);
         $this->assertStringContainsString('return freshResponse().catch(() => cache.match(event.request));', $worker);
     }

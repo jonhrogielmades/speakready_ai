@@ -41,8 +41,7 @@
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json?v=8') }}">
-      <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
+      @include('shared.pwa-meta')
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -149,7 +148,7 @@
       @include('shared.user.first-steps-modal-styles')
       @stack('styles')
    </head>
-   <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user">
+   <body class="user-desktop-shell desktop-shell @yield('body-class')" data-layout-shell="desktop" data-app-surface="user" data-pwa-auto-install="true" data-pwa-suppress-auto-install="{{ request()->routeIs('interview.session') ? 'true' : 'false' }}">
       <div id="dashboard">
          <!-- Sidebar -->
          <div class="db-sidebar" id="dbSidebar">
@@ -292,6 +291,7 @@
                         <div style="padding:8px 0">
                            <a href="{{ route('user.account') }}" class="profile-menu-item profile-menu-account {{ request()->routeIs('user.account') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-user-gear me-2"></i>Account Management</a>
                            <a href="{{ route('user.notifications') }}" class="profile-menu-item profile-menu-notifications {{ request()->routeIs('user.notifications') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
+                            <button type="button" class="profile-menu-item" data-pwa-install-action style="width:100%;text-align:left;"><i class="fa-solid fa-download me-2"></i>Install App</button>
                            <form action="{{ route('user.language.update') }}" method="POST" class="profile-language-form" style="padding:10px 16px 8px;">
                               @csrf
                               <label for="profileLanguageSelect" class="profile-language-label" style="display:flex;align-items:center;gap:8px;font-size:.86rem;font-weight:600;margin-bottom:8px;">
@@ -344,6 +344,7 @@
             </div>
          </div>
       </div>
+      @include('shared.pwa-install-prompt')
       <!-- ======================== SCRIPTS ======================== -->
       <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
@@ -357,7 +358,7 @@
             subscribeUrl: @json(route('user.notifications.push.subscribe')),
             testUrl: @json(route('user.notifications.push.test')),
             unsubscribeUrl: @json(route('user.notifications.push.unsubscribe')),
-            serviceWorkerUrl: @json(asset('sw.js?v=46')),
+            serviceWorkerUrl: @json(asset('sw.js?v=47')),
             csrfToken: @json(csrf_token())
          };
       </script>
@@ -554,18 +555,6 @@
             syncSidebarToggleState();
          });
 
-         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=46').then(function(registration) {
-                  if (!registration) return;
-                  window.SpeakReadyServiceWorkerRegistration = registration;
-                  console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
-               }, function(err) {
-                  console.log('ServiceWorker registration failed: ', err);
-               });
-            });
-         }
-         
          function triggerMobTutorial(attempt = 0) {
             if (typeof window.startOnboardingTour === 'function') {
                const started = window.startOnboardingTour();

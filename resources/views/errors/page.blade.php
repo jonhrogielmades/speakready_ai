@@ -20,6 +20,7 @@
     <meta name="theme-color" content="#effbff">
     <title>{{ $errorCode }} &middot; {{ $systemName }}</title>
     <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+    @include('shared.pwa-meta')
     <style>
         :root {
             color-scheme: light;
@@ -354,5 +355,6 @@
             <p class="error-footer">&copy; {{ date('Y') }} {{ $systemName }} &middot; Your next confident answer starts with practice.</p>
         </section>
     </main>
+    @include('shared.pwa-install-prompt')
 </body>
 </html>

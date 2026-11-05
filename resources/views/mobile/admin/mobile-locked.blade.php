@@ -7,6 +7,7 @@
       <title>Admin Desktop Only | SpeakReady AI</title>
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'mobile'])
       <link rel="icon" href="{{ asset('img/logo.png') }}" type="image/png">
+      @include('shared.pwa-meta')
       <link rel="stylesheet" href="{{ asset('css/bootstrap.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/admin/mobile-locked.css?v=1') }}" data-page-style="admin-mobile-locked">
@@ -41,5 +42,6 @@
             </form>
          </div>
       </main>
+      @include('shared.pwa-install-prompt')
    </body>
 </html>

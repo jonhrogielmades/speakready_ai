@@ -8,6 +8,7 @@
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'img/logo.png') }}" type="image/png">
+      @include('shared.pwa-meta')
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -42,5 +43,6 @@
          </section>
       </main>
       @endif
+      @include('shared.pwa-install-prompt')
    </body>
 </html>

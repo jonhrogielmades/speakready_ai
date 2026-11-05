@@ -8,8 +8,7 @@
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'desktop'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json?v=8') }}">
-      <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
+      @include('shared.pwa-meta')
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -221,7 +220,7 @@
          }
       </style>
    </head>
-   <body class="guest-shell guest-desktop-shell" data-layout-shell="desktop" data-guest-layout="desktop">
+   <body class="guest-shell guest-desktop-shell" data-layout-shell="desktop" data-guest-layout="desktop" data-pwa-auto-install="true">
       @include('desktop.partials.viewport-mobile-cookie')
 <!-- ======================== LANDING PAGE ======================== -->
       <div id="landing">
@@ -288,7 +287,7 @@
                      <p class="hero-home-copy-text afu" style="animation-delay:.2s">Practice realistic job interviews with AI-powered coaching, camera detection, and evidence-based feedback.</p>
                      <div class="hero-cta-row d-flex align-items-center justify-content-center gap-3 flex-wrap">
                         <a href="{{ route('register', sr_layout_query()) }}" class="bgrd btn px-4 py-3 fs-6 hero-primary-cta">Start Practicing Free</a>
-                        <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn hero-secondary-cta" id="heroInstallBtn" hidden><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
+                        <button type="button" class="boc btn px-4 py-3 fs-6 hero-install-btn hero-secondary-cta" id="heroInstallBtn" data-pwa-install-action hidden><i class="fa-solid fa-download me-2" aria-hidden="true"></i>Install App</button>
                         <a href="#how" class="boc btn px-4 py-3 fs-6 hero-secondary-cta hero-how-it-works-cta">How Interview Works?</a>
                      </div>
                      <div class="hero-trust-row" role="list" aria-label="What you can do with SpeakReady AI">
@@ -686,16 +685,7 @@
 
 
       <!-- ===== PWA INSTALL PROMPT ===== -->
-      <div id="pwa-install-prompt" role="dialog" aria-labelledby="pwaPromptTitle" aria-describedby="pwaPromptCopy">
-         <div class="pwa-install-dialog">
-            <h5 id="pwaPromptTitle">Install SpeakReady AI</h5>
-            <p id="pwaPromptCopy">Do you want to install this app for a better and faster experience?</p>
-            <div class="pwa-btn-wrap">
-               <button type="button" id="pwa-btn-no" class="pwa-btn-no">No</button>
-               <button type="button" id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
-            </div>
-         </div>
-      </div>
+      @include('shared.pwa-install-prompt')
 
       <button type="button" id="backToTopBtn" class="back-to-top-btn" aria-label="Back to top. Drag to move." title="Drag or tap to go back to top">
          <i class="fa-solid fa-arrow-up" aria-hidden="true"></i>
@@ -708,212 +698,6 @@
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       @include('desktop.partials.flash-modal', ['includeValidationErrors' => false])
       <script src="{{ asset('js/guest.js?v=3') }}"></script>
-      <!-- PWA Service Worker Registration -->
-      <script>
-         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=46').then(function(registration) {
-                  if (!registration) return;
-                  console.log('ServiceWorker registration successful with scope: ', registration.scope || '/');
-               }, function(err) {
-                  console.log('ServiceWorker registration failed: ', err);
-               });
-            });
-         }
-
-         // PWA Install Prompt Logic
-         let deferredPrompt;
-         let installButtonStateRequest = 0;
-         const PWA_APP_INSTALLED_KEY = 'pwa_app_installed';
-         const PWA_PROMPT_DISMISSED_KEY = 'pwa_prompt_dismissed';
-         const PWA_PROMPT_AUTO_SHOWN_KEY = 'pwa_prompt_auto_shown';
-         const PWA_PROMPT_LAST_SHOWN_KEY = 'pwa_prompt_last_shown_at';
-
-         function isPwaRunningStandalone() {
-            return window.matchMedia('(display-mode: standalone)').matches ||
-               window.navigator.standalone === true;
-         }
-
-         function isPwaAlreadyInstalled() {
-            return isPwaRunningStandalone() ||
-               localStorage.getItem(PWA_APP_INSTALLED_KEY) === 'true';
-         }
-
-         async function detectPwaAlreadyInstalled() {
-            if (isPwaRunningStandalone()) {
-               localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
-               document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
-               return true;
-            }
-
-            if ('getInstalledRelatedApps' in navigator) {
-               try {
-                  const relatedApps = await navigator.getInstalledRelatedApps();
-                  const isInstalled = relatedApps.length > 0;
-
-                  if (isInstalled) {
-                     localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
-                     document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
-                  } else {
-                     localStorage.removeItem(PWA_APP_INSTALLED_KEY);
-                  }
-
-                  return isInstalled;
-               } catch (error) {
-                  // Fall back to the local marker when the browser cannot query related apps.
-               }
-            }
-
-            return localStorage.getItem(PWA_APP_INSTALLED_KEY) === 'true';
-         }
-
-         function shouldAutoShowPwaInstallPrompt() {
-            if (
-               isPwaAlreadyInstalled() ||
-               localStorage.getItem(PWA_PROMPT_DISMISSED_KEY) ||
-               localStorage.getItem(PWA_PROMPT_AUTO_SHOWN_KEY) ||
-               localStorage.getItem(PWA_PROMPT_LAST_SHOWN_KEY)
-            ) {
-               return false;
-            }
-
-            return true;
-         }
-
-         function rememberPwaInstallPromptShown() {
-            localStorage.setItem(PWA_PROMPT_AUTO_SHOWN_KEY, 'true');
-            localStorage.setItem(PWA_PROMPT_LAST_SHOWN_KEY, String(Date.now()));
-         }
-
-         function renderInstallButtonState(isInstalled) {
-            const installButton = document.getElementById('heroInstallBtn');
-            if (!installButton) return;
-
-            const icon = installButton.querySelector('i');
-             const label = isInstalled ? 'Already Installed' : 'Install App';
-             installButton.hidden = isInstalled;
-             installButton.disabled = false;
-             installButton.classList.remove('is-disabled');
-
-             if (icon) {
-               installButton.replaceChildren(icon, document.createTextNode(label));
-            } else {
-               installButton.textContent = label;
-            }
-
-            installButton.setAttribute('aria-label', label);
-         }
-
-         async function updateInstallButtonState(forcedState = null) {
-            const installButton = document.getElementById('heroInstallBtn');
-            if (!installButton) return;
-
-            const requestId = ++installButtonStateRequest;
-            const isInstalled = typeof forcedState === 'boolean'
-               ? forcedState
-               : await detectPwaAlreadyInstalled();
-
-            if (requestId !== installButtonStateRequest) return;
-            renderInstallButtonState(isInstalled);
-         }
-
-         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            // This event is authoritative: the browser has just confirmed that the
-            // PWA can be installed again, including after the user uninstalled it.
-            localStorage.removeItem(PWA_APP_INSTALLED_KEY);
-            deferredPrompt = e;
-            updateInstallButtonState(false);
-            if (shouldAutoShowPwaInstallPrompt()) {
-               queuePwaInstallPrompt();
-            }
-         });
-
-         window.addEventListener('appinstalled', () => {
-            localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
-            deferredPrompt = null;
-            document.getElementById('pwa-install-prompt')?.style.setProperty('display', 'none');
-            updateInstallButtonState(true);
-         });
-
-         const standaloneDisplayMode = window.matchMedia('(display-mode: standalone)');
-         if (standaloneDisplayMode.addEventListener) {
-            standaloneDisplayMode.addEventListener('change', updateInstallButtonState);
-         } else if (standaloneDisplayMode.addListener) {
-            standaloneDisplayMode.addListener(updateInstallButtonState);
-         }
-
-         document.addEventListener('DOMContentLoaded', updateInstallButtonState);
-         updateInstallButtonState();
-
-         function queuePwaInstallPrompt() {
-            const prompt = document.getElementById('pwa-install-prompt');
-            if (!prompt || !shouldAutoShowPwaInstallPrompt()) return;
-            rememberPwaInstallPromptShown();
-
-            if (!isPwaAlreadyInstalled()) {
-               showPwaInstallMessage('Install SpeakReady AI', 'Do you want to install this app for a better and faster experience?', true);
-            }
-         }
-
-         async function triggerInstall() {
-             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-             const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-             const prompt = document.getElementById('pwa-install-prompt');
-
-             if (isStandalone) {
-                 showPwaInstallMessage('Already installed', 'SpeakReady AI is already running as an installed app on this device.', false);
-                 return;
-             }
-
-            if (deferredPrompt) {
-               deferredPrompt.prompt();
-               const { outcome } = await deferredPrompt.userChoice;
-               console.log(`User response to the install prompt: ${outcome}`);
-               if (outcome === 'accepted') {
-                  localStorage.setItem(PWA_APP_INSTALLED_KEY, 'true');
-               }
-               deferredPrompt = null;
-               prompt?.style.setProperty('display', 'none');
-               updateInstallButtonState();
-             } else {
-                if (isIos) {
-                    showPwaInstallMessage('Install from Safari', "Tap Safari's Share button, then choose Add to Home Screen.", false);
-                } else {
-                    showPwaInstallMessage('Install unavailable', 'Your browser is not offering an install prompt right now. Try Chrome or Edge, or use your browser menu if it shows Install app.', false);
-                }
-             }
-          }
-
-          function showPwaInstallMessage(title, message, allowInstall) {
-             const prompt = document.getElementById('pwa-install-prompt');
-             const promptTitle = document.getElementById('pwaPromptTitle');
-             const promptCopy = document.getElementById('pwaPromptCopy');
-             const yesButton = document.getElementById('pwa-btn-yes');
-             const noButton = document.getElementById('pwa-btn-no');
-
-             if (!prompt) return;
-             if (allowInstall && isPwaAlreadyInstalled()) return;
-
-             if (promptTitle) promptTitle.textContent = title;
-             if (promptCopy) promptCopy.textContent = message;
-             if (yesButton) yesButton.hidden = !allowInstall;
-             if (noButton) noButton.textContent = allowInstall ? 'No' : 'OK';
-             prompt.dataset.mode = allowInstall ? 'install' : 'message';
-             prompt.style.display = 'block';
-          }
-
-         document.getElementById('pwa-btn-yes')?.addEventListener('click', triggerInstall);
-         document.getElementById('heroInstallBtn')?.addEventListener('click', triggerInstall);
-
-          document.getElementById('pwa-btn-no')?.addEventListener('click', () => {
-             document.getElementById('pwa-install-prompt').style.display = 'none';
-             if (document.getElementById('pwa-install-prompt')?.dataset.mode !== 'message') {
-                localStorage.setItem(PWA_PROMPT_DISMISSED_KEY, 'true');
-             }
-          });
-      </script>
-
       <script>
          document.addEventListener('DOMContentLoaded', function() {
             const backToTopBtn = document.getElementById('backToTopBtn');

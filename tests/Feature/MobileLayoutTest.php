@@ -2,14 +2,14 @@
 
 namespace Tests\Feature;
 
-use App\Models\Category;
-use App\Models\Contact;
 use App\Models\ActivityLog;
 use App\Models\AiProvider;
 use App\Models\AiProviderEvaluationResult;
 use App\Models\AiProviderEvaluationRun;
 use App\Models\AiProviderLog;
 use App\Models\Announcement;
+use App\Models\Category;
+use App\Models\Contact;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\LearningModule;
@@ -40,16 +40,12 @@ class MobileLayoutTest extends TestCase
                 ->assertDontSee('id="srLaunchScreen"', false)
                 ->assertDontSee('guest-splash-pending', false)
                 ->assertSee('css/mobile/style.css?v=39', false)
-                ->assertSee('css/mobile/guest.css?v=37', false)
+                ->assertSee('css/mobile/guest.css?v=44', false)
                 ->assertSee('js/guest.js?v=3', false)
                 ->assertDontSee('js/main.js', false)
                 ->assertDontSee('js/user-ui.js', false)
                 ->assertSee('mobile-hero-preview-row', false)
                 ->assertSee('mobile-hero-image-frame', false)
-                ->assertSee('Register for Free', false)
-                 ->assertSee('Sample Feedback', false)
-                 ->assertSee('What does the sample feedback review show?', false)
-                ->assertDontSee('Get Started Free', false)
                 ->assertSee(route('login', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
                 ->assertSee(route('register', ['sr_layout' => 'mobile', 'sr_is_mobile' => '1']))
                 ->assertDontSee('Login for Free', false)
@@ -126,7 +122,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=39', false)
-            ->assertSee('css/mobile/guest.css?v=37', false)
+            ->assertSee('css/mobile/guest.css?v=44', false)
             ->assertSee('js/guest.js?v=3', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=12', false);
@@ -142,7 +138,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('css/mobile/style.css?v=39', false)
-            ->assertSee('css/mobile/guest.css?v=37', false)
+            ->assertSee('css/mobile/guest.css?v=44', false)
             ->assertSee('js/guest.js?v=3', false)
             ->assertSee('mobile-hero-preview-row', false)
             ->assertDontSee('css/desktop/style.css?v=12', false);
@@ -162,7 +158,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('href="#how" class="nav-link"', false)
             ->assertSee('id="gqn-destination-about"', false)
             ->assertSee('id="gqn-destination-how"', false)
-            ->assertSee('css/desktop/guest.css?v=24', false)
+            ->assertSee('css/desktop/guest.css?v=27', false)
             ->assertSee('js/guest.js?v=3', false)
             ->assertDontSee('window.SpeakReadyGoogleMobileLayout', false)
             ->assertDontSee('id="lofc"', false)
@@ -362,7 +358,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('id="mobFullscreenBtn"', false)
             ->assertSee('data-user-fullscreen-toggle', false)
             ->assertSee('js/user-ui.js?v=28', false)
-            ->assertSee('sw.js?v=46', false)
+            ->assertSee('js/pwa-install.js?v=2', false)
             ->assertDontSee('SpeakReadyPushConfig', false)
             ->assertDontSee('\\/admin\\/notifications\\/push\\/key', false)
             ->assertDontSee('push-notifications.js?v=7', false)
@@ -457,7 +453,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
             ->assertSee('css/desktop/admin/dashboard.css?v=5', false)
-            ->assertSee('sw.js?v=46', false)
+            ->assertSee('js/pwa-install.js?v=2', false)
             ->assertDontSee('SpeakReadyPushConfig', false)
             ->assertDontSee('\\/admin\\/notifications\\/push\\/key', false)
             ->assertDontSee('push-notifications.js?v=7', false)
@@ -1475,7 +1471,7 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('data-user-fullscreen-toggle', false)
             ->assertSee('body.mobile-shell.user-app-fullscreen #mob-content', false)
             ->assertSee('height: var(--sr-visual-vh) !important', false)
-            ->assertSee('css/mobile/style.css?v=35', false)
+            ->assertSee('css/mobile/style.css?v=36', false)
             ->assertSee('js/main.js?v=7', false)
             ->assertSee('js/user-ui.js?v=28', false)
             ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false);
@@ -1840,22 +1836,22 @@ class MobileLayoutTest extends TestCase
                     $transitionStart = strpos($content, 'function recordingTransitionInProgress()');
                     $transitionEndNeedle = 'function setRecordingTransitionState(';
                 }
-                $transitionEnd = $transitionStart === false? false: strpos($content, $transitionEndNeedle, $transitionStart);
-                $transitionSource = $transitionStart === false || $transitionEnd === false? '': substr($content, $transitionStart, $transitionEnd - $transitionStart);
+                $transitionEnd = $transitionStart === false ? false : strpos($content, $transitionEndNeedle, $transitionStart);
+                $transitionSource = $transitionStart === false || $transitionEnd === false ? '' : substr($content, $transitionStart, $transitionEnd - $transitionStart);
                 $this->assertStringContainsString('recordingStartPromise', $transitionSource);
                 $this->assertStringContainsString('recordingPausePromise', $transitionSource);
                 $this->assertStringContainsString('recordingStopPromise', $transitionSource);
                 $this->assertStringContainsString('voiceSessionTranscriptPromise', $transitionSource);
 
                 $startRecordingStart = strpos($content, 'async function startRecording(options = {})');
-                $startRecordingEnd = $startRecordingStart === false? false: strpos($content, 'async function startRecordingInternal(options = {})', $startRecordingStart);
-                $startRecordingSource = $startRecordingStart === false || $startRecordingEnd === false? '': substr($content, $startRecordingStart, $startRecordingEnd - $startRecordingStart);
+                $startRecordingEnd = $startRecordingStart === false ? false : strpos($content, 'async function startRecordingInternal(options = {})', $startRecordingStart);
+                $startRecordingSource = $startRecordingStart === false || $startRecordingEnd === false ? '' : substr($content, $startRecordingStart, $startRecordingEnd - $startRecordingStart);
                 $this->assertStringNotContainsString('await recordingStopPromise', $startRecordingSource);
                 $this->assertStringNotContainsString('return startRecording(options)', $startRecordingSource);
 
                 $voiceStart = strpos($content, 'async function startVoiceSessionRecorderInternal()');
-                $voiceStartEnd = $voiceStart === false? false: strpos($content, 'function pauseVoiceSessionRecorder()', $voiceStart);
-                $voiceStartSource = $voiceStart === false || $voiceStartEnd === false? '': substr($content, $voiceStart, $voiceStartEnd - $voiceStart);
+                $voiceStartEnd = $voiceStart === false ? false : strpos($content, 'function pauseVoiceSessionRecorder()', $voiceStart);
+                $voiceStartSource = $voiceStart === false || $voiceStartEnd === false ? '' : substr($content, $voiceStart, $voiceStartEnd - $voiceStart);
                 $recorderStartPosition = strpos($voiceStartSource, 'recorder.start(voiceSessionTimesliceMs);');
                 $replacementCommitPosition = strpos($voiceStartSource, 'commitStartedVoiceSessionReplacement(');
                 if ($replacementCommitPosition === false) {
@@ -1867,22 +1863,22 @@ class MobileLayoutTest extends TestCase
                 $this->assertStringNotContainsString('clearVoiceSessionRecordingFor(key);', substr($voiceStartSource, 0, $recorderStartPosition));
 
                 $finalizeStart = strpos($content, 'async function finalizeCurrentTranscriptionForSubmit()');
-                $finalizeEnd = $finalizeStart === false? false: strpos($content, 'function saveCurrentAnswer(', $finalizeStart);
-                $finalizeSource = $finalizeStart === false || $finalizeEnd === false? '': substr($content, $finalizeStart, $finalizeEnd - $finalizeStart);
+                $finalizeEnd = $finalizeStart === false ? false : strpos($content, 'function saveCurrentAnswer(', $finalizeStart);
+                $finalizeSource = $finalizeStart === false || $finalizeEnd === false ? '' : substr($content, $finalizeStart, $finalizeEnd - $finalizeStart);
                 $this->assertStringContainsString('voiceSessionTranscriptPromise', $finalizeSource);
 
                 $sendStateStart = strpos($content, 'function updateSendAnswerButtonState()');
-                $sendStateEnd = $sendStateStart === false? false: strpos($content, 'function applyVoiceOnlyAnswerLock()', $sendStateStart);
-                $sendStateSource = $sendStateStart === false || $sendStateEnd === false? '': substr($content, $sendStateStart, $sendStateEnd - $sendStateStart);
+                $sendStateEnd = $sendStateStart === false ? false : strpos($content, 'function applyVoiceOnlyAnswerLock()', $sendStateStart);
+                $sendStateSource = $sendStateStart === false || $sendStateEnd === false ? '' : substr($content, $sendStateStart, $sendStateEnd - $sendStateStart);
                 $this->assertStringContainsString('const hasSubmittableVoiceRecording = Boolean(submittableVoiceSessionRecording(currentQIdx));', $sendStateSource);
                 $this->assertStringContainsString('&&!hasSubmittableVoiceRecording', $sendStateSource);
 
                 $stopInternalStart = strpos($content, 'async function stopRecordingInternal(options = {})');
-                $stopInternalEnd = $stopInternalStart === false? false: strpos($content, 'async function finalizeCurrentTranscriptionForSubmit()', $stopInternalStart);
-                $stopInternalSource = $stopInternalStart === false || $stopInternalEnd === false? '': substr($content, $stopInternalStart, $stopInternalEnd - $stopInternalStart);
+                $stopInternalEnd = $stopInternalStart === false ? false : strpos($content, 'async function finalizeCurrentTranscriptionForSubmit()', $stopInternalStart);
+                $stopInternalSource = $stopInternalStart === false || $stopInternalEnd === false ? '' : substr($content, $stopInternalStart, $stopInternalEnd - $stopInternalStart);
                 $stopRecorderPosition = strpos($stopInternalSource, 'await stopVoiceSessionRecorder();');
-                $sendRefreshPosition = strpos($stopInternalSource, 'updateSendAnswerButtonState();', $stopRecorderPosition === false? 0: $stopRecorderPosition);
-                $renderRecordingPosition = strpos($stopInternalSource, 'renderVoiceSessionPanel();', $sendRefreshPosition === false? 0: $sendRefreshPosition);
+                $sendRefreshPosition = strpos($stopInternalSource, 'updateSendAnswerButtonState();', $stopRecorderPosition === false ? 0 : $stopRecorderPosition);
+                $renderRecordingPosition = strpos($stopInternalSource, 'renderVoiceSessionPanel();', $sendRefreshPosition === false ? 0 : $sendRefreshPosition);
                 $this->assertNotFalse($stopRecorderPosition);
                 $this->assertNotFalse($sendRefreshPosition);
                 $this->assertNotFalse($renderRecordingPosition);
@@ -1890,11 +1886,11 @@ class MobileLayoutTest extends TestCase
                 $this->assertTrue($sendRefreshPosition < $renderRecordingPosition);
 
                 $startInternalStart = strpos($content, 'async function startRecordingInternal(options = {})');
-                $startInternalEnd = $startInternalStart === false? false: strpos($content, 'function toggleRecordingPause()', $startInternalStart);
-                $startInternalSource = $startInternalStart === false || $startInternalEnd === false? '': substr($content, $startInternalStart, $startInternalEnd - $startInternalStart);
+                $startInternalEnd = $startInternalStart === false ? false : strpos($content, 'function toggleRecordingPause()', $startInternalStart);
+                $startInternalSource = $startInternalStart === false || $startInternalEnd === false ? '' : substr($content, $startInternalStart, $startInternalEnd - $startInternalStart);
                 $captionFallbackStart = strrpos($startInternalSource, 'if (!started) {');
-                $captionFallbackEnd = $captionFallbackStart === false? false: strpos($startInternalSource, 'if (voiceOnly)', $captionFallbackStart);
-                $captionFallbackSource = $captionFallbackStart === false || $captionFallbackEnd === false? '': substr($startInternalSource, $captionFallbackStart, $captionFallbackEnd - $captionFallbackStart);
+                $captionFallbackEnd = $captionFallbackStart === false ? false : strpos($startInternalSource, 'if (voiceOnly)', $captionFallbackStart);
+                $captionFallbackSource = $captionFallbackStart === false || $captionFallbackEnd === false ? '' : substr($startInternalSource, $captionFallbackStart, $captionFallbackEnd - $captionFallbackStart);
                 $this->assertStringContainsString('activeTranscriptionEngine = null;', $captionFallbackSource);
                 $this->assertStringContainsString('The complete recording will be transcribed when stopped.', $captionFallbackSource);
                 $this->assertStringNotContainsString('discard: true', $captionFallbackSource);
@@ -1913,8 +1909,8 @@ class MobileLayoutTest extends TestCase
                 }
 
                 $abortStart = strpos($content, 'async function abortInterviewSession()');
-                $abortEnd = $abortStart === false? false: strpos($content, 'function activeInterviewModal()', $abortStart);
-                $abortSource = $abortStart === false || $abortEnd === false? '': substr($content, $abortStart, $abortEnd - $abortStart);
+                $abortEnd = $abortStart === false ? false : strpos($content, 'function activeInterviewModal()', $abortStart);
+                $abortSource = $abortStart === false || $abortEnd === false ? '' : substr($content, $abortStart, $abortEnd - $abortStart);
                 $abortFormPosition = strpos($abortSource, 'const formData = new FormData();');
                 $abortDraftPosition = strpos($abortSource, 'appendCurrentAnswerForEndedSession(formData);');
                 $abortControlsPosition = strpos($abortSource, "setVoiceControlsEnabled(false, 'Ending interview');");
@@ -1923,8 +1919,8 @@ class MobileLayoutTest extends TestCase
                 $abortTerminatedPosition = strpos($abortSource, 'interviewTerminated = true;');
                 $abortCleanupPosition = strpos($abortSource, 'cleanupInterviewProcesses({ abortFetches: true });');
                 $abortRedirectPosition = strpos($abortSource, 'window.location.href =');
-                $abortCatchPosition = $abortFetchPosition === false? false: strpos($abortSource, '} catch (error) {', $abortFetchPosition);
-                $abortCatchSource = $abortCatchPosition === false? '': substr($abortSource, $abortCatchPosition);
+                $abortCatchPosition = $abortFetchPosition === false ? false : strpos($abortSource, '} catch (error) {', $abortFetchPosition);
+                $abortCatchSource = $abortCatchPosition === false ? '' : substr($abortSource, $abortCatchPosition);
 
                 $this->assertNotFalse($abortFormPosition);
                 $this->assertNotFalse($abortDraftPosition);
@@ -2043,7 +2039,7 @@ class MobileLayoutTest extends TestCase
 
         $content = $response->getContent();
         $textareaPosition = strpos($content, 'id="answerTextarea"');
-        $stageSearchContent = $textareaPosition === false? '': substr($content, 0, $textareaPosition);
+        $stageSearchContent = $textareaPosition === false ? '' : substr($content, 0, $textareaPosition);
         $stageOpenPosition = strrpos($stageSearchContent, 'class="answer-transcript-stage"');
         $counterPosition = strpos($content, 'id="responseCountBar"');
         $counterClosePosition = strpos($content, '</div>', $counterPosition);

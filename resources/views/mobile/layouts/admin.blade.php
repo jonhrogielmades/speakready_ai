@@ -4,14 +4,11 @@
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
       <meta name="theme-color" content="#f1f6fb">
-      <meta name="apple-mobile-web-app-capable" content="yes">
-      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
       <title>{{ $systemName ?? 'SpeakReady AI' }} Interview Admin Portal</title>
       @include('shared.early-layout-shell-guard', ['serverLayout' => 'mobile'])
       <script src="{{ asset('js/theme-boot.js?v=2') }}"></script>
       <link rel="icon" href="{{ asset($systemFavicon ?? 'favicon.ico') }}" type="image/png">
-      <link rel="manifest" href="{{ asset('manifest.json?v=8') }}">
-      <link rel="apple-touch-icon" href="{{ asset('img/apple-touch-icon.png') }}">
+      @include('shared.pwa-meta', ['pwaStatusBarStyle' => 'black-translucent'])
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
@@ -1557,48 +1554,6 @@
             }
          }
 
-         /* --- PWA Install Prompt --- */
-         #pwa-install-prompt {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 1070;
-            min-height: 100vh;
-            min-height: 100dvh;
-            padding: max(18px, env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) max(18px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px));
-            background: rgba(2, 6, 23, 0.58);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            text-align: center;
-            animation: mobFadeIn 0.24s ease;
-         }
-         #pwa-install-prompt .pwa-install-dialog {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: min(calc(100vw - 32px), 390px);
-            max-height: calc(100vh - 36px);
-            max-height: calc(100dvh - 36px);
-            overflow-y: auto;
-            transform: translate(-50%, -50%);
-            background: rgba(10, 4, 4, 0.95);
-            border: 1px solid var(--adm-bd);
-            border-radius: 16px;
-            padding: 22px;
-            box-shadow: 0 24px 70px rgba(0,0,0,0.5);
-         }
-         .lm #pwa-install-prompt { background: rgba(15, 23, 42, 0.32); }
-         .lm #pwa-install-prompt .pwa-install-dialog { background: rgba(255, 248, 248, 0.97); box-shadow: 0 24px 70px rgba(15,23,42,0.18); }
-         #pwa-install-prompt h5 { color: #fff; font-weight: 700; margin-bottom: 8px; font-size: 1.1rem; }
-         .lm #pwa-install-prompt h5 { color: #111; }
-         #pwa-install-prompt p { color: #aaa; font-size: 0.88rem; line-height: 1.5; margin-bottom: 18px; }
-         .lm #pwa-install-prompt p { color: #555; }
-         .pwa-btn-wrap { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; justify-content: center; }
-         .pwa-btn-no { width: 100%; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: 1px solid #444; background: transparent; color: #fff; font-weight: 600; cursor: pointer; }
-         .lm .pwa-btn-no { border-color: #ccc; color: #333; }
-         .pwa-btn-yes { width: 100%; min-height: 44px; padding: 10px 14px; border-radius: 10px; border: none; background: var(--adm, #f87171); color: #fff; font-weight: 600; cursor: pointer; }
-         #pwa-install-prompt[data-mode="message"] .pwa-btn-no { grid-column: 1 / -1; }
-
          .mob-admin-logo-ring {
             background: #ffffff !important;
             border: 2px solid #ffffff !important;
@@ -2181,7 +2136,7 @@
          }
       </style>
    </head>
-   <body class="admin-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="admin">
+   <body class="admin-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="admin" data-pwa-auto-install="true">
 
       <!-- ===== ADMIN MOBILE TOP HEADER ===== -->
       <header id="mob-header">
@@ -3201,6 +3156,7 @@
                   <a href="{{ route('admin.account') }}" class="mob-profile-link profile-nav-slate {{ request()->routeIs('admin.account') ? 'active' : '' }}"><i class="fa-solid fa-user-shield"></i><span>Account</span></a>
                   <a href="{{ route('admin.settings.index') }}" class="mob-profile-link profile-nav-blue {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
                </div>
+                <button type="button" class="mob-profile-action" data-pwa-install-action><i class="fa-solid fa-download"></i><span>Install App</span></button>
                <form action="{{ route('logout') }}" method="POST">
                   @csrf
                   <button type="submit" class="mob-profile-action danger"><i class="fa-solid fa-right-from-bracket"></i><span>Log Out</span></button>
@@ -3263,16 +3219,7 @@
       </div>
 
       <!-- ===== PWA INSTALL PROMPT ===== -->
-      <div id="pwa-install-prompt" role="dialog" aria-labelledby="pwaPromptTitle" aria-describedby="pwaPromptCopy">
-         <div class="pwa-install-dialog">
-            <h5 id="pwaPromptTitle">Install SpeakReady AI</h5>
-            <p id="pwaPromptCopy">Do you want to install this app for a better and faster experience?</p>
-            <div class="pwa-btn-wrap">
-               <button type="button" id="pwa-btn-no" class="pwa-btn-no">No</button>
-               <button type="button" id="pwa-btn-yes" class="pwa-btn-yes">Yes</button>
-            </div>
-         </div>
-      </div>
+      @include('shared.pwa-install-prompt')
 
       <!-- ======================== SCRIPTS ======================== -->
       <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
@@ -3531,38 +3478,6 @@
             }
          }
 
-         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-               navigator.serviceWorker.register('/sw.js?v=46')
-                  .then(r => { if (r) console.log('SW:', r.scope || '/'); })
-                  .catch(e => console.log('SW fail:', e));
-            });
-         }
-
-         // PWA Install Prompt Logic
-         let deferredPrompt;
-         window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            if (!localStorage.getItem('pwa_prompt_dismissed')) {
-               document.getElementById('pwa-install-prompt').style.display = 'block';
-            }
-         });
-
-         document.getElementById('pwa-btn-yes')?.addEventListener('click', async () => {
-            document.getElementById('pwa-install-prompt').style.display = 'none';
-            if (deferredPrompt) {
-               deferredPrompt.prompt();
-               const { outcome } = await deferredPrompt.userChoice;
-               console.log(`User response to the install prompt: ${outcome}`);
-               deferredPrompt = null;
-            }
-         });
-
-         document.getElementById('pwa-btn-no')?.addEventListener('click', () => {
-            document.getElementById('pwa-install-prompt').style.display = 'none';
-            localStorage.setItem('pwa_prompt_dismissed', 'true');
-         });
       </script>
 
       <script>
