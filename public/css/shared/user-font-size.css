@@ -37,13 +37,16 @@
 }
 
 [data-font-size-menu] {
+  --sr-font-action-bg: rgba(30, 41, 59, 0.86);
+  --sr-font-action-hover: rgba(51, 65, 85, 0.92);
+  --sr-font-accent: #93c5fd;
   position: absolute;
   top: calc(100% + 12px);
   right: 0;
   z-index: 1250;
   width: min(232px, calc(100vw - 24px));
   padding: 14px;
-  border: 1px solid var(--user-top-line, var(--bd, rgba(148, 163, 184, 0.28)));
+  border: 1px solid var(--bd, rgba(148, 163, 184, 0.28));
   border-radius: 16px;
   background: var(--bg2, #153b63);
   color: var(--tx, #f8fafc);
@@ -54,6 +57,14 @@
 
 [data-font-size-menu][hidden] {
   display: none !important;
+}
+
+body > [data-font-size-menu] {
+  position: fixed;
+  z-index: 1250;
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  pointer-events: auto;
 }
 
 .sr-font-size-menu-header {
@@ -75,11 +86,11 @@
 }
 
 .sr-font-size-menu-title i {
-  color: var(--user-top-blue, #93c5fd);
+  color: var(--sr-font-accent);
 }
 
 [data-font-size-value] {
-  color: var(--user-top-blue, #93c5fd);
+  color: var(--sr-font-accent);
   font-size: 0.76rem;
   font-weight: 800;
   white-space: nowrap;
@@ -94,9 +105,9 @@
 .sr-font-size-action {
   min-height: 40px;
   padding: 7px 8px;
-  border: 1px solid var(--user-top-line, rgba(148, 163, 184, 0.28));
+  border: 1px solid var(--bd, rgba(148, 163, 184, 0.28));
   border-radius: 10px;
-  background: var(--user-top-tile, rgba(30, 41, 59, 0.86));
+  background: var(--sr-font-action-bg);
   color: inherit;
   font: inherit;
   font-size: 0.82rem;
@@ -109,9 +120,9 @@
 
 .sr-font-size-action:hover,
 .sr-font-size-action:focus-visible {
-  border-color: var(--user-top-line-strong, rgba(96, 165, 250, 0.48));
-  background: var(--user-top-tile-hover, rgba(51, 65, 85, 0.92));
-  color: var(--user-top-blue, #93c5fd);
+  border-color: var(--sr-font-accent);
+  background: var(--sr-font-action-hover);
+  color: var(--sr-font-accent);
   outline: none;
 }
 
@@ -146,6 +157,9 @@
 }
 
 html.lm [data-font-size-menu] {
+  --sr-font-action-bg: rgba(255, 255, 255, 0.92);
+  --sr-font-action-hover: #ffffff;
+  --sr-font-accent: #2563eb;
   background: var(--bg2, #edf5fc);
   box-shadow: 0 18px 44px rgba(15, 23, 42, 0.14);
 }

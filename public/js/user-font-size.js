@@ -64,6 +64,8 @@
       toggle.setAttribute("title", "Adjust font size (" + formatScale(scale) + ")");
     });
 
+    positionOpenMenus();
+
     return scale;
   }
 
@@ -71,10 +73,22 @@
     if (!wrapper) return;
 
     var toggle = wrapper.querySelector("[data-font-size-toggle]");
-    var menu = wrapper.querySelector("[data-font-size-menu]");
+    var menu = wrapper._srFontSizeMenu || wrapper.querySelector("[data-font-size-menu]");
     if (!toggle || !menu) return;
 
-    menu.hidden = !open;
+    if (open) {
+      // The fixed, blurred headers create their own stacking contexts. Keep the
+      // open menu at body level so page cards cannot cover its touch targets.
+      document.body.appendChild(menu);
+      menu.hidden = false;
+      positionMenu(toggle, menu);
+    } else {
+      menu.hidden = true;
+      menu.style.left = "";
+      menu.style.top = "";
+      menu.style.right = "";
+      if (menu.parentNode !== wrapper) wrapper.appendChild(menu);
+    }
     toggle.setAttribute("aria-expanded", open ? "true" : "false");
     toggle.classList.toggle("is-active", open);
 
@@ -92,6 +106,34 @@
     }
   }
 
+  function positionMenu(toggle, menu) {
+    var gap = 8;
+    var toggleRect = toggle.getBoundingClientRect();
+    var menuRect = menu.getBoundingClientRect();
+    var viewportWidth = document.documentElement.clientWidth;
+    var viewportHeight = window.innerHeight;
+    var left = Math.max(gap, Math.min(toggleRect.right - menuRect.width, viewportWidth - menuRect.width - gap));
+    var top = toggleRect.bottom + gap;
+
+    if (top + menuRect.height > viewportHeight - gap && toggleRect.top - menuRect.height - gap >= gap) {
+      top = toggleRect.top - menuRect.height - gap;
+    }
+
+    menu.style.left = Math.round(left) + "px";
+    menu.style.top = Math.round(Math.max(gap, Math.min(top, viewportHeight - menuRect.height - gap))) + "px";
+    menu.style.right = "auto";
+  }
+
+  function positionOpenMenus() {
+    document.querySelectorAll("[data-font-size-control]").forEach(function (wrapper) {
+      var menu = wrapper._srFontSizeMenu;
+      var toggle = wrapper.querySelector("[data-font-size-toggle]");
+      if (toggle && menu && !menu.hidden) {
+        positionMenu(toggle, menu);
+      }
+    });
+  }
+
   function closeAllMenus(except) {
     document.querySelectorAll("[data-font-size-control]").forEach(function (wrapper) {
       if (wrapper !== except) setMenuOpen(wrapper, false, false);
@@ -107,6 +149,8 @@
       if (!toggle || !menu || wrapper.dataset.fontSizeReady === "true") return;
 
       wrapper.dataset.fontSizeReady = "true";
+      wrapper._srFontSizeMenu = menu;
+      menu._srFontSizeWrapper = wrapper;
       menu.hidden = true;
 
       toggle.addEventListener("click", function (event) {
@@ -140,9 +184,14 @@
 
     document.addEventListener("click", function (event) {
       var target = event.target instanceof Element ? event.target : event.target.parentElement;
-      if (target && target.closest("[data-font-size-control]")) return;
+      if (target && target.closest("[data-font-size-control], [data-font-size-menu]")) return;
       closeAllMenus();
     });
+
+    window.addEventListener("resize", positionOpenMenus);
+    if (window.visualViewport && window.visualViewport.addEventListener) {
+      window.visualViewport.addEventListener("resize", positionOpenMenus);
+    }
 
     document.addEventListener("keydown", function (event) {
       if (event.key !== "Escape") return;
@@ -151,8 +200,7 @@
       if (!openMenu) return;
 
       event.preventDefault();
-      var wrapper = openMenu.closest("[data-font-size-control]");
-      setMenuOpen(wrapper, false);
+      setMenuOpen(openMenu._srFontSizeWrapper, false);
     });
 
     window.SpeakReadyFontSize = {

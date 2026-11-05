@@ -12455,6 +12455,12 @@ body.user-desktop-shell:not(.admin-shell) #dashboard .sr-search-highlight.is-cur
   }
 }
 
+@media (min-width: 992px) and (max-width: 1100px) {
+  body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-upgrade-card {
+    display: none !important;
+  }
+}
+
 @media (max-width: 991px) {
   body.user-desktop-shell:not(.admin-shell) #dashboard .db-top-command-search {
     display: none !important;
