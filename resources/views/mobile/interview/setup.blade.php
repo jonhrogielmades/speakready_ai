@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=14') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=15') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -148,13 +148,6 @@
  <div class="col-lg-8" id="setup-left-col">
  <div class="setup-stepper" id="setupStepper" aria-label="Interview setup steps">
  <div class="setup-stepper-track" id="setupStepperTrack"></div>
- <div class="setup-stepper-actions">
- <button type="button" class="setup-step-btn" id="setupStepPrev"><i class="fa-solid fa-arrow-left"></i> Back</button>
- <button type="submit" id="btn-start-interview" class="setup-step-btn setup-start-button btn-shine" aria-label="Start Interview" title="Start Interview" data-default-label='Start <i class="fa-solid fa-play ms-2"></i>' data-loading-label='Starting <i class="fa-solid fa-spinner fa-spin ms-2"></i>' hidden>
- Start <i class="fa-solid fa-play ms-2"></i>
- </button>
- <button type="button" class="setup-step-btn primary" id="setupStepNext">Next <i class="fa-solid fa-arrow-right"></i></button>
- </div>
  </div>
 
  <!-- Basic Info -->
@@ -452,6 +445,14 @@
  </label>
  </div>
  <div class="setup-inline-error" id="responseModeError" role="alert" hidden>Choose a response mode.</div>
+ </div>
+
+ <div class="setup-stepper-actions" aria-label="Interview setup navigation">
+ <button type="button" class="setup-step-btn" id="setupStepPrev"><i class="fa-solid fa-arrow-left"></i> Back</button>
+ <button type="submit" id="btn-start-interview" class="setup-step-btn setup-start-button btn-shine" aria-label="Start Interview" title="Start Interview" data-default-label='Start <i class="fa-solid fa-play ms-2"></i>' data-loading-label='Starting <i class="fa-solid fa-spinner fa-spin ms-2"></i>' hidden>
+ Start <i class="fa-solid fa-play ms-2"></i>
+ </button>
+ <button type="button" class="setup-step-btn primary" id="setupStepNext">Next <i class="fa-solid fa-arrow-right"></i></button>
  </div>
 
  </div>
@@ -1720,6 +1721,16 @@ Begin Interview <i class="fa-solid fa-play"></i>
  section.classList.add('setup-step-mode');
  section.classList.toggle('setup-summary-step',!isDesktop && steps[setupStepState.index]?.id === 'panel-summary');
  stepper.hidden = false;
+
+ const setupActions = document.querySelector('.setup-stepper-actions');
+ const activePanel = document.getElementById(steps[setupStepState.index]?.id);
+ if (setupActions) {
+ if (!isDesktop && activePanel) {
+ activePanel.appendChild(setupActions);
+ } else if (stepper) {
+ stepper.appendChild(setupActions);
+ }
+ }
 
  steps.forEach((step, index) => {
  const panel = document.getElementById(step.id);
