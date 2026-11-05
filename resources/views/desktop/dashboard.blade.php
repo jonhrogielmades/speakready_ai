@@ -1233,6 +1233,13 @@ document.addEventListener("DOMContentLoaded", function() {
         const dashboardTourQueryPresent = new URLSearchParams(window.location.search).get('onboarding') === 'tour';
         const dashboardTourRequested = @json((bool) ($dashboardTourAutoStart ?? false));
 
+        // Keep the registered tour scope aligned with the visible dashboard URL.
+        if (dashboardTourQueryPresent) {
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete('onboarding');
+            window.history.replaceState(window.history.state, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+        }
+
         async function saveDashboardTourMilestone(milestone) {
             const response = await fetch(onboardingProgressUrl, {
                 method: 'POST',
@@ -1304,12 +1311,6 @@ document.addEventListener("DOMContentLoaded", function() {
             element.getAttribute('aria-hidden') === 'false'
         ));
 
-        if (dashboardTourQueryPresent && !dashboardTourRequested) {
-            const cleanUrl = new URL(window.location.href);
-            cleanUrl.searchParams.delete('onboarding');
-            window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
-        }
-
         function startDashboardTourWhenReady() {
             if (!dashboardTourRequested || !dashboardTour || tourStartScheduled) return;
 
@@ -1324,9 +1325,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     return;
                 }
 
-                const cleanUrl = new URL(window.location.href);
-                cleanUrl.searchParams.delete('onboarding');
-                window.history.replaceState({}, '', `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
                 dashboardTour.start();
             }, 350);
         }
