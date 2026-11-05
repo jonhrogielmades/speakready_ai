@@ -185,36 +185,42 @@ try {
     const expanded = await evaluate(`document.querySelector(${JSON.stringify(scenario.id)}).getAttribute('aria-expanded')`);
     assert.equal(expanded, 'true', `${scenario.layout} ${scenario.width}px toggle did not open`);
 
-    const increase = await centerAndHit('[data-font-size-action="increase"]');
-    assert.ok(increase?.hitsTarget, `${scenario.layout} ${scenario.width}px increase action is covered: ${JSON.stringify(increase)}`);
     const originalTextSize = await evaluate('parseFloat(getComputedStyle(document.querySelector(".sr-font-size-menu-title")).fontSize)');
-    await clickAt(increase.x, increase.y, scenario.touch);
-    const scale = await evaluate('window.SpeakReadyFontSize.get()');
-    assert.equal(scale, 1.1, `${scenario.layout} ${scenario.width}px increase failed`);
+    for (const expected of [1.1, 1.2, 1.3, 1.4, 1.5]) {
+      const increase = await centerAndHit('[data-font-size-action="increase"]');
+      assert.ok(increase?.hitsTarget, `${scenario.layout} ${scenario.width}px increase action is covered: ${JSON.stringify(increase)}`);
+      await clickAt(increase.x, increase.y, scenario.touch);
+      assert.equal(await evaluate('window.SpeakReadyFontSize.get()'), expected, `${scenario.layout} ${scenario.width}px increase failed`);
+    }
     const enlargedTextSize = await evaluate('parseFloat(getComputedStyle(document.querySelector(".sr-font-size-menu-title")).fontSize)');
     assert.ok(enlargedTextSize > originalTextSize, 'visible text did not grow');
-    const increaseAgain = await centerAndHit('[data-font-size-action="increase"]');
-    assert.ok(increaseAgain?.hitsTarget, 'increase action moved under another element');
-    await clickAt(increaseAgain.x, increaseAgain.y, scenario.touch);
-    assert.equal(await evaluate('window.SpeakReadyFontSize.get()'), 1.2);
     assert.equal(await evaluate('document.querySelector("[data-font-size-action=increase]").disabled'), true);
-    assert.equal(await evaluate('localStorage.getItem("speakready.user.fontScale.v1")'), '1.2');
+    assert.equal(await evaluate('document.querySelector("[data-font-size-value]").textContent'), '150%');
+    assert.equal(await evaluate('localStorage.getItem("speakready.user.fontScale.v1")'), '1.5');
 
     await command('Page.reload', { ignoreCache: true });
     await until(() => evaluate('Boolean(window.SpeakReadyFontSize)'), 'control after reload');
-    assert.equal(await evaluate('window.SpeakReadyFontSize.get()'), 1.2, 'scale did not persist after reload');
+    assert.equal(await evaluate('window.SpeakReadyFontSize.get()'), 1.5, 'scale did not persist after reload');
 
     const toggleAgain = await centerAndHit(scenario.id);
     assert.ok(toggleAgain?.hitsTarget, `${scenario.layout} ${scenario.width}px toggle after reload is covered: ${JSON.stringify(toggleAgain)}`);
     await clickAt(toggleAgain.x, toggleAgain.y, scenario.touch);
     assert.equal(await evaluate(`document.querySelector(${JSON.stringify(scenario.id)}).getAttribute('aria-expanded')`), 'true', 'toggle did not reopen after reload');
-    for (const expected of [1.1, 1, 0.9, 0.8]) {
+    for (const expected of [1.4, 1.3, 1.2, 1.1, 1, 0.9, 0.8, 0.7, 0.6, 0.5]) {
       const decrease = await centerAndHit('[data-font-size-action="decrease"]');
       assert.ok(decrease?.hitsTarget, `${scenario.layout} ${scenario.width}px decrease action is covered: ${JSON.stringify(decrease)}`);
       await clickAt(decrease.x, decrease.y, scenario.touch);
       assert.equal(await evaluate('window.SpeakReadyFontSize.get()'), expected);
     }
     assert.equal(await evaluate('document.querySelector("[data-font-size-action=decrease]").disabled'), true);
+    assert.equal(await evaluate('document.querySelector("[data-font-size-value]").textContent'), '50%');
+    await command('Page.reload', { ignoreCache: true });
+    await until(() => evaluate('Boolean(window.SpeakReadyFontSize)'), 'control after minimum reload');
+    assert.equal(await evaluate('window.SpeakReadyFontSize.get()'), 0.5, 'minimum scale did not persist after reload');
+    const minimumToggle = await centerAndHit(scenario.id);
+    assert.ok(minimumToggle?.hitsTarget, 'toggle is covered at minimum scale');
+    await clickAt(minimumToggle.x, minimumToggle.y, scenario.touch);
+    assert.equal(await evaluate('document.querySelector("[data-font-size-value]").textContent'), '50%');
 
     const reset = await centerAndHit('[data-font-size-action="reset"]');
     assert.ok(reset?.hitsTarget, `${scenario.layout} ${scenario.width}px reset action is covered: ${JSON.stringify(reset)}`);

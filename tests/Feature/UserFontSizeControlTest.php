@@ -29,8 +29,8 @@ class UserFontSizeControlTest extends TestCase
                 ->assertSee('data-font-size-action="decrease"', false)
                 ->assertSee('data-font-size-action="reset"', false)
                 ->assertSee('data-font-size-action="increase"', false)
-                ->assertSee('js/user-font-size.js?v=2', false)
-                ->assertSee('js/font-size-boot.js?v=1', false)
+                ->assertSee('js/user-font-size.js?v=3', false)
+                ->assertSee('js/font-size-boot.js?v=2', false)
                 ->assertSee('css/shared/user-font-size.css?v=2', false)
                 ->assertSee('id="'.($layout === 'mobile' ? 'mob' : 'db').'FontSizeBtn"', false);
 

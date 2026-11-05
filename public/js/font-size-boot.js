@@ -1,8 +1,8 @@
 (function () {
   var storageKey = "speakready.user.fontScale.v1";
   var defaultScale = 1;
-  var minimumScale = 0.8;
-  var maximumScale = 1.2;
+  var minimumScale = 0.5;
+  var maximumScale = 1.5;
 
   function normalizeScale(value) {
     var numericValue = Number(value);

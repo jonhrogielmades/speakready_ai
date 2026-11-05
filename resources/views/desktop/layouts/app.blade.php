@@ -54,7 +54,7 @@
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=43') }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/user-font-size.css?v=2') }}" />
-      <script src="{{ asset('js/font-size-boot.js?v=1') }}"></script>
+      <script src="{{ asset('js/font-size-boot.js?v=2') }}"></script>
       <style>
           :root,
           .lm {
@@ -365,7 +365,7 @@
       </script>
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
       <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
-      <script src="{{ asset('js/user-font-size.js?v=2') }}" defer></script>
+      <script src="{{ asset('js/user-font-size.js?v=3') }}" defer></script>
       @include('desktop.partials.language-translation')
       @include('shared.user.first-steps-modal-script')
       <!-- PWA Service Worker Registration -->

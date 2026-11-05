@@ -40,6 +40,6 @@
             <span class="sr-font-size-letter" aria-hidden="true">A<small>+</small></span>
          </button>
       </div>
-      <span class="sr-font-size-help">Adjust the reading size for this app.</span>
+      <span class="sr-font-size-help">Adjust reading size from 50% to 150%.</span>
    </div>
 </div>
