@@ -108,7 +108,8 @@
             }
 
             skipConfirmationPending = true;
-            Promise.resolve(showConfirmation.call(desktopConfirm ? window.SpeakReadyConfirm : window.SpeakReadyMobileConfirm, {
+            document.body.classList.add('sr-first-steps-skip-confirm-active');
+            Promise.resolve().then(() => showConfirmation.call(desktopConfirm ? window.SpeakReadyConfirm : window.SpeakReadyMobileConfirm, {
                 title: 'Skip First Steps?',
                 message: 'Are you sure you want to skip setup? You can complete these steps later from your dashboard.',
                 action: 'Skip setup',
@@ -118,6 +119,7 @@
                 if (confirmed) skipFirstSteps();
             }).finally(() => {
                 skipConfirmationPending = false;
+                document.body.classList.remove('sr-first-steps-skip-confirm-active');
             });
         }
 
@@ -174,7 +176,7 @@
             if (footerCopy) {
                 footerCopy.textContent = allStepsComplete
                     ? 'Setup complete. Your dashboard is ready.'
-                    : 'Complete all four steps to continue to your dashboard.';
+                    : 'Finish all four steps or skip setup to continue to your dashboard.';
             }
         }
 
@@ -190,7 +192,7 @@
                 if (verificationForm) verificationForm.hidden = true;
                 const verificationCopy = step.querySelector('.sr-first-steps-step-copy small');
                 if (verificationCopy) {
-                    verificationCopy.textContent = 'Your recovery email is verified and ready for password recovery.';
+                    verificationCopy.textContent = 'Your email is verified and ready for password recovery.';
                 }
             }
             ensureStepStatus(step, label);

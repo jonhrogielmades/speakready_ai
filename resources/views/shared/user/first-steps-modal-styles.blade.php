@@ -17,6 +17,19 @@
         backdrop-filter: blur(12px) saturate(0.82);
     }
 
+    body.sr-first-steps-skip-confirm-active .modal-backdrop.show {
+        z-index: 1060;
+        opacity: 1;
+        background-color: rgba(15, 23, 42, 0.76);
+        -webkit-backdrop-filter: blur(16px) saturate(0.72);
+        backdrop-filter: blur(16px) saturate(0.72);
+    }
+
+    body.sr-first-steps-skip-confirm-active .sr-confirm-modal,
+    body.sr-first-steps-skip-confirm-active .sr-mobile-confirm-modal {
+        z-index: 1065;
+    }
+
     .sr-first-steps-modal .modal-dialog {
         width: min(720px, calc(100vw - 24px));
         max-width: min(720px, calc(100vw - 24px));
