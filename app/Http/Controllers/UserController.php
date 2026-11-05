@@ -183,10 +183,11 @@ class UserController extends Controller
   if (($onboardingState['dashboard_tour_completed']?? false) || ($onboardingState['dashboard_tour_skipped']?? false)) {
    $request->session()->forget('onboarding_auto_start');
   }
-  $dashboardTourAutoStart = $request->query('onboarding') === 'tour'
-  && $request->session()->get('onboarding_auto_start') === true
-  && ! ($onboardingState['dashboard_tour_completed']?? false)
-  && ! ($onboardingState['dashboard_tour_skipped']?? false);
+  $dashboardTourAutoStart = $request->query('onboarding') === 'tour';
+  if ($dashboardTourAutoStart) {
+   // Choosing Skip or Proceed ends the first-steps prompt and opens the tour.
+   $request->session()->forget('onboarding_auto_start');
+  }
 
  // Base query for completed sessions
  $completedSessions = InterviewSession::where('user_id', $user_id)

@@ -475,8 +475,12 @@ class UserOnboardingProgressTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('data-sr-first-steps-auto-show="false"', false)
-            ->assertSee('data-sr-auto-start-dashboard-tour="false"', false)
             ->assertSessionMissing('onboarding_auto_start');
+
+        $this->get(route('dashboard', ['onboarding' => 'tour']))
+            ->assertOk()
+            ->assertSee('const dashboardTourRequested = true;', false)
+            ->assertSee('data-sr-first-steps-auto-show="false"', false);
     }
 
     public function test_page_tours_require_an_explicit_auto_start_opt_in(): void
@@ -682,8 +686,7 @@ class UserOnboardingProgressTest extends TestCase
             ->assertOk()
             ->assertSee('4 of 4 complete')
             ->assertSee('data-sr-first-steps-auto-show="true"', false)
-            ->assertSee('data-sr-auto-start-dashboard-tour="true"', false)
-            ->assertSee('window.location.assign(modalElement.dataset.srDashboardTourUrl);', false)
+            ->assertSee('data-sr-dashboard-tour-url=', false)
             ->assertSessionHas('onboarding_auto_start', true);
 
         $content = $response->getContent();
@@ -696,7 +699,7 @@ class UserOnboardingProgressTest extends TestCase
             ->assertOk()
             ->assertSee('const dashboardTourRequested = true;', false)
             ->assertSee('data-sr-first-steps-auto-show="false"', false)
-            ->assertSessionHas('onboarding_auto_start', true);
+            ->assertSessionMissing('onboarding_auto_start');
 
         $this->postJson(route('user.onboarding.progress'), [
             'milestone' => 'dashboard_tour_skipped',
@@ -706,8 +709,66 @@ class UserOnboardingProgressTest extends TestCase
 
         $this->get(route('dashboard'))
             ->assertOk()
-            ->assertSee('data-sr-first-steps-auto-show="false"', false)
-            ->assertSee('data-sr-auto-start-dashboard-tour="false"', false);
+            ->assertSee('data-sr-first-steps-auto-show="false"', false);
+    }
+
+    public function test_skipping_first_steps_keeps_the_dashboard_tour_available_on_both_layouts(): void
+    {
+        $user = User::factory()->unverified()->create([
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+
+        $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+        foreach ([null, $mobileUserAgent] as $userAgent) {
+            $request = $this->actingAs($user)->withSession(['onboarding_auto_start' => true]);
+            if ($userAgent !== null) {
+                $request = $request->withHeader('User-Agent', $userAgent);
+            }
+
+            $request->get(route('dashboard'))
+                ->assertOk()
+                ->assertSee('data-sr-first-steps-auto-show="true"', false);
+
+            $request->get(route('dashboard', ['onboarding' => 'tour']))
+                ->assertOk()
+                ->assertSee('const dashboardTourRequested = true;', false)
+                ->assertSee('data-sr-first-steps-auto-show="false"', false)
+                ->assertSessionMissing('onboarding_auto_start');
+        }
+
+        $this->assertNull(UserOnboardingProgress::forUser($user)->fresh()->dashboard_tour_skipped_at);
+    }
+
+    public function test_proceed_to_dashboard_requests_the_tour_without_a_registration_session_on_both_layouts(): void
+    {
+        $user = User::factory()->create([
+            'google_id' => null,
+            'auth_method' => User::AUTH_METHOD_LOCAL,
+        ]);
+        UserOnboardingProgress::forUser($user)->forceFill([
+            'recovery_code_saved_at' => now(),
+            'profile_personalized_at' => now(),
+            'setup_tools_completed_at' => now(),
+        ])->save();
+
+        $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+        foreach ([null, $mobileUserAgent] as $userAgent) {
+            $request = $this->actingAs($user);
+            if ($userAgent !== null) {
+                $request = $request->withHeader('User-Agent', $userAgent);
+            }
+
+            $request->get(route('dashboard'))
+                ->assertOk()
+                ->assertSee('data-sr-first-steps-complete="true"', false)
+                ->assertSee('data-sr-dashboard-tour-url=', false)
+                ->assertSee('onboarding=tour', false);
+
+            $request->get(route('dashboard', ['onboarding' => 'tour']))
+                ->assertOk()
+                ->assertSee('const dashboardTourRequested = true;', false);
+        }
     }
 
     public function test_activation_requires_current_terms_and_a_completed_scored_interview(): void

@@ -52,47 +52,13 @@
             modalController()?.show();
         }
 
-        async function skipFirstSteps() {
+        function continueToDashboard() {
+            window.location.assign(modalElement.dataset.srDashboardTourUrl);
+        }
+
+        function skipFirstSteps() {
             if (!skipButton || skipButton.disabled) return;
-
-            const progressEndpoint = modalElement.dataset.srOnboardingProgressUrl?.trim() || '';
-            skipButton.disabled = true;
-            skipButton.setAttribute('aria-busy', 'true');
-
-            try {
-                if (progressEndpoint) {
-                    const response = await fetch(progressEndpoint, {
-                        method: 'POST',
-                        credentials: 'same-origin',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
-                        },
-                        body: JSON.stringify({ milestone: 'dashboard_tour_skipped' }),
-                    });
-
-                    const payload = await response.json().catch(() => ({}));
-                    if (!response.ok) throw new Error(payload.message || 'Unable to skip setup.');
-                    applyOnboardingState(payload.onboarding || {});
-                }
-
-                removeOnboardingQuery();
-                const dashboardUrl = new URL(modalElement.dataset.srDashboardUrl, window.location.origin);
-                const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-                const dashboardPath = dashboardUrl.pathname.replace(/\/$/, '') || '/';
-
-                if (currentPath === dashboardPath) {
-                    modalController()?.hide();
-                    return;
-                }
-
-                window.location.assign(dashboardUrl.toString());
-            } catch (error) {
-                skipButton.disabled = false;
-                skipButton.removeAttribute('aria-busy');
-                if (footerCopy) footerCopy.textContent = error.message || 'Unable to skip setup. Please try again.';
-            }
+            continueToDashboard();
         }
 
         function confirmSkipFirstSteps() {
@@ -111,7 +77,7 @@
             document.body.classList.add('sr-first-steps-skip-confirm-active');
             Promise.resolve().then(() => showConfirmation.call(desktopConfirm ? window.SpeakReadyConfirm : window.SpeakReadyMobileConfirm, {
                 title: 'Skip First Steps?',
-                message: 'Are you sure you want to skip setup? You can complete these steps later from your dashboard.',
+                message: 'Skip setup and start the dashboard tutorial? You can complete these steps later from your dashboard.',
                 action: 'Skip setup',
                 actionText: 'Skip setup',
                 variant: 'danger',
@@ -243,22 +209,7 @@
                 event.preventDefault();
                 if (proceed.disabled || modalElement.dataset.srFirstStepsComplete !== 'true') return;
 
-                removeOnboardingQuery();
-                const dashboardUrl = new URL(modalElement.dataset.srDashboardUrl, window.location.origin);
-                if (modalElement.dataset.srAutoStartDashboardTour === 'true') {
-                    window.location.assign(modalElement.dataset.srDashboardTourUrl);
-                    return;
-                }
-
-                const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
-                const dashboardPath = dashboardUrl.pathname.replace(/\/$/, '') || '/';
-
-                if (currentPath === dashboardPath) {
-                    modalController()?.hide();
-                    return;
-                }
-
-                window.location.assign(dashboardUrl.toString());
+                continueToDashboard();
                 return;
             }
 

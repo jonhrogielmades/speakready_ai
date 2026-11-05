@@ -39,7 +39,6 @@
      data-sr-onboarding-user="{{ (int) Auth::id() }}"
      data-sr-first-steps-auto-show="{{ $firstStepsAutoShow ? 'true' : 'false' }}"
      data-sr-first-steps-complete="{{ $firstStepsComplete ? 'true' : 'false' }}"
-     data-sr-auto-start-dashboard-tour="{{ $firstStepsTutorialPending ? 'true' : 'false' }}"
      data-sr-onboarding-progress-url="{{ route('user.onboarding.progress') }}"
      data-sr-dashboard-url="{{ $firstStepsDashboardUrl }}"
      data-sr-dashboard-tools-url="{{ $firstStepsToolsUrl }}"
