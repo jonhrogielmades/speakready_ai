@@ -48,6 +48,8 @@
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=36') }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
+      <link rel="stylesheet" href="{{ asset('css/shared/user-font-size.css?v=1') }}" />
+      <script src="{{ asset('js/font-size-boot.js?v=1') }}"></script>
       @include('mobile.partials.onboarding-styles')
       <style>
          :root,
@@ -4863,6 +4865,7 @@
                <i class="fa-solid fa-sun" id="mobSunI" style="display:none"></i>
                <i class="fa-solid fa-moon" id="mobMoonI"></i>
             </button>
+            @include('shared.user.font-size-control', ['fontSizeControlPrefix' => 'mob', 'fontSizeControlButtonClass' => 'mob-icon-btn'])
             <div class="mob-notif-wrap" id="mobNotifWrap">
                <button class="mob-icon-btn" id="mobBellBtn" type="button" aria-label="Open notifications" aria-controls="mobNotifDropdown" aria-expanded="false" aria-haspopup="true" onclick="toggleMobileNotif(event)" style="position:relative;">
                   <i class="fa-regular fa-bell"></i>
@@ -5070,6 +5073,7 @@
       @include('mobile.partials.language-translation')
       @include('shared.user.first-steps-modal-script')
       <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
+      <script src="{{ asset('js/user-font-size.js?v=1') }}" defer></script>
 
       <script>
          (function initializeSpeakReadyMobileConfirm() {

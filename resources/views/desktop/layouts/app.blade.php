@@ -54,6 +54,8 @@
       <!-- Shared app CSS -->
       <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=42') }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
+      <link rel="stylesheet" href="{{ asset('css/shared/user-font-size.css?v=1') }}" />
+      <script src="{{ asset('js/font-size-boot.js?v=1') }}"></script>
       <style>
           :root,
           .lm {
@@ -240,6 +242,7 @@
                   <i class="fa-solid fa-sun" id="dbSunI" style="display:none"></i>
                   <i class="fa-solid fa-moon" id="dbMoonI"></i>
                   </button>
+                  @include('shared.user.font-size-control', ['fontSizeControlPrefix' => 'db'])
                   
                   <!-- Notifications -->
                   <div style="position:relative" id="notifWrap">
@@ -360,6 +363,7 @@
       </script>
       <script src="{{ asset('js/push-notifications.js?v=7') }}" defer></script>
       <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
+      <script src="{{ asset('js/user-font-size.js?v=1') }}" defer></script>
       @include('desktop.partials.language-translation')
       @include('shared.user.first-steps-modal-script')
       <!-- PWA Service Worker Registration -->
