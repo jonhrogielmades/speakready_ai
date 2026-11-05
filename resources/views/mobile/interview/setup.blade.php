@@ -1601,7 +1601,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const visitedSetupStepIds = new Set();
  const setupDraftApi = window.SpeakReadyInterviewSetupDraft;
  const setupDraftFormElement = document.getElementById('setupForm');
- const restoredSetupDraft = setupDraftApi?.restore(setupDraftFormElement);
+ const restoredSetupDraft = @json(!$errors->any())? setupDraftApi?.restore(setupDraftFormElement): null;
  if (Array.isArray(restoredSetupDraft?.visited_step_ids)) {
  restoredSetupDraft.visited_step_ids.forEach(stepId => visitedSetupStepIds.add(stepId));
  }

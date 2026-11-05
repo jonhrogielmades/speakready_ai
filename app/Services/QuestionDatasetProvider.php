@@ -1125,8 +1125,9 @@ class QuestionDatasetProvider
  $limit = max(1, min(30, $limit));
  $difficulty = ucfirst(strtolower(trim($difficulty)))?: 'Medium';
  $selectedTypes = collect($questionTypes)
- ->map(fn ($type) => trim((string) $type))
+ ->map(fn ($type) => ucfirst(strtolower(trim((string) $type))))
  ->filter()
+ ->unique()
  ->values()
  ->all();
  $excluded = collect($excludeQuestionTexts)
@@ -1139,10 +1140,11 @@ class QuestionDatasetProvider
  ->filter(fn ($question) => is_array($question));
 
  if ($selectedTypes!== []) {
- $typedQuestions = $questions->filter(fn (array $question) => in_array(trim((string) ($question['type']?? '')), $selectedTypes, true));
- if ($typedQuestions->isNotEmpty()) {
- $questions = $typedQuestions;
- }
+ $questions = $questions->filter(fn (array $question) => in_array(
+ ucfirst(strtolower(trim((string) ($question['type']?? '')))),
+ $selectedTypes,
+ true
+ ));
  }
 
  return $questions
@@ -1160,7 +1162,7 @@ class QuestionDatasetProvider
  'score' => self::questionSelectionScore($question, $dataset, $position, $difficulty, $selectedTypes),
  'record' => array_merge($metadata, [
  'question_text' => $text,
- 'type' => trim((string) ($question['type']?? 'Behavioral'))?: 'Behavioral',
+ 'type' => ucfirst(strtolower(trim((string) ($question['type']?? 'Behavioral'))))?: 'Behavioral',
  'difficulty' => ucfirst(strtolower(trim((string) ($question['difficulty']?? $difficulty))))?: $difficulty,
  'expected_guide' => trim((string) ($question['expected_guide']?? '')),
  'mapped_skills' => array_values(array_filter((array) ($question['mapped_skills']?? ($dataset['default_skills']?? [])))),

@@ -710,6 +710,7 @@ class InterviewController extends Controller
  );
  session(['active_interview_provider' => $provider]);
  $isFinal = $currentQuestionIndex >= $targetQuestionCount - 2;
+ $requiredQuestionType = $this->selectedQuestionTypeForIndex($session, $currentQuestionIndex + 1);
  if (! $followUpEnabled) {
  $provider = 'local';
  }
@@ -717,7 +718,7 @@ class InterviewController extends Controller
  $dataset = $this->datasetForSession($session);
  try {
  // Persisted questions and answers are the authoritative conversation.
- $followUpText = $followUpEnabled? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset): AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
+ $followUpText = $followUpEnabled? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType): AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
  } catch (\Throwable $error) {
  Log::warning('Interview follow-up generation failed; using local fallback.', [
  'session_id' => $session->id,
@@ -749,12 +750,14 @@ class InterviewController extends Controller
  // bar, prefer a source-backed recommendation and finally a deterministic
  // answer-grounded fallback so the conversation cannot jump topics.
  $followUpSourceMetadata = $dataset? QuestionDatasetProvider::sourceMetadata($dataset): [];
- if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText)) {
+ if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText)
+ || ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($followUpText, $requiredQuestionType))) {
  $recommendedFollowUp = $this->recommendedInterviewFollowUp(
  $dataset,
  $session,
  $interviewerInputText,
- $provider
+ $provider,
+ $requiredQuestionType
  );
 
  if ($recommendedFollowUp !== null) {
@@ -772,15 +775,18 @@ class InterviewController extends Controller
  }
  }
 
- if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText)) {
+ if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText)
+ || ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($followUpText, $requiredQuestionType))) {
  $provider = 'local';
- $followUpText = $isFinal
+ $followUpText = $requiredQuestionType !== null
+ ? $this->fallbackQuestionForSelectedType($session, $requiredQuestionType, $interviewerInputText, $isFinal)
+ : ($isFinal
  ? "For the final question, what specific evidence best proves your fit for the {$session->target_position} role?"
- : "What specific example, decision, or result best shows how you would succeed in the {$session->target_position} role?";
+ : "What specific example, decision, or result best shows how you would succeed in the {$session->target_position} role?");
  }
 
  try {
- return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $followUpSourceMetadata) {
+ return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $followUpSourceMetadata, $requiredQuestionType) {
  $lockedSession = InterviewSession::with('category')
  ->where('user_id', Auth::id())
  ->where('status', 'in_progress')
@@ -812,10 +818,14 @@ class InterviewController extends Controller
  // 4. Save new AI Question
  $sourceMetadata = $followUpSourceMetadata;
  $existingQuestionTexts = $questionSequence->pluck('question_text')->all();
- $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts);
+ $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts, $requiredQuestionType);
  $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
  $this->deleteUnansweredFutureQuestions($lockedSession, $question);
 
+ $questionMetadata = $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider);
+ if ($requiredQuestionType !== null) {
+ $questionMetadata['question_type'] = $requiredQuestionType;
+ }
  $newQuestion = $this->createInterviewQuestion(
  $lockedSession,
  $lockedSession->category,
@@ -823,7 +833,7 @@ class InterviewController extends Controller
  $lockedSession->difficulty,
  $this->decodeQuestionTypes($lockedSession->question_types),
  $nextQuestionIndex,
- $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider),
+ $questionMetadata,
  $provider!== 'local'
  );
 
@@ -3919,6 +3929,9 @@ return response()->json([
  }
 
  $questionType = $sourceMetadata['question_type']?? $this->questionTypeForIndex($questionText, $selectedTypes, $index);
+ if (($sourceMetadata['source_type']?? null) !== 'real_interview_opening') {
+ $questionType = $this->selectedQuestionTypeForIndex($session, $index)?? $questionType;
+ }
  $defaultCoaching = $this->defaultQuestionCoachingMetadata($questionType);
  $questionData = [
  'category_id' => $categoryId,
@@ -3963,6 +3976,7 @@ return response()->json([
  }
 
  $selectionTypes = ! empty($selectedTypes)? $selectedTypes: ['Behavioral', 'Situational', 'Technical'];
+ $initialType = $selectionTypes[0];
  $position = trim((string) $session->target_position)?: 'this role';
  $difficulty = (string) ($session->difficulty?: 'medium');
  $existingQuestionTexts = Question::where('interview_session_id', $session->id)
@@ -3974,7 +3988,7 @@ return response()->json([
  if ($dataset) {
  $record = $this->firstLocalSourceQuestionRecord(
  $dataset,
- $selectionTypes,
+ [$initialType],
  $difficulty,
  $position,
  $existingQuestionTexts
@@ -3985,15 +3999,18 @@ return response()->json([
  }
 
  if (empty($records)) {
- $records = $this->fallbackQuestionRecordsForSession($session, $selectionTypes, 1);
+ $records = $this->fallbackQuestionRecordsForSession($session, [$initialType], 1);
  }
 
  if (empty($records) && $dataset) {
- $records[] = QuestionDatasetProvider::fallbackQuestion($dataset, $category, $position, $difficulty);
+ $datasetFallback = QuestionDatasetProvider::fallbackQuestion($dataset, $category, $position, $difficulty);
+ if ($this->canonicalQuestionType($datasetFallback['type']?? null) === $initialType) {
+ $records[] = $datasetFallback;
+ }
  }
 
  if (empty($records)) {
- $questionType = $selectionTypes[0]?? 'Behavioral';
+ $questionType = $initialType;
  $records[] = [
  'question_text' => $this->defaultInitialPracticeQuestionText($position, $questionType),
  'type' => $questionType,
@@ -4007,8 +4024,17 @@ return response()->json([
  $questionText = $this->uniqueQuestionTextForSession(
  $session,
  (string) ($record['question_text']?? $this->defaultInitialPracticeQuestionText($position, $selectionTypes[0]?? 'Behavioral')),
- $existingQuestionTexts
+ $existingQuestionTexts,
+ $initialType
  );
+ if (! $this->questionMatchesSelectedType($questionText, $initialType)) {
+ $questionText = $this->defaultInitialPracticeQuestionText($position, $initialType);
+ $record = [
+ 'type' => $initialType,
+ 'source_name' => 'SpeakReady local fallback',
+ 'source_type' => 'local_question_fallback',
+ ];
+ }
 
  $this->createInterviewQuestion(
  $session,
@@ -4033,17 +4059,18 @@ return response()->json([
  {
  $metadata = QuestionDatasetProvider::sourceMetadata($dataset);
  $difficulty = ucfirst(strtolower(trim($difficulty)))?: 'Medium';
- $selectedTypes = array_values(array_filter(array_map(fn ($type) => trim((string) $type), $selectedTypes)));
+ $selectedTypes = array_values(array_unique(array_filter(array_map(
+ fn ($type):?string => $this->canonicalQuestionType($type),
+ $selectedTypes
+ ))));
  $existingKeys = collect($existingQuestionTexts)
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))
  ->filter()
  ->flip()
  ->all();
  $passes = [
- ['type' => true, 'difficulty' => true],
- ['type' => true, 'difficulty' => false],
- ['type' => false, 'difficulty' => true],
- ['type' => false, 'difficulty' => false],
+ ['difficulty' => true],
+ ['difficulty' => false],
  ];
 
  foreach ($passes as $pass) {
@@ -4058,9 +4085,12 @@ return response()->json([
  continue;
  }
 
- $questionType = trim((string) ($question['type']?? ''))?: ($selectedTypes[0]?? 'Behavioral');
+ $questionType = $this->canonicalQuestionType($question['type']?? null);
+ if ($questionType === null) {
+ continue;
+ }
  $questionDifficulty = ucfirst(strtolower(trim((string) ($question['difficulty']?? $difficulty))))?: $difficulty;
- if ($pass['type'] && ! empty($selectedTypes) && ! in_array($questionType, $selectedTypes, true)) {
+ if (! empty($selectedTypes) && ! in_array($questionType, $selectedTypes, true)) {
  continue;
  }
  if ($pass['difficulty'] && $questionDifficulty!== $difficulty) {
@@ -4144,6 +4174,21 @@ return response()->json([
  return $hasOpeningQuestion? $count + 1: $count;
  }
 
+ private function selectedQuestionTypeForIndex(InterviewSession $session, int $questionIndex):?string
+ {
+ $selectedTypes = $this->decodeQuestionTypes($session->question_types);
+ if ($selectedTypes === []) {
+ return null;
+ }
+
+ $hasOpeningQuestion = Question::where('interview_session_id', $session->id)
+ ->where('source_type', 'real_interview_opening')
+ ->exists();
+ $scoredIndex = max(0, $questionIndex - ($hasOpeningQuestion? 1: 0));
+
+ return $selectedTypes[$scoredIndex % count($selectedTypes)];
+ }
+
  private function hasNonOpeningQuestion(InterviewSession $session): bool
  {
  return Question::where('interview_session_id', $session->id)
@@ -4189,7 +4234,7 @@ return response()->json([
  ->delete();
  }
 
- private function uniqueQuestionTextForSession(InterviewSession $session, string $questionText, array $existingQuestionTexts): string
+ private function uniqueQuestionTextForSession(InterviewSession $session, string $questionText, array $existingQuestionTexts,?string $requiredQuestionType = null): string
  {
  $normalizedExisting = collect($existingQuestionTexts)
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))
@@ -4201,11 +4246,29 @@ return response()->json([
  }
 
  $targetPosition = trim((string) $session->target_position)?: 'the role';
- $alternatives = [
+ $alternatives = match ($requiredQuestionType) {
+ 'Behavioral' => [
+ "Can you describe a different time you solved a work problem relevant to the {$targetPosition} role?",
+ "Tell me about another specific experience that shows your judgment in the {$targetPosition} role?",
+ ],
+ 'Situational' => [
+ "If a different priority changed suddenly in the {$targetPosition} role, what would you do first?",
+ "Suppose a stakeholder disagreed with your approach in the {$targetPosition} role; how would you respond?",
+ ],
+ 'Technical' => [
+ "What tools and technical steps would you use to diagnose another problem in the {$targetPosition} role?",
+ "How would you test and verify a different solution in the {$targetPosition} role?",
+ ],
+ 'Personal' => [
+ "Which other strength would you bring to the {$targetPosition} role?",
+ "What career goal would the {$targetPosition} role help you pursue?",
+ ],
+ default => [
  "Thinking about a different example for the {$targetPosition} role, what result or lesson would you want the interviewer to remember?",
  "For the {$targetPosition} role, what is another specific situation that shows your judgment, ownership, and impact?",
  "What remaining evidence best shows that you can succeed in the {$targetPosition} role?",
- ];
+ ],
+ };
 
  foreach ($alternatives as $alternative) {
  if (! in_array($this->normalizedQuestionText($alternative), $normalizedExisting, true)) {
@@ -4231,7 +4294,7 @@ return response()->json([
 
  $questions = $query->inRandomOrder()->limit($limit)->get();
 
- if (empty($questions)) {
+ if ($questions->isEmpty()) {
  $questions = Question::where('category_id', $session->category_id)
  ->whereNull('interview_session_id')
  ->where('status', 'active')
@@ -4797,7 +4860,7 @@ return response()->json([
  )));
  }
 
- private function recommendedInterviewFollowUp(?array $dataset, InterviewSession $session, string $latestAnswer, string $provider):?array
+ private function recommendedInterviewFollowUp(?array $dataset, InterviewSession $session, string $latestAnswer, string $provider,?string $requiredQuestionType = null):?array
  {
  if ($dataset === null) {
  return null;
@@ -4807,7 +4870,7 @@ return response()->json([
  $records = $this->sourceBackedQuestionRecords(
  $dataset,
  $session,
- $this->decodeQuestionTypes($session->question_types),
+ $requiredQuestionType !== null? [$requiredQuestionType]: $this->decodeQuestionTypes($session->question_types),
  5,
  (string) ($session->difficulty?? 'medium'),
  (string) ($session->target_position?? ''),
@@ -4832,7 +4895,8 @@ return response()->json([
  (string) ($record['question_text']?? ''),
  (string) ($session->target_position?? '')
  );
- if (! $this->isReliableInterviewFollowUpText($text, $session, $latestAnswer)) {
+ if (! $this->isReliableInterviewFollowUpText($text, $session, $latestAnswer)
+ || ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($text, $requiredQuestionType))) {
  continue;
  }
 
@@ -5125,6 +5189,51 @@ return response()->json([
  return 'Behavioral';
  }
 
+ private function questionMatchesSelectedType(string $reply, string $requiredType): bool
+ {
+ $beforeQuestionMark = strstr($reply, '?', true);
+ if ($beforeQuestionMark === false) {
+ return false;
+ }
+
+ $clauses = preg_split('/[.!;]\s+/u', $beforeQuestionMark)?: [];
+ $question = trim((string) end($clauses));
+ $personal = preg_match('/\b(?:yourself|strengths?|weakness(?:es)?|motivat\w*|interests?|career|goals?|values?|work style|bring to|why (?:do|did|would|are) you)\b|\b(?:tell me about|describe|walk me through)\s+your background\b|\b(?:what|why|how|which)\b.*\bfit\b/i', $question) === 1;
+ $behavioral = preg_match('/\b(?:tell me about|describe|share|give (?:me )?an example|walk me through)\b.*\b(?:time|experience|project|incident|challenge|problem|decision|situation|case|work)\b|\bgive (?:me )?an example of how you\b|\b(?:what|how|which)\b.*\b(?:did you|have you|was your|you handled|you learned)\b/i', $question) === 1
+ && preg_match('/\b(?:would you|might you|suppose|imagine)\b/i', $question) !== 1;
+ $technical = preg_match('/\b(?:technical|tools?|systems?|software|code|database|api|diagnos\w*|debug\w*|design|test\w*|verif\w*|troubleshoot\w*|deploy\w*|architecture|algorithm|procedure|protocol)\b/i', $question) === 1
+ || (preg_match('/\b(?:process|workflow|method|steps?)\b/i', $question) === 1
+ && preg_match('/\b(?:solve|check|measure|implement|investigate|improve)\b/i', $question) === 1);
+ $situational = preg_match('/\b(?:if|suppose|imagine|scenario|would you|might you|how would|what would|how do you (?:handle|respond|approach|prioritize|adapt|confirm)|what do you do when)\b/i', $question) === 1;
+
+ return match ($requiredType) {
+ 'Personal' => $personal,
+ 'Behavioral' => ! $personal && $behavioral,
+ 'Technical' => ! $personal && ! $behavioral && $technical,
+ 'Situational' => ! $personal && ! $behavioral && ! $technical && $situational,
+ default => false,
+ };
+ }
+
+ private function fallbackQuestionForSelectedType(InterviewSession $session, string $requiredType, string $latestAnswer, bool $isFinal): string
+ {
+ $position = trim((string) $session->target_position)?: 'this position';
+ $hasAnswer = trim($latestAnswer) !== ''
+ && ! preg_match('/^\((?:Skipped or no answer|No answer before the time limit)\)/i', trim($latestAnswer))
+ && ! str_starts_with(trim($latestAnswer), '[Voice answer saved for playback.');
+ $lead = $isFinal? 'For my final question, ': ($hasAnswer? 'Thinking about what you shared, ': '');
+
+ $question = match ($requiredType) {
+ 'Behavioral' => "can you describe a specific time you handled a work challenge relevant to the {$position} role and what you personally did?",
+ 'Situational' => "if an important task changed suddenly in the {$position} role, what would you do first?",
+ 'Technical' => "what tools and technical steps would you use to solve a realistic problem in the {$position} role?",
+ 'Personal' => "which strength from your background would help you most in the {$position} role?",
+ default => "what specific evidence best shows your fit for the {$position} role?",
+ };
+
+ return $lead === ''? ucfirst($question): $lead.$question;
+ }
+
  private function buildActionPlan(InterviewSession $session, Score $score, Feedback $feedback, $answers): array
  {
  $metrics = [
@@ -5227,7 +5336,29 @@ return response()->json([
 
  $decoded = json_decode($questionTypes, true);
 
- return is_array($decoded)? array_values(array_filter($decoded)): [];
+ if (! is_array($decoded)) {
+ return [];
+ }
+
+ return array_values(array_unique(array_filter(array_map(
+ fn ($type):?string => $this->canonicalQuestionType($type),
+ $decoded
+ ))));
+ }
+
+ private function canonicalQuestionType(mixed $type):?string
+ {
+ if (! is_string($type)) {
+ return null;
+ }
+
+ foreach (['Behavioral', 'Situational', 'Technical', 'Personal'] as $canonical) {
+ if (strcasecmp(trim($type), $canonical) === 0) {
+ return $canonical;
+ }
+ }
+
+ return null;
  }
 
  private function cleanTranscribedAnswer(?string $answerText): string

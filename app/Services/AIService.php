@@ -364,11 +364,20 @@ class AIService
  $prompt.= self::localHiringContextInstruction();
  }
 
- if (! empty($questionTypes)) {
- $types = implode(', ', array_unique(array_filter((array) $questionTypes)));
- if ($types!== '') {
- $prompt.= "Only generate questions from these requested question types: {$types}. Keep the set balanced across the requested types when possible. ";
- }
+ $questionTypeExamples = [
+ 'Behavioral' => "Tell me about a time you used a skill relevant to the {$targetPosition} role.",
+ 'Situational' => "If an urgent priority changed during a {$targetPosition} task, how would you respond?",
+ 'Technical' => "How would you check that your work as a {$targetPosition} meets the required standard?",
+ 'Personal' => "What motivates you to pursue the {$targetPosition} role?",
+ ];
+ $requestedTypes = array_values(array_unique(array_filter(array_map(
+ static fn ($type): string => ucfirst(strtolower(trim((string) $type))),
+ (array) $questionTypes
+ ), static fn (string $type): bool => isset($questionTypeExamples[$type]))));
+ if ($requestedTypes!== []) {
+ $types = implode(', ', $requestedTypes);
+ $prompt.= "Only generate questions from these requested question types: {$types}. If one type is selected, every question must be that type; otherwise balance the types across the requested count. ";
+ $prompt.= 'Behavioral asks for a real past action and outcome; Situational presents a plausible hypothetical decision; Technical tests job-specific methods, tools, or reasoning; Personal explores motivation, strengths, or work style relevant to the role. Never relabel one type as another. ';
  }
 
  $prompt.= self::assistanceLevelInstruction($assistanceLevel);
@@ -384,7 +393,7 @@ class AIService
  $prompt.= "The questions must be highly tailored to the following Job Description: \"$jobDescription\". ";
  }
  if (! empty($resumeText)) {
- $prompt.= "The candidate has provided their resume. Create behavioral and experience-based questions that specifically ask about details, projects, or experiences mentioned in this Resume: \"$resumeText\". ";
+ $prompt.= "The candidate has provided their resume. Use its relevant details, projects, or experience to tailor the questions while preserving each requested question type: \"$resumeText\". ";
  }
 
  if (! empty($datasetContext)) {
@@ -400,7 +409,7 @@ class AIService
  (string) $focus,
  $resumeText,
  $jobDescription,
- (array) $questionTypes,
+ $requestedTypes,
  (array) ($requestOptions['exclude_question_texts']?? []),
  );
 
@@ -414,8 +423,12 @@ class AIService
  }
 
  $prompt.= "Return ONLY a valid JSON object with a \"questions\" array of strings. Do not include any markdown formatting, headers, or explanations.\n";
- $prompt.= "EXAMPLE OUTPUT FORMAT:\n";
- $prompt.= '{"questions":["Can you describe a time when you had to overcome a significant technical challenge?","How do you prioritize your tasks when facing multiple tight deadlines?"]}';
+ $prompt.= "EXAMPLE OUTPUT FORMAT (illustrates the requested types, not the question count):\n";
+ $examples = array_map(
+ static fn (string $type): string => $questionTypeExamples[$type],
+ $requestedTypes!== []? $requestedTypes: ['Behavioral', 'Situational']
+ );
+ $prompt.= json_encode(['questions' => $examples], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
  $maxRetries = 3;
  $attempt = 0;
@@ -627,7 +640,7 @@ class AIService
  Cache::forget(self::questionRerankProviderCooldownKey($provider));
  }
 
- public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false, $targetLanguage = null, array $conversationContext = [], $datasetContext = null)
+ public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false, $targetLanguage = null, array $conversationContext = [], $datasetContext = null,?string $requiredQuestionType = null)
  {
  $targetPosition = trim((string) ($session->target_position?? 'General'))?: 'General';
  $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
@@ -657,6 +670,16 @@ class AIService
  $requestedTypes = self::decodeQuestionTypes($session->question_types?? null);
  if (! empty($requestedTypes)) {
  $prompt.= "The session's requested question types are ".implode(', ', $requestedTypes).". Keep follow-ups aligned with those types unless the candidate's answer requires clarification. ";
+ }
+ $requiredQuestionType = ucfirst(strtolower(trim((string) $requiredQuestionType)));
+ if (in_array($requiredQuestionType, ['Behavioral', 'Situational', 'Technical', 'Personal'], true)) {
+ $typeRule = match ($requiredQuestionType) {
+ 'Behavioral' => 'Ask for one real past situation, the candidate\'s own action, and what happened.',
+ 'Situational' => 'Present one plausible hypothetical work situation and ask what the candidate would do.',
+ 'Technical' => 'Probe a job-specific method, tool, diagnosis, tradeoff, or verification step.',
+ 'Personal' => 'Explore the candidate\'s motivation, strength, work style, or career goal for this role.',
+ };
+ $prompt.= "The NEXT question must be {$requiredQuestionType}. {$typeRule} Preserve this type even when referring to the latest answer or resume. ";
  }
 
  if (! empty($session->resume_text)) {
@@ -712,6 +735,9 @@ class AIService
  $prompt.= "\nYour task: This is the FINAL question of the interview. Briefly acknowledge the candidate's latest answer in a warm, encouraging sentence without evaluating it. If they asked a brief rapport or logistics question, answer it first in one short clause. Explicitly mention that this is the final question, and ask ONE concluding interview question that a real interviewer would ask. Prefer a question about strongest fit, remaining evidence, motivation, or what the candidate wants the interviewer to remember. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
  } else {
  $prompt.= "\nYour task: Briefly acknowledge the candidate's latest answer in one warm, encouraging sentence, then ask exactly ONE relevant follow-up question based on that answer. If they asked a brief rapport or logistics question, answer it first in one short clause before the interview question. If the answer was vague, keep the tone inviting while asking for a specific example, their personal role, measurable result, or decision process. If the answer was strong, probe deeper into tradeoffs, constraints, stakeholder impact, or how they would apply it in this role. Do not jump to an unrelated prewritten question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+ }
+ if (in_array($requiredQuestionType, ['Behavioral', 'Situational', 'Technical', 'Personal'], true)) {
+ $prompt.= " The required {$requiredQuestionType} type takes priority over generic example or final-fit wording above. Do not switch to another question type.";
  }
  $prompt.= ' Keep the reply natural for speech, under 75 words, with exactly one interviewer question. '.self::liveFeedbackReplyBoundary($liveFeedbackMode);
 
