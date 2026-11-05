@@ -330,6 +330,15 @@
         font-weight: 750;
     }
 
+    .sr-first-steps-footer-actions {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .sr-first-steps-skip,
     .sr-first-steps-proceed {
         display: inline-flex;
         align-items: center;
@@ -343,6 +352,22 @@
         color: #ffffff;
         font-size: 0.76rem;
         font-weight: 900;
+    }
+
+    .sr-first-steps-skip {
+        border-color: color-mix(in srgb, var(--sr-first-accent) 24%, var(--sr-first-line));
+        background: transparent;
+        color: var(--sr-first-accent);
+    }
+
+    .sr-first-steps-skip:hover,
+    .sr-first-steps-skip:focus-visible {
+        background: color-mix(in srgb, var(--sr-first-accent) 9%, transparent);
+    }
+
+    .sr-first-steps-skip:disabled {
+        cursor: wait;
+        opacity: 0.58;
     }
 
     .sr-first-steps-proceed:disabled {
@@ -431,6 +456,13 @@
             text-align: center;
         }
 
+        .sr-first-steps-footer-actions {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            width: 100%;
+        }
+
+        .sr-first-steps-skip,
         .sr-first-steps-proceed {
             width: 100%;
             min-width: 0;

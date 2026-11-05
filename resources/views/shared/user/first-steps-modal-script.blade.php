@@ -9,6 +9,7 @@
         const userId = modalElement.dataset.srOnboardingUser || 'guest';
         const returnAfterSetupKey = `speakready.firstSteps.returnAfterSetup.${userId}`;
         const proceedButton = modalElement.querySelector('[data-sr-first-steps-proceed]');
+        const skipButton = modalElement.querySelector('[data-sr-first-steps-skip]');
         const footerCopy = modalElement.querySelector('[data-sr-first-steps-footer-copy]');
         const personalizationForm = modalElement.querySelector('[data-sr-first-steps-personalization-form]');
         const personalizationFormStatus = modalElement.querySelector('[data-sr-first-steps-form-status]');
@@ -48,6 +49,49 @@
         function openFirstSteps() {
             closeShellMenus();
             modalController()?.show();
+        }
+
+        async function skipFirstSteps() {
+            if (!skipButton || skipButton.disabled) return;
+
+            const progressEndpoint = modalElement.dataset.srOnboardingProgressUrl?.trim() || '';
+            skipButton.disabled = true;
+            skipButton.setAttribute('aria-busy', 'true');
+
+            try {
+                if (progressEndpoint) {
+                    const response = await fetch(progressEndpoint, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        },
+                        body: JSON.stringify({ milestone: 'dashboard_tour_skipped' }),
+                    });
+
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(payload.message || 'Unable to skip setup.');
+                    applyOnboardingState(payload.onboarding || {});
+                }
+
+                removeOnboardingQuery();
+                const dashboardUrl = new URL(modalElement.dataset.srDashboardUrl, window.location.origin);
+                const currentPath = window.location.pathname.replace(/\/$/, '') || '/';
+                const dashboardPath = dashboardUrl.pathname.replace(/\/$/, '') || '/';
+
+                if (currentPath === dashboardPath) {
+                    modalController()?.hide();
+                    return;
+                }
+
+                window.location.assign(dashboardUrl.toString());
+            } catch (error) {
+                skipButton.disabled = false;
+                skipButton.removeAttribute('aria-busy');
+                if (footerCopy) footerCopy.textContent = error.message || 'Unable to skip setup. Please try again.';
+            }
         }
 
         window.openSpeakReadyFirstSteps = openFirstSteps;
@@ -158,6 +202,13 @@
         });
 
         document.addEventListener('click', (event) => {
+            const skip = event.target.closest('[data-sr-first-steps-skip]');
+            if (skip && modalElement.contains(skip)) {
+                event.preventDefault();
+                skipFirstSteps();
+                return;
+            }
+
             const proceed = event.target.closest('[data-sr-first-steps-proceed]');
             if (proceed && modalElement.contains(proceed)) {
                 event.preventDefault();

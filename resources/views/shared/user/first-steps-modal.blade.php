@@ -44,6 +44,7 @@
      data-sr-first-steps-auto-show="{{ $firstStepsAutoShow ? 'true' : 'false' }}"
      data-sr-first-steps-complete="{{ $firstStepsComplete ? 'true' : 'false' }}"
      data-sr-auto-start-dashboard-tour="{{ $firstStepsTutorialPending ? 'true' : 'false' }}"
+     data-sr-onboarding-progress-url="{{ route('user.onboarding.progress') }}"
      data-sr-dashboard-url="{{ $firstStepsDashboardUrl }}"
      data-sr-dashboard-tools-url="{{ $firstStepsToolsUrl }}"
      data-sr-dashboard-tour-url="{{ $firstStepsTourUrl }}">
@@ -180,9 +181,14 @@
 
             <div class="modal-footer">
                 <p class="sr-first-steps-footer-copy" data-sr-first-steps-footer-copy>{{ $firstStepsComplete ? 'Setup complete. Your dashboard is ready.' : 'Complete all four steps to continue to your dashboard.' }}</p>
-                <button type="button" class="sr-first-steps-proceed" data-sr-first-steps-proceed @disabled(! $firstStepsComplete)>
-                    <i class="fa-solid fa-arrow-right"></i> Proceed to Dashboard
-                </button>
+                <div class="sr-first-steps-footer-actions">
+                    <button type="button" class="sr-first-steps-skip" data-sr-first-steps-skip>
+                        Skip
+                    </button>
+                    <button type="button" class="sr-first-steps-proceed" data-sr-first-steps-proceed @disabled(! $firstStepsComplete)>
+                        <i class="fa-solid fa-arrow-right"></i> Proceed to Dashboard
+                    </button>
+                </div>
             </div>
         </div>
     </div>
