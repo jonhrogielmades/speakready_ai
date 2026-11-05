@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=13') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=14') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -524,21 +524,21 @@
  <div class="setup-role-discovery-grid">
  <div>
  <label for="roleSkills">Skills <span class="setup-optional-label">Optional</span></label>
- <input type="text" class="oinp" id="roleSkills" name="role_skills" maxlength="500" placeholder="e.g. customer service, spreadsheets" aria-describedby="roleSkillsHelp">
+ <input type="text" class="oinp" id="roleSkills" name="role_skills" form="setupForm" maxlength="500" placeholder="e.g. customer service, spreadsheets" aria-describedby="roleSkillsHelp">
  <small id="roleSkillsHelp">Separate skills with commas.</small>
  </div>
  <div>
  <label for="roleInterests">Interests <span class="setup-optional-label">Optional</span></label>
- <input type="text" class="oinp" id="roleInterests" name="role_interests" maxlength="500" placeholder="e.g. helping people, technology" aria-describedby="roleInterestsHelp">
+ <input type="text" class="oinp" id="roleInterests" name="role_interests" form="setupForm" maxlength="500" placeholder="e.g. helping people, technology" aria-describedby="roleInterestsHelp">
  <small id="roleInterestsHelp">Separate interests with commas.</small>
  </div>
  <div>
  <label for="roleQualifications">Qualifications or certifications <span class="setup-optional-label">Optional</span></label>
- <input type="text" class="oinp" id="roleQualifications" name="role_qualifications" maxlength="500" placeholder="e.g. TESDA NC II, nursing degree">
+ <input type="text" class="oinp" id="roleQualifications" name="role_qualifications" form="setupForm" maxlength="500" placeholder="e.g. TESDA NC II, nursing degree">
  </div>
  <div>
  <label for="roleExperienceLevel">Experience level <span class="setup-optional-label">Optional</span></label>
- <select class="oinp" id="roleExperienceLevel" name="role_experience_level">
+ <select class="oinp" id="roleExperienceLevel" name="role_experience_level" form="setupForm">
  <option value="">Choose an experience level</option>
  <option value="entry">Student, first job, or entry level</option>
  <option value="mid">Some professional experience</option>
@@ -1379,7 +1379,14 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  roleFinderModal?.addEventListener('show.bs.modal', () => {
  setSetupTargetDropdownOpen(false);
+ if (roleFinderModal.parentElement !== document.body) document.body.appendChild(roleFinderModal);
  });
+
+ for (const eventName of ['input', 'change']) {
+ roleFinderModal?.addEventListener(eventName, () => {
+ document.getElementById('setupForm')?.dispatchEvent(new Event(eventName, { bubbles: true }));
+ });
+ }
 
  roleFinderModal?.addEventListener('shown.bs.modal', () => {
  document.getElementById('roleSkills')?.focus();

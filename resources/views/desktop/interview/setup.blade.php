@@ -3,7 +3,7 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=18') }}" data-page-style="interview-setup-2">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=2') }}" data-page-style="interview-role-discovery">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=3') }}" data-page-style="interview-role-discovery">
 @endpush
 
 @section('content')
@@ -1300,9 +1300,11 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const suggestedRoles = document.getElementById('suggestedRoles');
  const roleFinderModal = document.getElementById('roleFinderModal');
  let roleFinderSelectedPosition = false;
+ if (roleFinderModal && roleFinderModal.parentElement !== document.body) {
+ document.body.appendChild(roleFinderModal);
+ }
  roleFinderModal?.addEventListener('show.bs.modal', () => {
  setSetupTargetDropdownOpen(false);
- if (roleFinderModal.parentElement !== document.body) document.body.appendChild(roleFinderModal);
  });
  roleFinderModal?.addEventListener('shown.bs.modal', () => document.getElementById('roleSkills')?.focus());
  roleFinderModal?.addEventListener('hidden.bs.modal', () => {

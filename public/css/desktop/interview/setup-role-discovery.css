@@ -1,4 +1,17 @@
 /* Role discovery controls in the desktop interview setup. */
+html body > #roleFinderModal.modal {
+    z-index: 12001;
+    pointer-events: auto;
+}
+
+html body:has(> #roleFinderModal.show) > .modal-backdrop.show {
+    z-index: 12000;
+    background: rgba(8, 20, 43, .58);
+    opacity: 1;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+}
+
 html body #sec-interview-setup #panel-basic .setup-role-finder-launch {
     grid-column: 1 / -1;
     min-width: 0;

@@ -986,9 +986,12 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame(0, substr_count($content, 'data-target-dropdown-choice-kind="school"'));
  }
 
+ $desktopResponse
+ ->assertSee('css/desktop/interview/setup-role-discovery.css?v=3', false);
+
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=13', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=14', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)
