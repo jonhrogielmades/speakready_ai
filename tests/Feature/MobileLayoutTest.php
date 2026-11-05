@@ -1634,7 +1634,7 @@ class MobileLayoutTest extends TestCase
             ],
             'mobile' => [
                 'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-                'stylesheet' => 'css/mobile/interview/session.css?v=76',
+                'stylesheet' => 'css/mobile/interview/session.css?v=78',
             ],
         ];
 
@@ -2006,7 +2006,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=76', false)
+            ->assertSee('css/mobile/interview/session.css?v=78', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertDontSee('id="interviewStartModal"', false)
@@ -2072,10 +2072,11 @@ class MobileLayoutTest extends TestCase
         $this->assertStringContainsString('height: clamp(162px, calc(var(--sr-visual-vh, 100dvh) - 404px), 224px) !important;', $mobileSessionCss);
         $this->assertStringContainsString('margin-bottom: 14px !important;', $mobileSessionCss);
         $this->assertStringContainsString('overflow: hidden !important;', $mobileSessionCss);
-        $this->assertStringContainsString('html body.mobile-answer-focused.mobile-interview-fullscreen.user-mobile-shell #sec-interview-session', $mobileSessionCss);
+        $this->assertStringContainsString('html body.mobile-answer-focused.mobile-interview-fullscreen #mob-content #sec-interview-session:not([data-game-session-root])', $mobileSessionCss);
         $this->assertStringContainsString('overflow-y: auto !important;', $mobileSessionCss);
-        $this->assertStringContainsString('position: sticky !important;', $mobileSessionCss);
-        $this->assertStringContainsString('height: clamp(108px, calc(var(--sr-answer-viewport-h, var(--sr-visual-vh, 100dvh)) - 290px), 180px) !important;', $mobileSessionCss);
+        $this->assertStringContainsString('flex: 0 0 var(--sr-interview-content-h, calc(100svh - 16px)) !important;', $mobileSessionCss);
+        $this->assertStringContainsString("document.documentElement.style.setProperty('--sr-interview-content-h'", $response->getContent());
+        $this->assertStringNotContainsString('height: 120px !important;', $mobileSessionCss);
         $this->assertStringContainsString('html body.mobile-interview-fullscreen.user-mobile-shell #sec-interview-session .response-panel', $mobileSessionCss);
         $this->assertStringContainsString('html body.user-mobile-shell #sec-interview-session .response-panel #answerForm', $mobileSessionCss);
         $this->assertStringContainsString('scrollbar-gutter: stable;', $mobileSessionCss);

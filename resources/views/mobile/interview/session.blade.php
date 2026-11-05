@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=77') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=78') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -3559,6 +3559,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  let mobileAnswerFocusFrame = null;
  let mobileAnswerViewportListenersBound = false;
+ let mobileAnswerLayoutHeight = 0;
+ let mobileAnswerLayoutWidth = 0;
 
  function currentVisualViewportHeight() {
  const visualViewport = window.visualViewport;
@@ -3570,15 +3572,34 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function syncMobileAnswerFocusState() {
  const visualHeight = currentVisualViewportHeight();
+ const visualWidth = Number(window.visualViewport?.width || window.innerWidth || 0);
+ const mobileFullscreen = document.body.classList.contains('mobile-interview-fullscreen');
 
  if (visualHeight > 0) {
  document.documentElement.style.setProperty('--sr-answer-viewport-h', `${visualHeight.toFixed(2)}px`);
  }
 
+ // Keep the pre-keyboard workspace height while the visual viewport is shorter.
+ // The session itself can scroll so the answer stays reachable above the keyboard.
+ if (mobileFullscreen && visualHeight > 0) {
+ if (Math.abs(visualWidth - mobileAnswerLayoutWidth) > 2) {
+ mobileAnswerLayoutWidth = visualWidth;
+ mobileAnswerLayoutHeight = 0;
+ }
+ const workspaceHeight = document.getElementById('workspaceWrapper')?.getBoundingClientRect().height || 0;
+ if (document.activeElement !== answerTextareaElement()) {
+ mobileAnswerLayoutHeight = Math.max(mobileAnswerLayoutHeight, workspaceHeight, visualHeight - 16);
+ }
+ if (mobileAnswerLayoutHeight <= 0) {
+ mobileAnswerLayoutHeight = Math.max(workspaceHeight, visualHeight - 16);
+ }
+ document.documentElement.style.setProperty('--sr-interview-content-h', `${mobileAnswerLayoutHeight.toFixed(2)}px`);
+ }
+
  const textareaFocused = document.activeElement === answerTextareaElement();
  document.body.classList.toggle(
  'mobile-answer-focused',
- textareaFocused && document.body.classList.contains('mobile-interview-fullscreen')
+ textareaFocused && mobileFullscreen
  );
  }
 
