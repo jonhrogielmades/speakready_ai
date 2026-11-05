@@ -182,9 +182,9 @@ class UserDashboardFunctionalityTest extends TestCase
             $this->assertTrue($supportScriptPosition < $modalInitializerPosition);
 
             $response
-                ->assertSee('id="card-daily-challenge"', false)
-                ->assertSee('href="'.route('interview.setup').'"', false)
-                ->assertSee('id="card-current-goal"', false)
+                ->assertDontSee('id="card-skill-radar"', false)
+                ->assertDontSee('id="card-daily-challenge"', false)
+                ->assertDontSee('id="card-current-goal"', false)
                 ->assertSee('href="'.route('user.progress').'"', false)
                 ->assertDontSee('id="card-achievements"', false)
                 ->assertDontSee('Sharpen 3 advanced advanced answers', false);

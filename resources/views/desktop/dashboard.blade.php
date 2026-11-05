@@ -40,7 +40,6 @@
     $playerLevel = max(1, (int) ($profile->player_level ?? (floor($xpValue / 1000) + 1)));
     $xpMeter = max(0, min(100, (int) round((($xpValue % 1000) / 1000) * 100)));
     $streakMeter = max(0, min(100, (int) round((($currentStreak ?? 0) / 7) * 100)));
-    $hasRadarScores = collect($radarData ?? [])->contains(fn ($score) => is_numeric($score) && (int) $score > 0);
     $trendScores = collect($scoreTrend ?? [])->pluck('score')->filter(fn ($score) => is_numeric($score))->map(fn ($score) => (int) round($score))->values();
     $trendAverage = $trendScores->isNotEmpty() ? (int) round($trendScores->avg()) : $scoreVal;
     $trendFirst = $trendScores->first();
@@ -71,17 +70,6 @@
         $trendNoteBody = 'Your readiness is holding steady. Consistent practice will help move it higher.';
         $trendNoteIcon = 'fa-regular fa-star';
     }
-    $goalNote = $goalPercent >= 100
-        ? 'Target reached. Set your next readiness goal.'
-        : ($goalPercent >= 75
-            ? 'Almost there. A focused session can close the gap.'
-            : ($goalPercent >= 40
-                ? 'You are building momentum toward this goal.'
-                : 'Start with one scored session to build momentum.'));
-    $challengeTitle = $scoreVal >= 75 ? 'Sharpen 3 advanced answers' : 'Answer 3 HR questions';
-    $challengeCopy = $scoreVal >= 75
-        ? 'Polish role-fit stories, metrics, and confident closing answers.'
-        : 'Practice structure, confidence, and local role-fit responses.';
     $challengeXp = $hasTrendScores ? 60 : 40;
     $trendDirectionText = ! $hasTrendScores
         ? 'No scores yet'
@@ -397,84 +385,6 @@
                 </div>
             </section>
 
-            <div class="sr-dashboard-panel-row">
-            <section id="card-skill-radar" class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#ec4899">
-                <div class="sr-side-feature-header">
-                    <div class="sr-side-title-row">
-                        <div class="sr-side-icon"><i class="fa-solid fa-chart-simple"></i></div>
-                        <div>
-                            <h5 class="sr-side-title">Skill Chart</h5>
-                            <p class="sr-side-subtitle">Average capability by skill.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('user.progress') }}" class="sr-side-detail-btn"><i class="fa-solid fa-chart-line"></i> View Details</a>
-                </div>
-                @if($hasRadarScores)
-                    <div class="chart-container-mobile sr-radar-box">
-                        <canvas id="radarChart"></canvas>
-                    </div>
-                @else
-                    <div class="sr-radar-locked" role="status">
-                        <div class="sr-radar-locked-icon"><i class="fa-solid fa-lock"></i></div>
-                        <p>Complete a scored interview to unlock your skill chart.</p>
-                    </div>
-                @endif
-            </section>
-
-            <section id="card-daily-challenge" class="sr-card sr-card-pad sr-side-feature sr-challenge-feature">
-                <div class="sr-side-feature-header mb-0">
-                    <div class="sr-side-title-row">
-                        <div class="sr-side-icon"><i class="fa-regular fa-calendar-check"></i></div>
-                        <div>
-                            <h5 class="sr-side-title" style="color:#2563eb">Today&apos;s Challenge</h5>
-                        </div>
-                    </div>
-                    <div class="sr-challenge-star"><i class="fa-regular fa-star"></i></div>
-                </div>
-                <h5 class="sr-challenge-title">{{ $challengeTitle }}</h5>
-                <p class="sr-challenge-copy">{{ $challengeCopy }}</p>
-                <div class="sr-reward-row">
-                    <span class="sr-reward-pill xp"><i class="fa-regular fa-star"></i> +{{ $challengeXp }} XP</span>
-                    <span class="sr-reward-pill streak"><i class="fa-solid fa-fire"></i> Streak eligible</span>
-                </div>
-                <a href="{{ route('interview.setup') }}" class="sr-btn sr-btn-primary w-100 sr-challenge-cta"><i class="fa-solid fa-play"></i> START INTERVIEW</a>
-            </section>
-
-            <section id="card-current-goal" class="sr-card sr-card-pad sr-side-feature" style="--side-accent:#ef4444">
-                <div class="sr-side-feature-header">
-                    <div class="sr-side-title-row">
-                        <div class="sr-side-icon"><i class="fa-solid fa-bullseye"></i></div>
-                        <div>
-                            <h5 class="sr-side-title">Current Goal</h5>
-                            <p class="sr-side-subtitle">Progress toward your next readiness target.</p>
-                        </div>
-                    </div>
-                </div>
-                @if(isset($upcomingGoal))
-                    <div class="sr-goal-panel">
-                        <div class="sr-goal-main">
-                            <div class="sr-goal-row">
-                                <div class="sr-goal-title">{{ $upcomingGoal->title }}</div>
-                                <div class="sr-goal-percent">{{ $goalPercent }}%</div>
-                            </div>
-                            <div class="sr-progress"><span style="--value: {{ $goalPercent }}%; background:linear-gradient(90deg,#22c55e,#0ea5e9)"></span></div>
-                        </div>
-                        <div class="sr-goal-footer">
-                            <div class="sr-goal-note"><i class="fa-solid fa-chart-line"></i> {{ $goalNote }}</div>
-                            <a href="{{ route('user.progress') }}" class="sr-side-detail-btn">View Goals <i class="fa-solid fa-chevron-right"></i></a>
-                        </div>
-                    </div>
-                @else
-                    <div class="sr-polished-empty">
-                        <div class="sr-polished-empty-inner">
-                            <div class="sr-empty-visual"><i class="fa-solid fa-bullseye"></i></div>
-                            <p class="sr-polished-empty-text">No current goal set.</p>
-                        </div>
-                    </div>
-                @endif
-            </section>
-            </div>
-
         </main>
     </div>
 </div>
@@ -630,8 +540,6 @@ document.addEventListener("DOMContentLoaded", function() {
     };
     const getDashboardChartPalette = () => {
         const rootStyle = getComputedStyle(rootElement);
-        const radarCard = document.getElementById('card-skill-radar');
-        const radarStyle = radarCard ? getComputedStyle(radarCard) : rootStyle;
         const isLightMode = getDashboardTheme() === 'light';
 
         return {
@@ -641,11 +549,7 @@ document.addEventListener("DOMContentLoaded", function() {
             surfaceColor: isLightMode ? '#ffffff' : readThemeColor(rootStyle, '--sf', '#111827'),
             gridColor: isLightMode ? 'rgba(71,85,105,0.34)' : 'rgba(226,232,240,0.5)',
             trendLineColor: isLightMode ? '#1d4ed8' : '#93c5fd',
-            trendPointFill: isLightMode ? '#ffffff' : '#0f172a',
-            radarGridColor: readThemeColor(radarStyle, '--sr-radar-grid-color', isLightMode ? 'rgba(71,85,105,0.48)' : 'rgba(226,232,240,0.66)'),
-            radarAngleColor: readThemeColor(radarStyle, '--sr-radar-angle-color', isLightMode ? 'rgba(71,85,105,0.42)' : 'rgba(226,232,240,0.54)'),
-            radarGridWidth: isLightMode ? 1.35 : 1.75,
-            radarLabelColor: readThemeColor(radarStyle, '--sr-radar-label-color', isLightMode ? '#1e293b' : '#f8fafc')
+            trendPointFill: isLightMode ? '#ffffff' : '#0f172a'
         };
     };
     const createTrendGradient = (ctx, palette) => {
@@ -655,18 +559,6 @@ document.addEventListener("DOMContentLoaded", function() {
         gradient.addColorStop(1, 'rgba(37, 99, 235, 0.00)');
         return gradient;
     };
-    const getRadarDatasetColors = (hasScores, palette) => ({
-        backgroundColor: hasScores
-            ? (palette.isLightMode ? 'rgba(219, 39, 119, 0.72)' : 'rgba(244, 114, 182, 0.76)')
-            : (palette.isLightMode ? 'rgba(219, 39, 119, 0.18)' : 'rgba(244, 114, 182, 0.24)'),
-        borderColor: hasScores
-            ? (palette.isLightMode ? '#be185d' : '#f9a8d4')
-            : (palette.isLightMode ? 'rgba(190, 24, 93, 0.78)' : 'rgba(251, 207, 232, 0.94)'),
-        hoverBackgroundColor: hasScores
-            ? (palette.isLightMode ? '#be185d' : '#f9a8d4')
-            : (palette.isLightMode ? 'rgba(219, 39, 119, 0.28)' : 'rgba(244, 114, 182, 0.34)'),
-        hoverBorderColor: palette.isLightMode ? '#9d174d' : '#fbcfe8'
-    });
     const initialPalette = getDashboardChartPalette();
     const {
         isLightMode,
@@ -675,18 +567,11 @@ document.addEventListener("DOMContentLoaded", function() {
         surfaceColor,
         gridColor,
         trendLineColor,
-        trendPointFill,
-        radarGridColor,
-        radarAngleColor,
-        radarGridWidth,
-        radarLabelColor
+        trendPointFill
     } = initialPalette;
     const isCompactTrend = () => window.matchMedia('(max-width: 575px)').matches;
-    const skillChartLabelSize = () => window.matchMedia('(max-width: 380px)').matches ? 9 : 10;
     let progressChart = null;
     let progressCtx = null;
-    let radarChart = null;
-    let dashboardHasRadarScores = false;
 
     Chart.defaults.color = txColor;
     Chart.defaults.font.family = "'Poppins', sans-serif";
@@ -888,92 +773,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    const radarCanvas = document.getElementById('radarChart');
-    if (radarCanvas) {
-        const radarScores = [
-            {{ (int) ($radarData['clarity'] ?? 0) }},
-            {{ (int) ($radarData['relevance'] ?? 0) }},
-            {{ (int) ($radarData['grammar'] ?? 0) }},
-            {{ (int) ($radarData['professionalism'] ?? 0) }}
-        ];
-        const hasRadarScores = radarScores.some((value) => Number(value) > 0);
-        dashboardHasRadarScores = hasRadarScores;
-        const radarDisplayScores = hasRadarScores ? radarScores : [0, 0, 0, 0];
-        const radarColors = getRadarDatasetColors(hasRadarScores, initialPalette);
-
-        radarChart = new Chart(radarCanvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Clarity', 'Relevance', 'Grammar', 'Professionalism'],
-                datasets: [{
-                    label: 'Score Level',
-                    data: radarDisplayScores,
-                    backgroundColor: radarColors.backgroundColor,
-                    borderColor: radarColors.borderColor,
-                    hoverBackgroundColor: radarColors.hoverBackgroundColor,
-                    hoverBorderColor: radarColors.hoverBorderColor,
-                    borderWidth: hasRadarScores ? 1.5 : 1,
-                    borderRadius: 0,
-                    borderSkipped: false,
-                    maxBarThickness: 22,
-                    categoryPercentage: 0.74,
-                    barPercentage: 0.84
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                layout: { padding: { top: 6, right: 10, bottom: 4, left: 0 } },
-                plugins: {
-                    legend: { display: false },
-                    emptyChartMessage: {
-                        color: mutedColor,
-                        force: !hasRadarScores,
-                        text: 'Complete a scored interview to unlock your skill chart.'
-                    },
-                    tooltip: {
-                        backgroundColor: isLightMode ? '#ffffff' : 'rgba(15, 23, 42, 0.94)',
-                        titleColor: isLightMode ? '#0f172a' : '#fff',
-                        bodyColor: isLightMode ? '#334155' : '#dbeafe',
-                        borderColor: radarColors.borderColor,
-                        borderWidth: 1,
-                        displayColors: false,
-                        callbacks: {
-                            label: function(context) {
-                                return ' Score Level: ' + context.parsed.x + '%';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            stepSize: 25,
-                            color: txColor,
-                            font: { size: 10, weight: 700 },
-                            callback: function(value) {
-                                return value + '%';
-                            }
-                        },
-                        grid: { color: radarGridColor, lineWidth: radarGridWidth, drawTicks: false },
-                        border: { display: false }
-                    },
-                    y: {
-                        ticks: {
-                            color: radarLabelColor,
-                            font: { size: skillChartLabelSize(), weight: 900 }
-                        },
-                        grid: { display: false },
-                        border: { display: false }
-                    }
-                }
-            }
-        });
-    }
-
     const previousChartColorUpdater = window.updateChartColors;
     window.updateChartColors = function() {
         if (typeof previousChartColorUpdater === 'function' && previousChartColorUpdater !== window.updateChartColors) {
@@ -1001,22 +800,6 @@ document.addEventListener("DOMContentLoaded", function() {
             progressChart.update('none');
         }
 
-        if (radarChart) {
-            const radarColors = getRadarDatasetColors(dashboardHasRadarScores, palette);
-            const radarDataset = radarChart.data.datasets[0];
-            Object.assign(radarDataset, radarColors);
-            radarChart.options.plugins.emptyChartMessage.color = palette.mutedColor;
-            radarChart.options.plugins.tooltip.backgroundColor = palette.isLightMode ? '#ffffff' : 'rgba(15, 23, 42, 0.94)';
-            radarChart.options.plugins.tooltip.titleColor = palette.isLightMode ? '#0f172a' : '#fff';
-            radarChart.options.plugins.tooltip.bodyColor = palette.isLightMode ? '#334155' : '#dbeafe';
-            radarChart.options.plugins.tooltip.borderColor = radarColors.borderColor;
-            radarChart.options.scales.x.ticks.color = palette.txColor;
-            radarChart.options.scales.x.grid.color = palette.radarGridColor;
-            radarChart.options.scales.x.grid.lineWidth = palette.radarGridWidth;
-            radarChart.options.scales.y.ticks.color = palette.radarLabelColor;
-            radarChart.options.scales.y.ticks.font.size = skillChartLabelSize();
-            radarChart.update('none');
-        }
     };
 });
 </script>
@@ -1281,8 +1064,6 @@ document.addEventListener("DOMContentLoaded", function() {
             { element: '.sr-score-panel', popover: { title: 'Readiness and Goal', description: 'Open Progress to review your overall readiness score, current status, and next goal.', side: 'bottom', align: 'start' }},
             { element: '.sr-stats-desktop', popover: { title: 'Practice Snapshot', description: 'These cards link to completed sessions, feedback ratings, XP, and your activity calendar.', side: 'top', align: 'start' }},
             { element: '#card-progress-chart', popover: { title: 'Readiness Trend', description: 'Compare scores from your latest completed interviews, then open Progress for more detail.', side: 'top', align: 'start' }},
-            { element: '#card-daily-challenge', popover: { title: "Today's Practice Prompt", description: 'Use the suggested answer focus, then select Start Interview to configure a practice session. Rewards depend on the completed activity.', side: 'left', align: 'start' }},
-            { element: '#card-current-goal', popover: { title: 'Current Goal', description: 'Check progress toward your next readiness target and open Progress to review or update goals.', side: 'left', align: 'start' }},
             { element: '#dbTutorialBtn', popover: { title: 'Replay This Tutorial', description: 'Select this button whenever you want to review the current page.', side: 'bottom', align: 'center' }},
             { element: '#dbThBtn', popover: { title: 'Display Theme', description: 'Switch between light and dark mode.', side: 'bottom', align: 'center' }},
             { element: '#dbFontSizeBtn', popover: { title: 'Reading Size', description: 'Adjust text size from 50% to 150%, or reset it to 100%.', side: 'bottom', align: 'center' }},
