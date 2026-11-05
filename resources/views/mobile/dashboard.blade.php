@@ -259,7 +259,6 @@
             <section id="card-progress-chart" class="sr-card sr-card-pad">
                 <div class="sr-trend-header">
                     <div>
-                        <span class="sr-trend-kicker">Performance overview</span>
                         <div class="sr-trend-title-row">
                             <div class="sr-trend-icon"><i class="fa-solid fa-chart-line"></i></div>
                             <h5 class="sr-trend-title">Readiness Trend</h5>
@@ -290,18 +289,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="sr-chart-box sr-trend-chart-wrap {{ $hasTrendScores ? '' : 'is-empty' }}" aria-label="Readiness trend chart">
-                    <canvas id="progressChart" aria-label="Readiness scores from recent interview sessions"></canvas>
-                    @if(! $hasTrendScores)
-                        <div class="sr-trend-chart-empty" role="status">
-                            <div class="sr-trend-chart-empty-icon"><i class="fa-solid fa-chart-line"></i></div>
-                            <div class="sr-trend-chart-empty-copy">
-                                <strong>Build your readiness trend</strong>
-                                <span>Complete one scored interview to see your progress here.</span>
-                            </div>
-                            <a href="{{ route('interview.setup') }}" class="sr-trend-empty-action">Start interview <i class="fa-solid fa-arrow-right"></i></a>
-                        </div>
-                    @endif
+                <div class="sr-chart-box sr-trend-chart-wrap">
+                    <canvas id="progressChart"></canvas>
                 </div>
                 <div class="sr-trend-note {{ $hasTrendScores ? '' : 'is-empty' }}">
                     <i class="{{ $trendNoteIcon }}"></i>
@@ -483,7 +472,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     legend: { display: false },
                     emptyChartMessage: {
                         color: mutedColor,
-                        text: @json($hasTrendScores ? 'Complete a scored interview to see your readiness trend.' : '')
+                        text: 'Complete a scored interview to see your readiness trend.'
                     },
                     tooltip: {
                         mode: 'index',
