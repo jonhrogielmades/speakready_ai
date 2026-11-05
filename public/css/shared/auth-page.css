@@ -807,8 +807,8 @@ html[data-theme="dark"] .auth-page-form-side,
       padding-bottom: max(40px, calc(env(safe-area-inset-bottom, 0px) + 40px));
    }
    .auth-page-shell.auth-support-page .auth-page-card {
-      margin-top: 0;
-      margin-bottom: 0;
+      margin-top: auto;
+      margin-bottom: auto;
    }
    .auth-page-support-divider { margin-top: 17px; margin-bottom: 10px; }
    .auth-page-security-note { font-size: .67rem; }
