@@ -966,6 +966,11 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('id="roleInterests"', false)
  ->assertSee('id="roleQualifications"', false)
  ->assertSee('Experience level')
+ ->assertSee('id="roleFinderOpenButton"', false)
+ ->assertSee('data-bs-target="#roleFinderModal"', false)
+ ->assertSee('id="roleFinderModal"', false)
+ ->assertDontSee('<details class="setup-role-discovery"', false)
+ ->assertDontSee('<details class="setup-role-finder"', false)
  ->assertSee('id="suggestRolesButton"', false)
  ->assertDontSee('Choose a job interview practice scenario.')
  ->assertSee('class="setup-card-field setup-target-position-field"', false)
@@ -983,7 +988,7 @@ class UserSideHardeningTest extends TestCase
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=12', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=13', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)

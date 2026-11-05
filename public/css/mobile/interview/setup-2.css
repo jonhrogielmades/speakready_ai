@@ -826,6 +826,232 @@ html:not(.lm) body #sec-interview-setup #panel-basic .setup-role-result {
     background: #1e293b;
 }
 
+/* Role finder modal stays outside the step panel so it remains visible over every setup step. */
+html body #sec-interview-setup .setup-role-discovery-launch {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+html body #sec-interview-setup .setup-role-discovery-open {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 48px;
+    padding: 11px 16px;
+    border: 1px solid #93c5fd;
+    border-radius: 12px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .modal-dialog {
+    width: calc(100% - 24px);
+    max-width: 540px;
+    margin: max(12px, env(safe-area-inset-top)) auto max(12px, env(safe-area-inset-bottom));
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .modal-content {
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 16px;
+    background: #fff;
+    color: #1e293b;
+    overflow: hidden;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .modal-header,
+html body #sec-interview-setup .setup-role-discovery-modal .modal-footer {
+    padding: 14px 16px;
+    border-color: #e2e8f0;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .modal-title {
+    color: #1e3a5f;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .modal-body {
+    padding: 16px;
+    overscroll-behavior: contain;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .modal-body > p:first-child {
+    margin: 0 0 16px;
+    color: #64748b;
+    font-size: 0.84rem;
+    line-height: 1.45;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-discovery-grid,
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-results {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-discovery-grid > div {
+    min-width: 0;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-discovery-grid label,
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-discovery-grid small {
+    display: block;
+    margin-bottom: 5px;
+    color: #334155;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-optional-label {
+    margin-left: 5px;
+    color: #64748b;
+    font-size: 0.75em;
+    font-weight: 600;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-discovery-grid small {
+    margin: 5px 0 0;
+    color: #64748b;
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .oinp {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #1e293b;
+    font-size: 0.9rem;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-status {
+    margin: 14px 0 0;
+    color: #475569;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-status:empty {
+    display: none;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-status.is-error {
+    color: #b91c1c;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-results {
+    margin-top: 12px;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-result {
+    display: grid;
+    gap: 3px;
+    min-height: 60px;
+    padding: 11px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #fff;
+    color: #1e293b;
+    text-align: left;
+    cursor: pointer;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-result small {
+    color: #2563eb;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-result span {
+    color: #64748b;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .modal-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 10px;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-close-button,
+html body #sec-interview-setup .setup-role-discovery-modal .setup-suggest-roles-button {
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 0.83rem;
+    font-weight: 800;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-role-close-button {
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #334155;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-suggest-roles-button {
+    border: 0;
+    background: linear-gradient(120deg, #2563eb, #06b6d4);
+    color: #fff;
+}
+
+html body #sec-interview-setup .setup-role-discovery-modal .setup-suggest-roles-button:disabled {
+    opacity: 0.65;
+}
+
+html body #sec-interview-setup .setup-role-discovery-open:focus-visible,
+html body #sec-interview-setup .setup-role-discovery-modal :is(.setup-role-close-button, .setup-suggest-roles-button, .setup-role-result):focus-visible {
+    outline: 3px solid #38bdf8;
+    outline-offset: 2px;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-open {
+    border-color: #3b82f6;
+    background: #172554;
+    color: #bfdbfe;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-modal .modal-content,
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-modal .setup-role-result,
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-modal .oinp {
+    border-color: #334155;
+    background: #111827;
+    color: #f8fafc;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-modal .modal-title,
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-modal .setup-role-discovery-grid label {
+    color: #f8fafc;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-modal :is(.modal-body > p:first-child, .setup-role-status, .setup-role-result span, .setup-role-discovery-grid small) {
+    color: #cbd5e1;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-modal .setup-optional-label {
+    color: #cbd5e1;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-modal .setup-role-close-button {
+    border-color: #475569;
+    background: #1e293b;
+    color: #f8fafc;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-role-discovery-modal .btn-close {
+    filter: invert(1);
+}
+
 @media (max-width: 380px) {
     body.user-mobile-shell #mob-content #sec-interview-setup .summary-row,
     body.interview-setup-page #mob-content #sec-interview-setup .summary-row,

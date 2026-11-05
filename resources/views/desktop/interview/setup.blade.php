@@ -3,7 +3,7 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=18') }}" data-page-style="interview-setup-2">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=1') }}" data-page-style="interview-role-discovery">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=2') }}" data-page-style="interview-role-discovery">
 @endpush
 
 @section('content')
@@ -248,21 +248,11 @@
  <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>{{ $targetFieldCopy['required_message'] }}</div>
  </div>
 
- <details class="setup-role-finder" id="roleFinderPanel">
- <summary><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Help me find a role <span>Optional</span></summary>
- <div class="setup-role-finder-body">
- <p>Tell us what you can do and what interests you. We’ll suggest roles to explore for interview practice.</p>
- <div class="setup-role-finder-fields">
- <div><label for="roleSkills">Skills</label><input class="oinp" id="roleSkills" name="role_skills" type="text" maxlength="500" placeholder="e.g. customer service, spreadsheets"><small>Separate multiple skills with commas.</small></div>
- <div><label for="roleInterests">Interests</label><input class="oinp" id="roleInterests" name="role_interests" type="text" maxlength="500" placeholder="e.g. healthcare, helping people"><small>Separate multiple interests with commas.</small></div>
- <div><label for="roleQualifications">Qualifications or certifications</label><input class="oinp" id="roleQualifications" name="role_qualifications" type="text" maxlength="500" placeholder="e.g. NC II, nursing degree"></div>
- <div><label for="roleExperience">Experience level</label><select class="oinp" id="roleExperience" name="role_experience"><option value="">Select if relevant</option><option value="entry">Entry level</option><option value="mid">Some experience</option><option value="senior">Experienced</option></select></div>
+ <div class="setup-role-finder-launch">
+ <button type="button" class="setup-role-finder-open" id="roleFinderOpenButton" data-bs-toggle="modal" data-bs-target="#roleFinderModal" aria-haspopup="dialog" aria-controls="roleFinderModal">
+ <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> Help me find a role
+ </button>
  </div>
- <button type="button" class="setup-role-suggest-btn" id="suggestRolesButton">Suggest positions</button>
- <p class="setup-role-suggest-status" id="suggestRolesStatus" role="status" aria-live="polite"></p>
- <div class="setup-role-results" id="suggestedRoles" aria-label="Suggested positions"></div>
- </div>
- </details>
 
  <div class="setup-calibrated-simple">
  <div class="setup-calibrated-icon" aria-hidden="true">
@@ -534,6 +524,29 @@
  </div>
  </div>
  </form>
+
+ <div class="modal fade setup-role-finder-modal" id="roleFinderModal" tabindex="-1" aria-labelledby="roleFinderTitle" aria-describedby="roleFinderIntro" aria-hidden="true">
+ <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h5 class="modal-title" id="roleFinderTitle">Help me find a role</h5>
+ <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close role finder"></button>
+ </div>
+ <div class="modal-body">
+ <p id="roleFinderIntro">Share your skills, interests, and qualifications. We’ll suggest roles to explore for interview practice.</p>
+ <div class="setup-role-finder-fields" role="form" aria-labelledby="roleFinderTitle">
+ <div><label for="roleSkills">Skills</label><input class="oinp" id="roleSkills" name="role_skills" form="setupForm" type="text" maxlength="500" placeholder="e.g. customer service, spreadsheets"><small>Separate multiple skills with commas.</small></div>
+ <div><label for="roleInterests">Interests</label><input class="oinp" id="roleInterests" name="role_interests" form="setupForm" type="text" maxlength="500" placeholder="e.g. healthcare, helping people"><small>Separate multiple interests with commas.</small></div>
+ <div><label for="roleQualifications">Qualifications or certifications</label><input class="oinp" id="roleQualifications" name="role_qualifications" form="setupForm" type="text" maxlength="500" placeholder="e.g. NC II, nursing degree"></div>
+ <div><label for="roleExperience">Experience level</label><select class="oinp" id="roleExperience" name="role_experience" form="setupForm"><option value="">Select if relevant</option><option value="entry">Entry level</option><option value="mid">Some experience</option><option value="senior">Experienced</option></select></div>
+ </div>
+ <button type="button" class="setup-role-suggest-btn" id="suggestRolesButton">Suggest positions</button>
+ <p class="setup-role-suggest-status" id="suggestRolesStatus" role="status" aria-live="polite"></p>
+ <div class="setup-role-results" id="suggestedRoles" aria-label="Suggested positions"></div>
+ </div>
+ </div>
+ </div>
+ </div>
 
 <div id="setupTransitionOverlay" class="finish-transition-overlay interview-prep-overlay" role="dialog" aria-modal="true" aria-live="polite" aria-atomic="true" aria-labelledby="setupLoadingTitle" aria-describedby="setupLoadingDescription">
  <div class="interview-prep-shell">
@@ -1285,6 +1298,30 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const suggestRolesButton = document.getElementById('suggestRolesButton');
  const suggestRolesStatus = document.getElementById('suggestRolesStatus');
  const suggestedRoles = document.getElementById('suggestedRoles');
+ const roleFinderModal = document.getElementById('roleFinderModal');
+ let roleFinderSelectedPosition = false;
+ roleFinderModal?.addEventListener('show.bs.modal', () => {
+ setSetupTargetDropdownOpen(false);
+ if (roleFinderModal.parentElement !== document.body) document.body.appendChild(roleFinderModal);
+ });
+ roleFinderModal?.addEventListener('shown.bs.modal', () => document.getElementById('roleSkills')?.focus());
+ roleFinderModal?.addEventListener('hidden.bs.modal', () => {
+ const target = roleFinderSelectedPosition
+ ? (customPositionWrap && !customPositionWrap.hidden? customPositionInput: targetPositionDropdownButton)
+ : document.getElementById('roleFinderOpenButton');
+ roleFinderSelectedPosition = false;
+ target?.focus();
+ });
+ roleFinderModal?.addEventListener('keydown', (event) => {
+ if (event.key !== 'Enter' || !event.target.matches('input')) return;
+ event.preventDefault();
+ suggestRolesButton?.click();
+ });
+ for (const eventName of ['input', 'change']) {
+ roleFinderModal?.addEventListener(eventName, () => {
+ document.getElementById('setupForm')?.dispatchEvent(new Event(eventName, { bubbles: true }));
+ });
+ }
  const roleTags = (id) => String(document.getElementById(id)?.value || '')
  .split(',').map(value => value.trim()).filter(Boolean);
 
@@ -1344,6 +1381,8 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (catalogChoice) chooseSetupTargetValue(catalogChoice);
  else chooseCustomSetupTarget(title);
  suggestRolesStatus.textContent = `${title} is selected as your target position.`;
+ roleFinderSelectedPosition = true;
+ window.bootstrap?.Modal.getInstance(roleFinderModal)?.hide();
  });
  suggestedRoles.appendChild(button);
  });
@@ -1411,9 +1450,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const setupDraftApi = window.SpeakReadyInterviewSetupDraft;
  const setupDraftFormElement = document.getElementById('setupForm');
  const restoredSetupDraft = setupDraftApi?.restore(setupDraftFormElement);
- if (['role_skills', 'role_interests', 'role_qualifications', 'role_experience'].some(name => String(restoredSetupDraft?.values?.[name] || '').trim())) {
- document.getElementById('roleFinderPanel').open = true;
- }
  if (Array.isArray(restoredSetupDraft?.visited_step_ids)) {
  restoredSetupDraft.visited_step_ids.forEach(stepId => visitedSetupStepIds.add(stepId));
  }

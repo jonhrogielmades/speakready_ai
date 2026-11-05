@@ -39,6 +39,7 @@
     var DETACHED_USER_PAGE_ARTIFACT_IDS = [
         'setupTransitionOverlay',
         'targetPositionAlertModal',
+        'roleFinderModal',
         'interviewStartModal',
         'finishTransitionOverlay',
         'endSessionModal'
