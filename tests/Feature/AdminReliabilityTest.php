@@ -649,6 +649,7 @@ class AdminReliabilityTest extends TestCase
         $csv = $response->streamedContent();
         $this->assertStringContainsString('Describe a database migration incident.', $csv);
         $this->assertStringNotContainsString('Tell me about teamwork.', $csv);
+        $this->assertStringNotContainsString('Delivery Stability', $csv);
     }
 
     public function test_admin_feedback_audit_omits_average_scores_and_export_report_controls(): void
@@ -1016,24 +1017,20 @@ class AdminReliabilityTest extends TestCase
             ->get(route('admin.feedback.show', $answer))
             ->assertOk()
             ->assertSee('name="star_analysis"', false)
+            ->assertDontSee('Delivery Stability')
+            ->assertDontSee('name="delivery_stability_score"', false)
             ->assertSee('[]', false);
 
         $this->actingAs($admin)
             ->post(route('admin.feedback.verify', $answer), [
                 'clarity_score' => 80,
                 'relevance_score' => 81,
-                'delivery_stability_score' => 82,
                 'grammar_score' => 83,
                 'star_analysis' => '{"situation":"clear","result":"measurable"}',
                 'audit_status' => 'approved',
                 'notes' => 'Verified after review.',
             ])
             ->assertRedirect(route('admin.feedback.show', $answer));
-
-        $this->assertDatabaseHas('interview_answers', [
-            'id' => $answer->id,
-            'delivery_stability_score' => 82,
-        ]);
 
         $this->assertSame([
             'situation' => 'clear',

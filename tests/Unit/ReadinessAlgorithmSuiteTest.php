@@ -152,7 +152,6 @@ class ReadinessAlgorithmSuiteTest extends TestCase
         $score = new Score;
         $score->setRawAttributes(array_merge([
             'readiness_band' => '',
-            'delivery_stability_score' => 0,
             'star_method_score' => 0,
         ], $attributes), true);
 

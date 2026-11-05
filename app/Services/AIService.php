@@ -261,7 +261,7 @@ class AIService
  'connection' => 'Mapped with local speech safeguards',
  'status' => 'mapped',
  'icon' => 'fa-solid fa-gauge-high',
- 'description' => 'WPM, filler words, pauses, delivery stability, and speaking-practice signals.',
+ 'description' => 'WPM, filler words, pauses, and speaking-practice signals.',
  'log_modules' => ['speech_transcription', 'feedback_generation'],
  ],
  [

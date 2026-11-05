@@ -918,7 +918,6 @@ class MobileLayoutTest extends TestCase
             'clarity_score' => 82,
             'relevance_score' => 88,
             'grammar_score' => 81,
-            'delivery_stability_score' => 79,
             'audit_status' => 'under_review',
         ]);
 

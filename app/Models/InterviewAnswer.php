@@ -50,7 +50,6 @@ class InterviewAnswer extends Model
         'clarity_score',
         'relevance_score',
         'confidence_score',
-        'delivery_stability_score',
         'self_reported_confidence',
         'scoring_confidence',
         'grammar_score',

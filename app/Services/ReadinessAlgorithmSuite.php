@@ -48,12 +48,6 @@ class ReadinessAlgorithmSuite
             'terms' => ['confidence', 'delivery', 'voice', 'speaking', 'pace', 'filler', 'rehearsal'],
             'core' => false,
         ],
-        'delivery_stability_score' => [
-            'label' => 'Delivery Stability',
-            'weight' => 0.06,
-            'terms' => ['delivery', 'stability', 'pace', 'pause', 'filler', 'voice', 'steady'],
-            'core' => false,
-        ],
         'star_method_score' => [
             'label' => 'STAR Method',
             'weight' => 0.10,
@@ -706,7 +700,7 @@ class ReadinessAlgorithmSuite
                 continue;
             }
 
-            if (! ($config['core'] ?? false) && $value === 0) {
+            if (! $config['core'] && $value === 0) {
                 continue;
             }
 

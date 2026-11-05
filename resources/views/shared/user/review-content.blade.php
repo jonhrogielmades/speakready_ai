@@ -15,7 +15,6 @@
  'clarity' => 'Fluency & Clarity',
  'relevance' => 'Answer Match',
  'professionalism', 'tone' => 'Professional Tone',
- 'delivery stability', 'speaking steadiness' => 'Pacing',
  default => $label!== ''? $label: 'Skill',
  };
  };

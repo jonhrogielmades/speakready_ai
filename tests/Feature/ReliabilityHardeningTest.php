@@ -2534,7 +2534,6 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertSame(0, $retry->wpm);
  $this->assertSame(0, $retry->filler_words_count);
  $this->assertSame(0, $retry->pause_count);
- $this->assertNull($retry->delivery_stability_score);
  }
 
  public function test_user_review_does_not_refresh_stale_rubric_score_metadata_on_open(): void
@@ -2647,7 +2646,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('answer-review-body', false);
  }
 
- public function test_review_score_breakdown_only_shows_recorded_optional_metrics(): void
+ public function test_review_score_breakdown_only_shows_recorded_confidence(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
@@ -2669,7 +2668,6 @@ class ReliabilityHardeningTest extends TestCase
  'grammar_score' => 77,
  'professionalism_score' => 79,
  'confidence_score' => 0,
- 'delivery_stability_score' => 64,
  'overall_readiness_score' => 80,
  'rubric' => ['version' => TrustworthyAssessmentService::SCORE_VERSION],
  ]);
@@ -2695,7 +2693,6 @@ class ReliabilityHardeningTest extends TestCase
  $answer->update([
  'response_mode' => 'voice',
  'voice_duration' => 45,
- 'delivery_stability_score' => 64,
  'coaching_feedback' => [
  'delivery' => ['status' => 'measured'],
  ],
@@ -2713,8 +2710,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('>Confidence</span>', false)
  ->assertSee('>58%</strong>', false)
- ->assertSee('>Pacing</span>', false)
- ->assertSee('>64%</strong>', false);
+ ->assertDontSee('>Pacing</span>', false);
  }
 
  public function test_review_shows_camera_feedback_when_camera_was_measured_without_scoring_it(): void

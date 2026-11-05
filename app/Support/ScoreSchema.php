@@ -62,9 +62,6 @@ class ScoreSchema
                 if (self::isMissing($missing, 'confidence_score')) {
                     $table->integer('confidence_score')->default(0);
                 }
-                if (self::isMissing($missing, 'delivery_stability_score')) {
-                    $table->unsignedTinyInteger('delivery_stability_score')->default(0);
-                }
                 if (self::isMissing($missing, 'overall_readiness_score')) {
                     $table->integer('overall_readiness_score')->default(0);
                 }
@@ -131,7 +128,6 @@ class ScoreSchema
             $table->integer('grammar_score')->default(0);
             $table->integer('professionalism_score')->default(0);
             $table->integer('confidence_score')->default(0);
-            $table->unsignedTinyInteger('delivery_stability_score')->default(0);
             $table->integer('overall_readiness_score')->default(0);
             $table->string('readiness_band')->default('Developing');
             $table->unsignedTinyInteger('scoring_confidence')->default(0);
@@ -177,7 +173,6 @@ class ScoreSchema
             'grammar_score',
             'professionalism_score',
             'confidence_score',
-            'delivery_stability_score',
             'overall_readiness_score',
             'readiness_band',
             'scoring_confidence',

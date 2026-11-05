@@ -124,10 +124,6 @@
                                 <input type="number" name="relevance_score" class="form-control feedback-review-input" style="background: var(--bg); color: var(--tx); border: 1px solid var(--bd);" value="{{ $answer->relevance_score ?? 0 }}" min="0" max="100">
                             </div>
                             <div class="col-12 col-sm-6 feedback-review-score-field">
-                                <label class="form-label small feedback-review-field-label" style="color: var(--tx3);">Delivery Stability (non-scoring)</label>
-                                <input type="number" name="delivery_stability_score" class="form-control feedback-review-input" style="background: var(--bg); color: var(--tx); border: 1px solid var(--bd);" value="{{ $answer->delivery_stability_score ?? 0 }}" min="0" max="100">
-                            </div>
-                            <div class="col-12 col-sm-6 feedback-review-score-field">
                                 <label class="form-label small feedback-review-field-label" style="color: var(--tx3);">Grammar Score</label>
                                 <input type="number" name="grammar_score" class="form-control feedback-review-input" style="background: var(--bg); color: var(--tx); border: 1px solid var(--bd);" value="{{ $answer->grammar_score ?? 0 }}" min="0" max="100">
                             </div>

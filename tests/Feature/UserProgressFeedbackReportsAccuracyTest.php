@@ -75,44 +75,23 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  });
  }
 
- public function test_skill_improvement_tracker_excludes_delivery_stability_rows(): void
+ public function test_skill_improvement_tracker_uses_supported_score_metrics(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category('Behavioral');
 
- $previous = $this->completedSessionFor($user, $category, 68, now()->subDays(2));
- $latest = $this->completedSessionFor($user, $category, 82, now()->subDay());
-
- Score::where('interview_session_id', $previous->id)->update(['delivery_stability_score' => 91]);
- Score::where('interview_session_id', $latest->id)->update(['delivery_stability_score' => 94]);
+ $this->completedSessionFor($user, $category, 68, now()->subDays(2));
+ $this->completedSessionFor($user, $category, 82, now()->subDay());
 
  $this->actingAs($user)
  ->get(route('user.progress'))
  ->assertOk()
  ->assertSee('Skill Improvement Tracker')
  ->assertViewHas('skillComparison', function ($skillComparison) {
- $labels = collect($skillComparison)->pluck('label');
-
- return $labels->contains('Clarity')
- && $labels->contains('Relevance')
- && $labels->contains('Grammar')
- && $labels->contains('Professionalism')
- &&! $labels->contains('Delivery Stability')
- &&! $labels->contains('Pacing');
+ return collect($skillComparison)->pluck('label')->all() === [
+ 'Clarity', 'Relevance', 'Grammar', 'Professionalism',
+ ];
  });
-
- $trackerHtml = view('shared.partials.progress-live-sections', [
- 'learningProgress' => collect(),
- 'skillComparison' => [
- ['label' => 'Delivery Stability', 'previous' => 91, 'current' => 94, 'delta' => 3, 'bar' => 94],
- ['label' => 'Pacing', 'previous' => 70, 'current' => 73, 'delta' => 3, 'bar' => 73],
- ['label' => 'Clarity', 'previous' => 68, 'current' => 82, 'delta' => 14, 'bar' => 82],
- ],
- ])->render();
-
- $this->assertStringContainsString('Clarity', $trackerHtml);
- $this->assertStringNotContainsString('Delivery Stability', $trackerHtml);
- $this->assertStringNotContainsString('Pacing', $trackerHtml);
  }
 
  public function test_progress_page_filters_removed_job_evidence_categories(): void

@@ -15,28 +15,6 @@ class TrustworthyAssessmentService
 
  private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|receiv(?:e|ed)|thank(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
 
- public function deliveryStability(string $answerText, int $wpm, int $fillerWords, int $pauseCount, int $voiceDuration):?int
- {
- if ($voiceDuration <= 0 || TranscriptService::wordCount($answerText) === 0) {
- return null;
- }
-
- $words = max(1, TranscriptService::wordCount($answerText));
- $score = 100;
- $score -= min(35, (int) round(($fillerWords / $words) * 250));
- $score -= min(25, (int) round(($pauseCount / $words) * 160));
- if ($wpm < 80 || $wpm > 200) {
- $score -= 20;
- } elseif ($wpm < 100 || $wpm > 170) {
- $score -= 8;
- }
- if ($words < 20) {
- $score -= 15;
- }
-
- return max(0, min(100, $score));
- }
-
  public function overallScore(array $metrics, bool $starApplicable, bool $languageScoringEnabled = true): int
  {
  $weights = [
@@ -332,7 +310,6 @@ class TrustworthyAssessmentService
  if ($answerConfidences->isNotEmpty()) {
  $confidence = min($confidence, (int) floor((float) $answerConfidences->avg() + PHP_FLOAT_EPSILON));
  }
- $deliveryScores = $answers->pluck('delivery_stability_score')->filter(fn ($value) => $value!== null);
  $starApplicable = $answers->contains(fn ($answer) => QuestionIntentService::starApplicable($answer->question));
  $languageScoring =! ((bool) data_get($session->accommodation_profile, 'separate_language_scoring', false));
  $overall = $this->overallScore([
@@ -358,7 +335,6 @@ class TrustworthyAssessmentService
  'algorithm_quality' => $qualityGate,
  'eligible_for_automated_decision' => $qualityGate['passed'],
  'accuracy_guaranteed' => false,
- 'delivery_stability' => (int) round($deliveryScores->avg()?? 0),
  'evidence_map' => $answerEvidence,
  'rubric' => [
  'version' => self::SCORE_VERSION,
@@ -376,7 +352,6 @@ class TrustworthyAssessmentService
  'star_when_applicable' => $starApplicable? 10: 0,
  ],
  'body_language_included' => false,
- 'delivery_stability_included' => false,
  'algorithm_quality' => $qualityGate,
  'accuracy_guaranteed' => false,
  ],

@@ -19,7 +19,6 @@ class Score extends Model
         'grammar_score',
         'professionalism_score',
         'confidence_score',
-        'delivery_stability_score',
         'overall_readiness_score',
         'readiness_band',
         'scoring_confidence',

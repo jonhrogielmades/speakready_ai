@@ -799,7 +799,6 @@ class UserOnboardingProgressTest extends TestCase
             'grammar_score' => 70,
             'professionalism_score' => 70,
             'confidence_score' => 0,
-            'delivery_stability_score' => 0,
             'star_method_score' => 70,
             'overall_readiness_score' => 70,
             'readiness_band' => 'Developing',

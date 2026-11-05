@@ -40,7 +40,7 @@ class AdminFeedbackController extends Controller
             $stream = fopen('php://output', 'w');
             CsvExportService::writeRow($stream, [
                 'Answer ID', 'Session ID', 'User', 'Question', 'Answer Score', 'Clarity',
-                'Relevance', 'Grammar', 'Delivery Stability (Non-Scoring)', 'Audit Status', 'AI Feedback', 'Created At',
+                'Relevance', 'Grammar', 'Audit Status', 'AI Feedback', 'Created At',
             ]);
 
             foreach ($feedbacks as $feedback) {
@@ -53,7 +53,6 @@ class AdminFeedbackController extends Controller
                     $feedback->clarity_score,
                     $feedback->relevance_score,
                     $feedback->grammar_score,
-                    $feedback->delivery_stability_score,
                     $feedback->audit_status,
                     $feedback->ai_feedback,
                     optional($feedback->created_at)->toDateTimeString(),
@@ -84,7 +83,6 @@ class AdminFeedbackController extends Controller
         $validated = $request->validate([
             'clarity_score' => 'required|integer|min:0|max:100',
             'relevance_score' => 'required|integer|min:0|max:100',
-            'delivery_stability_score' => 'required|integer|min:0|max:100',
             'grammar_score' => 'required|integer|min:0|max:100',
             'notes' => 'nullable|string',
             'audit_status' => 'required|string|in:approved,under_review,flagged,archived',
@@ -117,7 +115,6 @@ class AdminFeedbackController extends Controller
             $answer->update([
                 'clarity_score' => $validated['clarity_score'],
                 'relevance_score' => $validated['relevance_score'],
-                'delivery_stability_score' => $validated['delivery_stability_score'],
                 'grammar_score' => $validated['grammar_score'],
                 'score' => $answerScore,
                 'star_analysis' => $starAnalysis,

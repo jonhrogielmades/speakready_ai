@@ -157,9 +157,6 @@ class InterviewAnswerSchema
                 if (self::isMissing($missing, 'confidence_score')) {
                     $table->integer('confidence_score')->nullable();
                 }
-                if (self::isMissing($missing, 'delivery_stability_score')) {
-                    $table->unsignedTinyInteger('delivery_stability_score')->nullable();
-                }
                 if (self::isMissing($missing, 'self_reported_confidence')) {
                     $table->unsignedTinyInteger('self_reported_confidence')->nullable();
                 }
@@ -257,7 +254,6 @@ class InterviewAnswerSchema
             $table->integer('clarity_score')->nullable();
             $table->integer('relevance_score')->nullable();
             $table->integer('confidence_score')->nullable();
-            $table->unsignedTinyInteger('delivery_stability_score')->nullable();
             $table->unsignedTinyInteger('self_reported_confidence')->nullable();
             $table->unsignedTinyInteger('scoring_confidence')->nullable();
             $table->integer('grammar_score')->nullable();
@@ -338,7 +334,6 @@ class InterviewAnswerSchema
             'clarity_score',
             'relevance_score',
             'confidence_score',
-            'delivery_stability_score',
             'self_reported_confidence',
             'scoring_confidence',
             'grammar_score',

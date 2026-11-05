@@ -22,7 +22,6 @@ class TrustworthyAssessmentServiceTest extends TestCase
             'grammar' => 60,
             'star' => 100,
             'body_language' => 0,
-            'delivery_stability' => 0,
             'confidence' => 0,
         ], true);
 

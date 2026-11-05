@@ -3329,7 +3329,6 @@ class UserSideHardeningTest extends TestCase
  ->firstOrFail();
 
  $this->assertNull($savedAnswer->delivery_transcript);
- $this->assertNull($savedAnswer->delivery_stability_score);
  $this->assertSame(0, $savedAnswer->wpm);
  $this->assertSame(0, $savedAnswer->filler_words_count);
  $this->assertSame('not_measured', data_get($savedAnswer->observation_data, 'delivery.status'));

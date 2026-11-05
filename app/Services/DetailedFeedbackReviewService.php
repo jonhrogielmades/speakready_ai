@@ -289,7 +289,6 @@ class DetailedFeedbackReviewService
  'professionalism_score' => $metrics['professionalism'],
  'body_language_score' => 0,
  'confidence_score' => 0,
- 'delivery_stability_score' => $metadata['delivery_stability'],
  'overall_readiness_score' => $overall,
  'readiness_band' => $metadata['readiness_band'],
  'scoring_confidence' => $metadata['scoring_confidence'],

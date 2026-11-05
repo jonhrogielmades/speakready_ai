@@ -21,7 +21,6 @@ class KnnReadinessClassifier
         'grammar_score' => 0.10,
         'professionalism_score' => 0.16,
         'confidence_score' => 0.08,
-        'delivery_stability_score' => 0.06,
         'star_method_score' => 0.04,
     ];
 

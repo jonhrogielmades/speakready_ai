@@ -61,7 +61,6 @@ class InterviewSessionScoreRefreshService
                 'professionalism_score' => $metrics['professionalism'],
                 'body_language_score' => $this->scoreValue($existingScore?->body_language_score),
                 'confidence_score' => $this->scoreValue($existingScore?->confidence_score),
-                'delivery_stability_score' => $metadata['delivery_stability'],
                 'overall_readiness_score' => $metadata['overall'],
                 'readiness_band' => $metadata['readiness_band'],
                 'scoring_confidence' => $metadata['scoring_confidence'],

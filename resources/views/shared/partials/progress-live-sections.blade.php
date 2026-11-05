@@ -8,13 +8,7 @@
         : null;
     $learningPageSize = 3;
     $learningPageCount = max(1, (int) ceil($learningItems->count() / $learningPageSize));
-    $visibleSkillComparison = collect($skillComparison ?? [])
-        ->reject(function ($metric) {
-            $label = strtolower(trim((string) ($metric['label'] ?? '')));
-
-            return in_array($label, ['delivery stability', 'pacing'], true);
-        })
-        ->values();
+    $visibleSkillComparison = collect($skillComparison ?? [])->values();
 @endphp
 
 <div class="progress-live-grid">

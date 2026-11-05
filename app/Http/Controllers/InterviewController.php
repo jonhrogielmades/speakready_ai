@@ -1421,7 +1421,6 @@ return response()->json([
  'professionalism_score' => $prof,
  'body_language_score' => $bodyLang,
  'confidence_score' => $conf,
- 'delivery_stability_score' => $metadata['delivery_stability'],
  'overall_readiness_score' => $overall,
  'readiness_band' => $metadata['readiness_band'],
  'scoring_confidence' => $metadata['scoring_confidence'],
@@ -2033,7 +2032,6 @@ return response()->json([
  'relevance_score' => $retry->relevance_score?? 0,
  'grammar_score' => $retry->grammar_score?? 0,
  'confidence_score' => $retry->confidence_score?? 0,
- 'delivery_stability_score' => $retry->delivery_stability_score,
  'response_mode' => $retry->response_mode?: 'text',
  'voice_duration' => $retry->voice_duration?? 0,
  'scoring_confidence' => $retry->scoring_confidence,
@@ -2486,7 +2484,6 @@ return response()->json([
  'voice_duration' => $deliveryMetrics['voice_duration'],
  'filler_words_count' => $deliveryMetrics['filler_words_count'],
  'pause_count' => $deliveryMetrics['pause_count'],
- 'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
  'observation_data' => $observationData,
  'coaching_feedback' => $coachingFeedback,
  'response_mode' => $responseMode,
@@ -2834,7 +2831,6 @@ return response()->json([
  'filler_words_count' => $deliveryMetrics['filler_words_count'],
  'pause_count' => $deliveryMetrics['pause_count'],
  'confidence_score' => $deliveryMetrics['confidence_score'],
- 'delivery_stability_score' => $deliveryMetrics['delivery_stability_score'],
  'self_reported_confidence' => $validated['self_reported_confidence']?? null,
  'eye_contact_score' => $deliveryMetrics['eye_contact_score'],
  'posture_score' => $deliveryMetrics['posture_score'],
@@ -3087,7 +3083,6 @@ return response()->json([
  'filler_words_count' => 0,
  'pause_count' => 0,
  'confidence_score' => 0,
- 'delivery_stability_score' => null,
  'eye_contact_score' => 0,
  'posture_score' => 0,
  ];
@@ -3418,15 +3413,10 @@ return response()->json([
  $answerConfidences = $answers
  ->pluck('scoring_confidence')
  ->filter(fn ($value): bool => is_numeric($value) && (int) $value > 0);
- $deliveryScores = $answers
- ->pluck('delivery_stability_score')
- ->filter(fn ($value): bool => $value!== null);
-
  return [
  'overall' => $overall,
  'readiness_band' => $this->fallbackReadinessBand($overall),
  'scoring_confidence' => $answerConfidences->isNotEmpty()? max(20, min(80, (int) round($answerConfidences->avg()))): 45,
- 'delivery_stability' => (int) round($deliveryScores->avg()?? 0),
  'evidence_map' => $answers->mapWithKeys(function ($answer): array {
  if (! $answer instanceof InterviewAnswer) {
  return [];
@@ -3455,7 +3445,6 @@ return response()->json([
  'star_when_applicable' => $starApplicable? 10: 0,
  ],
  'body_language_included' => false,
- 'delivery_stability_included' => false,
  'fallback_metadata' => true,
  ],
  ];
@@ -3599,11 +3588,6 @@ return response()->json([
  // but are not persisted as verified delivery evidence.
  $pauseCount = 0;
 
- $deliveryStability = $hasMeasuredDuration
- ? app(TrustworthyAssessmentService::class)
- ->deliveryStability($deliveryTranscript, $wpm, $fillerWords, 0, $voiceDuration)
- : null;
-
  return [
  'wpm' => $wpm,
  'voice_duration' => $voiceDuration,
@@ -3612,7 +3596,6 @@ return response()->json([
  // Confidence is a personal trait and is not inferred from pace,
  // filler candidates, pauses, answer length, or camera behavior.
  'confidence_score' => 0,
- 'delivery_stability_score' => $deliveryStability,
  // Legacy client scores are deliberately ignored. Structured camera
  // samples are stored separately and are never part of readiness.
  'eye_contact_score' => 0,

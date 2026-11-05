@@ -333,7 +333,6 @@ class AdminIntegrationHardeningTest extends TestCase
             'relevance_score' => 30,
             'grammar_score' => 30,
             'professionalism_score' => 80,
-            'delivery_stability_score' => 30,
             'overall_readiness_score' => 35,
             'readiness_band' => 'Developing',
             'star_method_score' => 0,
@@ -343,7 +342,6 @@ class AdminIntegrationHardeningTest extends TestCase
             ->post(route('admin.feedback.verify', $answerOne), [
                 'clarity_score' => 100,
                 'relevance_score' => 100,
-                'delivery_stability_score' => 70,
                 'grammar_score' => 100,
                 'audit_status' => 'approved',
                 'notes' => 'Verified against the interview recording.',
@@ -354,7 +352,6 @@ class AdminIntegrationHardeningTest extends TestCase
         $this->assertSame(70, (int) $score->clarity_score);
         $this->assertSame(70, (int) $score->relevance_score);
         $this->assertSame(70, (int) $score->grammar_score);
-        $this->assertSame(55, (int) $score->delivery_stability_score);
         $this->assertSame(72, (int) $score->overall_readiness_score);
         $this->assertSame(72, (int) $user->profile()->firstOrFail()->readiness_score);
         $this->assertSame(95, (int) $answerOne->fresh()->score);
@@ -397,7 +394,6 @@ class AdminIntegrationHardeningTest extends TestCase
             'clarity_score' => $score,
             'relevance_score' => $score,
             'grammar_score' => $score,
-            'delivery_stability_score' => $score,
             'scoring_confidence' => 80,
             'audit_status' => 'under_review',
         ]);
