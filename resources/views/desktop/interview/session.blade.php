@@ -185,7 +185,7 @@
  <button type="button" id="responseFullscreenToggle" class="response-fullscreen-toggle" onclick="toggleMobileFullscreen()" aria-label="Enter browser fullscreen" title="Enter browser fullscreen">
  <i class="fa-solid fa-expand"></i>
  </button>
- <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" onclick="submitAnswer()" disabled aria-disabled="true" title="Start the interview to answer">
+ <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" disabled aria-disabled="true" title="Start the interview to answer">
  Send Answer <i class="fa-solid fa-paper-plane"></i>
  </button>
  </div>
@@ -3591,6 +3591,40 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  });
  }
 
+ function bindSendAnswerButton() {
+ const button = document.querySelector('.response-send-answer-btn');
+ if (!button) return;
+ let activePointer = null;
+ let suppressPointerClickUntil = 0;
+
+ button.addEventListener('pointerdown', event => {
+ if (button.disabled || event.button !== 0 || event.isPrimary === false) return;
+ activePointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+ // Keep the focused answer in place until the tap is complete. A keyboard
+ // dismissal can otherwise move the button before its click is delivered.
+ if (document.activeElement === answerTextareaElement()) event.preventDefault();
+ try { button.setPointerCapture?.(event.pointerId); } catch (error) { /* Pointer capture is optional. */ }
+ });
+
+ button.addEventListener('pointerup', event => {
+ if (!activePointer || event.pointerId !== activePointer.id) return;
+ const wasTap = Math.hypot(event.clientX - activePointer.x, event.clientY - activePointer.y) <= 12;
+ activePointer = null;
+ suppressPointerClickUntil = Date.now() + 900;
+ if (!wasTap || button.disabled) return;
+ const textarea = answerTextareaElement();
+ if (textarea && document.activeElement === textarea) textarea.blur();
+ submitAnswer();
+ });
+
+ button.addEventListener('pointercancel', () => { activePointer = null; });
+ button.addEventListener('click', event => {
+ if (button.disabled) return;
+ if (event.detail > 0 && Date.now() < suppressPointerClickUntil) return;
+ submitAnswer();
+ });
+ }
+
  function applyVoiceOnlyAnswerLock() {
  const textarea = answerTextareaElement();
  const lockNotice = document.getElementById('responseModeLockNotice');
@@ -5223,6 +5257,7 @@ return fallbackText;
  
  if (!answerListenersBound) {
  answerListenersBound = true;
+ bindSendAnswerButton();
  const answerTextarea = document.getElementById('answerTextarea');
  if (answerTextarea) {
  answerTextarea.addEventListener('input', handleAnswerInput);
