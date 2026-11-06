@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=78') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=79') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -4150,6 +4150,32 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return words;
  }
 
+ function captionWordCumulativeWeights(words) {
+ let total = 0;
+ return words.map(word => {
+ const length = word.text.replace(/[^\p{L}\p{N}]/gu, '').length;
+ const pause = /[.!?]["'\u2019\u201d)]?$/.test(word.text)? 0.4: (/[,;:]["'\u2019\u201d)]?$/.test(word.text)? 0.18: 0);
+ total += Math.max(0.75, Math.min(1.4, length / 5)) + pause;
+ return total;
+ });
+ }
+
+ function captionWordIndexForAudio(cumulativeWeights, audioElement) {
+ const count = cumulativeWeights.length;
+ if (!count) return -1;
+ const elapsed = Number(audioElement?.currentTime);
+ if (!Number.isFinite(elapsed) || elapsed < 0) return 0;
+ const duration = Number(audioElement?.duration);
+ if (!Number.isFinite(duration) || duration <= 0) {
+ return Math.min(count - 1, Math.floor(elapsed * 1000 / interviewerCaptionWordMs));
+ }
+
+ const progress = Math.min(1, (elapsed + 0.08) / duration) * cumulativeWeights[count - 1];
+ let index = 0;
+ while (index < count - 1 && cumulativeWeights[index] <= progress) index++;
+ return index;
+ }
+
  function renderQuestionCaption(words, activeIndex) {
  const caption = document.getElementById('questionCaptionText');
  if (!caption) return;
@@ -4255,7 +4281,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  resolve(status);
  }
 
- function startSpeakingUi(text, boundaryAware = false) {
+ function startSpeakingUi(text, options = {}) {
+ const speechOptions = typeof options === 'boolean'? { boundaryAware: options }: (options || {});
+ const boundaryAware = speechOptions.boundaryAware === true;
  clearCaptionInterval();
  document.querySelectorAll('.sound-wave').forEach(el => el.style.display = 'block');
  const avatarHead = document.getElementById('aiAvatarHead');
@@ -4264,6 +4292,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  document.getElementById('aiQuestionText').innerText = text;
 
  const words = captionWordsFor(text);
+ const cumulativeWeights = captionWordCumulativeWeights(words);
+ const audioElement = speechOptions.audioElement || null;
  let currentWordIdx = words.length? 0: -1;
  let boundaryFired = false;
  renderQuestionCaption(words, currentWordIdx);
@@ -4271,14 +4301,17 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  captionInterval = setInterval(() => {
  if (boundaryAware && boundaryFired) return;
 
- if (currentWordIdx < words.length - 1) {
- currentWordIdx++;
+ const nextWordIdx = audioElement
+ ? captionWordIndexForAudio(cumulativeWeights, audioElement)
+ : Math.min(currentWordIdx + 1, words.length - 1);
+ if (nextWordIdx > currentWordIdx) {
+ currentWordIdx = nextWordIdx;
  renderQuestionCaption(words, currentWordIdx);
  currentAmplitude = 1.0;
- } else {
+ } else if (!audioElement && currentWordIdx >= words.length - 1) {
  clearCaptionInterval();
  }
- }, interviewerCaptionWordMs);
+ }, audioElement? 50: interviewerCaptionWordMs);
 
  if (visualizerInterval) clearInterval(visualizerInterval);
  const bars = document.querySelectorAll('.spectrum-bar');
@@ -4422,7 +4455,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  audio.addEventListener('playing', () => {
  if (token!== questionSpeechToken || activeQuestionAudio!== audio) return;
- startSpeakingUi(text);
+ startSpeakingUi(text, { audioElement: audio });
  }, { once: true });
 
  audio.addEventListener('ended', () => {

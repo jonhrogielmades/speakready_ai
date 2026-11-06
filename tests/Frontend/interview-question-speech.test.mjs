@@ -119,6 +119,61 @@ for (const layout of layouts) {
         assert.equal(captionsFinished, 1);
     });
 
+    test(`${layout} keeps captions aligned with playback speed and pauses`, () => {
+        const rendered = [];
+        const intervals = [];
+        const questionText = { innerText: '' };
+        const avatarHead = {
+            style: { setProperty() {} },
+            classList: { add() {} },
+        };
+        const context = evaluate(source, [
+            'captionWordsFor',
+            'captionWordCumulativeWeights',
+            'captionWordIndexForAudio',
+            'startSpeakingUi',
+        ], {
+            document: {
+                querySelectorAll: () => [],
+                getElementById: id => id === 'aiAvatarHead' ? avatarHead : questionText,
+            },
+            captionInterval: null,
+            visualizerInterval: null,
+            currentAmplitude: 0.2,
+            interviewerCaptionWordMs: 430,
+            clearCaptionInterval() {},
+            clearInterval() {},
+            setInterval(callback, delay) {
+                intervals.push({ callback, delay });
+                return intervals.length;
+            },
+            renderQuestionCaption(_words, index) { rendered.push(index); },
+            startSpeechSpectrumVisualizer() {},
+            pulseSpeechSpectrum() {},
+        });
+
+        const prompt = 'alpha bravo charl delta echoo foxtt golfh hotel';
+        const weights = context.captionWordCumulativeWeights(context.captionWordsFor(prompt));
+        assert.equal(context.captionWordIndexForAudio(weights, { currentTime: 1.5, duration: 2 }), 6);
+        assert.equal(context.captionWordIndexForAudio(weights, { currentTime: 1.5, duration: 8 }), 1);
+        assert.equal(context.captionWordIndexForAudio(weights, { currentTime: 1.5, duration: NaN }), 3);
+
+        const audio = { currentTime: 0, duration: 2 };
+        context.startSpeakingUi(prompt, { audioElement: audio });
+        assert.deepEqual(rendered, [0]);
+        assert.equal(intervals[0].delay, 50);
+
+        audio.currentTime = 1.5;
+        intervals[0].callback();
+        assert.equal(rendered.at(-1), 6);
+        intervals[0].callback();
+        assert.equal(rendered.length, 2, 'paused audio must not advance or rerender captions');
+
+        audio.currentTime = 1.75;
+        intervals[0].callback();
+        assert.equal(rendered.at(-1), 7);
+    });
+
     test(`${layout} keeps the question readable and continues when server audio is unavailable`, async () => {
         const shown = { innerText: '...' };
         const notices = [];

@@ -79,7 +79,7 @@ test('desktop fullscreen keeps a CSS fallback and retries native fullscreen on a
 });
 
 test('desktop fullscreen locks the outer viewport and keeps response scrolling internal', () => {
-    assert.match(session, /css\/desktop\/interview\/session\.css\?v=68/);
+    assert.match(session, /css\/desktop\/interview\/session\.css\?v=69/);
     assert.match(sessionCss, /html\.interview-session-fullscreen-root[\s\S]*?overflow:\s*hidden !important;/);
     assert.match(sessionCss, /interview-session-browser-fullscreen #dashboard \.db-content[\s\S]*?overflow:\s*hidden !important;/);
     assert.match(sessionCss, /interview-session-browser-fullscreen \.desktop-response-column \.response-panel[\s\S]*?overflow-y:\s*auto !important;/);
