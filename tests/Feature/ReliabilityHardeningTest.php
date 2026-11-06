@@ -1524,6 +1524,10 @@ class ReliabilityHardeningTest extends TestCase
  });
 
  $this->actingAs($user)
+ ->withSession([
+ 'active_interview_id' => $session->id,
+ 'active_interview_provider' => 'openai',
+ ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
  ->assertStatus(409)
  ->assertJsonPath('error_code', 'feedback_processing_lease_lost')
