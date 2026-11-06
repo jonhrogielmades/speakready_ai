@@ -4802,6 +4802,7 @@
       @include('mobile.partials.user-mobile-side-gutter')
    </head>
    <body class="user-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="user" data-pwa-auto-install="true" data-pwa-suppress-auto-install="{{ request()->routeIs('interview.session') ? 'true' : 'false' }}">
+      @include('shared.mobile-portrait-only-overlay')
       @include('shared.pwa-launch')
 
       @php

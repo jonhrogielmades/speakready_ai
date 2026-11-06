@@ -72,7 +72,7 @@ class PwaRememberedLoginTest extends TestCase
         $this->assertSame('/', $manifest['scope'] ?? null);
         $this->assertSame('standalone', $manifest['display'] ?? null);
         $this->assertSame($manifest['id'], $manifest['related_applications'][0]['id'] ?? null);
-        $this->assertSame('/manifest.json?v=13', $manifest['related_applications'][0]['url'] ?? null);
+        $this->assertSame('/manifest.json?v=14', $manifest['related_applications'][0]['url'] ?? null);
     }
 
     public function test_pwa_service_worker_cache_version_is_bumped_and_code_assets_are_network_first(): void

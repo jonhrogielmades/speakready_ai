@@ -13,6 +13,7 @@
       <link rel="stylesheet" href="{{ asset('css/mobile/admin/mobile-locked.css?v=1') }}" data-page-style="admin-mobile-locked">
    </head>
    <body class="mobile-shell" data-layout-shell="mobile">
+      @include('shared.mobile-portrait-only-overlay')
       @include('shared.pwa-launch')
       <main class="admin-mobile-lock" role="main" aria-labelledby="adminMobileLockTitle">
          <div class="brand">

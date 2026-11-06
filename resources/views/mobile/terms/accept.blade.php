@@ -719,6 +719,7 @@
       </style>
    </head>
    <body class="terms-accept-shell mobile-shell" data-layout-shell="mobile">
+      @include('shared.mobile-portrait-only-overlay')
       @include('shared.pwa-launch')
       @include('mobile.partials.viewport-mobile-cookie')
       <div class="terms-mobile-shell">

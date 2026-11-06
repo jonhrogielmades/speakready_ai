@@ -9,9 +9,4 @@
 <link rel="apple-touch-startup-image"
       media="screen and (device-width: {{ $screenWidth }}px) and (device-height: {{ $screenHeight }}px) and (-webkit-device-pixel-ratio: {{ $pixelRatio }}) and (orientation: portrait)"
       href="{{ asset('img/pwa-startup/splash-'.($screenWidth * $pixelRatio).'x'.($screenHeight * $pixelRatio).'.png') }}">
-@if ($screenWidth >= 600)
-<link rel="apple-touch-startup-image"
-      media="screen and (device-width: {{ $screenHeight }}px) and (device-height: {{ $screenWidth }}px) and (-webkit-device-pixel-ratio: {{ $pixelRatio }}) and (orientation: landscape)"
-      href="{{ asset('img/pwa-startup/splash-'.($screenHeight * $pixelRatio).'x'.($screenWidth * $pixelRatio).'.png') }}">
-@endif
 @endforeach

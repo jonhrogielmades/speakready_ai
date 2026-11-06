@@ -2134,6 +2134,7 @@
       </style>
    </head>
    <body class="admin-mobile-shell mobile-shell" data-layout-shell="mobile" data-app-surface="admin" data-pwa-auto-install="true">
+      @include('shared.mobile-portrait-only-overlay')
       @include('shared.pwa-launch')
 
       <!-- ===== ADMIN MOBILE TOP HEADER ===== -->

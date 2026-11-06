@@ -1,6 +1,9 @@
 @php
    $srEarlyLayoutShell = ($serverLayout ?? 'desktop') === 'mobile' ? 'mobile' : 'desktop';
 @endphp
+@if ($srEarlyLayoutShell === 'mobile')
+   @include('shared.mobile-portrait-only-head')
+@endif
 <style data-sr-early-layout-shell-guard-style>
    html.sr-layout-shell-redirecting {
       background: #f1f6fb;

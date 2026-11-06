@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="{{ $pwaApplicationName }}">
 <meta name="apple-mobile-web-app-status-bar-style" content="{{ $pwaStatusBarStyle }}">
 <meta name="format-detection" content="telephone=no">
-<link rel="manifest" href="{{ asset('manifest.json?v=13') }}">
+<link rel="manifest" href="{{ asset('manifest.json?v=14') }}">
 <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('img/apple-touch-icon.png') }}?v=4">
 @include('shared.pwa-startup-images')
 <link rel="stylesheet" href="{{ asset('css/shared/pwa-launch.css?v=1') }}">

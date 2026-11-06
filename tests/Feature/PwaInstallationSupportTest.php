@@ -50,6 +50,7 @@ final class PwaInstallationSupportTest extends TestCase
 
         $this->assertSame('/', $manifest['scope'] ?? null);
         $this->assertSame('standalone', $manifest['display'] ?? null);
+        $this->assertSame('portrait', $manifest['orientation'] ?? null);
         $this->assertSame('#071a33', $manifest['background_color'] ?? null);
         $this->assertSame('#071a33', $manifest['theme_color'] ?? null);
 
@@ -127,35 +128,25 @@ final class PwaInstallationSupportTest extends TestCase
         }
     }
 
-    public function test_apple_startup_images_exist_at_their_declared_device_resolutions(): void
+    public function test_apple_startup_images_use_only_portrait_device_resolutions(): void
     {
         $source = $this->read('resources/views/shared/pwa-startup-images.blade.php');
         $this->assertStringContainsString('rel="apple-touch-startup-image"', $source);
-        $this->assertStringContainsString('(orientation: landscape)', $source);
+        $this->assertStringContainsString('(orientation: portrait)', $source);
+        $this->assertStringNotContainsString('(orientation: landscape)', $source);
 
         preg_match_all('/\[(\d+),\s*(\d+),\s*(\d+)\]/', $source, $devices, PREG_SET_ORDER);
         $this->assertCount(21, $devices);
 
-        $expectedCount = 0;
         foreach ($devices as [, $deviceWidth, $deviceHeight, $pixelRatio]) {
             $width = (int) $deviceWidth * (int) $pixelRatio;
             $height = (int) $deviceHeight * (int) $pixelRatio;
-            $sizes = [[$width, $height]];
-            if ((int) $deviceWidth >= 600) {
-                $sizes[] = [$height, $width];
-            }
-
-            foreach ($sizes as [$imageWidth, $imageHeight]) {
-                $path = $this->projectPath("public/img/pwa-startup/splash-{$imageWidth}x{$imageHeight}.png");
-                $this->assertFileExists($path);
-                $actualSize = getimagesize($path);
-                $this->assertNotFalse($actualSize);
-                $this->assertSame([$imageWidth, $imageHeight], array_slice($actualSize, 0, 2));
-                $expectedCount++;
-            }
+            $path = $this->projectPath("public/img/pwa-startup/splash-{$width}x{$height}.png");
+            $this->assertFileExists($path);
+            $actualSize = getimagesize($path);
+            $this->assertNotFalse($actualSize);
+            $this->assertSame([$width, $height], array_slice($actualSize, 0, 2));
         }
-
-        $this->assertSame($expectedCount, count(glob($this->projectPath('public/img/pwa-startup/splash-*.png'))));
     }
 
     public function test_shared_pwa_meta_exposes_cross_platform_metadata_and_the_controller(): void
@@ -164,7 +155,7 @@ final class PwaInstallationSupportTest extends TestCase
 
         $this->assertStringContainsString('<meta name="mobile-web-app-capable" content="yes">', $meta);
         $this->assertStringContainsString('<meta name="apple-mobile-web-app-capable" content="yes">', $meta);
-        $this->assertStringContainsString("asset('manifest.json?v=13')", $meta);
+        $this->assertStringContainsString("asset('manifest.json?v=14')", $meta);
         $this->assertStringContainsString('rel="apple-touch-icon" sizes="180x180"', $meta);
         $this->assertStringContainsString("asset('img/apple-touch-icon.png')", $meta);
         $this->assertStringContainsString("@include('shared.pwa-startup-images')", $meta);

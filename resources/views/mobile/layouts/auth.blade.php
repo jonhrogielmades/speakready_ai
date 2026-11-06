@@ -32,6 +32,7 @@
       </style>
    </head>
    <body class="auth-mobile-shell mobile-shell @yield('body_class')" data-layout-shell="mobile" data-auth-layout="mobile">
+      @include('shared.mobile-portrait-only-overlay')
       @include('shared.pwa-launch')
       @include('mobile.partials.viewport-mobile-cookie')
       @hasSection('auth_page')
