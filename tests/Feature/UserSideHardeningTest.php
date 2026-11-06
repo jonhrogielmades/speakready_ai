@@ -1216,7 +1216,7 @@ class UserSideHardeningTest extends TestCase
  ->assertOk()
  ->assertSee('name="category_id"', false)
  ->assertSee('value="'.$category->id.'"', false)
- ->assertSee('id="scenarioHelp"', false)
+ ->assertSee('id="sourceSummary"', false)
  ->assertSee('Start Interview');
 
  $this->assertInterviewRuntimeTablesReady();

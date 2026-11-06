@@ -4097,8 +4097,13 @@ return response()->json([
  continue;
  }
 
+ $alignedQuestionText = $this->roleAlignedQuestionText($questionText, $position);
+ if (! $this->questionMatchesSelectedType($alignedQuestionText, $questionType)) {
+ continue;
+ }
+
  return array_merge($metadata, [
- 'question_text' => $this->roleAlignedQuestionText($questionText, $position),
+ 'question_text' => $alignedQuestionText,
  'type' => $questionType,
  'difficulty' => $questionDifficulty,
  'expected_guide' => trim((string) ($question['expected_guide']?? '')),
@@ -4989,7 +4994,7 @@ return response()->json([
  '/^(?:my name is|you can call me)\s+(?:mia|karyl),\s*(?:the\s+)?(?:hiring\s+manager|interviewer|ai interviewer|recruiter)[,.!\s]+/i',
  '/^(?:as\s+)?(?:the\s+)?(?:hiring\s+manager|interviewer|recruiter)[,.!\s]+/i',
  '/^nice to meet you(?:,\s*[a-z][a-z\'-]{1,30})?[,.!\s]+/i',
- '/^(?:thanks|thank you)\s+for\s+(?:sharing|that\s+background)[,.!\s]+/i',
+ '/^(?:thanks|thank you)\s+for\s+(?:sharing|that\s+background)(?:[,.!]\s+|$)/i',
  '/^(?:here(?:\'s| is)\s+(?:your\s+)?(?:first\s+)?question)[,:.\s]+/i',
  ];
 

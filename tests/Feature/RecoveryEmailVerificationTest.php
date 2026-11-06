@@ -106,7 +106,7 @@ class RecoveryEmailVerificationTest extends TestCase
         $response = $this->get(route('dashboard'))
             ->assertOk()
             ->assertSee('1 of 4 complete')
-            ->assertSee('4. Verify your recovery email');
+            ->assertSee('4. Verify your email');
         $this->assertMatchesRegularExpression(
             '/<section\b(?=[^>]*\bis-done\b)(?=[^>]*\bdata-sr-onboarding-step="email_verified")[^>]*>/',
             $response->getContent()
@@ -150,7 +150,7 @@ class RecoveryEmailVerificationTest extends TestCase
             ->assertOk()
             ->assertSee('4 of 4 complete')
             ->assertSee('data-sr-first-steps-auto-show="true"', false)
-            ->assertSee('data-sr-auto-start-dashboard-tour="true"', false)
+            ->assertSee('data-sr-dashboard-tour-url="'.route('dashboard', ['onboarding' => 'tour']).'"', false)
             ->assertSessionHas('onboarding_auto_start', true);
 
         $this->assertMatchesRegularExpression(

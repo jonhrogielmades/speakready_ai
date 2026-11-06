@@ -120,9 +120,26 @@ class AdminNewFeatureConnectionTest extends TestCase
                 'category' => 'Career Growth',
                 'difficulty' => 'Intermediate',
                 'description' => 'Prepare clear salary expectation answers.',
-                'status' => 'published',
+                'status' => 'draft',
             ])
             ->assertRedirect();
+
+        $module = LearningModule::where('title', 'Salary Negotiation Sprint')->firstOrFail();
+        $module->chapters()->create([
+            'title' => 'Prepare your salary answer',
+            'content' => '<p>Write and rehearse a salary expectation answer.</p>',
+            'order' => 1,
+        ]);
+
+        $this->actingAs($admin)
+            ->put(route('admin.modules.update', $module), [
+                'title' => 'Salary Negotiation Sprint',
+                'category' => 'Career Growth',
+                'difficulty' => 'Intermediate',
+                'description' => 'Prepare clear salary expectation answers.',
+                'status' => 'published',
+            ])
+            ->assertRedirect(route('admin.modules'));
 
         $this->actingAs($admin)
             ->post(route('admin.game.store'), $this->gamePayload($gameCategory, [
@@ -261,6 +278,11 @@ class AdminNewFeatureConnectionTest extends TestCase
             'description' => 'Draft STAR content.',
             'status' => 'draft',
         ]);
+        $module->chapters()->create([
+            'title' => 'Build a STAR answer',
+            'content' => '<p>Prepare a specific situation, task, action, and result.</p>',
+            'order' => 1,
+        ]);
 
         $this->actingAs($admin)
             ->put(route('admin.modules.update', $module), [
@@ -311,6 +333,11 @@ class AdminNewFeatureConnectionTest extends TestCase
             'category' => 'Communication',
             'difficulty' => 'Beginner',
             'status' => 'published',
+        ]);
+        $module->chapters()->create([
+            'title' => 'Practice a clear introduction',
+            'content' => '<p>Write and rehearse a concise interview introduction.</p>',
+            'order' => 1,
         ]);
         $gameCategory = $this->category(['title' => 'Certificate Path', 'type' => 'game']);
         $gameLevel = $this->gameLevel($gameCategory, [

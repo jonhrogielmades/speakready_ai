@@ -10,7 +10,7 @@ class InitialRenderGuardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_full_user_pages_guard_the_initial_ui_on_desktop_and_mobile(): void
+    public function test_full_user_pages_keep_the_shell_guard_without_a_branded_loader(): void
     {
         $user = User::factory()->create([
             'is_admin' => false,
@@ -18,7 +18,7 @@ class InitialRenderGuardTest extends TestCase
         ]);
         $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
-        foreach ([null, $mobileUserAgent] as $userAgent) {
+        foreach ([[null, 'desktop'], [$mobileUserAgent, 'mobile']] as [$userAgent, $layout]) {
             $request = $this->actingAs($user);
             if ($userAgent !== null) {
                 $request = $request->withHeader('User-Agent', $userAgent);
@@ -28,17 +28,17 @@ class InitialRenderGuardTest extends TestCase
 
             $response
                 ->assertOk()
-                ->assertSee('data-sr-initial-render-guard-script', false)
-                ->assertSee("root.classList.add('sr-user-ui-booting')", false)
-                ->assertSee('id="srInitialRenderGuard"', false)
-                ->assertSee('Preparing your interview workspace...', false)
-                ->assertSee('aria-busy="true"', false);
+                ->assertSee('data-sr-early-layout-shell-guard="'.$layout.'"', false)
+                ->assertSee('data-user-ajax-content', false)
+                ->assertDontSee('data-sr-initial-render-guard-script', false)
+                ->assertDontSee('id="srInitialRenderGuard"', false)
+                ->assertDontSee('Preparing your workspace...', false);
 
             $this->assertSame(1, substr_count($response->getContent(), 'js/user-ui.js'));
         }
     }
 
-    public function test_partial_user_navigation_does_not_emit_a_second_initial_guard(): void
+    public function test_partial_user_navigation_omits_full_page_shell_guard_and_loader(): void
     {
         $user = User::factory()->create([
             'is_admin' => false,
@@ -50,6 +50,7 @@ class InitialRenderGuardTest extends TestCase
             ->get(route('dashboard'))
             ->assertOk()
             ->assertSee('data-partial-navigation-response="true"', false)
+            ->assertDontSee('data-sr-early-layout-shell-guard=', false)
             ->assertDontSee('data-sr-initial-render-guard-script', false)
             ->assertDontSee('id="srInitialRenderGuard"', false)
             ->assertDontSee('sr-user-ui-booting', false);

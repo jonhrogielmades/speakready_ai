@@ -143,6 +143,10 @@
               transition-delay: 0s !important;
               transition-duration: 0.16s !important;
           }
+
+          body.user-desktop-shell [data-pwa-install-action][hidden] {
+              display: none !important;
+          }
       </style>
       @include('desktop.partials.onboarding-styles')
       @include('shared.user.first-steps-modal-styles')
@@ -293,6 +297,7 @@
                            <a href="{{ route('user.account') }}" class="profile-menu-item profile-menu-account {{ request()->routeIs('user.account') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-user-gear me-2"></i>Account Management</a>
                            <a href="{{ route('user.notifications') }}" class="profile-menu-item profile-menu-notifications {{ request()->routeIs('user.notifications') ? 'active' : '' }}" style="display:block;text-decoration:none;"><i class="fa-solid fa-bell me-2"></i>Notifications</a>
                             <button type="button" class="profile-menu-item" data-font-size-settings-action aria-haspopup="dialog" style="width:100%;text-align:left;"><i class="fa-solid fa-text-height me-2"></i>Font Size Settings</button>
+                           <button type="button" class="profile-menu-item" data-pwa-install-action><i class="fa-solid fa-download me-2"></i>Install App</button>
                            <form action="{{ route('user.language.update') }}" method="POST" class="profile-language-form" style="padding:10px 16px 8px;">
                               @csrf
                               <label for="profileLanguageSelect" class="profile-language-label" style="display:flex;align-items:center;gap:8px;font-size:.86rem;font-weight:600;margin-bottom:8px;">

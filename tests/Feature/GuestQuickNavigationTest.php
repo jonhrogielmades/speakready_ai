@@ -24,7 +24,7 @@ class GuestQuickNavigationTest extends TestCase
             ->assertSee('id="gqn-destination-how"', false)
             ->assertSee('id="gqn-destination-developers"', false)
             ->assertDontSee('id="gqn-destination-faq"', false)
-            ->assertDontSee('id="gqn-destination-contact"', false)
+            ->assertSee('id="gqn-destination-contact"', false)
             ->assertSee('class="ucp-guest-actions"', false)
             ->assertSee('data-ucp-action', false)
             ->assertSee('class="guest-brand-copy"', false)
@@ -32,11 +32,11 @@ class GuestQuickNavigationTest extends TestCase
             ->assertSee('id="guestHeaderDate"', false)
             ->assertSee('id="guestHeaderTime"', false)
             ->assertSee('Start Practicing', false)
-            ->assertSee('Sample Feedback', false)
-            ->assertSee('What does the sample feedback review show?', false)
+            ->assertSee('Contact Us', false)
+            ->assertSee('Send a question or request support', false)
             ->assertSee('href="'.route('login').'"', false)
             ->assertSee('href="'.route('register').'"', false)
-            ->assertSee('css/desktop/guest.css?v=24', false)
+            ->assertSee('css/desktop/guest.css?v=27', false)
             ->assertSee('js/guest.js?v=3', false)
             ->assertDontSee('js/main.js', false)
             ->assertDontSee('js/user-ui.js', false)
@@ -48,7 +48,7 @@ class GuestQuickNavigationTest extends TestCase
             ->assertDontSee('id="benefits"', false)
             ->assertDontSee('landing-stats-row', false)
             ->assertDontSee('data-landing-stat=', false)
-            ->assertSee('href="#about" class="boc btn', false)
+            ->assertSee('href="#how" class="boc btn', false)
             ->assertDontSee('data-ucp-search', false)
             ->assertDontSee('class="ucp-mobile-launcher"', false)
             ->assertDontSee('data-ucp-context="guest"', false)
@@ -61,7 +61,7 @@ class GuestQuickNavigationTest extends TestCase
         $markup = $response->getContent();
 
         $this->assertSame(1, substr_count($markup, 'data-ucp-open'));
-        $this->assertSame(4, substr_count($markup, 'data-ucp-item'));
+        $this->assertSame(5, substr_count($markup, 'data-ucp-item'));
         $this->assertSame(2, substr_count($markup, 'data-ucp-action'));
         $this->assertSame(0, substr_count($markup, 'js/user-ui.js'));
         $this->assertSame(1, substr_count($markup, 'js/guest.js'));

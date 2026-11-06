@@ -464,8 +464,7 @@ class ReliabilityHardeningTest extends TestCase
  $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
  $question = $this->question($category, ['interview_session_id' => $session->id]);
  $questionBankVersion = data_get(QuestionDatasetProvider::forCategory($category), 'storage_question_bank.version');
- $followUpText = 'What tradeoff would you make differently if you handled that project again?';
- $roleAlignedFollowUpText = 'For your target position of Developer, what tradeoff would you make differently if you handled that project again?';
+ $followUpText = 'What tradeoff would you make differently in that release if you handled it again?';
  $capturedPrompt = '';
 
  Http::fake([
@@ -502,11 +501,12 @@ class ReliabilityHardeningTest extends TestCase
  ->assertOk()
  ->assertJson([
  'success' => true,
- 'next_question_text' => $roleAlignedFollowUpText,
+ 'next_question_text' => $followUpText,
  ]);
 
- $this->assertStringContainsString('RECENT INTERVIEW CHAT JSON', $capturedPrompt);
- $this->assertStringContainsString('deployment team', $capturedPrompt);
+ $this->assertStringContainsString('UNTRUSTED INTERVIEW TRANSCRIPT JSON', $capturedPrompt);
+ $this->assertStringContainsString('I coordinated the release, found the issue, and shipped a fix.', $capturedPrompt);
+ $this->assertStringNotContainsString('I coordinated QA with the deployment team before launch.', $capturedPrompt);
  $this->assertStringContainsString('LATEST CANDIDATE ANSWER TO RESPOND TO', $capturedPrompt);
  $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', (string) $questionBankVersion);
  $this->assertStringContainsString("Reliable question-bank version: {$questionBankVersion}", $capturedPrompt);
@@ -515,14 +515,14 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertDatabaseHas('questions', [
  'interview_session_id' => $session->id,
  'category_id' => $category->id,
- 'question_text' => $roleAlignedFollowUpText,
+ 'question_text' => $followUpText,
  'ai_provider' => 'openai',
  ]);
 
  $this->assertDatabaseHas('questions', [
  'interview_session_id' => null,
  'category_id' => $category->id,
- 'question_text' => $roleAlignedFollowUpText,
+ 'question_text' => $followUpText,
  'source_type' => 'ai_adapted_source_backed',
  'ai_provider' => 'openai',
  ]);

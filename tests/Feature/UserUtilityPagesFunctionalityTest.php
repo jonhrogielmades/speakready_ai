@@ -205,8 +205,8 @@ class UserUtilityPagesFunctionalityTest extends TestCase
  $options = $this->accountTargetPositionOptions($response->getContent());
 
  $this->assertSame($expectedPositions, $options);
- $response->assertDontSee('Administrative Assistant / LGU Staff', false)
- ->assertDontSee('Accounting Assistant', false);
+ $this->assertContains('Administrative Assistant / LGU Staff', $options);
+ $this->assertContains('Accounting Assistant', $options);
  }
  }
 

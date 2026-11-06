@@ -4792,6 +4792,10 @@
              }
           }
 
+         body.user-mobile-shell .mob-profile-dropdown[data-mode="account"] .mob-profile-action[data-pwa-install-action][hidden] {
+            display: none !important;
+         }
+
       </style>
       @include('shared.user.first-steps-modal-styles')
       @stack('styles')
@@ -4883,6 +4887,7 @@
                   <a href="{{ route('user.notifications') }}" class="mob-profile-link profile-nav-rose {{ request()->routeIs('user.notifications') ? 'active' : '' }}"><i class="fa-regular fa-bell"></i><span>Notifications</span></a>
                   <a href="{{ route('user.account') }}" class="mob-profile-link profile-nav-indigo {{ request()->routeIs('user.account') ? 'active' : '' }}"><i class="fa-solid fa-user-gear"></i><span>Account</span></a>
                   <button type="button" class="mob-profile-action" data-font-size-settings-action aria-haspopup="dialog"><i class="fa-solid fa-text-height"></i><span>Font Size Settings</span></button>
+                  <button type="button" class="mob-profile-action" data-pwa-install-action><i class="fa-solid fa-download"></i><span>Install App</span></button>
                   <form action="{{ route('user.language.update') }}" method="POST" class="mob-profile-language">
                      @csrf
                      <label for="mobileProfileLanguageSelect"><i class="fa-solid fa-language"></i>Language</label>

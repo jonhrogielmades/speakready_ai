@@ -45,6 +45,20 @@ class InterviewFollowUpReliabilityTest extends TestCase
         ));
     }
 
+    public function test_specific_acknowledgement_is_not_truncated_before_the_next_question(): void
+    {
+        $method = new ReflectionMethod(InterviewController::class, 'roleAlignedQuestionText');
+        $method->setAccessible(true);
+        $controller = app(InterviewController::class);
+        $reply = 'Thanks for sharing that; you mentioned you coordinated the release. For my final question, what evidence best shows your fit for the Developer role?';
+
+        $this->assertSame($reply, $method->invoke($controller, $reply, 'Developer'));
+        $this->assertSame(
+            'What evidence best shows your fit for the Developer role?',
+            $method->invoke($controller, 'Thanks for sharing. What evidence best shows your fit for the Developer role?', 'Developer')
+        );
+    }
+
     private function isReliable(string $question, string $answer): bool
     {
         $session = new InterviewSession;
