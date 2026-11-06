@@ -137,10 +137,6 @@
  @endfor
  </div>
  </div>
- <div class="question-caption-overlay" aria-live="polite" aria-atomic="true">
- <div id="questionCaptionText" class="question-caption-line" style="color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 2px 6px rgba(0,0,0,0.92),0 0 10px rgba(0,0,0,0.65);"></div>
- </div>
-
  <!-- Interview Panel Quick Actions -->
  <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mb-4 animate-fade-up delay-150 interview-panel-actions" id="interviewControls" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
  <!-- Left: Navigation / Secondary -->

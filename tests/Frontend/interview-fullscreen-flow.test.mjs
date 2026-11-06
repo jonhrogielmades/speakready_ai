@@ -31,6 +31,15 @@ test('interview session views omit the duplicate start dialog', () => {
     }
 });
 
+test('interview session views do not render the opening prompt as a caption overlay', () => {
+    for (const relativePath of sessionViews) {
+        const source = read(relativePath);
+
+        assert.doesNotMatch(source, /class="question-caption-overlay"/, `${relativePath} still renders the question caption overlay`);
+        assert.doesNotMatch(source, /id="questionCaptionText"/, `${relativePath} still renders the question caption text`);
+    }
+});
+
 test('desktop session starts after entering the fullscreen layout and arming native fullscreen retry', () => {
     const startup = startupSource(session);
     const fullscreenLayout = startup.indexOf('enterInterviewFullscreen({ auto: setupRequestedFullscreen || !interviewTerminated, requestBrowser: false });');
