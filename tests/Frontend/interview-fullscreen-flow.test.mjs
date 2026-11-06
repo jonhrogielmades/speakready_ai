@@ -31,12 +31,12 @@ test('interview session views omit the duplicate start dialog', () => {
     }
 });
 
-test('interview session views do not render the opening prompt as a caption overlay', () => {
+test('interview session views retain the spoken question caption overlay', () => {
     for (const relativePath of sessionViews) {
         const source = read(relativePath);
 
-        assert.doesNotMatch(source, /class="question-caption-overlay"/, `${relativePath} still renders the question caption overlay`);
-        assert.doesNotMatch(source, /id="questionCaptionText"/, `${relativePath} still renders the question caption text`);
+        assert.match(source, /class="question-caption-overlay"/, `${relativePath} is missing the question caption overlay`);
+        assert.match(source, /id="questionCaptionText"/, `${relativePath} is missing the question caption text`);
     }
 });
 

@@ -137,6 +137,10 @@
  @endfor
  </div>
  </div>
+  <div class="question-caption-overlay" aria-live="polite" aria-atomic="true">
+  <div id="questionCaptionText" class="question-caption-line" style="color:#ffffff;-webkit-text-fill-color:#ffffff;text-shadow:0 2px 6px rgba(0,0,0,0.92),0 0 10px rgba(0,0,0,0.65);"></div>
+  </div>
+
  <div id="aiQuestionText" class="visually-hidden" aria-hidden="true">Loading your first question...</div>
 
  <!-- Unified Responsive Interview Controls (Desktop & Mobile) -->
@@ -4487,7 +4491,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  cancelQuestionSpeechOutput();
  const questionText = document.getElementById('aiQuestionText');
  if (questionText) questionText.innerText = text;
- renderStaticQuestionCaption(text);
  const token = ++questionSpeechToken;
  const startTimerAfterSpeech = options.startTimerAfterSpeech === true;
  const completion = new Promise(resolve => {
@@ -4833,7 +4836,6 @@ return fallbackText;
  function showInterviewerConversation(text, counterText = null) {
  const qText = document.getElementById('aiQuestionText');
  if (qText) qText.innerText = text;
- renderStaticQuestionCaption(text);
  setRepeatPrompt(text, {
  phase: counterText === 'Done'? 'closing': 'conversation',
  speechText: text

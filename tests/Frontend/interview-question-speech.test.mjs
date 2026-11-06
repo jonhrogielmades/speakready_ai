@@ -36,13 +36,14 @@ function evaluate(source, names, context) {
 for (const layout of layouts) {
     const source = readFileSync(join(root, `resources/views/${layout}/interview/session.blade.php`), 'utf8');
 
-    test(`${layout} shows an uncached question while waiting for server audio`, async () => {
+    test(`${layout} waits for AI audio before showing question captions`, async () => {
         const server = deferred();
         const shown = { innerText: '...' };
         const notices = [];
         let finished = false;
         let serverCalls = 0;
         let watchdogs = 0;
+        let earlyCaptions = 0;
         const context = evaluate(source, ['speakQuestion'], {
             interviewTerminated: false,
             questionSpeechToken: 0,
@@ -51,7 +52,7 @@ for (const layout of layouts) {
             serverAiVoiceEnabled: true,
             window: { speechSynthesis: {}, SpeechSynthesisUtterance() {} },
             document: { getElementById: () => shown },
-            renderStaticQuestionCaption() {},
+            renderStaticQuestionCaption() { earlyCaptions++; },
             cleanTranscriptText: value => value.trim(),
             setTimeout: () => { watchdogs++; return 1; },
             cancelQuestionSpeechOutput() { context.questionSpeechToken++; },
@@ -71,12 +72,51 @@ for (const layout of layouts) {
         assert.equal(shown.innerText, 'Tell me about your project.');
         assert.equal(serverCalls, 1);
         assert.equal(watchdogs, 0, 'speech completion must not time out while audio is being fetched');
+        assert.equal(earlyCaptions, 0, 'the full question must stay hidden while audio loads');
         await Promise.resolve();
         assert.equal(finished, false);
         assert.deepEqual(notices, []);
         server.resolve();
         assert.equal(await result, 'finished');
         assert.equal(serverCalls, 1);
+        assert.equal(earlyCaptions, 0);
+    });
+
+    test(`${layout} starts highlighted captions when server audio plays`, async () => {
+        const voiceUrl = deferred();
+        const events = new Map();
+        let captionsStarted = 0;
+        let captionsFinished = 0;
+        const audio = {
+            addEventListener(name, callback) { events.set(name, callback); },
+            play: async () => {},
+        };
+        const context = evaluate(source, ['speakWithServerVoice'], {
+            window: { Audio() {} },
+            Audio: function Audio() { return audio; },
+            interviewerServerAudioPlaybackRate: 1,
+            serverVoiceUnavailable: false,
+            interviewTerminated: false,
+            questionSpeechToken: 3,
+            activeQuestionAudio: null,
+            serverSpeechUrl: () => voiceUrl.promise,
+            startSpeakingUi() { captionsStarted++; },
+            finishSpeakingUi() { captionsFinished++; },
+            activeSpeechCompletion: { token: 3, timeoutId: null },
+            estimatedSpeechTimeoutMs: () => 10000,
+            setTimeout: () => 1,
+            console,
+        });
+
+        const result = context.speakWithServerVoice('Tell me about your project.', 3, true, 12);
+        assert.equal(captionsStarted, 0);
+        voiceUrl.resolve('blob:question-12');
+        assert.equal(await result, true);
+        assert.equal(captionsStarted, 0, 'loading and play() must not display captions early');
+        events.get('playing')();
+        assert.equal(captionsStarted, 1);
+        events.get('ended')();
+        assert.equal(captionsFinished, 1);
     });
 
     test(`${layout} keeps the question readable and continues when server audio is unavailable`, async () => {
