@@ -3724,7 +3724,15 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const button = document.querySelector('.response-send-answer-btn');
  if (!button) return;
  let activePointer = null;
+ let activeTouch = null;
  let suppressPointerClickUntil = 0;
+
+ const submitFromTap = () => {
+ suppressPointerClickUntil = Date.now() + 900;
+ submitAnswer();
+ const textarea = answerTextareaElement();
+ if (textarea && document.activeElement === textarea) textarea.blur();
+ };
 
  button.addEventListener('pointerdown', event => {
  if (button.disabled || event.button !== 0 || event.isPrimary === false) return;
@@ -3738,15 +3746,58 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  button.addEventListener('pointerup', event => {
  if (!activePointer || event.pointerId !== activePointer.id) return;
  const wasTap = Math.hypot(event.clientX - activePointer.x, event.clientY - activePointer.y) <= 12;
+ const handledByTouch = activePointer.handledByTouch;
  activePointer = null;
- suppressPointerClickUntil = Date.now() + 900;
+ if (handledByTouch) return;
+ if (!wasTap) suppressPointerClickUntil = Date.now() + 900;
  if (!wasTap || button.disabled) return;
- const textarea = answerTextareaElement();
- if (textarea && document.activeElement === textarea) textarea.blur();
- submitAnswer();
+ if (event.pointerType === 'touch' && activeTouch) activeTouch.submitted = true;
+ submitFromTap();
  });
 
  button.addEventListener('pointercancel', () => { activePointer = null; });
+
+ // Touch events stay with the element where the finger landed even if closing
+ // the mobile keyboard reflows the response panel and cancels pointerup.
+ button.addEventListener('touchstart', event => {
+ if (button.disabled || event.touches.length !== 1) {
+ activeTouch = null;
+ return;
+ }
+ const touch = event.changedTouches[0];
+ activeTouch = { id: touch.identifier, x: touch.clientX, y: touch.clientY, moved: false, submitted: false };
+ const textarea = answerTextareaElement();
+ if (textarea && document.activeElement === textarea && event.cancelable) event.preventDefault();
+ }, { passive: false });
+
+ button.addEventListener('touchmove', event => {
+ if (!activeTouch) return;
+ const touch = Array.from(event.changedTouches).find(item => item.identifier === activeTouch.id);
+ if (touch && Math.hypot(touch.clientX - activeTouch.x, touch.clientY - activeTouch.y) > 12) {
+ activeTouch.moved = true;
+ }
+ }, { passive: true });
+
+ button.addEventListener('touchend', event => {
+ if (!activeTouch) return;
+ const touch = Array.from(event.changedTouches).find(item => item.identifier === activeTouch.id);
+ if (!touch) return;
+ const wasTap = !activeTouch.moved && event.touches.length === 0
+ && Math.hypot(touch.clientX - activeTouch.x, touch.clientY - activeTouch.y) <= 12;
+ const alreadySubmitted = activeTouch.submitted;
+ activeTouch = null;
+ if (activePointer) activePointer.handledByTouch = true;
+ suppressPointerClickUntil = Date.now() + 900;
+ if (!wasTap || alreadySubmitted || button.disabled) return;
+ if (event.cancelable) event.preventDefault();
+ submitFromTap();
+ }, { passive: false });
+
+ button.addEventListener('touchcancel', () => {
+ activeTouch = null;
+ activePointer = null;
+ });
+
  button.addEventListener('click', event => {
  if (button.disabled) return;
  if (event.detail > 0 && Date.now() < suppressPointerClickUntil) return;

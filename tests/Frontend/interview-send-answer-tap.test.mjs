@@ -88,3 +88,99 @@ for (const layout of ['desktop', 'mobile']) {
         assert.equal(submissions, 4, 'disabled state still blocks submission');
     });
 }
+
+for (const mode of ['text', 'hybrid', 'voice']) {
+    test(`mobile ${mode} Send Answer survives keyboard reflow and submits each touch once`, () => {
+        const source = readFileSync(join(root, 'resources/views/mobile/interview/session.blade.php'), 'utf8');
+        const listeners = new Map();
+        const events = [];
+        const textarea = mode === 'voice' ? null : {
+            blur() {
+                events.push('blur');
+                document.activeElement = null;
+            },
+        };
+        const button = {
+            disabled: false,
+            addEventListener(name, listener) { listeners.set(name, listener); },
+            setPointerCapture() {},
+        };
+        const document = { activeElement: textarea, querySelector: () => button };
+        let now = 1000;
+        const context = {
+            Math,
+            Array,
+            Date: { now: () => now },
+            document,
+            answerTextareaElement: () => textarea,
+            submitAnswer: () => { events.push('submit'); },
+        };
+        vm.createContext(context);
+        vm.runInContext(functionSource(source, 'bindSendAnswerButton'), context);
+        context.bindSendAnswerButton();
+
+        const touch = (identifier, x = 10, y = 20) => ({ identifier, clientX: x, clientY: y });
+        const pointerDown = id => listeners.get('pointerdown')({
+            pointerId: id, pointerType: 'touch', button: 0, isPrimary: true,
+            clientX: 10, clientY: 20, preventDefault() {},
+        });
+        const touchStart = id => {
+            let prevented = false;
+            listeners.get('touchstart')({
+                touches: [touch(id)], changedTouches: [touch(id)], cancelable: true,
+                preventDefault() { prevented = true; },
+            });
+            return prevented;
+        };
+        const touchEnd = (id, x = 10, y = 20) => {
+            let prevented = false;
+            listeners.get('touchend')({
+                touches: [], changedTouches: [touch(id, x, y)], cancelable: true,
+                preventDefault() { prevented = true; },
+            });
+            return prevented;
+        };
+
+        pointerDown(1);
+        assert.equal(touchStart(1), mode !== 'voice', 'keep the answer focused through the touch');
+        listeners.get('pointercancel')(); // Keyboard dismissal lost the pointer release.
+        document.activeElement = null; // The focused layout has already reflowed.
+        assert.equal(touchEnd(1), true);
+        listeners.get('click')({ detail: 1 });
+        assert.deepEqual(events, ['submit']);
+
+        now += 100;
+        document.activeElement = textarea;
+        pointerDown(2);
+        touchStart(2);
+        listeners.get('pointerup')({ pointerId: 2, pointerType: 'touch', clientX: 10, clientY: 20 });
+        touchEnd(2);
+        listeners.get('click')({ detail: 1 });
+        assert.equal(events.filter(event => event === 'submit').length, 2, 'pointerup and touchend must send once');
+        assert.deepEqual(events.slice(1), mode === 'voice' ? ['submit'] : ['submit', 'blur'], 'send before changing the focused layout');
+
+        now += 1000;
+        pointerDown(5);
+        touchStart(5);
+        touchEnd(5);
+        listeners.get('pointerup')({ pointerId: 5, pointerType: 'touch', clientX: 10, clientY: 20 });
+        listeners.get('click')({ detail: 1 });
+        assert.equal(events.filter(event => event === 'submit').length, 3, 'touchend before pointerup must also send once');
+
+        now += 1000;
+        pointerDown(3);
+        touchStart(3);
+        listeners.get('pointercancel')();
+        listeners.get('touchmove')({ changedTouches: [touch(3, 40, 20)] });
+        assert.equal(touchEnd(3), false);
+        listeners.get('click')({ detail: 1 });
+        assert.equal(events.filter(event => event === 'submit').length, 3, 'dragging must not send');
+
+        now += 1000;
+        pointerDown(4);
+        touchStart(4);
+        listeners.get('touchcancel')();
+        touchEnd(4);
+        assert.equal(events.filter(event => event === 'submit').length, 3, 'canceled touches must not send');
+    });
+}
