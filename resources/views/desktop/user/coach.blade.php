@@ -155,6 +155,7 @@
     <script>
         let coachChatHistory = [];
         let currentConversationId = null;
+        let coachReviewAnswerIdHandoff = null;
         let coachSelectedFiles = [];
         let coachSending = false;
         let coachVoiceRecognition = null;
@@ -1006,6 +1007,9 @@
                     window.sessionStorage.removeItem(storageKey);
                     const payload = JSON.parse(raw);
                     prompt = typeof payload === 'string' ? payload : payload?.prompt;
+                    coachReviewAnswerIdHandoff = typeof payload === 'object' && payload?.reviewAnswerId
+                        ? String(payload.reviewAnswerId).replace(/[^0-9]/g, '').slice(0, 12)
+                        : null;
                 }
             } catch (error) {
                 prompt = '';
@@ -1016,7 +1020,9 @@
                     const url = new URL(window.location.href);
                     prompt = url.searchParams.get('review_prompt') || '';
                     if (prompt) {
+                        coachReviewAnswerIdHandoff = url.searchParams.get('review_answer_id') || null;
                         url.searchParams.delete('review_prompt');
+                        url.searchParams.delete('review_answer_id');
                         window.history.replaceState({}, document.title, url.toString());
                     }
                 } catch (error) {
@@ -1094,6 +1100,9 @@
                 if (currentConversationId) {
                     formData.append('conversation_id', currentConversationId);
                 }
+                if (coachReviewAnswerIdHandoff) {
+                    formData.append('review_answer_id', coachReviewAnswerIdHandoff);
+                }
                 files.forEach(file => formData.append('coach_attachments[]', file));
 
                 const response = await coachFetch(coachEndpoint('chatUrl', @json(route('user.coach.chat'))), {
@@ -1102,6 +1111,7 @@
                 });
                 const data = await coachJson(response, 'Could not send your message. Please try again.');
                 const aiResponse = data.response;
+                coachReviewAnswerIdHandoff = null;
                 
                 if (data.conversation_id && !currentConversationId) {
                     currentConversationId = data.conversation_id;
@@ -1300,6 +1310,8 @@
             if (coachVoiceActive) {
                 stopCoachVoicePrompt();
             }
+
+            coachReviewAnswerIdHandoff = null;
 
             // Reset state
             coachChatHistory = [];

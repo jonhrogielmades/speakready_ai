@@ -205,7 +205,7 @@
  <p>{{ $possibleAnswer }}</p>
  <div class="review-ai-coach-action" data-ai-coach-prompt-wrapper>
  <textarea class="review-ai-coach-prompt" data-ai-coach-prompt hidden readonly>{{ $coachPrompt }}</textarea>
- <button type="button" class="review-ai-coach-button" data-coach-url="{{ route('user.coach') }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach about this answer">
+ <button type="button" class="review-ai-coach-button" data-coach-url="{{ route('user.coach') }}" data-review-answer-id="{{ (int) ($answer->id?? 0) }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach about this answer">
  <span>ASK AI COACH</span>
  </button>
  </div>
@@ -229,11 +229,14 @@
                     window.sessionStorage.setItem(reviewCoachPromptKey, JSON.stringify({
                         prompt,
                         source: 'answer-review',
+                        reviewAnswerId: button?.dataset?.reviewAnswerId || null,
                         createdAt: Date.now()
                     }));
                 } catch (error) {
                     const separator = target.includes('?') ? '&' : '?';
-                    window.location.href = `${target}${separator}review_prompt=${encodeURIComponent(prompt.slice(0, 3500))}`;
+                    const reviewAnswerId = button?.dataset?.reviewAnswerId || '';
+                    const answerQuery = reviewAnswerId ? `&review_answer_id=${encodeURIComponent(reviewAnswerId)}` : '';
+                    window.location.href = `${target}${separator}review_prompt=${encodeURIComponent(prompt.slice(0, 3500))}${answerQuery}`;
                     return;
                 }
             }
