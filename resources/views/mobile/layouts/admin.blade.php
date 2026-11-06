@@ -12,11 +12,8 @@
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
-      <link href="{{ asset('css/aos.css') }}" rel="stylesheet"/>
-      <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=31') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.min.css') }}?v={{ filemtime(public_path('css/mobile/style.min.css')) }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       <style>
          :root,
@@ -3223,14 +3220,13 @@
       @include('shared.pwa-install-prompt')
 
       <!-- ======================== SCRIPTS ======================== -->
-      <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       <script src="{{ asset('js/admin-ui.js?v=1') }}"></script>
       @include('shared.partials.flash-modal')
-      <script src="{{ asset('js/aos.js') }}"></script>
+      @if (request()->routeIs('admin.dashboard', 'admin.categories.details'))
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
-      <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
+      @endif
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       <script src="{{ asset('js/user-ui.js') }}?v=28&build=20261031" defer></script>
 

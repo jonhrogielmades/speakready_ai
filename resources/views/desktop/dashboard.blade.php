@@ -1,7 +1,7 @@
 @extends('desktop.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.css?v=61') }}" data-page-style="dashboard">
+<link rel="stylesheet" href="{{ asset('css/desktop/dashboard.min.css') }}?v={{ filemtime(public_path('css/desktop/dashboard.min.css')) }}" data-page-style="dashboard">
 @endpush
 
 @section('content')

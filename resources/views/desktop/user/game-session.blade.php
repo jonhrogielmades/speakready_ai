@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="{{ asset('css/desktop/user/game-session.css?v=2026110401') }}" data-page-style="user-game-session">
 <link rel="stylesheet" href="{{ asset('css/desktop/user/game-session-2.css?v=2026101208') }}" data-page-style="user-game-session-2">
 <link rel="preload" as="image" href="{{ asset('img/interviewers/Filipina_Interviewer_06.webp') }}" type="image/webp" fetchpriority="high">
-<link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.png') }}" type="image/png">
+<link rel="preload" as="image" href="{{ asset('img/interviewer-panel-room-bg.webp') }}" type="image/webp">
 @endpush
 
 @section('content')
@@ -36,7 +36,7 @@
  ];
  $interviewerAvatarImage = $interviewerAvatarImages[0];
  $interviewerAvatarWebpImage = preg_replace('/\.png$/', '.webp', $interviewerAvatarImage);
- $interviewerPanelBackgroundImage = 'img/interviewer-panel-room-bg.png';
+ $interviewerPanelBackgroundImage = 'img/interviewer-panel-room-bg.webp';
  $interviewerAvatarImageUrls = array_map(fn ($image) => asset($image), $interviewerAvatarImages);
  $serverElapsedAtRender = $sessionRecord?->started_at
  ? max(0, (int) $sessionRecord->started_at->diffInSeconds(now()))

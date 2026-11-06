@@ -4,8 +4,10 @@
     "scripts": {
         "start": "vite",
         "dev": "vite",
-        "build": "vite build",
+        "build": "vite build && node scripts/minify-public-css.mjs",
+        "check:css": "node scripts/minify-public-css.mjs --check",
         "check:frontend": "node scripts/check-frontend.mjs",
+        "test:service-worker-cache": "node --test tests/Frontend/service-worker-cache.test.mjs",
         "test:pwa-install": "node --test tests/Frontend/pwa-install.test.mjs",
         "test:onboarding-voiceover": "node --test tests/Frontend/onboarding-voiceover.test.mjs",
         "test:media-permissions": "node --test tests/Frontend/media-permission-support.test.mjs"
@@ -17,6 +19,7 @@
     "devDependencies": {
         "axios": "^1.18.1",
         "laravel-vite-plugin": "^3.1.3",
+        "lightningcss": "^1.33.0",
         "vite": "^8.1.4"
     }
 }

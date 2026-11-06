@@ -9,6 +9,7 @@ const DEFAULT_NOTIFICATION_ACTIONS = [
 ];
 const CODE_ASSET_PATTERN = /\.(?:css|js|mjs)$/i;
 const STATIC_ASSET_PATTERN = /\.(?:css|js|mjs|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|eot)$/i;
+const VERSIONED_MINIFIED_CSS_PATTERN = /^\/css\/(?:desktop|mobile)\/(?:style|dashboard|admin\/dashboard)\.min\.css$/i;
 
 function isSameOrigin(requestUrl) {
   return new URL(requestUrl).origin === self.location.origin;
@@ -28,6 +29,13 @@ function isCodeAsset(request) {
   if (!isSameOrigin(request.url)) return false;
 
   return CODE_ASSET_PATTERN.test(new URL(request.url).pathname);
+}
+
+function isVersionedMinifiedStyle(request) {
+  if (!isSameOrigin(request.url)) return false;
+
+  const url = new URL(request.url);
+  return VERSIONED_MINIFIED_CSS_PATTERN.test(url.pathname) && /^\d+$/.test(url.searchParams.get('v') || '');
 }
 
 self.addEventListener('install', event => {
@@ -82,7 +90,7 @@ self.addEventListener('fetch', event => {
 
   event.respondWith(
     caches.open(CACHE_NAME).then(cache => {
-      const freshResponse = () => fetch(event.request, { cache: 'no-cache' }).then(response => {
+      const freshResponse = (cacheMode = 'no-cache') => fetch(event.request, { cache: cacheMode }).then(response => {
         if (response && response.ok) {
           return cache.put(event.request, response.clone())
             .catch(() => undefined)
@@ -91,6 +99,10 @@ self.addEventListener('fetch', event => {
 
         return response;
       });
+
+      if (isVersionedMinifiedStyle(event.request)) {
+        return cache.match(event.request).then(cachedResponse => cachedResponse || freshResponse('default'));
+      }
 
       if (isCodeAsset(event.request)) {
         // CSS and JavaScript must come from the current deployment whenever the

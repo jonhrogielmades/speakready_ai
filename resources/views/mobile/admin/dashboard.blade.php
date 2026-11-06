@@ -1,7 +1,7 @@
 @extends('mobile.layouts.admin')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/admin/dashboard.css?v=7') }}" data-page-style="admin-dashboard">
+<link rel="stylesheet" href="{{ asset('css/mobile/admin/dashboard.min.css') }}?v={{ filemtime(public_path('css/mobile/admin/dashboard.min.css')) }}" data-page-style="admin-dashboard">
 @endpush
 
 @section('content')
@@ -243,8 +243,6 @@
     </div>
 </div>
 
-<!-- Scripts for Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     if (typeof window.Chart === 'undefined') return;

@@ -51,7 +51,7 @@
       <!-- all min css -->
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=43') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.min.css') }}?v={{ filemtime(public_path('css/desktop/style.min.css')) }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/user-font-size.css?v=2') }}" />
       <script src="{{ asset('js/font-size-boot.js?v=2') }}"></script>

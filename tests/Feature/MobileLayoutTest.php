@@ -39,7 +39,7 @@ class MobileLayoutTest extends TestCase
                 ->assertSee('data-guest-layout="mobile"', false)
                 ->assertDontSee('id="srLaunchScreen"', false)
                 ->assertDontSee('guest-splash-pending', false)
-                ->assertSee('css/mobile/style.css?v=39', false)
+                ->assertSee('css/mobile/style.min.css?v=', false)
                 ->assertSee('css/mobile/guest.css?v=44', false)
                 ->assertSee('js/guest.js?v=3', false)
                 ->assertDontSee('js/main.js', false)
@@ -71,7 +71,7 @@ class MobileLayoutTest extends TestCase
                 ->assertDontSee('id="mbmenu"', false)
                 ->assertDontSee('id="barIcon"', false)
                 ->assertDontSee('id="xIcon"', false)
-                ->assertDontSee('css/desktop/style.css?v=12', false);
+                ->assertDontSee('css/desktop/style.min.css?v=', false);
         }
     }
 
@@ -121,11 +121,11 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=39', false)
+            ->assertSee('css/mobile/style.min.css?v=', false)
             ->assertSee('css/mobile/guest.css?v=44', false)
             ->assertSee('js/guest.js?v=3', false)
             ->assertSee('mobile-hero-preview-row', false)
-            ->assertDontSee('css/desktop/style.css?v=12', false);
+            ->assertDontSee('css/desktop/style.min.css?v=', false);
     }
 
     public function test_guest_landing_uses_mobile_guest_layout_from_viewport_query_hint(): void
@@ -137,11 +137,11 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=39', false)
+            ->assertSee('css/mobile/style.min.css?v=', false)
             ->assertSee('css/mobile/guest.css?v=44', false)
             ->assertSee('js/guest.js?v=3', false)
             ->assertSee('mobile-hero-preview-row', false)
-            ->assertDontSee('css/desktop/style.css?v=12', false);
+            ->assertDontSee('css/desktop/style.min.css?v=', false);
     }
 
     public function test_desktop_guest_links_to_dedicated_auth_pages(): void
@@ -176,8 +176,8 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-desktop-shell', false)
             ->assertSee('data-layout-shell="desktop"', false)
-            ->assertSee('css/desktop/style.css?v=12', false)
-            ->assertDontSee('css/mobile/style.css?v=39', false);
+            ->assertSee('css/desktop/style.min.css?v=', false)
+            ->assertDontSee('css/mobile/style.min.css?v=', false);
     }
 
     public function test_mobile_user_agent_cannot_force_desktop_shell_with_desktop_query_hint(): void
@@ -189,9 +189,9 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('guest-shell guest-mobile-shell', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/style.css?v=39', false)
+            ->assertSee('css/mobile/style.min.css?v=', false)
             ->assertDontSee('guest-shell guest-desktop-shell', false)
-            ->assertDontSee('css/desktop/style.css?v=12', false);
+            ->assertDontSee('css/desktop/style.min.css?v=', false);
     }
 
     public function test_guest_landing_exposes_shell_marker_for_viewport_repair(): void
@@ -215,7 +215,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee("url.searchParams.set('sr_layout', targetLayout)", false)
             ->assertSee("url.searchParams.set('sr_mobile_desktop_blocked', '1')", false)
             ->assertSee('window.location.replace(url.toString())', false)
-            ->assertSee('css/desktop/style.css?v=12', false);
+            ->assertSee('css/desktop/style.min.css?v=', false);
     }
 
     public function test_top_level_shells_use_the_shared_early_guard_and_blocking_icon_css(): void
@@ -289,8 +289,8 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="user-mobile-shell mobile-shell"', false)
             ->assertSee('data-layout-shell="mobile"', false)
             ->assertSee('id="mob-content"', false)
-            ->assertSee('css/mobile/dashboard.css?v=50', false)
-            ->assertSee('data-page-style="dashboard-v50"', false)
+            ->assertSee('css/mobile/dashboard.min.css?v='.filemtime(public_path('css/mobile/dashboard.min.css')), false)
+            ->assertSee('data-page-style="dashboard-v57"', false)
             ->assertSee('sr-readiness-card-grid', false)
             ->assertDontSee('class="sr-card sr-score-panel', false)
             ->assertSee('--mob-card-gap: 12px', false)
@@ -327,7 +327,7 @@ class MobileLayoutTest extends TestCase
             ->assertOk()
             ->assertSee('class="user-mobile-shell mobile-shell"', false)
             ->assertSee('data-layout-shell="mobile"', false)
-            ->assertSee('css/mobile/dashboard.css?v=50', false)
+            ->assertSee('css/mobile/dashboard.min.css?v='.filemtime(public_path('css/mobile/dashboard.min.css')), false)
             ->assertSee('sr-readiness-card-grid', false)
             ->assertDontSee('user-desktop-shell desktop-shell', false)
             ->assertDontSee('class="db-sidebar"', false);
@@ -354,7 +354,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-dashboard-title-text"', false)
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
-            ->assertSee('css/mobile/admin/dashboard.css?v=7', false)
+            ->assertSee('css/mobile/admin/dashboard.min.css?v='.filemtime(public_path('css/mobile/admin/dashboard.min.css')), false)
             ->assertSee('id="mobFullscreenBtn"', false)
             ->assertSee('data-user-fullscreen-toggle', false)
             ->assertSee('js/user-ui.js?v=28', false)
@@ -452,7 +452,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="admin-dashboard-title-text"', false)
             ->assertSee('admin-dashboard-shell', false)
             ->assertSee('dashboard-work-grid', false)
-            ->assertSee('css/desktop/admin/dashboard.css?v=5', false)
+            ->assertSee('css/desktop/admin/dashboard.min.css?v='.filemtime(public_path('css/desktop/admin/dashboard.min.css')), false)
             ->assertSee('js/pwa-install.js?v=2', false)
             ->assertDontSee('SpeakReadyPushConfig', false)
             ->assertDontSee('\\/admin\\/notifications\\/push\\/key', false)
@@ -1470,7 +1470,7 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('data-user-fullscreen-toggle', false)
             ->assertSee('body.mobile-shell.user-app-fullscreen #mob-content', false)
             ->assertSee('height: var(--sr-visual-vh) !important', false)
-            ->assertSee('css/mobile/style.css?v=36', false)
+            ->assertSee('css/mobile/style.min.css?v='.filemtime(public_path('css/mobile/style.min.css')), false)
             ->assertSee('js/main.js?v=7', false)
             ->assertSee('js/user-ui.js?v=28', false)
             ->assertDontSee('body.user-mobile-shell #mob-header #mobFullscreenBtn', false);
@@ -1562,7 +1562,7 @@ class MobileLayoutTest extends TestCase
             ->assertSee('class="desktop-camera-pip d-none d-lg-flex"', false)
             ->assertSee('id="userCamera"', false)
             ->assertSee('alt="AI Interviewer"', false)
-            ->assertSee('img/interviewer-panel-room-bg.png', false)
+            ->assertSee('img/interviewer-panel-room-bg.webp', false)
             ->assertSee('class="interviewer-room-stage"', false)
             ->assertSee('class="interviewer-room-bg-image"', false)
             ->assertSee('avatar-side-wave avatar-side-wave-left', false)
@@ -2016,7 +2016,7 @@ class MobileLayoutTest extends TestCase
             ->assertDontSee('mobile-response-end-session-action', false)
             ->assertDontSee('mobile-response-end-session-btn', false)
             ->assertSee('id="responseFullscreenToggle"', false)
-            ->assertSee('img/interviewer-panel-room-bg.png', false)
+            ->assertSee('img/interviewer-panel-room-bg.webp', false)
             ->assertSee('class="interviewer-room-stage"', false)
             ->assertSee('class="interviewer-room-bg-image"', false)
             ->assertSee('avatar-side-wave avatar-side-wave-left', false)

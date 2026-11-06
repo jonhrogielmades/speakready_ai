@@ -99,6 +99,8 @@ jobs:
       - name: Run frontend contract tests
         run: |
           npm run check:frontend
+          npm run check:css
+          npm run test:service-worker-cache
           npm run test:onboarding-voiceover
           npm run test:media-permissions
 

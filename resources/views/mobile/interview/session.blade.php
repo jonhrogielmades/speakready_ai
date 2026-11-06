@@ -71,11 +71,11 @@
   $interviewerAvatarIndex = abs(crc32((string) $sessionRecord->id)) % count($interviewerAvatarImages);
   $interviewerAvatarImage = $interviewerAvatarImages[$interviewerAvatarIndex];
   $interviewerAvatarWebpImage = preg_replace('/\.png$/', '.webp', $interviewerAvatarImage);
-  $interviewerPanelBackgroundImage = 'img/interviewer-panel-room-bg.png';
+  $interviewerPanelBackgroundImage = 'img/interviewer-panel-room-bg.webp';
   @endphp
  @push('styles')
  <link rel="preload" as="image" href="{{ asset($interviewerAvatarWebpImage) }}" type="image/webp" fetchpriority="high">
- <link rel="preload" as="image" href="{{ asset($interviewerPanelBackgroundImage) }}" type="image/png">
+ <link rel="preload" as="image" href="{{ asset($interviewerPanelBackgroundImage) }}" type="image/webp">
  @endpush
  <div id="workspaceWrapper" style="display:none;">
  <div class="row g-4" id="workspaceRow">

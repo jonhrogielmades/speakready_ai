@@ -100,13 +100,13 @@ class UserDashboardFunctionalityTest extends TestCase
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => [],
                 'shell' => 'class="user-desktop-shell desktop-shell',
-                'css' => 'css/desktop/dashboard.css?v=60',
+                'css' => 'css/desktop/dashboard.min.css?v='.filemtime(public_path('css/desktop/dashboard.min.css')),
             ],
             [
                 'user' => User::factory()->create(['is_admin' => false, 'status' => 'active']),
                 'headers' => ['User-Agent' => $iphoneUserAgent],
                 'shell' => 'class="user-mobile-shell mobile-shell',
-                'css' => 'css/mobile/dashboard.css?v=50',
+                'css' => 'css/mobile/dashboard.min.css?v='.filemtime(public_path('css/mobile/dashboard.min.css')),
             ],
         ];
 
@@ -172,7 +172,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertSee('speakready.firstSteps.returnAfterSetup.', false)
                 ->assertDontSee('speakready.firstSteps.returnAfterTour.', false)
                 ->assertDontSee('speakready:dashboard-tour-closed', false)
-                ->assertSee('data-sr-auto-start-dashboard-tour="false"', false);
+                ->assertSee('const dashboardTourRequested = false;', false);
 
             $html = $response->getContent();
             $supportScriptPosition = strpos($html, 'js/media-permission-support.js?v=1');
@@ -189,7 +189,7 @@ class UserDashboardFunctionalityTest extends TestCase
                 ->assertDontSee('id="card-achievements"', false)
                 ->assertDontSee('Sharpen 3 advanced advanced answers', false);
 
-            if (str_contains($case['css'], 'mobile/dashboard.css')) {
+            if (str_contains($case['css'], 'mobile/dashboard.min.css')) {
                 $response
                     ->assertSee('id="dashboardCoachImageTrigger"', false)
                     ->assertSee('sr-image-coach-trigger', false)

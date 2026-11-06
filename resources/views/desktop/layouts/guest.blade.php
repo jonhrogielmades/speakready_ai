@@ -13,16 +13,15 @@
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
-      <link rel="preload" href="{{ asset('videos/speakready-ai-60s-product-tour.mp4') }}?v=20261102-60s" as="video" type="video/mp4" fetchpriority="high">
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <!-- all min css -->
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
       <!-- Style CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=12') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.min.css') }}?v={{ filemtime(public_path('css/desktop/style.min.css')) }}" />
       <link rel="stylesheet" href="{{ asset('css/desktop/guest.css?v=27') }}" />
       <link rel="stylesheet" href="{{ asset('css/about-system.css?v=5') }}" />
-      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=15') }}" />
+      <link rel="stylesheet" href="{{ asset('css/landing-hero.css?v=16') }}" />
       <link rel="stylesheet" href="{{ asset('css/how-it-works.css?v=1') }}" />
       <style>
          :root,
@@ -315,19 +314,24 @@
                                     <span class="hero-video-chrome-dots"><i></i><i></i><i></i></span>
                                     <span class="hero-video-chrome-label">speakreadyai.online</span>
                                  </div>
-                                 <video
-                                    class="desktop-hero-image desktop-hero-video"
-                                    width="1920"
-                                    height="1080"
-                                    autoplay
-                                    muted
-                                    loop
-                                    playsinline
-                                    preload="auto"
-                                    aria-label="SpeakReady AI desktop product overview"
-                                 >
-                                    <source src="{{ $heroVideo }}" type="video/mp4">
-                                 </video>
+                                 <div class="hero-video-stage">
+                                    <video
+                                       class="desktop-hero-image desktop-hero-video"
+                                       width="1920"
+                                       height="1080"
+                                       muted
+                                       loop
+                                       playsinline
+                                       preload="none"
+                                       poster="{{ asset('img/landing-product-tour-poster.webp') }}"
+                                       aria-label="SpeakReady AI desktop product overview"
+                                    >
+                                       <source data-src="{{ $heroVideo }}" type="video/mp4">
+                                    </video>
+                                    <button class="hero-video-play" type="button" data-hero-video-play aria-label="Play the one-minute SpeakReady AI product tour">
+                                       <span class="hero-video-play-content" aria-hidden="true"><i class="fa-solid fa-play"></i><span>Play product tour</span></span>
+                                    </button>
+                                 </div>
                               </div>
                               <p class="hero-video-caption"><span class="hero-caption-green">Practice interviews.</span> <span class="hero-caption-yellow">Get real-time coaching.</span> <span class="hero-caption-blue">Improve with every session.</span></p>
                               <div class="hero-benefit-row" role="list" aria-label="SpeakReady AI benefits">
@@ -699,6 +703,7 @@
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       @include('desktop.partials.flash-modal', ['includeValidationErrors' => false])
       <script src="{{ asset('js/guest.js?v=3') }}"></script>
+      <script src="{{ asset('js/landing-video.js?v=1') }}"></script>
       <script>
          document.addEventListener('DOMContentLoaded', function() {
             const backToTopBtn = document.getElementById('backToTopBtn');

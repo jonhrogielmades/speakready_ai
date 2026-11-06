@@ -13,16 +13,8 @@
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
       <!-- Bootstrap 5.3 -->
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
-      <!-- AOS Animate on Scroll -->
-      <link href="{{ asset('css/aos.css') }}" rel="stylesheet"/>
-      <!-- Swiper -->
-      <link href="{{ asset('css/swiper-bundle.min.css') }}" rel="stylesheet"/>
-      <!-- all min css -->
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}"/>
-      <!-- magnific CSS -->
-      <link rel="stylesheet" href="{{ asset('css/magnific-popup.css') }}"/>
-      <!-- Shared app CSS -->
-      <link rel="stylesheet" href="{{ asset('css/desktop/style.css?v=37') }}" />
+      <link rel="stylesheet" href="{{ asset('css/desktop/style.min.css') }}?v={{ filemtime(public_path('css/desktop/style.min.css')) }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       <style>
           :root,
@@ -282,19 +274,13 @@
       @stack('modals')
       @include('shared.pwa-install-prompt')
       <!-- ======================== SCRIPTS ======================== -->
-      <!-- jQuery -->
-      <script src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
-      <!-- Bootstrap 5 -->
       <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       <script src="{{ asset('js/admin-ui.js?v=1') }}"></script>
       @include('shared.partials.flash-modal')
-      <!-- AOS -->
-      <script src="{{ asset('js/aos.js') }}"></script>
-      <!-- Swiper -->
+      @if (request()->routeIs('admin.dashboard', 'admin.categories.details'))
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
-      <!-- CounterUp -->
-      <script src="{{ asset('js/jquery.magnific-popup.min.js') }}"></script>
+      @endif
       <!-- Main js -->
       <script src="{{ asset('js/main.js?v=7') }}"></script>
       <!-- PWA Service Worker Registration -->

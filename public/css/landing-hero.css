@@ -1,5 +1,60 @@
 /* ======================== LANDING HERO POLISH ======================== */
 
+#landing #hero .hero-video-stage {
+   position: relative;
+}
+
+#landing #hero .hero-video-play {
+   position: absolute;
+   inset: 0;
+   display: grid;
+   place-items: center;
+   width: 100%;
+   padding: 16px;
+   border: 0;
+   border-radius: 10px;
+   background: transparent;
+   color: #ffffff;
+   cursor: pointer;
+}
+
+#landing #hero .hero-video-play[hidden] {
+   display: none;
+}
+
+#landing #hero .hero-video-play-content {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   padding: 12px 18px;
+   border: 1px solid rgba(255, 255, 255, 0.32);
+   border-radius: 999px;
+   background: rgba(3, 15, 38, 0.82);
+   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+   font-size: clamp(0.72rem, 1.5vw, 0.92rem);
+   font-weight: 800;
+   line-height: 1;
+   transition: transform 180ms ease, background 180ms ease;
+}
+
+#landing #hero .hero-video-play:hover .hero-video-play-content,
+#landing #hero .hero-video-play:focus-visible .hero-video-play-content {
+   transform: scale(1.05);
+   background: rgba(22, 62, 119, 0.94);
+}
+
+#landing #hero .hero-video-play:focus-visible {
+   outline: 3px solid #fbbf24;
+   outline-offset: 3px;
+}
+
+@media (max-width: 575.98px) {
+   #landing #hero .hero-video-play-content {
+      gap: 8px;
+      padding: 9px 12px;
+   }
+}
+
 /* Keep the homepage hero clean and theme-safe. The earlier hero surface used
    a grid texture that competed with the message and wrapped product preview. */
 #landing #hero {

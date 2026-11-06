@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.css?v=57') }}" data-page-style="dashboard-v57">
+<link rel="stylesheet" href="{{ asset('css/mobile/dashboard.min.css') }}?v={{ filemtime(public_path('css/mobile/dashboard.min.css')) }}" data-page-style="dashboard-v57">
 @endpush
 
 @section('content')

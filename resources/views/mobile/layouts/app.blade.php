@@ -43,7 +43,7 @@
       <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"></noscript>
       <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet"/>
       <link rel="stylesheet" href="{{ asset('css/all.min.css') }}">
-      <link rel="stylesheet" href="{{ asset('css/mobile/style.css?v=36') }}" />
+      <link rel="stylesheet" href="{{ asset('css/mobile/style.min.css') }}?v={{ filemtime(public_path('css/mobile/style.min.css')) }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/system-feedback.css?v=1') }}" />
       <link rel="stylesheet" href="{{ asset('css/shared/user-font-size.css?v=2') }}" />
       <script src="{{ asset('js/font-size-boot.js?v=2') }}"></script>
