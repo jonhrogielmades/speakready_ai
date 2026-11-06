@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Category;
 use App\Models\GameLevel;
+use App\Models\Profile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -317,7 +318,7 @@ class LearningChallengeGenerationService
 
  $gameData['required_score'] = max(0, min(100, (int) ($gameData['required_score']?? $fallback['required_score'])));
  $gameData['xp_reward'] = max(0, (int) ($gameData['xp_reward']?? $fallback['xp_reward']));
- $gameData['energy_cost'] = max(0, (int) ($gameData['energy_cost']?? $fallback['energy_cost']));
+ $gameData['energy_cost'] = max(1, min(Profile::MAX_ENERGY, (int) ($gameData['energy_cost']?? $fallback['energy_cost'])));
  $gameData['time_limit_seconds'] = isset($gameData['time_limit_seconds'])? max(0, (int) $gameData['time_limit_seconds']): null;
  $gameData['skill_xp_amount'] = max(0, (int) ($gameData['skill_xp_amount']?? $fallback['skill_xp_amount']));
 

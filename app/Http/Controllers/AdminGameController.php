@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GameLevel;
 use App\Models\Category;
+use App\Models\Profile;
 use App\Services\AIService;
 use App\Services\UserContentUpdateNotificationService;
 use Illuminate\Http\Request;
@@ -288,7 +289,7 @@ class AdminGameController extends Controller
  'difficulty' => ['required', Rule::in(['beginner', 'intermediate', 'advanced'])],
  'required_score' => 'required|integer|min:0|max:100',
  'xp_reward' => 'required|integer|min:0|max:1000000',
- 'energy_cost' => 'required|integer|min:0|max:1000',
+ 'energy_cost' => 'required|integer|min:1|max:'.Profile::MAX_ENERGY,
  'ai_persona' => 'nullable|string|max:255',
  'ai_custom_prompt' => 'nullable|string|max:10000',
  'time_limit_seconds' => 'nullable|integer|min:0|max:86400',
@@ -346,7 +347,7 @@ class AdminGameController extends Controller
 
  $gameData['required_score'] = max(0, min(100, (int) ($gameData['required_score']?? $fallback['required_score'])));
  $gameData['xp_reward'] = max(0, (int) ($gameData['xp_reward']?? $fallback['xp_reward']));
- $gameData['energy_cost'] = max(0, (int) ($gameData['energy_cost']?? $fallback['energy_cost']));
+ $gameData['energy_cost'] = max(1, min(Profile::MAX_ENERGY, (int) ($gameData['energy_cost']?? $fallback['energy_cost'])));
  $gameData['time_limit_seconds'] = isset($gameData['time_limit_seconds'])? max(0, (int) $gameData['time_limit_seconds']): null;
  $gameData['skill_xp_amount'] = max(0, (int) ($gameData['skill_xp_amount']?? $fallback['skill_xp_amount']));
 

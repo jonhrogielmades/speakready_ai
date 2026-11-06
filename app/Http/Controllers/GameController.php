@@ -79,6 +79,19 @@ class GameController extends Controller
 
  $level = GameLevel::with('category')->findOrFail($id);
  $user = Auth::user();
+ $resumeSession = GameSession::where('user_id', $user->id)
+ ->where('game_level_id', $level->id)
+ ->where('status', 'in_progress')
+ ->latest('id')
+ ->first();
+ if ($resumeSession) {
+ session([
+ 'game_level_id' => $resumeSession->game_level_id,
+ 'active_game_session_id' => $resumeSession->id,
+ ]);
+
+ return redirect()->route('user.game.match')->with('success', 'Your active Learning Game is ready to continue.');
+ }
  $profile = Profile::forUser((int) $user->id);
 
  if (! $level->category || $level->category->status!== 'active' || $level->category->type!== 'game') {
@@ -100,7 +113,7 @@ class GameController extends Controller
  return back()->with('error', 'Only Levels 1-'.ChallengePositionService::JOURNEY_MAX_LEVEL_NUMBER.' are available in the Challenge Journey.');
  }
 
- $this->refreshEnergyIfNeeded($profile);
+ $profile->refreshChallengeLivesIfNeeded();
 
  // Check if level is locked (Sequential Locking by Category)
  $status = 'locked';
@@ -152,9 +165,8 @@ class GameController extends Controller
  $progress->update(['status' => 'active']);
  }
 
- // Energy debit and active-session selection are performed again under a row
- // lock below.  This closes the double-click/racing-start window.
- $energyCost = $this->effectiveGameEnergyCost($level, $profile);
+ // Energy debit and active-session selection are performed under a row lock
+ // below. This closes the double-click/racing-start window.
 
  // Combine mission text, learning goal, and custom prompt for game-mode coaching.
  $interviewFocus = trim((string) $level->mission_text);
@@ -187,13 +199,13 @@ class GameController extends Controller
  $timeLimit += 30;
  }
 
- $startResult = DB::transaction(function () use ($user, $level, $profile, $energyCost, $questions, $interviewFocus, $timeLimit, $languageConfig): array {
+ $startResult = DB::transaction(function () use ($user, $level, $profile, $questions, $interviewFocus, $timeLimit, $languageConfig): array {
  $lockedProfile = Profile::whereKey($profile->id)->lockForUpdate()->first();
  if (! $lockedProfile) {
  return ['error' => 'profile_missing'];
  }
 
- $this->refreshEnergyIfNeeded($lockedProfile);
+ $lockedProfile->refreshChallengeLivesIfNeeded();
  $activeSession = GameSession::where('user_id', $user->id)
  ->where(function ($query): void {
  $query->where('status', 'in_progress')->orWhere('status', 'like', 'finishing:%');
@@ -211,6 +223,7 @@ class GameController extends Controller
  return ['session' => $activeSession, 'existing' => true];
  }
 
+ $energyCost = $this->effectiveGameEnergyCost($level, $lockedProfile);
  if ($lockedProfile->energy < $energyCost) {
  return ['error' => 'energy'];
  }
@@ -243,7 +256,7 @@ class GameController extends Controller
  }, 3);
 
  if (($startResult['error']?? null) === 'energy') {
- return back()->with('error', 'Not enough energy to start this challenge. Your energy refills daily.');
+ return back()->with('error', 'Not enough lives to start this challenge. Your lives reset every 24 hours.');
  }
  if (($startResult['error']?? null) === 'finalizing') {
  return back()->with('error', 'Your previous challenge is still being scored. Please try again shortly.');
@@ -278,31 +291,6 @@ class GameController extends Controller
  );
 
  return redirect()->route('user.game.match')->with('success', 'Learning Game Started! Good luck!');
- }
-
- private function refreshEnergyIfNeeded(Profile $profile): void
- {
- if (Profile::challengeLivesAreUnlimited()) {
- return;
- }
-
- $maxEnergy = Profile::MAX_ENERGY;
- $lastRefill = $profile->energy_last_refilled_at;
- $currentEnergy = (int) ($profile->energy?? 0);
- $cappedEnergy = max(0, min($currentEnergy, $maxEnergy));
-
- if ($lastRefill && $lastRefill->isSameDay(now())) {
- if ($currentEnergy!== $cappedEnergy) {
- $profile->energy = $cappedEnergy;
- $profile->save();
- }
-
- return;
- }
-
- $profile->energy = $maxEnergy;
- $profile->energy_last_refilled_at = now();
- $profile->save();
  }
 
  public function arenaSession(Request $request)
@@ -1967,6 +1955,7 @@ class GameController extends Controller
  private function gameResultPayload(GameSession $gameSession, GameLevel $gameLevel): array
  {
  $profile = Profile::forUser((int) Auth::id());
+ $profile->refreshChallengeLivesIfNeeded();
  $progress = GameProgress::where('user_id', Auth::id())
  ->where('game_level_id', $gameLevel->id)
  ->first();
@@ -2015,7 +2004,7 @@ class GameController extends Controller
  'xp_earned' => (int) ($gameSession->xp_earned?? 0),
  'skill_xp_type' => $gameLevel->skill_xp_type,
  'skill_xp_amount' => (int) data_get($gameSession->goal_breakdown, 'skill_xp_awarded', 0),
- 'energy_spent' => Profile::challengeLivesAreUnlimited()? 0: (int) ($gameSession->energy_spent?? $this->effectiveGameEnergyCost($gameLevel, $profile)),
+ 'energy_spent' => (int) ($gameSession->energy_spent?? $this->effectiveGameEnergyCost($gameLevel, $profile)),
  'energy_remaining' => (int) ($profile->energy?? 0),
  'retry_hint' => $gameLevel->retry_hint,
  'retry_energy_cost' => $this->effectiveGameEnergyCost($gameLevel, $profile),
@@ -2040,17 +2029,7 @@ class GameController extends Controller
 
  private function effectiveGameEnergyCost(GameLevel $level, Profile $profile): int
  {
- if (Profile::challengeLivesAreUnlimited()) {
- return 0;
- }
-
- $energyCost = (int) ($level->energy_cost?? 0);
-
- if ($profile->hasPerk('energy_efficiency')) {
- $energyCost = max(0, $energyCost - 1);
- }
-
- return $energyCost;
+ return $profile->challengeEnergyCost($level);
  }
 
  private function previousChallengeLevelFor(GameLevel $level):?GameLevel

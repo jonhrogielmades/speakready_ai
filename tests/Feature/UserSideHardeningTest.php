@@ -3416,7 +3416,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('possible AI-generated answer pattern detected', $answer->flagged_reason);
  }
 
- public function test_game_start_allows_empty_energy_while_challenge_lives_are_unlimited(): void
+ public function test_game_start_rejects_empty_lives_before_twenty_four_hours(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  Profile::create([
@@ -3430,20 +3430,15 @@ class UserSideHardeningTest extends TestCase
  $this->actingAs($user)
  ->from(route('user.learning', ['category_id' => $category->id]))
  ->post(route('user.game.start', $level))
- ->assertRedirect(route('user.game.match'));
+ ->assertRedirect(route('user.learning', ['category_id' => $category->id]))
+ ->assertSessionHas('error');
 
- $this->assertDatabaseHas('game_sessions', [
- 'user_id' => $user->id,
- 'game_level_id' => $level->id,
- 'status' => 'in_progress',
- 'energy_spent' => 0,
- 'energy_remaining' => 0,
- ]);
+ $this->assertDatabaseCount('game_sessions', 0);
  $this->assertDatabaseCount('interview_sessions', 0);
  $this->assertSame(0, Profile::where('user_id', $user->id)->first()->energy);
  }
 
- public function test_game_start_does_not_refill_or_consume_energy_while_challenge_lives_are_unlimited(): void
+ public function test_game_start_refills_lives_after_twenty_four_hours_and_spends_one(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  Profile::create([
@@ -3458,18 +3453,20 @@ class UserSideHardeningTest extends TestCase
  ->post(route('user.game.start', $level))
  ->assertRedirect(route('user.game.match'));
 
- $this->assertSame(0, Profile::where('user_id', $user->id)->first()->energy);
+ $profile = Profile::where('user_id', $user->id)->firstOrFail();
+ $this->assertSame(2, $profile->energy);
+ $this->assertTrue($profile->energy_last_refilled_at->isSameSecond(now()));
  $this->assertDatabaseHas('game_sessions', [
  'user_id' => $user->id,
  'game_level_id' => $level->id,
  'status' => 'in_progress',
- 'energy_spent' => 0,
- 'energy_remaining' => 0,
+ 'energy_spent' => 1,
+ 'energy_remaining' => 2,
  ]);
  $this->assertDatabaseCount('interview_sessions', 0);
  }
 
- public function test_learning_shows_unlimited_lives_without_capping_existing_energy(): void
+ public function test_learning_shows_three_lives_and_caps_existing_energy(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  Profile::create([
@@ -3483,10 +3480,221 @@ class UserSideHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.learning', ['category_id' => $category->id]))
  ->assertOk()
- ->assertSee('Unlimited Lives')
- ->assertDontSee('3 / 3 Lives');
+ ->assertSee('3/3 Lives')
+ ->assertDontSee('Unlimited Lives');
 
- $this->assertSame(20, Profile::where('user_id', $user->id)->first()->energy);
+ $this->assertSame(3, Profile::where('user_id', $user->id)->first()->energy);
+ }
+
+ public function test_challenge_start_is_disabled_when_life_cost_exceeds_available_lives(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Profile::create([
+ 'user_id' => $user->id,
+ 'energy' => 1,
+ 'energy_last_refilled_at' => now(),
+ ]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category, ['energy_cost' => 2]);
+
+ foreach (['Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148'] as $userAgent) {
+ $response = $this->actingAs($user)
+ ->withHeader('User-Agent', $userAgent)
+ ->get(route('user.learning', ['category_id' => $category->id]));
+ $response->assertOk()->assertSee('1/3 Lives');
+
+ $dom = new \DOMDocument();
+ libxml_use_internal_errors(true);
+ $dom->loadHTML($response->getContent());
+ libxml_clear_errors();
+ $xpath = new \DOMXPath($dom);
+ $button = $xpath->query('//form[@action="'.route('user.game.start', $level->id).'"]//button[contains(concat(" ", normalize-space(@class), " "), " start-challenge-btn ")]')->item(0);
+ $this->assertNotNull($button);
+ $this->assertTrue($button->hasAttribute('disabled'));
+ $note = $xpath->query('//*[contains(concat(" ", normalize-space(@class), " "), " challenge-lives-unavailable ")]')->item(0);
+ $this->assertNotNull($note);
+ $this->assertStringContainsString('reset every 24 hours', strtolower($note->textContent));
+ }
+ }
+
+ public function test_in_progress_challenge_can_resume_with_zero_lives_without_another_charge(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $profile = Profile::create([
+ 'user_id' => $user->id,
+ 'energy' => 0,
+ 'energy_last_refilled_at' => now(),
+ ]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category);
+ $session = GameSession::create([
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'status' => 'in_progress',
+ 'num_questions' => 1,
+ 'questions' => ['Tell me about yourself.'],
+ 'response_mode' => 'hybrid',
+ 'energy_spent' => 1,
+ 'energy_remaining' => 0,
+ 'started_at' => now(),
+ ]);
+
+ foreach (['Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148'] as $userAgent) {
+ $response = $this->actingAs($user)
+ ->withHeader('User-Agent', $userAgent)
+ ->get(route('user.learning', ['category_id' => $category->id]));
+ $response->assertOk()->assertSee('0/3 Lives');
+
+ $dom = new \DOMDocument();
+ libxml_use_internal_errors(true);
+ $dom->loadHTML($response->getContent());
+ libxml_clear_errors();
+ $xpath = new \DOMXPath($dom);
+ $resumeForm = $xpath->query('//form[contains(concat(" ", normalize-space(@class), " "), " challenge-resume-form ")]')->item(0);
+ $this->assertNotNull($resumeForm);
+ $this->assertSame(route('user.game.start', $level->id), $resumeForm->getAttribute('action'));
+ $resumeButton = $xpath->query('./button', $resumeForm)->item(0);
+ $this->assertNotNull($resumeButton);
+ $this->assertFalse($resumeButton->hasAttribute('disabled'));
+ $this->assertStringContainsString('Resume Challenge', $resumeButton->textContent);
+ $cardButton = $xpath->query('//form[@action="'.route('user.game.start', $level->id).'" and @data-sr-loader-label="'.$level->title.'"]//button[contains(concat(" ", normalize-space(@class), " "), " start-challenge-btn ")]')->item(0);
+ $this->assertNotNull($cardButton);
+ $this->assertTrue($cardButton->hasAttribute('disabled'));
+ }
+
+ $this->actingAs($user)
+ ->post(route('user.game.start', $level))
+ ->assertRedirect(route('user.game.match'))
+ ->assertSessionHas('active_game_session_id', $session->id);
+ $this->assertDatabaseCount('game_sessions', 1);
+ $this->assertSame(0, $profile->fresh()->energy);
+ }
+
+ public function test_lives_do_not_refill_at_midnight_before_twenty_four_hours_elapsed(): void
+ {
+ $this->travelTo(\Illuminate\Support\Carbon::parse('2026-11-06 00:01:00'));
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $profile = Profile::create([
+ 'user_id' => $user->id,
+ 'energy' => 0,
+ 'energy_last_refilled_at' => now()->subMinutes(2),
+ ]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category);
+
+ $this->actingAs($user)
+ ->get(route('user.learning', ['category_id' => $category->id]))
+ ->assertOk()
+ ->assertSee('0/3 Lives');
+ $this->assertSame(0, $profile->fresh()->energy);
+
+ $this->travelTo(now()->addHours(23)->addMinutes(57));
+ $this->actingAs($user)
+ ->from(route('user.learning', ['category_id' => $category->id]))
+ ->post(route('user.game.start', $level))
+ ->assertRedirect(route('user.learning', ['category_id' => $category->id]))
+ ->assertSessionHas('error');
+ $this->assertSame(0, $profile->fresh()->energy);
+
+ $this->travelTo(now()->addMinute());
+ $this->actingAs($user)
+ ->get(route('user.learning', ['category_id' => $category->id]))
+ ->assertOk()
+ ->assertSee('3/3 Lives');
+ $profile->refresh();
+ $this->assertSame(3, $profile->energy);
+ $this->assertTrue($profile->energy_last_refilled_at->isSameSecond(now()));
+ }
+
+ public function test_three_challenge_starts_spend_all_lives_and_block_the_fourth(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $profile = Profile::create([
+ 'user_id' => $user->id,
+ 'energy' => Profile::MAX_ENERGY,
+ 'energy_last_refilled_at' => now(),
+ ]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category);
+
+ for ($attempt = 1; $attempt <= Profile::MAX_ENERGY; $attempt++) {
+ $this->actingAs($user)
+ ->post(route('user.game.start', $level))
+ ->assertRedirect(route('user.game.match'));
+
+ $this->assertSame(Profile::MAX_ENERGY - $attempt, $profile->fresh()->energy);
+ $this->assertDatabaseHas('game_sessions', [
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'energy_spent' => 1,
+ 'energy_remaining' => Profile::MAX_ENERGY - $attempt,
+ ]);
+ GameSession::where('user_id', $user->id)->where('status', 'in_progress')->update(['status' => 'completed']);
+ }
+
+ $this->actingAs($user)
+ ->from(route('user.learning', ['category_id' => $category->id]))
+ ->post(route('user.game.start', $level))
+ ->assertRedirect(route('user.learning', ['category_id' => $category->id]))
+ ->assertSessionHas('error');
+ $this->assertSame(3, GameSession::where('user_id', $user->id)->count());
+ $this->assertSame(0, $profile->fresh()->energy);
+ }
+
+ public function test_energy_efficiency_perk_still_spends_one_life_on_one_cost_challenge(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $profile = Profile::create([
+ 'user_id' => $user->id,
+ 'energy' => Profile::MAX_ENERGY,
+ 'energy_last_refilled_at' => now(),
+ 'unlocked_perks' => ['energy_efficiency'],
+ ]);
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category, ['energy_cost' => 1]);
+
+ $this->actingAs($user)
+ ->post(route('user.game.start', $level))
+ ->assertRedirect(route('user.game.match'));
+
+ $this->assertSame(2, $profile->fresh()->energy);
+ $this->assertDatabaseHas('game_sessions', [
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'energy_spent' => 1,
+ 'energy_remaining' => 2,
+ ]);
+ }
+
+ public function test_two_cost_challenge_uses_two_lives_or_one_with_energy_efficiency(): void
+ {
+ $category = $this->category(['type' => 'game']);
+ $level = $this->gameLevel($category, ['energy_cost' => 2]);
+
+ foreach ([
+ ['perks' => [], 'cost' => 2],
+ ['perks' => ['energy_efficiency'], 'cost' => 1],
+ ] as $case) {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $profile = Profile::create([
+ 'user_id' => $user->id,
+ 'energy' => Profile::MAX_ENERGY,
+ 'energy_last_refilled_at' => now(),
+ 'unlocked_perks' => $case['perks'],
+ ]);
+
+ $this->actingAs($user)
+ ->post(route('user.game.start', $level))
+ ->assertRedirect(route('user.game.match'));
+
+ $this->assertSame(Profile::MAX_ENERGY - $case['cost'], $profile->fresh()->energy);
+ $this->assertDatabaseHas('game_sessions', [
+ 'user_id' => $user->id,
+ 'game_level_id' => $level->id,
+ 'energy_spent' => $case['cost'],
+ 'energy_remaining' => Profile::MAX_ENERGY - $case['cost'],
+ ]);
+ }
  }
 
  public function test_game_start_repairs_missing_game_session_tables_before_insert(): void
@@ -3703,8 +3911,8 @@ class UserSideHardeningTest extends TestCase
  && $result['level_id'] === $level->id
  && $result['status'] === 'passed'
  && $result['required_score'] === 0
- && $result['energy_spent'] === 0
- && $result['energy_remaining'] === Profile::MAX_ENERGY
+ && $result['energy_spent'] === 1
+ && $result['energy_remaining'] === Profile::MAX_ENERGY - 1
  && $result['xp_earned'] === 125
  &&! empty($result['certificate']['download_url']);
  });

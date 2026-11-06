@@ -16,6 +16,7 @@
  $challengePositionValue = old('target_position', $selectedChallengePosition);
  $showPositionModal = (bool) ($showPositionModal?? false);
  $usingGeneralChallengeFallback = (bool) ($usingGeneralChallengeFallback?? false);
+ $activeGameSession = $activeGameSession?? null;
 @endphp
 
 <div class="db-section active" id="learning-games-page">
@@ -81,7 +82,6 @@
  
  <!-- Energy/Lives -->
  @php
- $hasUnlimitedLives = \App\Models\Profile::challengeLivesAreUnlimited();
  $maxEnergy = \App\Models\Profile::MAX_ENERGY;
  $currentEnergy = max(0, min((int) ($profile?->energy?? $maxEnergy), $maxEnergy));
  @endphp
@@ -91,8 +91,9 @@
  <i class="fa-solid fa-heart"></i>
  </div>
  <div style="text-align:left;">
- <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">@if($hasUnlimitedLives) Unlimited @else {{ $currentEnergy }} <span style="font-size:1rem; color:var(--tx3);">/ {{ $maxEnergy }}</span> @endif</div>
+ <div class="ll-stat-val" style="font-size:1.5rem; margin:0; font-weight:800;">{{ $currentEnergy }}<span style="font-size:1rem; color:var(--tx3);">/{{ $maxEnergy }}</span></div>
  <div style="font-size:0.8rem; color:var(--tx3); font-weight:700; text-transform:uppercase">Lives</div>
+ <div style="font-size:0.72rem; color:var(--tx3);">Resets every 24 hours</div>
  </div>
  </div>
  </div>
@@ -152,9 +153,18 @@
  <h5 class="journey-title" style="margin:0">Challenge Journey</h5>
  <div class="journey-header-actions">
  <a id="btn-skill-tree" href="{{ route('user.skills') }}" class="btn btn-sm journey-skill-tree-btn d-inline-flex align-items-center justify-content-center"><i class="fa-solid fa-tree me-1"></i> <span>Skill Tree</span></a>
- <span class="badge journey-lives"><i class="fa-solid fa-heart me-1" style="color:#ef4444"></i> @if($hasUnlimitedLives) Unlimited Lives @else {{ $currentEnergy }} / {{ $maxEnergy }} Lives @endif</span>
+ <span class="badge journey-lives" title="Lives reset every 24 hours"><i class="fa-solid fa-heart me-1" style="color:#ef4444"></i> {{ $currentEnergy }}/{{ $maxEnergy }} Lives</span>
  </div>
  </div>
+ @if($activeGameSession)
+ <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 p-3 rounded border">
+ <span>Challenge in progress</span>
+ <form action="{{ route('user.game.start', $activeGameSession->game_level_id) }}" method="POST" class="start-challenge-form challenge-resume-form" data-sr-related-loader-form="challenge-start" data-sr-loader-label="Resume Challenge">
+ @csrf
+ <button type="submit" class="btn btn-sm btn-primary"><i class="fa-solid fa-play me-1"></i> Resume Challenge</button>
+ </form>
+ </div>
+ @endif
 
  <div class="level-path-container" id="modules-list">
  @if(session('error') &&! $gameResult)
@@ -313,6 +323,7 @@
  @endif
 
  @if($status === 'active' || $status === 'locked')
+ @php $levelCost = $profile->challengeEnergyCost($level); @endphp
  <div class="active-challenge-panel" style="background:var(--bg3);border-radius:10px;padding:15px;margin-bottom:20px;border:1px solid var(--bd)">
  <div style="font-size:0.85rem;color:var(--tx2);font-weight:600;margin-bottom:5px"><i class="fa-solid fa-list-check me-1 text-info"></i> Contains {{ count($level->parsed_questions) }} Questions</div>
  @if($successChecklist)
@@ -326,13 +337,18 @@
  @if($score > 0 &&! $isCompleted)
  <div style="margin-top:12px;font-size:0.78rem;color:#f59e0b;font-weight:700;"><i class="fa-solid fa-arrow-trend-up me-1"></i> Best attempt: {{ $score }}%</div>
  @endif
- <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $hasUnlimitedLives? 'Free': $level->energy_cost.' Energy' }}</div>
+ <div style="margin-top:10px; font-size:0.75rem; color:var(--tx3);"><i class="fa-solid fa-heart text-danger"></i> Cost: {{ $levelCost }} {{ $levelCost === 1 ? 'Life' : 'Lives' }}</div>
  </div>
  @if($status === 'active')
  <form action="{{ route('user.game.start', $level->id) }}" method="POST" class="start-challenge-form" data-sr-related-loader-form="challenge-start" data-sr-loader-label="{{ $level->title }}">
  @csrf
- <button type="submit" class="btn btn-shine start-challenge-btn" style="background:var(--dash-primary, #60a5fa);color:#fff;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);border-radius:12px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
+ <button type="submit" class="btn btn-shine start-challenge-btn" @disabled($activeGameSession || $currentEnergy < $levelCost) style="background:var(--dash-primary, #60a5fa);color:#fff;border:none;box-shadow:0 4px 15px rgba(96,165,250,0.4);border-radius:12px;font-weight:600;padding:10px 25px"><i class="fa-solid fa-play me-2"></i> Start Challenge</button>
  </form>
+ @if($activeGameSession)
+ <div class="mt-2" style="font-size:0.8rem;color:var(--tx2);">Finish your current challenge first.</div>
+ @elseif($currentEnergy < $levelCost)
+ <div class="challenge-lives-unavailable mt-2" style="font-size:0.8rem;color:var(--tx2);">Not enough lives. Lives reset every 24 hours.</div>
+ @endif
  @else
  <div class="start-challenge-form locked-start-challenge-form">
  <button type="button" class="btn btn-shine start-challenge-btn locked-start-challenge-btn" disabled aria-disabled="true" style="background:#94a3b8;color:#fff;border:none;box-shadow:none;border-radius:12px;font-weight:600;padding:10px 25px;cursor:not-allowed"><i class="fa-solid fa-lock me-2"></i> Start Challenge</button>
@@ -565,7 +581,7 @@
  <div class="col-6 col-md-3">
  <div class="game-result-stat">
  <div class="game-result-stat-label">Lives</div>
- <div class="game-result-stat-value">@if($hasUnlimitedLives) Unlimited @else -{{ $gameResult['energy_spent']?? 0 }} <span style="font-size:0.82rem;color:var(--tx3);">left {{ $gameResult['energy_remaining']?? 0 }}</span> @endif</div>
+ <div class="game-result-stat-value">-{{ $gameResult['energy_spent']?? 0 }} <span style="font-size:0.82rem;color:var(--tx3);">{{ $gameResult['energy_remaining']?? 0 }}/{{ $maxEnergy }} left</span></div>
  </div>
  </div>
  <div class="col-6 col-md-3">
@@ -579,13 +595,13 @@
  @if(! $resultPassed)
  <div class="mb-4" style="border:1px solid rgba(245,158,11,0.28);background:rgba(245,158,11,0.08);border-radius:12px;padding:14px;color:var(--tx2);">
  <strong style="color:#f59e0b;">{{ $gameResult['points_to_goal']?? 0 }} more point{{ (int)($gameResult['points_to_goal']?? 0) === 1? '': 's' }} needed.</strong>
- @if($hasUnlimitedLives) Retry starts a fresh attempt. @else Retry starts a fresh attempt and costs {{ $gameResult['retry_energy_cost']?? 0 }} energy. @endif
+ Retry starts a fresh attempt and costs {{ $gameResult['retry_energy_cost']?? 0 }} {{ (int) ($gameResult['retry_energy_cost']?? 0) === 1 ? 'life' : 'lives' }}.
  </div>
  @elseif($nextLevel)
  <div class="mb-4" style="border:1px solid rgba(52,211,153,0.28);background:rgba(52,211,153,0.08);border-radius:12px;padding:14px;color:var(--tx2);">
  <strong style="color:#10b981;">Next level unlocked:</strong>
  Level {{ $nextLevel['level_number']?? '' }} - {{ $nextLevel['title']?? 'Next Challenge' }}.
- @if($hasUnlimitedLives) Starting it is free. @else Starting it costs {{ $nextLevel['energy_cost']?? 0 }} energy. @endif
+ Starting it costs {{ $nextLevel['energy_cost']?? 0 }} {{ (int) ($nextLevel['energy_cost']?? 0) === 1 ? 'life' : 'lives' }}.
  </div>
  @elseif($resultPassed)
  <div class="mb-4" style="border:1px solid rgba(52,211,153,0.28);background:rgba(52,211,153,0.08);border-radius:12px;padding:14px;color:var(--tx2);">
@@ -731,7 +747,7 @@
  </div>
  @if(($resultPassed && $nextLevel && empty($nextLevel['can_start'])) || (! $resultPassed && empty($gameResult['can_retry'])))
  <div class="w-100 mt-2" style="font-size:0.82rem;color:#ef4444;text-align:right;">
- <i class="fa-solid fa-heart-crack me-1"></i>Not enough energy. Energy refills daily.
+ <i class="fa-solid fa-heart-crack me-1"></i>Not enough lives. Lives reset every 24 hours.
  </div>
  @endif
  </div>

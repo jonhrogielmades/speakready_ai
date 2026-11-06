@@ -5510,6 +5510,7 @@ return response()->json([
  array $context = []
  ): array {
  $profile = Profile::forUser((int) Auth::id());
+ $profile->refreshChallengeLivesIfNeeded();
  $progress = GameProgress::where('user_id', Auth::id())
  ->where('game_level_id', $gameLevel->id)
  ->first();
@@ -5536,7 +5537,7 @@ return response()->json([
  }
  }
 
- $energySpent = Profile::challengeLivesAreUnlimited()? 0: ($context['energy_spent']?? $this->effectiveGameEnergyCost($gameLevel, $profile));
+ $energySpent = $context['energy_spent']?? $this->effectiveGameEnergyCost($gameLevel, $profile);
  $retryEnergyCost = $this->effectiveGameEnergyCost($gameLevel, $profile);
  $nextEnergyCost = $nextLevel? $this->effectiveGameEnergyCost($nextLevel, $profile): null;
  $energyRemaining = (int) ($profile->energy?? 0);
@@ -5579,17 +5580,7 @@ return response()->json([
 
  private function effectiveGameEnergyCost(GameLevel $level, Profile $profile): int
  {
- if (Profile::challengeLivesAreUnlimited()) {
- return 0;
- }
-
- $energyCost = (int) ($level->energy_cost?? 0);
-
- if ($profile->hasPerk('energy_efficiency')) {
- $energyCost = max(0, $energyCost - 1);
- }
-
- return $energyCost;
+ return $profile->challengeEnergyCost($level);
  }
 
  private function nextChallengeLevelFor(GameLevel $level):?GameLevel

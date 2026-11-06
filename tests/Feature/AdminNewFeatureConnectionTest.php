@@ -34,6 +34,28 @@ class AdminNewFeatureConnectionTest extends TestCase
             ->assertDontSee('Hidden Draft Challenge');
     }
 
+    public function test_admin_challenge_cost_must_fit_within_three_lives(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+        $category = $this->category(['type' => 'game']);
+
+        foreach ([0, 4] as $invalidCost) {
+            $this->actingAs($admin)
+                ->post(route('admin.game.store'), $this->gamePayload($category, ['energy_cost' => $invalidCost]))
+                ->assertSessionHasErrors('energy_cost');
+        }
+        $this->assertDatabaseCount('game_levels', 0);
+
+        $this->actingAs($admin)
+            ->post(route('admin.game.store'), $this->gamePayload($category, ['energy_cost' => 1]))
+            ->assertRedirect(route('admin.game'))
+            ->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('game_levels', [
+            'category_id' => $category->id,
+            'energy_cost' => 1,
+        ]);
+    }
+
     public function test_admin_settings_toggles_are_enforced_on_user_features(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);

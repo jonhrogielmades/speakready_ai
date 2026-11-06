@@ -12,6 +12,7 @@ use App\Models\ChatbotMessage;
 use App\Models\Feedback;
 use App\Models\GameLevel;
 use App\Models\GameProgress;
+use App\Models\GameSession;
 use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\LearningProgress;
@@ -126,7 +127,7 @@ class UserController extends Controller
  private const SKILL_PERKS = [
  'energy_efficiency' => [
  'name' => 'Energy Efficiency',
- 'description' => 'Reduces the energy cost of all Interview Challenges by 1.',
+ 'description' => 'Reduces Interview Challenge life costs by 1, to a minimum of 1 life.',
  'cost' => 500,
  'type' => 'leadership',
  'icon' => 'fa-bolt',
@@ -3863,7 +3864,7 @@ class UserController extends Controller
 
  $user = Auth::user();
  $profile = $user->profile()->firstOrCreate([]);
- $this->refreshChallengeEnergyIfNeeded($profile);
+ $profile->refreshChallengeLivesIfNeeded();
 
  $categories = Category::where('status', 'active')
  ->where('type', 'game')
@@ -3915,12 +3916,17 @@ class UserController extends Controller
  );
 
  $gameProgress = GameProgress::where('user_id', $user->id)->get()->keyBy('game_level_id');
+ $activeGameSession = GameSession::where('user_id', $user->id)
+ ->where('status', 'in_progress')
+ ->latest('id')
+ ->first();
  $selectedCategory = $requestedCategoryId!== null? $categories->firstWhere('id', $requestedCategoryId): null;
 
  return $this->mobileView('user.learning', compact(
  'profile',
  'gameLevels',
  'gameProgress',
+ 'activeGameSession',
  'categories',
  'selectedCategory',
  'selectedChallengePosition',
@@ -4011,31 +4017,6 @@ class UserController extends Controller
  }
 
  return $challengePositions->clean(Auth::user()->target_position?? null);
- }
-
- private function refreshChallengeEnergyIfNeeded(Profile $profile): void
- {
- if (Profile::challengeLivesAreUnlimited()) {
- return;
- }
-
- $maxEnergy = Profile::MAX_ENERGY;
- $lastRefill = $profile->energy_last_refilled_at;
- $currentEnergy = (int) ($profile->energy?? 0);
- $cappedEnergy = max(0, min($currentEnergy, $maxEnergy));
-
- if ($lastRefill && $lastRefill->isSameDay(now())) {
- if ($currentEnergy!== $cappedEnergy) {
- $profile->energy = $cappedEnergy;
- $profile->save();
- }
-
- return;
- }
-
- $profile->energy = $maxEnergy;
- $profile->energy_last_refilled_at = now();
- $profile->save();
  }
 
  public function learningAssistant()

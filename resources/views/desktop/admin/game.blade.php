@@ -344,7 +344,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-2">
                             <label class="olbl">Energy Cost</label>
-                            <input class="oinp w-100" type="number" name="energy_cost" value="{{ $level->energy_cost }}" min="0" required>
+                            <input class="oinp w-100" type="number" name="energy_cost" value="{{ max(1, min(3, (int) $level->energy_cost)) }}" min="1" max="3" required>
                         </div>
                         <div class="col-md-2">
                             <label class="olbl">General XP Reward</label>
@@ -554,7 +554,7 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-2">
                             <label class="olbl">Energy Cost</label>
-                            <input class="oinp w-100" type="number" name="energy_cost" value="1" min="0" required>
+                            <input class="oinp w-100" type="number" name="energy_cost" value="1" min="1" max="3" required>
                         </div>
                         <div class="col-md-2">
                             <label class="olbl">General XP Reward</label>

@@ -13,9 +13,6 @@ class Profile extends Model
 
     public const MAX_ENERGY = 3;
 
-    // Temporary Interview Challenges override. Flip this back to false to restore 3/3 lives.
-    public const UNLIMITED_CHALLENGE_LIVES = true;
-
     protected $fillable = [
         'user_id',
         'total_sessions',
@@ -68,9 +65,39 @@ class Profile extends Model
         return isset($columns[$column]);
     }
 
-    public static function challengeLivesAreUnlimited(): bool
+    public function refreshChallengeLivesIfNeeded(): void
     {
-        return self::UNLIMITED_CHALLENGE_LIVES;
+        DB::transaction(function (): void {
+            $profile = static::query()->whereKey($this->getKey())->lockForUpdate()->firstOrFail();
+            $now = now();
+            $currentEnergy = (int) ($profile->energy ?? 0);
+
+            if ($profile->energy_last_refilled_at?->gt($now->copy()->subHours(24))) {
+                $cappedEnergy = max(0, min($currentEnergy, self::MAX_ENERGY));
+                if ($currentEnergy !== $cappedEnergy) {
+                    $profile->energy = $cappedEnergy;
+                    $profile->save();
+                }
+
+                return;
+            }
+
+            $profile->energy = self::MAX_ENERGY;
+            $profile->energy_last_refilled_at = $now;
+            $profile->save();
+        });
+
+        $this->refresh();
+    }
+
+    public function challengeEnergyCost(GameLevel $level): int
+    {
+        $cost = (int) ($level->energy_cost ?? 0);
+        if ($this->hasPerk('energy_efficiency')) {
+            $cost--;
+        }
+
+        return max(1, min(self::MAX_ENERGY, $cost));
     }
 
     public static function forUser(int $userId): static
