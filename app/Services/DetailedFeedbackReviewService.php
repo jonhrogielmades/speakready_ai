@@ -138,7 +138,11 @@ class DetailedFeedbackReviewService
  }
 
  $summarySource = trim((string) data_get($session->feedback->coaching_summary?? [], 'overall_summary_source', ''));
- if ($summarySource !== 'ai_provider_validated') {
+ $repairedSummaryFields = (array) data_get($session->feedback->coaching_summary?? [], 'review_context.session_feedback_repaired_fields', []);
+ $summarySourceVerified = $summarySource === 'ai_provider_validated'
+ || ($summarySource === 'local_evidence_validated'
+ && in_array('overall_summary', $repairedSummaryFields, true));
+ if (! $summarySourceVerified) {
  return true;
  }
 
@@ -148,6 +152,17 @@ class DetailedFeedbackReviewService
  ''
  ));
  if ($validationStatus !== 'verified') {
+ return true;
+ }
+
+ // A verified report can still reflect an older scoring policy. Refresh it
+ // when the review rules change, even if its response schema is unchanged.
+ $storedPolicyVersion = (int) data_get(
+ $session->feedback->coaching_summary?? [],
+ 'review_context.review_policy_version',
+ 0
+ );
+ if ($storedPolicyVersion < AIService::REVIEW_POLICY_VERSION) {
  return true;
  }
 
@@ -327,7 +342,9 @@ class DetailedFeedbackReviewService
  $overallSummary = trim((string) ($sessionFeedback['overall_summary']?? ''));
  if ($overallSummary !== '') {
  $summary['overall_summary'] = Str::limit($overallSummary, 700, '');
- $summary['overall_summary_source'] = 'ai_provider_validated';
+ $summary['overall_summary_source'] = in_array('overall_summary', (array) ($reviewContext['session_feedback_repaired_fields']?? []), true)
+ ? 'local_evidence_validated'
+ : 'ai_provider_validated';
  }
 
  return $summary;
@@ -337,12 +354,18 @@ class DetailedFeedbackReviewService
  {
  return [
  'schema_version' => trim((string) ($reviewContext['schema_version']?? 'interview_feedback_v9')),
+ 'review_policy_version' => (int) ($reviewContext['review_policy_version']?? 0),
  'rubric_name' => trim((string) ($reviewContext['rubric_name']?? 'SpeakReady detailed interview feedback rubric')),
  'rubric_version' => trim((string) ($reviewContext['rubric_version']?? 'score-v'.TrustworthyAssessmentService::SCORE_VERSION)),
  'score_version' => (int) ($reviewContext['score_version']?? TrustworthyAssessmentService::SCORE_VERSION),
  'coaching_version' => (int) ($reviewContext['coaching_version']?? EvidenceBasedCoachingService::VERSION),
  'provider_key' => AIService::normalizeProviderKey($reviewContext['provider_key']?? null),
  'provider_source' => trim((string) ($reviewContext['provider_source']?? 'ai_provider')),
+ 'session_feedback_source' => trim((string) ($reviewContext['session_feedback_source']?? 'ai_provider')),
+ 'session_feedback_repaired_fields' => array_values((array) ($reviewContext['session_feedback_repaired_fields']?? [])),
+ 'coaching_repaired_answer_ids' => array_values((array) ($reviewContext['coaching_repaired_answer_ids']?? [])),
+ 'repair_strategy' => trim((string) ($reviewContext['repair_strategy']?? '')),
+ 'repair_scope' => trim((string) ($reviewContext['repair_scope']?? '')),
  'provider_confidence' => trim((string) ($reviewContext['provider_confidence']?? 'medium')),
  'insufficient_data' => (bool) ($reviewContext['insufficient_data']?? false),
  'evidence_policy' => trim((string) ($reviewContext['evidence_policy']?? 'Scores and comments use only saved answer evidence, the exact question, and explicit missing requirements.')),
@@ -441,11 +464,43 @@ class DetailedFeedbackReviewService
  }
 
  $minimumScoreableReliability = $scoreableReliabilities !== []? min($scoreableReliabilities): null;
+ $coachingRepairedIds = $feedback['_coaching_repaired_answer_ids']?? null;
+ $coachingRepairIdsValid = is_array($coachingRepairedIds)
+ && $coachingRepairedIds !== []
+ && array_is_list($coachingRepairedIds)
+ && count($coachingRepairedIds) === count(array_unique($coachingRepairedIds))
+ && array_diff($coachingRepairedIds, $expectedIds) === [];
+ $sessionFields = ['overall_summary', 'strengths', 'weaknesses', 'improvement_suggestions'];
+ $sessionRepairedFields = $feedback['_session_feedback_repaired_fields']?? null;
+ $sessionRepairFieldsValid = is_array($sessionRepairedFields)
+ && $sessionRepairedFields !== []
+ && array_is_list($sessionRepairedFields)
+ && count($sessionRepairedFields) === count(array_unique($sessionRepairedFields))
+ && array_diff($sessionRepairedFields, $sessionFields) === [];
+ $repairScope = (string) ($feedback['_repair_scope']?? '');
+ $repairStrategy = (string) ($feedback['_repair_strategy']?? '');
+ $repairMetadataMatchesContext = ($reviewContext['repair_scope']?? null) === $repairScope
+ && ($reviewContext['repair_strategy']?? null) === $repairStrategy
+ && ($reviewContext['coaching_repaired_answer_ids']?? null) === ($coachingRepairedIds?? [])
+ && ($reviewContext['session_feedback_repaired_fields']?? null) === ($sessionRepairedFields?? [])
+ && ($reviewContext['session_feedback_source']?? null) === ($sessionRepairFieldsValid
+ ? (count($sessionRepairedFields) === 4? 'local_evidence_repair': 'mixed_provider_and_local_evidence')
+ : 'ai_provider');
+ $safeRepair = match ($repairScope) {
+ 'coaching_only' => $repairStrategy === 'provider_coaching_safety_repair'
+ && $coachingRepairIdsValid && ($sessionRepairedFields?? []) === [],
+ 'session_feedback_only' => $repairStrategy === 'provider_session_summary_safety_repair'
+ && $sessionRepairFieldsValid && ($coachingRepairedIds?? []) === [],
+ 'coaching_and_session_feedback' => $repairStrategy === 'provider_coaching_and_session_summary_safety_repair'
+ && $coachingRepairIdsValid && $sessionRepairFieldsValid,
+ default => false,
+ };
  $checks = [
  'api_provider_supported' => $this->isApiProviderKey($providerKey),
  'provider_metadata_matches' => AIService::normalizeProviderKey($feedback['_provider_key']?? null) === $providerKey,
  'strict_provider_validation_passed' => ($feedback['_strict_validation_passed']?? null) === true,
- 'provider_repair_not_applied' => ($feedback['_repair_applied']?? null) === false,
+ 'provider_repair_safe' => ($feedback['_repair_applied']?? null) === false
+ || (($feedback['_repair_applied']?? null) === true && $safeRepair && $repairMetadataMatchesContext),
  'exact_answer_count' => count($items) === count($expectedIds),
  'unique_answer_ids' => count($suppliedIds) === count(array_unique($suppliedIds)) && ! in_array('', $suppliedIds, true),
  'exact_answer_coverage' => $sortedExpectedIds === $sortedSuppliedIds,
@@ -459,6 +514,7 @@ class DetailedFeedbackReviewService
  'scoreable_reliability_threshold_met' => $scoreableReliabilities === []
  || $minimumScoreableReliability >= $requiredReliability,
  'review_context_matches_provider' => ($reviewContext['schema_version']?? null) === 'interview_feedback_v9'
+ && ($reviewContext['review_policy_version']?? null) === AIService::REVIEW_POLICY_VERSION
  && ($reviewContext['provider_source']?? null) === 'ai_provider'
  && AIService::normalizeProviderKey($reviewContext['provider_key']?? null) === $providerKey,
  'review_context_quality_matches' => ($contextQuality['status']?? null) === ($aggregateQuality['status']?? null)
@@ -550,7 +606,7 @@ class DetailedFeedbackReviewService
  {
  return [
  'timeout_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.timeout_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 30),
- 'deadline_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.deadline_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 60),
+ 'deadline_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.deadline_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 120),
  'max_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_review.max_attempts', 'AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', 2),
  'http_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_review.http_attempts', 'AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', 2),
  'retry_delay_ms' => (int) RuntimeConfiguration::get('services.ai_feedback_review.retry_delay_ms', 'AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', 250),

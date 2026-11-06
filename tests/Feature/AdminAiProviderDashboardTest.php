@@ -240,6 +240,18 @@ class AdminAiProviderDashboardTest extends TestCase
                 'provider_id' => $openAi->id,
                 'module' => 'feedback_generation',
                 'endpoint' => 'openai',
+                'response_time_ms' => 200,
+                'tokens_used' => null,
+                'cost' => null,
+                'status' => 'repaired',
+                'error_message' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'provider_id' => $openAi->id,
+                'module' => 'feedback_generation',
+                'endpoint' => 'openai',
                 'response_time_ms' => 900,
                 'tokens_used' => null,
                 'cost' => null,
@@ -254,10 +266,10 @@ class AdminAiProviderDashboardTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('id="provider-openai-requests-today">2', false)
-            ->assertSee('id="provider-openai-successful-today">1', false)
+            ->assertSee('id="provider-openai-requests-today">3', false)
+            ->assertSee('id="provider-openai-successful-today">2', false)
             ->assertSee('id="provider-openai-failed-today">1', false)
-            ->assertSee('50.00%')
+            ->assertSee('66.67%')
             ->assertSee('200ms')
             ->assertSee('Needs Attention')
             ->assertSee('Not Setup');
@@ -269,11 +281,11 @@ class AdminAiProviderDashboardTest extends TestCase
             $cohere = $providerStats->firstWhere('key', 'cohere');
 
             return $openAi?->status === 'active'
-                && $openAi->requests_today === 2
-                && $openAi->successful_requests === 1
+                && $openAi->requests_today === 3
+                && $openAi->successful_requests === 2
                 && $openAi->failed_requests === 1
                 && $openAi->avg_response_time === 200
-                && $openAi->success_rate === 50.0
+                && $openAi->success_rate === 66.67
                 && $openAi->last_activity_at !== null
                 && $gemini?->status === 'inactive'
                 && $groq?->status === 'misconfigured'

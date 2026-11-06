@@ -157,7 +157,12 @@ class FeedbackReportPresenter
 
  $summary = is_array($feedback->coaching_summary?? null)? $feedback->coaching_summary: [];
  $source = trim((string) data_get($summary, 'overall_summary_source', ''));
- if ($source !== 'ai_provider_validated') {
+ $repairedFields = (array) data_get($summary, 'review_context.session_feedback_repaired_fields', []);
+ $sourceTrusted = $source === 'ai_provider_validated'
+ || ($source === 'local_evidence_validated'
+ && in_array('overall_summary', $repairedFields, true)
+ && data_get($summary, 'review_context.detailed_review_validation.status') === 'verified');
+ if (! $sourceTrusted) {
  return false;
  }
 

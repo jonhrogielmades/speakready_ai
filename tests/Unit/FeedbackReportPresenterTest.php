@@ -188,6 +188,49 @@ class FeedbackReportPresenterTest extends TestCase
         $this->assertStringNotContainsString('This overall review is based on', $report['overview']['summary']);
     }
 
+    public function test_verified_mixed_summary_is_shown_with_explicit_local_repair_provenance(): void
+    {
+        $session = new InterviewSession();
+        $summaryText = 'For the customer process answer, you explained the process and coordinated the next action. Add the true customer result in the next attempt.';
+        $feedback = new Feedback();
+        $feedback->setRawAttributes([
+            'strengths' => 'The customer process answer describes coordinating the next action.',
+            'weaknesses' => 'The customer process answer could add the true customer result.',
+            'improvement_suggestions' => 'Keep the coordinated next action and add the true customer result.',
+            'coaching_summary' => json_encode([
+                'overall_summary' => $summaryText,
+                'overall_summary_source' => 'local_evidence_validated',
+                'review_context' => [
+                    'provider_key' => 'openai',
+                    'provider_source' => 'ai_provider',
+                    'session_feedback_source' => 'mixed_provider_and_local_evidence',
+                    'session_feedback_repaired_fields' => ['overall_summary'],
+                    'detailed_review_validation' => ['status' => 'verified'],
+                ],
+            ]),
+        ], true);
+        $question = new Question();
+        $question->setRawAttributes(['question_text' => 'Explain a time you helped a customer.'], true);
+        $answer = new InterviewAnswer();
+        $answer->setRawAttributes([
+            'answer_text' => 'I explained the customer process and coordinated the next action.',
+            'is_skipped' => false,
+        ], true);
+        $answer->setRelation('question', $question);
+        $session->setRelation('feedback', $feedback);
+        $session->setRelation('score', new Score());
+        $session->setRelation('answers', collect([$answer]));
+
+        $this->assertSame($summaryText, FeedbackReportPresenter::forSession($session)['overview']['summary']);
+
+        $unverified = $feedback->coaching_summary;
+        $unverified['review_context']['detailed_review_validation']['status'] = 'rejected';
+        $attributes = $feedback->getAttributes();
+        $attributes['coaching_summary'] = json_encode($unverified);
+        $feedback->setRawAttributes($attributes, true);
+        $this->assertNotSame($summaryText, FeedbackReportPresenter::forSession($session)['overview']['summary']);
+    }
+
     public function test_score_breakdown_contains_only_supported_metrics(): void
     {
         $session = new InterviewSession();

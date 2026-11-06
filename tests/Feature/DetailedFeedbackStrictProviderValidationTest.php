@@ -7,6 +7,7 @@ use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\User;
+use App\Services\AIService;
 use App\Services\DetailedFeedbackReviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use ReflectionMethod;
@@ -16,16 +17,16 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_final_provider_gate_requires_strict_unrepaired_feedback_metadata(): void
+    public function test_final_provider_gate_requires_strict_feedback_or_safe_coaching_repair(): void
     {
         $answer = $this->answer();
         $feedback = $this->validProviderFeedback($answer);
 
         $verified = $this->validateProviderFeedback($answer, $feedback);
 
-        $this->assertSame('verified', $verified['status']);
+        $this->assertSame('verified', $verified['status'], json_encode($verified['reasons']));
         $this->assertTrue($verified['checks']['strict_provider_validation_passed']);
-        $this->assertTrue($verified['checks']['provider_repair_not_applied']);
+        $this->assertTrue($verified['checks']['provider_repair_safe']);
 
         $missingStrictMetadata = $feedback;
         unset($missingStrictMetadata['_strict_validation_passed']);
@@ -44,9 +45,57 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
 
         $this->assertSame('rejected', $repairedValidation['status']);
         $this->assertFalse($repairedValidation['checks']['strict_provider_validation_passed']);
-        $this->assertFalse($repairedValidation['checks']['provider_repair_not_applied']);
+        $this->assertFalse($repairedValidation['checks']['provider_repair_safe']);
         $this->assertContains('strict_provider_validation_passed', $repairedValidation['reasons']);
-        $this->assertContains('provider_repair_not_applied', $repairedValidation['reasons']);
+        $this->assertContains('provider_repair_safe', $repairedValidation['reasons']);
+
+        $safeCoachingRepair = $feedback;
+        $safeCoachingRepair['_repair_applied'] = true;
+        $safeCoachingRepair['_repair_strategy'] = 'provider_coaching_safety_repair';
+        $safeCoachingRepair['_repair_scope'] = 'coaching_only';
+        $safeCoachingRepair['_coaching_repaired_answer_ids'] = [(string) $answer->id];
+        $safeCoachingRepair['_session_feedback_repaired_fields'] = [];
+        $safeCoachingRepair['review_context']['repair_strategy'] = 'provider_coaching_safety_repair';
+        $safeCoachingRepair['review_context']['repair_scope'] = 'coaching_only';
+        $safeCoachingRepair['review_context']['coaching_repaired_answer_ids'] = [(string) $answer->id];
+        $safeCoachingRepair['review_context']['session_feedback_repaired_fields'] = [];
+        $safeCoachingRepair['review_context']['session_feedback_source'] = 'ai_provider';
+
+        $safeRepairValidation = $this->validateProviderFeedback($answer, $safeCoachingRepair);
+        $this->assertSame('verified', $safeRepairValidation['status']);
+        $this->assertTrue($safeRepairValidation['checks']['provider_repair_safe']);
+
+        $unmatchedRepair = $safeCoachingRepair;
+        $unmatchedRepair['_coaching_repaired_answer_ids'] = ['999999'];
+        $unmatchedValidation = $this->validateProviderFeedback($answer, $unmatchedRepair);
+        $this->assertSame('rejected', $unmatchedValidation['status']);
+        $this->assertFalse($unmatchedValidation['checks']['provider_repair_safe']);
+
+        $safeSummaryRepair = $feedback;
+        $safeSummaryRepair['_repair_applied'] = true;
+        $safeSummaryRepair['_repair_strategy'] = 'provider_session_summary_safety_repair';
+        $safeSummaryRepair['_repair_scope'] = 'session_feedback_only';
+        $safeSummaryRepair['_coaching_repaired_answer_ids'] = [];
+        $safeSummaryRepair['_session_feedback_repaired_fields'] = ['overall_summary'];
+        $safeSummaryRepair['review_context']['repair_strategy'] = 'provider_session_summary_safety_repair';
+        $safeSummaryRepair['review_context']['repair_scope'] = 'session_feedback_only';
+        $safeSummaryRepair['review_context']['coaching_repaired_answer_ids'] = [];
+        $safeSummaryRepair['review_context']['session_feedback_repaired_fields'] = ['overall_summary'];
+        $safeSummaryRepair['review_context']['session_feedback_source'] = 'mixed_provider_and_local_evidence';
+        $summaryRepairValidation = $this->validateProviderFeedback($answer, $safeSummaryRepair);
+        $this->assertSame('verified', $summaryRepairValidation['status']);
+        $this->assertTrue($summaryRepairValidation['checks']['provider_repair_safe']);
+
+        $safeCombinedRepair = $safeSummaryRepair;
+        $safeCombinedRepair['_repair_strategy'] = 'provider_coaching_and_session_summary_safety_repair';
+        $safeCombinedRepair['_repair_scope'] = 'coaching_and_session_feedback';
+        $safeCombinedRepair['_coaching_repaired_answer_ids'] = [(string) $answer->id];
+        $safeCombinedRepair['review_context']['repair_strategy'] = $safeCombinedRepair['_repair_strategy'];
+        $safeCombinedRepair['review_context']['repair_scope'] = $safeCombinedRepair['_repair_scope'];
+        $safeCombinedRepair['review_context']['coaching_repaired_answer_ids'] = [(string) $answer->id];
+        $combinedValidation = $this->validateProviderFeedback($answer, $safeCombinedRepair);
+        $this->assertSame('verified', $combinedValidation['status']);
+        $this->assertTrue($combinedValidation['checks']['provider_repair_safe']);
 
         $scoreDisagreement = $feedback;
         data_set($scoreDisagreement, 'per_question_feedback.0.scoring_confidence', 80);
@@ -102,6 +151,37 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         ]);
         $typed = $method->invoke($service, $answer);
         $this->assertFalse($typed['uses_asr_transcript']);
+    }
+
+    public function test_verified_mixed_summary_persists_its_source_and_does_not_refresh_again(): void
+    {
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $feedback = $this->validProviderFeedback($answer);
+        $feedback['_repair_applied'] = true;
+        $feedback['_repair_strategy'] = 'provider_session_summary_safety_repair';
+        $feedback['_repair_scope'] = 'session_feedback_only';
+        $feedback['_coaching_repaired_answer_ids'] = [];
+        $feedback['_session_feedback_repaired_fields'] = ['overall_summary'];
+        $feedback['review_context']['repair_strategy'] = $feedback['_repair_strategy'];
+        $feedback['review_context']['repair_scope'] = $feedback['_repair_scope'];
+        $feedback['review_context']['coaching_repaired_answer_ids'] = [];
+        $feedback['review_context']['session_feedback_repaired_fields'] = ['overall_summary'];
+        $feedback['review_context']['session_feedback_source'] = 'mixed_provider_and_local_evidence';
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+        $this->assertSame('verified', $validation['status']);
+
+        $service = $this->app->make(DetailedFeedbackReviewService::class);
+        $persist = new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback');
+        $persist->setAccessible(true);
+        $persist->invoke($service, $session, collect([$answer]), $feedback, 'openai', $validation);
+
+        $session = $session->fresh(['answers.question', 'feedback', 'score']);
+        $summary = $session->feedback->coaching_summary;
+        $this->assertSame('local_evidence_validated', data_get($summary, 'overall_summary_source'));
+        $this->assertSame('mixed_provider_and_local_evidence', data_get($summary, 'review_context.session_feedback_source'));
+        $this->assertSame(['overall_summary'], data_get($summary, 'review_context.session_feedback_repaired_fields'));
+        $this->assertFalse($service->shouldRefreshWithProvider($session));
     }
 
     private function validateProviderFeedback(InterviewAnswer $answer, array $feedback): array
@@ -208,6 +288,7 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
             ],
             'review_context' => [
                 'schema_version' => 'interview_feedback_v9',
+                'review_policy_version' => AIService::REVIEW_POLICY_VERSION,
                 'provider_key' => 'openai',
                 'provider_source' => 'ai_provider',
                 'coverage' => [

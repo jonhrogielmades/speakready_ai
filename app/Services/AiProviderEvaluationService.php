@@ -763,7 +763,7 @@ class AiProviderEvaluationService
         return collect($this->configuredProviders())->map(function (array $provider) use ($start, $runResults): array {
             $logs = $this->logsForProvider($provider, $start)->get();
             $requests = $logs->count();
-            $successfulRequests = $logs->where('status', 'success')->count();
+            $successfulRequests = $logs->whereIn('status', ['success', 'repaired'])->count();
             $failedRequests = $requests - $successfulRequests;
             $avgLatency = $requests > 0
                 ? (int) round((float) $logs->avg('response_time_ms'))
@@ -2334,7 +2334,7 @@ class AiProviderEvaluationService
             return null;
         }
 
-        $successes = $logs->where('status', 'success');
+        $successes = $logs->whereIn('status', ['success', 'repaired']);
         $successRate = $this->scoreValue(($successes->count() / max(1, $logs->count())) * 100);
         $avgLatency = $successes->isNotEmpty()
             ? (int) round((float) $successes->avg('response_time_ms'))

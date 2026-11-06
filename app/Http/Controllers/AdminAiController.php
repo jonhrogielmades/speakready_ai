@@ -31,7 +31,7 @@ class AdminAiController extends Controller
  $todayLogs = AiProviderLog::where('created_at', '>=', $todayStart)
  ->where('created_at', '<', $tomorrowStart);
  $todayTotals = (clone $todayLogs)
- ->selectRaw("COUNT(*) as total_requests, SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as successful_requests, SUM(CASE WHEN status != 'success' THEN 1 ELSE 0 END) as failed_requests, AVG(response_time_ms) as avg_response_time")
+ ->selectRaw("COUNT(*) as total_requests, SUM(CASE WHEN status IN ('success', 'repaired') THEN 1 ELSE 0 END) as successful_requests, SUM(CASE WHEN status IN ('success', 'repaired') THEN 0 ELSE 1 END) as failed_requests, AVG(response_time_ms) as avg_response_time")
  ->first();
  $totalRequests = (int) ($todayTotals->total_requests?? 0);
  $successfulRequests = (int) ($todayTotals->successful_requests?? 0);
@@ -56,7 +56,7 @@ class AdminAiController extends Controller
  fn (AiProvider $provider): array => [$provider->id => AIService::normalizeProviderKey($provider->name)]
  );
  $todayUsageRows = (clone $todayLogs)
- ->selectRaw("provider_id, endpoint, COUNT(*) as requests_today, SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as successful_requests, SUM(CASE WHEN status = 'success' THEN 0 ELSE 1 END) as failed_requests, COALESCE(SUM(response_time_ms), 0) as response_time_total, COUNT(response_time_ms) as response_time_samples, MAX(created_at) as last_activity_at")
+ ->selectRaw("provider_id, endpoint, COUNT(*) as requests_today, SUM(CASE WHEN status IN ('success', 'repaired') THEN 1 ELSE 0 END) as successful_requests, SUM(CASE WHEN status IN ('success', 'repaired') THEN 0 ELSE 1 END) as failed_requests, COALESCE(SUM(response_time_ms), 0) as response_time_total, COUNT(response_time_ms) as response_time_samples, MAX(created_at) as last_activity_at")
  ->groupBy('provider_id', 'endpoint')
  ->get();
  $providerStats = $defaultProviders->map(function (array $providerOption) use ($providers, $providerKeysById, $todayUsageRows) {

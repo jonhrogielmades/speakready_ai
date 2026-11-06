@@ -208,8 +208,8 @@ return [
  'ai_feedback_review' => [
  'min_reliability_percent' => env('AI_FEEDBACK_REVIEW_MIN_RELIABILITY_PERCENT', 95),
  'retry_cooldown_minutes' => env('AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES', 10),
- 'timeout_seconds' => env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', 30)),
- 'deadline_seconds' => env('AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 60)),
+ 'timeout_seconds' => env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 30),
+ 'deadline_seconds' => env('AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 120),
  'max_attempts' => env('AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', env('AI_FEEDBACK_ATTEMPTS', 2)),
  'http_attempts' => env('AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
  'retry_delay_ms' => env('AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),

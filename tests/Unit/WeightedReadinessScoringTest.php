@@ -327,7 +327,8 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('one natural paragraph', $rules);
         $this->assertStringContainsString('candidate_answer', $rules);
         $this->assertStringContainsString('Do not use bracketed placeholders', $rules);
-        $this->assertStringContainsString('should add the true result', $rules);
+        $this->assertStringContainsString('Include a Result only when candidate_answer gives one', $rules);
+        $this->assertStringContainsString('Put the missing detail in coaching.improve', $rules);
         $this->assertStringContainsString('spoken draft', $rules);
         $this->assertStringContainsString('minimum of 3 sentences and a maximum of 6 sentences', $rules);
         $batchRules = $this->invokePrivate('aiCoachPossibleAnswerWritingRules', [null, true]);
@@ -418,6 +419,33 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringNotContainsString('Google', $normalized['ai_feedback']);
         $this->assertStringNotContainsString('AWS', $normalized['ai_feedback']);
         $this->assertStringNotContainsString('renewed the contract', $normalized['ai_feedback']);
+    }
+
+    public function test_hypothetical_follow_up_question_is_not_mistaken_for_a_past_claim(): void
+    {
+        $answer = [
+            'id' => 8001,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, compare estimated and actual rows, and check indexes before changing one issue at a time.',
+        ];
+
+        $this->assertTrue($this->invokePrivate('providerFollowUpQuestionIsValid', [
+            'Can you name one bottleneck you would investigate first and how you would measure improvement after fixing it?',
+            $answer,
+        ]));
+        $this->assertFalse($this->invokePrivate('providerFollowUpQuestionIsValid', [
+            'How would you explain the 50% speedup you achieved at Google after using AWS?',
+            $answer,
+        ]));
+        $this->assertFalse($this->invokePrivate('providerVisibleTextHasUnsupportedSpecificClaims', [
+            'List each diagnostic step you will perform.',
+            $answer,
+        ]));
+        $this->assertTrue($this->invokePrivate('providerVisibleTextHasUnsupportedSpecificClaims', [
+            'Describe the exact performance gain you measured after fixing the issue.',
+            $answer,
+        ]));
     }
 
     public function test_clause_level_grounding_rejects_novel_personal_facts_but_allows_explicit_coaching(): void
@@ -1447,6 +1475,52 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('internal_evidence_and_score_safeguards', $normalized['feedback_quality']['reliability_basis']);
     }
 
+    public function test_provider_score_above_lexical_reference_does_not_block_validated_feedback(): void
+    {
+        $answer = [
+            'id' => 704,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, compare estimated and actual rows, and verify the change against the same workload.',
+        ];
+        $providerScores = array_fill_keys(
+            ['clarity_score', 'relevance_score', 'grammar_score', 'professionalism_score'],
+            90
+        );
+        $localScores = array_fill_keys(array_keys($providerScores), 35);
+
+        [, , $calibration] = $this->invokePrivate('applyProviderScoreCalibration', [
+            $providerScores,
+            0,
+            $localScores,
+            [],
+            false,
+            $answer['answer'],
+            $answer['question'],
+            [],
+        ]);
+
+        $this->assertGreaterThanOrEqual(35, $calibration['provider_delta']);
+        $this->assertSame('provider_score_above_lexical_reference', $calibration['comparison_note']);
+        $this->assertSame([], $calibration['risk_flags']);
+        $this->assertFalse($calibration['adjustment_applied']);
+
+        $feedback = $this->invokePrivate('normalizeQuestionFeedback', [
+            $this->v4FeedbackFor($answer, 90, 'directly_addressed'),
+            $answer,
+            [],
+        ]);
+        $feedback['score_calibration'] = $calibration;
+        $quality = $this->invokePrivate('normalizedFeedbackQuality', [
+            $feedback,
+            $answer['answer'],
+            $answer['question'],
+        ]);
+
+        $this->assertSame('provider_above_lexical_reference', $quality['calibration_status']);
+        $this->assertGreaterThanOrEqual(95, $quality['reliability_percent']);
+    }
+
     public function test_provider_scores_are_symmetrically_calibrated_without_erasing_moderate_uncertainty(): void
     {
         $answer = [
@@ -1624,6 +1698,45 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('Add the result so the strength points are clearer.', $normalized['provider_coaching']['improve']);
         $this->assertSame('The missing result makes it harder to judge how the checklist helped the launch.', $normalized['provider_coaching']['impact']);
         $this->assertSame('The retry meets the strength points when the result is clear.', $normalized['provider_coaching']['success_check']);
+    }
+
+    public function test_coaching_section_can_use_short_follow_on_steps_without_repeating_question_words(): void
+    {
+        $answer = [
+            'id' => 7151,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I would inspect the query plan, compare row estimates, and check indexes before changing the query.',
+        ];
+        $coaching = [
+            'keep' => 'Keep the ordered steps you gave.',
+            'improve' => 'Add why the first check matters.',
+            'impact' => 'That helps the interviewer follow your reasoning.',
+            'next_try' => 'Start with the query plan and explain why.',
+            'next_attempt_steps' => [
+                'Name the first diagnostic step.',
+                'Explain what you would inspect next.',
+            ],
+            'success_check' => 'Your next try is easy to follow.',
+        ];
+
+        $validated = $this->invokePrivate('validatedProviderCoaching', [['coaching' => $coaching], $answer]);
+
+        $this->assertNotEmpty($validated);
+        $this->assertSame('Keep the ordered steps you gave.', $validated['keep']);
+
+        $unrelated = [
+            'keep' => 'Keep the clear part you shared.',
+            'improve' => 'Add a useful detail next time.',
+            'impact' => 'That helps the interviewer understand the response.',
+            'next_try' => 'Give a clearer explanation next time.',
+            'next_attempt_steps' => [
+                'Start with your main point.',
+                'Add another true detail next time.',
+            ],
+            'success_check' => 'Your next try is easy to follow.',
+        ];
+        $this->assertSame([], $this->invokePrivate('validatedProviderCoaching', [['coaching' => $unrelated], $answer]));
     }
 
     public function test_provider_feedback_does_not_need_to_repeat_the_full_question(): void

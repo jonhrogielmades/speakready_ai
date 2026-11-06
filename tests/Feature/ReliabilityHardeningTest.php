@@ -965,7 +965,7 @@ class ReliabilityHardeningTest extends TestCase
  ->assertDontSee('firstQuestionIntroText', false)
  ->assertDontSee('Here is your first question.', false)
  ->assertDontSee('first_question_intro', false)
- ->assertSee('startInterviewSession();', false)
+ ->assertSee('startInterviewSession({ requestBrowserFullscreen: false });', false)
  ->assertSee('finishTransitionOverlay', false)
  ->assertSee('setFinishTransitionVisible', false)
  ->assertSee('finishRetryButton', false)
@@ -1841,6 +1841,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertNotSame('Local possible answer.', $savedAnswer->better_sample_answer);
  $this->assertSame('ai_provider_validated', data_get($savedFeedback->coaching_summary, 'overall_summary_source'));
  $this->assertSame('interview_feedback_v9', data_get($savedFeedback->coaching_summary, 'review_context.schema_version'));
+ $this->assertSame(AIService::REVIEW_POLICY_VERSION, data_get($savedFeedback->coaching_summary, 'review_context.review_policy_version'));
  $this->assertSame('openai', data_get($savedFeedback->coaching_summary, 'review_context.provider_key'));
  $this->assertSame('ai_provider', data_get($savedFeedback->coaching_summary, 'review_context.provider_source'));
  $this->assertSame('verified', data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation.status'));
@@ -1859,7 +1860,21 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider(
  $session->fresh(['answers.question', 'score', 'feedback'])
  ));
- Http::assertSentCount(1);
+
+ $oldPolicySummary = $savedFeedback->coaching_summary;
+ data_set($oldPolicySummary, 'review_context.review_policy_version', AIService::REVIEW_POLICY_VERSION - 1);
+ $savedFeedback->update(['coaching_summary' => $oldPolicySummary]);
+ $staleSession = $session->fresh(['answers.question', 'score', 'feedback']);
+ $this->assertTrue($this->app->make(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider($staleSession));
+ $this->assertTrue($this->app->make(DetailedFeedbackReviewService::class)->refreshWithProvidersIfNeeded($staleSession));
+ $this->assertSame(
+ AIService::REVIEW_POLICY_VERSION,
+ data_get($savedFeedback->fresh()->coaching_summary, 'review_context.review_policy_version')
+ );
+ $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider(
+ $session->fresh(['answers.question', 'score', 'feedback'])
+ ));
+ Http::assertSentCount(2);
  }
 
  public function test_detailed_review_keeps_saved_feedback_when_provider_output_misses_required_reliability(): void

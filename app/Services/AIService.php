@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Log;
 
 class AIService
 {
+ public const REVIEW_POLICY_VERSION = 2;
+
  private const AI_FAILURE_MESSAGE = 'Sorry, I am having trouble connecting to my brain right now.';
 
  private const FEEDBACK_SCORE_FIELDS = [
@@ -1151,11 +1153,11 @@ return [
 
  $starRule = match ($starApplicable) {
  true => $groundInCandidateAnswer
- ? 'For STAR applicable items, write one natural paragraph in Situation, Task, Action, Result order. Do not use STAR labels or bracketed placeholders. If the result or another STAR detail is missing from candidate_answer, say that the candidate should add the true result or detail instead of inventing an outcome.'
+ ? 'For STAR applicable items, write one natural paragraph using the Situation, Task, and Action details that candidate_answer actually gives. Include a Result only when candidate_answer gives one. Do not use STAR labels or bracketed placeholders.'
  : 'Use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Use placeholders for unknown personal facts.',
  false => 'Do not force STAR labels unless the question asks for a past example.',
  default => $groundInCandidateAnswer
- ? 'When the supplied star_applicable value is true, write one natural paragraph in Situation, Task, Action, Result order without STAR labels or bracketed placeholders. If the result is missing, say that the candidate should add the true result. When star_applicable is false, do not force STAR labels.'
+ ? 'When the supplied star_applicable value is true, write one natural paragraph using only the STAR details candidate_answer gives, without STAR labels or bracketed placeholders. Include a Result only when candidate_answer gives one. When star_applicable is false, do not force STAR labels.'
  : 'When the supplied star_applicable value is true, use the exact labels Situation:, Task:, Action:, and Result: in this order, with one section per line. Use placeholders for unknown personal facts. When star_applicable is false, do not force STAR labels.',
  };
 
@@ -1164,7 +1166,7 @@ return [
  : 'Do not invent names, employers, schools, dates, numbers, awards, tools, certifications, achievements, or other personal facts that are not provided.';
 
  $missingFactRule = $groundInCandidateAnswer
- ? 'Do not use bracketed placeholders. When a personal fact or result is missing, write the answer with the available true facts and explicitly say the true detail or result should be added before using it.'
+ ? 'Do not use bracketed placeholders. When a personal fact or result is missing, write only the available true facts. Put the missing detail in coaching.improve, not in this spoken answer.'
  : 'When a personal fact or result is needed but missing, use a short bracketed placeholder such as [specific project], [your action], or [result].';
  $sentenceCountRule = $groundInCandidateAnswer
  ? 'Use a minimum of 3 sentences and a maximum of 6 sentences.'
@@ -2020,7 +2022,7 @@ Use risk_flags such as "skipped_answers", "short_answers", "missing_results", "w
 
 PLAIN LANGUAGE REQUIREMENTS:
 Write all user-facing text in short, simple sentences.
-Keep ai_feedback to 3-4 short sentences. Avoid repeated wording and do not restate the same advice twice.
+Keep ai_feedback to 3-4 short sentences, including one short exact answer excerpt. Avoid repeated wording and do not restate the same advice twice.
 If the report is in English, use simple English words that students and job seekers can understand.
 If another target language is selected, use simple everyday words in that language.
 Avoid hard words or jargon such as "evidence-grounded", "calibrated", "rubric", "infer", "observable", "assessment", "professionalism", "relevance", and "criteria" in ai_feedback, coaching, better_sample_answer, follow_up_question, and session_feedback unless the question, answer, or score label already uses them.
@@ -2035,6 +2037,7 @@ In ai_feedback, explicitly explain whether that answer answered the question dir
 In ai_feedback, include one short impact sentence that explains how the answer detail or missing detail affects the score, interviewer understanding, or next practice priority.
 Every non-skipped item must have distinct commentary tied to its own question focus and exact answer evidence. Do not reuse an identical feedback template across different ids.
 Use the supplied question_intent, star_applicable, requires_personal_action, and requires_result values. Do not require STAR, personal ownership, a result, or a metric when the corresponding supplied value is false.
+Keep hypothetical answers hypothetical. If the candidate says what they would or could do, do not describe that plan as an experience they already had, a bottleneck they encountered, or a result they achieved. Use would or could in the feedback, follow-up question, coaching, and Possible Answer.
 
 Every feedback statement MUST be supported by evidence found in the candidate's exact answer.
 
@@ -2044,9 +2047,9 @@ AI-ONLY VISIBLE FEEDBACK REQUIREMENTS:
 You MUST return the visible coaching text for every answer. The app will not create local substitute feedback when your response is missing, generic, duplicated, or unsupported.
 The detailed review page displays only three answer-level fields: Feedback, Your Answer, and Possible Answer.
 Your Answer is saved by the app from candidate_answer; do not rewrite it.
-Feedback must be final user-facing feedback for this exact answer, not an internal scoring note. It must say whether this answer directly answered, partly answered, or did not clearly answer the question, and it must include one exact evidence quote from candidate_answer when the answer was not skipped.
+Feedback must be final user-facing feedback for this exact answer, not an internal scoring note. It must say whether this answer directly answered, partly answered, or did not clearly answer the question, and it must include one short exact evidence quote from candidate_answer when the answer was not skipped.
 Possible Answer must be a safe spoken draft for this same question using only facts from candidate_answer. Keep useful candidate facts, improve structure, and never invent missing results, numbers, employers, tools, credentials, names, dates, or intentions.
-If the answer is too short or missing a needed result, the Possible Answer may say the true missing detail should be added before using the answer.
+If the answer is too short or missing a needed result, Possible Answer must use only the available true details. Explain the missing detail in coaching.improve instead of adding advice to the spoken draft.
 For each item, return:
 
 * ai_feedback: 3-4 short sentences tied to the exact question and exact answer evidence. Include what the detail changes for the score or interviewer understanding.
@@ -2066,6 +2069,7 @@ For coaching:
 * next_try: one direct instruction for the next attempt, tailored to this question and this answer.
 * next_attempt_steps: 2-4 short checklist items for retrying this exact question. Each item must be different and question-specific.
 * success_check: one short sentence describing how the user will know the retry answered this exact question well.
+For a hypothetical answer, coaching must describe future checks and possible improvements. Do not claim the candidate already fixed an issue or measured a gain. Say "explain what you would measure" instead of "describe the gain you measured" when no measured gain appears in candidate_answer.
 
 Do not copy the same coaching.keep, coaching.improve, coaching.impact, coaching.next_try, coaching.next_attempt_steps, or coaching.success_check across different answer ids.
 
@@ -2255,15 +2259,15 @@ FACTUAL DETAIL REQUIREMENT:
 
 For each feedback item:
 
-* Return evidence_quotes containing 1-3 exact, contiguous excerpts copied verbatim from that candidate_answer.
+* Return evidence_quotes containing 1-3 short, distinctive, exact contiguous excerpts copied verbatim from that candidate_answer. Each excerpt should carry at least three meaningful words when the answer allows it.
 * Do not translate, paraphrase, correct, or combine evidence_quotes.
 * Each excerpt must be useful detail for at least one score or feedback claim.
-* ai_feedback must include at least one of those exact excerpts verbatim and explain what it supports.
+* ai_feedback must include one short exact excerpt from evidence_quotes, or a distinctive contiguous subphrase of that excerpt, and explain what it supports.
 * ai_feedback and coaching.impact must explain the practical impact of the evidence or missing result in plain words.
 * Keep numeric scores only in score fields; do not repeat score values in ai_feedback.
 * If the answer is skipped, return an empty evidence_quotes array.
 * Base every score on those excerpts plus clear missing details. Never score a guessed fact.
-* Return question_focus as the exact full question text copied verbatim from that item's question. ai_feedback must also include this exact question_focus text verbatim.
+* Return question_focus as the exact full question text copied verbatim from that item's question. In ai_feedback, refer to the question's main point in natural words; you do not need to repeat the entire question.
 * Return answer_alignment as exactly one of: directly_addressed, partially_addressed, not_addressed, insufficient_evidence, or skipped.
 * Keep answer_alignment consistent with relevance_score: 75-100 = directly_addressed, 50-74 = partially_addressed, 0-49 = not_addressed. Use insufficient_evidence only when a non-skipped answer gives no usable point to evaluate, and skipped only for a skipped answer.
 * Return missing_criteria as 0-3 exact, contiguous excerpts copied verbatim from that same item's question or expected_answer_guide. Use an empty array when no required coverage is missing. Never copy criteria from another id.
@@ -2284,9 +2288,11 @@ The app displays session_feedback.overall_summary as "All Answer Review Summary"
 These three visible sections must be provider-written, specific to the saved answers, and safe for many users. Do not rely on local fallback wording.
 Mention patterns from the actual answers without copying the same sentence repeatedly.
 Each field must be 1-2 short sentences.
-overall_summary must summarize the user's full performance across all saved answers. Mention at least one real pattern from the candidate answers or questions, the main repeated strength, the main repeated gap, and the next practice focus. Do not use a fixed template or vague wording that could fit any user.
-strengths must name only observed patterns from the saved answers or per-question evidence. If there is too little detail, say that clearly instead of inventing a strength.
-weaknesses must name the clearest repeated missing point or next priority from the saved answers. Do not mention a weakness that is not supported by the answers, questions, or missing_criteria.
+overall_summary must summarize the saved answers. Mention an observed strength, any supported gap, and a practical next focus. Discuss a repeated pattern only when multiple answers actually show it. Do not use a fixed template or vague wording that could fit any user.
+strengths must name only details observed in the saved answers or per-question evidence. If there is too little detail, say that clearly instead of inventing a strength.
+weaknesses must name a supported missing point or an optional next priority. Do not mention a weakness that is not supported by the answers, questions, or missing_criteria.
+If there is only one answer, describe that single observed answer; do not call its details a repeated pattern. If it answers the main point, describe a further detail as optional practice instead of a weakness or a reason to fail.
+In every session_feedback field, name a concrete detail from candidate_answer or the focus of its question. Never say a fix succeeded, a result was measured, or a gap was observed unless the saved answer supports it. For hypothetical answers, use would or could for future checks.
 Do not copy the exact per-answer Feedback text into session_feedback. Summarize across answers.
 Do not include score numbers in session_feedback.
 If every answer was skipped or too short, say there was not enough answer detail to name a clear strength.
@@ -2294,16 +2300,17 @@ If every answer was skipped or too short, say there was not enough answer detail
 The application calculates final weighted scores itself. Do not return extra fields outside the schema.
 
 OUTPUT SCHEMA:
+This is a JSON shape illustration, not an example review. Replace every empty user-facing field with answer-specific text (except fields intentionally empty for a skipped answer), and choose scores from the actual answer. Do not copy the example numbers.
 
 {
 "per_question_feedback": [
 {
 "id": 1,
-"score": 0,
-"clarity_score": 0,
-"relevance_score": 0,
-"grammar_score": 0,
-"professionalism_score": 0,
+"score": 85,
+"clarity_score": 85,
+"relevance_score": 85,
+"grammar_score": 85,
+"professionalism_score": 85,
 "star_applicable": false,
 "star_method_score": 0,
 "evidence_quotes": ["exact excerpt from candidate_answer"],
@@ -2393,6 +2400,9 @@ EOT;
  $repairableRequestOptions = null;
  $repairableValidationErrors = [];
  $repairableValidItemCount = -1;
+ $visibleRepairableResponse = null;
+ $visibleRepairableProvider = null;
+ $visibleRepairableErrors = [];
 
  $providerCount = count($providers);
  foreach ($providers as $providerIndex => $currentProvider) {
@@ -2412,6 +2422,7 @@ EOT;
  $deadlineAt,
  $providerCount - $providerIndex
  );
+ $providerValidationErrors = [];
 
  for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
  $remainingSeconds = $deadlineAt - microtime(true);
@@ -2436,6 +2447,15 @@ EOT;
  (int) $requestOptions['timeout_seconds']
  );
  $currentRequestOptions['request_deadline_at'] = $providerDeadlineAt;
+ $attemptPrompt = $prompt;
+ if ($providerValidationErrors !== []) {
+ $attemptPrompt.= "\n\nYOUR PREVIOUS REVIEW FAILED VALIDATION. Return the complete JSON review again. Fix these exact issues:\n";
+ $attemptPrompt.= implode("\n", array_map(
+ fn (string $error): string => '- '.mb_substr($error, 0, 200),
+ array_slice($providerValidationErrors, 0, 8)
+ ));
+ $attemptPrompt.= "\nCite a short exact evidence_quotes excerpt in each ai_feedback. End each follow_up_question with a question mark and ask about a real missing or optional detail. Make every coaching and session_feedback field specific to this answer and question. For a one-answer session, do not invent repeated patterns or missing results. Write Possible Answer as a complete spoken draft using only candidate_answer facts. For hypothetical answers, write future advice such as 'explain what you would measure'; never say 'the gain you measured' unless that gain is in candidate_answer. Do not invent tools, employers, outcomes, or numbers.\n";
+ }
 
  $candidateResponse = null;
  $validationErrors = [];
@@ -2455,7 +2475,7 @@ EOT;
  $attemptedProviders[] = $currentProvider;
  }
 
- $response = self::callStructuredProvider($currentProvider, $prompt, $currentRequestOptions);
+ $response = self::callStructuredProvider($currentProvider, $attemptPrompt, $currentRequestOptions);
 
  if ($response === []) {
  throw new \RuntimeException("Feedback provider {$currentProvider} returned an empty response.");
@@ -2472,9 +2492,17 @@ EOT;
  );
  } catch (\Throwable $e) {
  if (is_array($candidateResponse) && $validationErrors !== []) {
+ $providerValidationErrors = $validationErrors;
  Log::warning("AI Feedback Generation rejected an untrusted response from {$currentProvider} on attempt {$attempt}.", [
  'validation_errors' => array_slice($validationErrors, 0, 10),
  ]);
+
+ if (self::feedbackErrorsOnlyContainRepairableVisibleFields($validationErrors)
+ && ($visibleRepairableResponse === null || count($validationErrors) <= count($visibleRepairableErrors))) {
+ $visibleRepairableResponse = $candidateResponse;
+ $visibleRepairableProvider = $currentProvider;
+ $visibleRepairableErrors = $validationErrors;
+ }
 
  $validItemCount = count(self::validFeedbackSubset($candidateResponse, $answersData));
  if ($repairableProviderResponse === null || $validItemCount > $repairableValidItemCount) {
@@ -2496,6 +2524,76 @@ EOT;
  if ($boundedDelayMs > 0) {
  usleep($boundedDelayMs * 1000);
  }
+ }
+ }
+ }
+
+ // Preserve valid provider scores and narrative when only the session notes
+ // or coaching fields failed. Exact candidate evidence anchors replacements;
+ // all fields must pass the complete strict validator after the cascade.
+ if (is_array($visibleRepairableResponse) && is_string($visibleRepairableProvider)) {
+ $safeResponse = $visibleRepairableResponse;
+ $repairedAnswerIds = [];
+ $repairedSessionFields = [];
+ if (self::feedbackErrorsContainInvalidCoaching($visibleRepairableErrors)) {
+ [$safeResponse, $repairedAnswerIds] = self::repairInvalidProviderCoaching($safeResponse, $answersData);
+ }
+ if (self::feedbackErrorsContainInvalidSessionFeedback($visibleRepairableErrors)) {
+ [$safeResponse, $repairedSessionFields] = self::repairInvalidProviderSessionFeedback($safeResponse, $answersData);
+ }
+
+ if (($repairedAnswerIds !== [] || $repairedSessionFields !== [])
+ && self::feedbackResponseValidationErrors($safeResponse, $answersData) === []) {
+ try {
+ $normalized = self::normalizeFeedbackResponse(
+ $safeResponse,
+ $answersData,
+ $sessionData,
+ true,
+ $visibleRepairableProvider
+ );
+ $strategy = match (true) {
+ $repairedAnswerIds !== [] && $repairedSessionFields !== [] => 'provider_coaching_and_session_summary_safety_repair',
+ $repairedAnswerIds !== [] => 'provider_coaching_safety_repair',
+ default => 'provider_session_summary_safety_repair',
+ };
+ $scope = match (true) {
+ $repairedAnswerIds !== [] && $repairedSessionFields !== [] => 'coaching_and_session_feedback',
+ $repairedAnswerIds !== [] => 'coaching_only',
+ default => 'session_feedback_only',
+ };
+ $normalized['_strict_validation_passed'] = true;
+ $normalized['_repair_applied'] = true;
+ $normalized['_repair_strategy'] = $strategy;
+ $normalized['_repair_scope'] = $scope;
+ $normalized['_coaching_repaired_answer_ids'] = $repairedAnswerIds;
+ $normalized['_session_feedback_repaired_fields'] = $repairedSessionFields;
+ $normalized['review_context']['repair_strategy'] = $strategy;
+ $normalized['review_context']['repair_scope'] = $scope;
+ $normalized['review_context']['coaching_repaired_answer_ids'] = $repairedAnswerIds;
+ $normalized['review_context']['session_feedback_repaired_fields'] = $repairedSessionFields;
+ $normalized['review_context']['session_feedback_source'] = $repairedSessionFields === []
+ ? 'ai_provider'
+ : (count($repairedSessionFields) === 4? 'local_evidence_repair': 'mixed_provider_and_local_evidence');
+ self::writeProviderLog(
+ self::dbProviderFor($visibleRepairableProvider)?->id,
+ 'feedback_generation',
+ $visibleRepairableProvider,
+ microtime(true),
+ 'repaired'
+ );
+
+ return self::withFeedbackProviderMetadata(
+ $normalized,
+ $visibleRepairableProvider,
+ $attemptedProviders
+ );
+ } catch (\Throwable $error) {
+ Log::warning('Evidence-grounded feedback safety repair failed normalization.', [
+ 'provider' => $visibleRepairableProvider,
+ 'error_type' => $error::class,
+ 'message' => self::safeProviderErrorMessage($error),
+ ]);
  }
  }
  }
@@ -5639,10 +5737,17 @@ PROMPT;
  ? self::withoutExactPromptReferences($sentence, $answersData)
  : $sentence;
  $personalClaimText = self::withoutExactPromptReferences($sentence, $answersData);
+ $hypotheticalQuestion = str_contains($sentence, '?')
+ && preg_match('/\b(?:would|will|could|might|can|if)\b/iu', $sentence) === 1
+ && preg_match('/\b(?:you|they|we)\s+(?:did|had|were|have|achieved|encountered|received|earned|completed|delivered|improved|reduced|increased)\b/iu', $sentence)!== 1;
+ $prospectiveInstruction = preg_match(
+ '/\b(?:you|the candidate)\s+(?:will|would|can|could)\s+(?:perform|check|inspect|measure|test|verify|describe|explain|list|name|plan)\b/iu',
+ $sentence
+ ) === 1;
  $statesMissingEvidence = preg_match(
  '/\b(?:add|could|did not|does not|do not|explain|include|keep|lack(?:ed|s)?|mention|missing|needs?|omitted|only if|practice|should|try|without)\b/iu',
  $sentence
- ) === 1;
+ ) === 1 || $hypotheticalQuestion || $prospectiveInstruction;
 
  if (! $statesMissingEvidence
  && self::betterSampleAnswerHasUnsupportedOutcome($outcomeClaimText, $answerText)) {
@@ -6232,7 +6337,183 @@ PROMPT;
 
  $validated['next_attempt_steps'] = $validatedSteps;
 
+ // Compact coaching is read as one section. A short step can refer back to
+ // the question detail named in another field without repeating its words.
+ if (! self::providerCoachingMentionsQuestionOrAnswer(
+ self::providerCoachingRawText($validated),
+ $answer
+ )) {
+ return [];
+ }
+
  return $validated;
+ }
+
+ private static function feedbackErrorsContainInvalidCoaching(array $errors): bool
+ {
+ return collect($errors)->contains(
+ static fn (string $error): bool => preg_match('/^Feedback ID .+ has invalid visible coaching text\.$/', $error) === 1
+ );
+ }
+
+ private static function feedbackErrorsContainInvalidSessionFeedback(array $errors): bool
+ {
+ return collect($errors)->contains(
+ static fn (string $error): bool => str_starts_with($error, 'session_feedback.')
+ || $error === 'session_feedback must be an object.'
+ );
+ }
+
+ private static function feedbackErrorsOnlyContainRepairableVisibleFields(array $errors): bool
+ {
+ return $errors !== [] && collect($errors)->every(
+ static fn (string $error): bool => str_starts_with($error, 'session_feedback.')
+ || $error === 'session_feedback must be an object.'
+ || preg_match('/^Feedback ID .+ has invalid visible coaching text\.$/', $error) === 1
+ );
+ }
+
+ private static function repairInvalidProviderSessionFeedback(array $response, array $answersData): array
+ {
+ $fields = ['overall_summary', 'strengths', 'weaknesses', 'improvement_suggestions'];
+ $sessionFeedback = is_array($response['session_feedback']?? null)? $response['session_feedback']: [];
+ $errors = self::sessionFeedbackValidationErrors($response['session_feedback']?? null, $answersData);
+ if ($errors === []) {
+ return [$response, []];
+ }
+
+ $anchor = null;
+ foreach ($response['per_question_feedback']?? [] as $item) {
+ if (! is_array($item)) {
+ continue;
+ }
+ foreach ($answersData as $answer) {
+ if ((string) ($item['id']?? '') !== (string) ($answer['id']?? '') || self::isSkippedAnswer($answer)) {
+ continue;
+ }
+ $quotes = self::validatedEvidenceQuotes($item, $answer);
+ $question = self::validatedQuestionFocus($item, $answer);
+ if ($quotes !== [] && $question !== null && self::wordCount($quotes[0]) >= 3) {
+ $anchor = [self::excerpt($question, 160), self::excerpt($quotes[0], 140)];
+ break 2;
+ }
+ }
+ }
+ if ($anchor === null) {
+ return [$response, []];
+ }
+
+ [$question, $quote] = $anchor;
+ $fallbacks = [
+ 'overall_summary' => 'For "'.$question.'", your answer says "'.$quote.'". This gives a concrete point to assess. In practice, add one true detail that explains the reasoning or result.',
+ 'strengths' => 'The answer to "'.$question.'" includes "'.$quote.'", a concrete detail the interviewer can check against the question.',
+ 'weaknesses' => 'The answer to "'.$question.'" could explain why "'.$quote.'" is the right step or choice.',
+ 'improvement_suggestions' => 'Next time you answer "'.$question.'", keep "'.$quote.'" and add one true supporting detail or check.',
+ ];
+ $replaceAll = in_array('session_feedback must be an object.', $errors, true);
+ $repairedFields = [];
+ foreach ($fields as $field) {
+ $fieldInvalid = $replaceAll || collect($errors)->contains(
+ static fn (string $error): bool => str_starts_with($error, "session_feedback.{$field} ")
+ );
+ if (! $fieldInvalid) {
+ continue;
+ }
+ if (($sessionFeedback[$field]?? null) !== $fallbacks[$field]) {
+ $sessionFeedback[$field] = $fallbacks[$field];
+ $repairedFields[] = $field;
+ }
+ }
+ $response['session_feedback'] = $sessionFeedback;
+
+ return [$response, $repairedFields];
+ }
+
+ private static function repairInvalidProviderCoaching(array $response, array $answersData): array
+ {
+ if (! is_array($response['per_question_feedback']?? null)) {
+ return [$response, []];
+ }
+
+ $answersById = [];
+ foreach ($answersData as $answer) {
+ $answersById[(string) ($answer['id']?? '')] = $answer;
+ }
+
+ $repairedIds = [];
+ foreach ($response['per_question_feedback'] as &$item) {
+ if (! is_array($item)) {
+ continue;
+ }
+
+ $id = (string) ($item['id']?? '');
+ $answer = $answersById[$id]?? null;
+ if (! is_array($answer) || self::validatedProviderCoaching($item, $answer) !== []) {
+ continue;
+ }
+
+ $original = $item['coaching']?? null;
+ $quotes = self::validatedEvidenceQuotes($item, $answer);
+ if (! is_array($original) || $quotes === [] || self::isSkippedAnswer($answer)) {
+ continue;
+ }
+
+ // At least three original fields or steps must survive validation. A
+ // mostly invented or generic coaching section should not be attributed to
+ // the provider after a local rewrite.
+ $preserved = 0;
+ $anchor = mb_substr($quotes[0], 0, 140);
+ $fallbacks = [
+ 'keep' => 'Keep the relevant point you gave: "'.$anchor.'".',
+ 'improve' => 'Expand on "'.$anchor.'" by explaining one supporting step or reason.',
+ 'impact' => 'That detail would help the interviewer understand why "'.$anchor.'" answers this question.',
+ 'next_try' => 'Next time, state "'.$anchor.'" first, then explain how or why it fits the question.',
+ 'success_check' => 'Check whether your revised answer supports "'.$anchor.'" with a clear, concrete detail.',
+ ];
+ $repaired = [];
+ foreach ($fallbacks as $field => $fallback) {
+ $valid = self::validatedProviderCoachingText($original[$field]?? null, $answer, $field === 'impact'? 700: 520);
+ if ($valid !== null) {
+ $preserved++;
+ }
+ $repaired[$field] = $valid?? $fallback;
+ }
+
+ $steps = is_array($original['next_attempt_steps']?? null) && array_is_list($original['next_attempt_steps'])
+ ? $original['next_attempt_steps']: [];
+ $repairedSteps = [];
+ foreach ($steps as $step) {
+ $valid = self::validatedProviderCoachingText($step, $answer, 260);
+ if ($valid !== null && ! in_array($valid, $repairedSteps, true)) {
+ $preserved++;
+ $repairedSteps[] = $valid;
+ }
+ }
+ foreach ([
+ 'State the main point behind "'.$anchor.'" clearly.',
+ 'Add one specific step or reason that supports that point.',
+ ] as $fallback) {
+ if (count($repairedSteps) >= 2) {
+ break;
+ }
+ if (! in_array($fallback, $repairedSteps, true)) {
+ $repairedSteps[] = $fallback;
+ }
+ }
+ $repaired['next_attempt_steps'] = array_slice($repairedSteps, 0, 4);
+
+ if ($preserved < 3 || self::validatedProviderCoaching(['coaching' => $repaired], $answer) === []) {
+ continue;
+ }
+
+ if ($item['coaching'] !== $repaired) {
+ $item['coaching'] = $repaired;
+ $repairedIds[] = $id;
+ }
+ }
+ unset($item);
+
+ return [$response, $repairedIds];
  }
 
  private static function validatedProviderCoachingText(mixed $text, array $answer, int $maxLength = 520):?string
@@ -6252,8 +6533,7 @@ PROMPT;
  &&! self::feedbackInfersForbiddenTrait($plain)
  &&! self::feedbackClaimsPerfectCertainty($plain)
  &&! self::providerVisibleTextHasUnsupportedSpecificClaims($plain, $answer)
- && (self::isSkippedAnswer($answer) ||! self::feedbackHasUnsupportedNumbers($plain, $answerText))
- && self::providerCoachingMentionsQuestionOrAnswer($plain, $answer)? $plain: null;
+ && (self::isSkippedAnswer($answer) ||! self::feedbackHasUnsupportedNumbers($plain, $answerText))? $plain: null;
  }
 
  private static function isGenericCoachingText(string $text): bool
@@ -6471,6 +6751,7 @@ PROMPT;
 
  return [
  'schema_version' => 'interview_feedback_v9',
+ 'review_policy_version' => self::REVIEW_POLICY_VERSION,
  'rubric_name' => self::reviewContextText(
  $reviewContext['rubric_name']?? null,
  'SpeakReady detailed interview feedback rubric',
@@ -7172,11 +7453,13 @@ PROMPT;
  $calibrationAdjusted = (bool) ($scoreCalibration['adjustment_applied']?? false);
  $calibrationRiskFlags = array_values(array_filter((array) ($scoreCalibration['risk_flags']?? [])));
  $calibrationCoverageFlags = array_values(array_filter((array) ($scoreCalibration['coverage_flags']?? [])));
+ $calibrationComparisonNote = (string) ($scoreCalibration['comparison_note']?? '');
 
  // This percentage is an internal evidence/safeguard score, not measured
  // agreement with human interviewers. Only a clean deterministic cross-check
  // can enter the high (95%+) band. Provider-only scores, incomplete coverage,
- // and material calibration disagreements remain visibly below that gate.
+ // and score adjustments remain visibly below that gate. Word overlap cannot
+ // disprove an answer that addresses the question in different words.
  if (! $isSkipped && ! (bool) ($feedback['is_too_short']?? false)) {
  if (! $calibrationChecked || $calibrationCoverageFlags!== []) {
  $reliabilityPercent = min($reliabilityPercent, 94);
@@ -7192,6 +7475,7 @@ PROMPT;
  ! $calibrationChecked => 'provider_only',
  $calibrationAdjusted || $calibrationRiskFlags!== [] => 'cross_checked_with_concerns',
  $calibrationCoverageFlags!== [] => 'cross_checked_with_limited_coverage',
+ $calibrationComparisonNote!== '' => 'provider_above_lexical_reference',
  default => 'cross_checked_clean',
  };
 
@@ -7413,10 +7697,25 @@ PROMPT;
  return false;
  }
 
+ $feedbackWords = ' '.trim((string) preg_replace('/[^\pL\pN]+/u', ' ', mb_strtolower($feedback))).' ';
  foreach ($quotes as $quote) {
  $quote = self::normalizeEvidenceText((string) $quote);
  if ($quote!== '' && str_contains($feedback, $quote)) {
  return true;
+ }
+
+ // Providers sometimes cite a distinctive part of a longer exact quote.
+ // Accept only a contiguous phrase with at least three meaningful terms;
+ // a generic one- or two-word overlap is not an evidence citation.
+ $quoteWords = preg_split('/\s+/u', trim((string) preg_replace('/[^\pL\pN]+/u', ' ', mb_strtolower($quote))))?: [];
+ for ($start = 0; $start < count($quoteWords); $start++) {
+ for ($length = 3; $length <= 8 && $start + $length <= count($quoteWords); $length++) {
+ $phrase = implode(' ', array_slice($quoteWords, $start, $length));
+ if (count(self::meaningfulKeywords($phrase)) >= 3
+ && str_contains($feedbackWords, ' '.$phrase.' ')) {
+ return true;
+ }
+ }
  }
  }
 
@@ -7762,6 +8061,7 @@ PROMPT;
  $checked = self::englishCalibrationEligible($answerText, $questionText);
  $adjustmentApplied = false;
  $riskFlags = [];
+ $comparisonNote = null;
  $coverageFlags = [];
 
  if ($providerMissingCriteria!== []) {
@@ -7771,9 +8071,9 @@ PROMPT;
  if ($checked) {
  $delta = $providerReadiness - $localReadiness;
  if ($delta >= 35) {
- // Local word and keyword checks can miss a short semantic answer. Surface
- // the disagreement as uncertainty without lowering validated AI scores.
- $riskFlags[] = 'provider_local_score_difference';
+ // Local word checks can miss a semantic answer. Preserve the
+ // comparison without treating it as failed evidence validation.
+ $comparisonNote = 'provider_score_above_lexical_reference';
  }
 
  if ($delta <= -35) {
@@ -7824,6 +8124,7 @@ PROMPT;
  'provider_delta' => $providerReadiness - $localReadiness,
  'adjustment_applied' => $adjustmentApplied,
  'risk_flags' => array_values(array_unique($riskFlags)),
+ 'comparison_note' => $comparisonNote,
  'coverage_flags' => array_values(array_unique($coverageFlags)),
  'language_scoring_enabled' => $languageScoringEnabled,
  'uses_asr_transcript' => (bool) ($profile['uses_asr_transcript']?? false),
@@ -9298,8 +9599,21 @@ PROMPT;
 
  private static function cohereTextFromResponse($response): string
  {
- $content = $response->json('message.content.0.text');
- if (is_string($content)) {
+ $content = $response->json('message.content');
+ if (is_array($content)) {
+ $text = [];
+ foreach ($content as $block) {
+ if (! is_array($block) || ($block['type']?? 'text') !== 'text' || ! is_string($block['text']?? null)) {
+ continue;
+ }
+
+ $text[] = $block['text'];
+ }
+
+ if ($text!== []) {
+ return implode('', $text);
+ }
+ } elseif (is_string($content)) {
  return $content;
  }
 

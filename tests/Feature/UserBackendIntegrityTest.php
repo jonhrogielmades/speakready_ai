@@ -126,6 +126,39 @@ class UserBackendIntegrityTest extends TestCase
         Queue::assertPushedTimes(RefreshDetailedFeedbackReview::class, 1);
     }
 
+    public function test_sync_review_refresh_is_scheduled_after_the_response(): void
+    {
+        Queue::fake();
+        config()->set('queue.default', 'sync');
+        $this->app['env'] = 'local';
+        $checkedBeforeDeferredDispatch = false;
+        $this->app->terminating(function () use (&$checkedBeforeDeferredDispatch): void {
+            Queue::assertNotPushed(RefreshDetailedFeedbackReview::class);
+            $checkedBeforeDeferredDispatch = true;
+        });
+
+        $user = User::factory()->create();
+        $session = InterviewSession::create([
+            'user_id' => $user->id,
+            'difficulty' => 'medium',
+            'target_position' => 'Software Engineer',
+            'status' => 'completed',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('Background review refresh is pending.');
+
+        $this->assertTrue($checkedBeforeDeferredDispatch);
+        Queue::assertPushed(
+            RefreshDetailedFeedbackReview::class,
+            fn (RefreshDetailedFeedbackReview $job): bool => $job->sessionId === $session->id
+                && $job->userId === $user->id
+        );
+        Queue::assertPushedTimes(RefreshDetailedFeedbackReview::class, 1);
+    }
+
     private function completedSession(): InterviewSession
     {
         return InterviewSession::create([

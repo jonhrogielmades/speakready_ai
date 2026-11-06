@@ -413,6 +413,10 @@ final class FeedbackEvidencePresenter
         if ($provider !== '') {
             $parts[] = Str::headline(str_replace('_', ' ', $provider));
         }
+        $summarySource = trim((string) ($context['session_feedback_source'] ?? ''));
+        if (in_array($summarySource, ['local_evidence_repair', 'mixed_provider_and_local_evidence'], true)) {
+            $parts[] = 'session notes include answer-based safety edits';
+        }
         if ($confidence !== '') {
             $parts[] = Str::headline($confidence).' provider confidence';
         }

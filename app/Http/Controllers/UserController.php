@@ -908,7 +908,14 @@ class UserController extends Controller
 
  if ($reviewNeedsRefresh && Cache::add($refreshCooldownKey, true, now()->addMinutes(15))) {
  try {
+ // A sync queue would otherwise run provider calls before this page renders.
+ // Run the refresh when the response has been sent, while keeping the normal
+ // queue dispatch in tests and installations with a background worker.
+ if (config('queue.default') === 'sync' && ! app()->environment('testing')) {
+ RefreshDetailedFeedbackReview::dispatchAfterResponse((int) $sessionRecord->id, (int) Auth::id());
+ } else {
  RefreshDetailedFeedbackReview::dispatch((int) $sessionRecord->id, (int) Auth::id());
+ }
  $feedbackRefreshQueued = true;
  } catch (\Throwable $exception) {
  Cache::forget($refreshCooldownKey);
