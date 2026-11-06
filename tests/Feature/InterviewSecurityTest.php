@@ -500,6 +500,87 @@ class InterviewSecurityTest extends TestCase
             && $request['voice'] === 'nova');
     }
 
+    public function test_interview_speech_pins_first_successful_provider_model_and_voice(): void
+    {
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'elevenlabs,openai',
+            'services.openai.tts_enabled' => true,
+            'services.openai.tts_model' => 'gpt-4o-mini-tts',
+            'services.openai.tts_voice' => 'nova',
+            'services.elevenlabs.api_key' => 'sk_test-eleven-key',
+            'services.elevenlabs.api_endpoint' => 'https://api.elevenlabs.io/v1',
+            'services.elevenlabs.tts_voice_id' => '21m00Tcm4TlvDq8ikWAM',
+        ]);
+
+        $elevenRequests = 0;
+        $openAiRequests = [];
+        Http::fake(function ($request) use (&$elevenRequests, &$openAiRequests) {
+            if (str_contains($request->url(), 'api.elevenlabs.io')) {
+                $elevenRequests++;
+
+                return Http::response($elevenRequests === 1 ? 'unavailable' : 'different-voice', $elevenRequests === 1 ? 500 : 200, [
+                    'Content-Type' => 'audio/mpeg',
+                ]);
+            }
+
+            if ($request->url() === 'https://api.openai.com/v1/audio/speech') {
+                $openAiRequests[] = $request->data();
+
+                return Http::response(count($openAiRequests) === 3 ? 'unavailable' : 'pinned-audio', count($openAiRequests) === 3 ? 500 : 200, [
+                    'Content-Type' => 'audio/mpeg',
+                ]);
+            }
+
+            return Http::response('unexpected provider', 500);
+        });
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+        $speechRequest = [
+            'session_id' => $session->id,
+            'question_id' => $question->id,
+        ];
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.speech'), $speechRequest)
+            ->assertOk()
+            ->assertSee('pinned-audio');
+
+        $session->refresh();
+        $this->assertSame('openai', $session->tts_provider);
+        $this->assertSame('gpt-4o-mini-tts', $session->tts_model);
+        $this->assertSame('nova', $session->tts_voice);
+
+        config([
+            'services.openai.tts_model' => 'tts-1',
+            'services.openai.tts_voice' => 'coral',
+        ]);
+
+        $this->post(route('interview.speech'), $speechRequest)
+            ->assertOk()
+            ->assertSee('pinned-audio');
+        $this->post(route('interview.speech'), $speechRequest)
+            ->assertStatus(503);
+
+        $this->assertSame(1, $elevenRequests);
+        $this->assertCount(3, $openAiRequests);
+        foreach ($openAiRequests as $request) {
+            $this->assertSame('gpt-4o-mini-tts', $request['model']);
+            $this->assertSame('nova', $request['voice']);
+        }
+    }
+
     public function test_user_can_request_onboarding_speech_from_tts_providers(): void
     {
         Storage::fake('local');

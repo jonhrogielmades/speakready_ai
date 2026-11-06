@@ -677,8 +677,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const mobileSpeechSurface = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
  const localMicrophoneHosts = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
  const speechLocale = document.documentElement.dataset.speechLocale || navigator.language || 'en-US';
- const speechLanguage = speechLocale.split('-')[0];
- const interviewerSpeechRate = 0.90;
  const interviewerServerAudioPlaybackRate = 1.0;
  const interviewerCaptionWordMs = 430;
  const interviewerSpeechTimeoutWordMs = 720;
@@ -3484,7 +3482,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  let visualizerInterval = null;
  let currentAmplitude = 0.2;
- let preferredVoice = null;
  let autoStartAfterQuestionTimer = null;
  let questionSpeechToken = 0;
  let questionLoadToken = 0;
@@ -4129,59 +4126,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }, 450);
  }
 
- function speechLocalePriority() {
- if (speechLanguage === 'fil' || speechLanguage === 'tl') {
- return ['fil-PH', 'tl-PH', 'fil', 'tl', 'en-PH', 'en-US', 'en'];
- }
-
- if (speechLanguage === 'ceb') {
- return ['ceb-PH', 'ceb', 'fil-PH', 'tl-PH', 'fil', 'tl', 'en-PH', 'en-US', 'en'];
- }
-
- return [speechLocale, speechLanguage, 'en-PH', 'en-US', 'en'];
- }
-
- function voiceMatchesLanguage(voice, language) {
- const voiceLang = String(voice.lang || '').toLowerCase();
- const target = String(language || '').toLowerCase();
- return voiceLang === target || voiceLang.startsWith(target + '-') || target.startsWith(voiceLang + '-');
- }
-
- function voiceLooksNatural(voice) {
- return /google|premium|natural|siri|microsoft|enhanced/i.test(voice.name || '');
- }
-
- function voiceLooksFemale(voice) {
- const name = String(voice.name || '').toLowerCase();
- return /\b(female|woman|girl|zira|aria|jenny|natasha|sonia|libby|hazel|susan|samantha|karen|moira|tessa|victoria|fiona|ava|allison|shelley|shelly|joanna|salli|kimberly|kendra|ivy|emma|amy|nicole|olivia|serena|veena|linda|melina|carmit|paulina|monica|marisol|lucia|maria|lupe|paloma|google us english|google uk english female)\b/i.test(name);
- }
-
- function voiceLooksMale(voice) {
- const name = String(voice.name || '').toLowerCase();
- return /\b(male|man|boy|david|mark|george|daniel|alex|fred|tom|ralph|bruce|arthur|albert|jorge|diego|carlos|miguel|juan|paul|ryan|liam|brian|guy|aaron|eric|nathan|christopher|jacob|justin|matthew|joey|onyx|echo)\b/i.test(name);
- }
-
- // Initialize preferred voice
- function loadVoices() {
- let voices = window.speechSynthesis.getVoices();
- if (voices.length > 0) {
- const languagePriority = speechLocalePriority();
- preferredVoice = languagePriority.map(language =>
- voices.find(v => voiceMatchesLanguage(v, language) && voiceLooksFemale(v) && voiceLooksNatural(v))
- || voices.find(v => voiceMatchesLanguage(v, language) && voiceLooksFemale(v))
- || voices.find(v => voiceMatchesLanguage(v, language) && voiceLooksNatural(v) &&!voiceLooksMale(v))
- || voices.find(v => voiceMatchesLanguage(v, language) &&!voiceLooksMale(v))
- ).find(Boolean)
- || voices.find(v => voiceLooksFemale(v) && voiceLooksNatural(v))
- || voices.find(v => voiceLooksFemale(v))
- || voices.find(v =>!voiceLooksMale(v))
- || voices[0];
- }
- }
- if ('speechSynthesis' in window) {
- window.speechSynthesis.onvoiceschanged = loadVoices;
- loadVoices();
- }
 
  function clearCaptionInterval() {
  if (captionInterval) {
@@ -4387,9 +4331,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  questionSpeechToken++;
  resolveAnySpeechCompletion();
  cancelQuestionAudio();
- if ('speechSynthesis' in window) {
- window.speechSynthesis.cancel();
- }
  clearCaptionInterval();
  renderQuestionCaption([], -1);
  if (visualizerInterval) clearInterval(visualizerInterval);
@@ -4432,13 +4373,24 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  });
 
  if (!response.ok) {
- if (response.status === 400 || response.status === 403 || response.status === 503) {
+ if (response.status === 400 || response.status === 403) {
  serverVoiceUnavailable = true;
  }
  return null;
  }
 
- const blob = await response.blob();
+ let bodyTimeoutId;
+ let blob;
+ try {
+ blob = await Promise.race([
+ response.blob(),
+ new Promise(resolve => {
+ bodyTimeoutId = setTimeout(() => resolve(null), 12000);
+ }),
+ ]);
+ } finally {
+ clearTimeout(bodyTimeoutId);
+ }
  if (!blob || blob.size < 128) return null;
 
  const url = URL.createObjectURL(blob);
@@ -4483,98 +4435,38 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (activeQuestionAudio!== audio) return;
  activeQuestionAudio = null;
  if (token!== questionSpeechToken || interviewTerminated) return;
- if (playbackReady) speakWithDeviceVoice(text, token, startTimerAfterSpeech);
+ if (playbackReady) {
+ showSessionNotice('Interviewer audio stopped. Read the text on screen.', 'warning');
+ finishSpeakingUi(text, token, startTimerAfterSpeech);
+ }
  }, { once: true });
 
- const deviceVoiceAvailable = 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
  const started = await Promise.race([
  Promise.resolve(audio.play()).then(() => true, () => false),
- new Promise(resolve => setTimeout(() => resolve(false), deviceVoiceAvailable? 700: 4000)),
+ new Promise(resolve => setTimeout(() => resolve(false), 4000)),
  ]);
- if (!started) {
+ if (!started || activeQuestionAudio!== audio) {
  if (activeQuestionAudio === audio) cancelQuestionAudio();
  return false;
  }
  playbackReady = true;
+ if (activeSpeechCompletion?.token === token) {
+ activeSpeechCompletion.timeoutId = setTimeout(() => {
+ if (token!== questionSpeechToken) return;
+ cancelQuestionAudio();
+ finishSpeakingUi(text, token, startTimerAfterSpeech);
+ }, estimatedSpeechTimeoutMs(text));
+ }
 
  return true;
  } catch (error) {
- console.warn('Server AI voice unavailable, using device voice.', error);
+ console.warn('Server AI voice unavailable.', error);
  cancelQuestionAudio();
 
  return false;
  }
  }
 
- function speakWithDeviceVoice(text, token, startTimerAfterSpeech) {
- if (interviewTerminated) {
- resolveSpeechCompletion(token, 'cancelled');
- return;
- }
-
- if ('speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function') {
- window.speechSynthesis.cancel();
- let utterance = new SpeechSynthesisUtterance(text);
- utterance.lang = speechLocale;
- if (preferredVoice) utterance.voice = preferredVoice;
- utterance.rate = interviewerSpeechRate;
- utterance.pitch = 1.0;
-
- let speechUi = null;
- let deviceSpeechStarted = false;
- let deviceSpeechAbandoned = false;
- const startupTimer = setTimeout(() => {
- if (deviceSpeechStarted || token!== questionSpeechToken) return;
- deviceSpeechAbandoned = true;
- window.speechSynthesis.cancel();
- finishSpeakingUi(text, token, startTimerAfterSpeech);
- }, 1200);
-
- utterance.onboundary = function(e) {
- if (deviceSpeechAbandoned || token!== questionSpeechToken) return;
- if(e.name === 'word' || (typeof e.charIndex === 'number' && e.charIndex >= 0)) {
- if (speechUi) speechUi.markBoundary(e.charIndex);
-
- currentAmplitude = 1.0;
- }
- };
-
- utterance.onstart = function() {
- if (deviceSpeechAbandoned || token!== questionSpeechToken) return;
- deviceSpeechStarted = true;
- clearTimeout(startupTimer);
- speechUi = startSpeakingUi(text, true);
- };
-
- utterance.onend = function() {
- clearTimeout(startupTimer);
- if (deviceSpeechAbandoned || token!== questionSpeechToken) return;
- deviceSpeechAbandoned = true;
- finishSpeakingUi(text, token, startTimerAfterSpeech);
- };
-
- utterance.onerror = function() {
- clearTimeout(startupTimer);
- if (deviceSpeechAbandoned || token!== questionSpeechToken) return;
- deviceSpeechAbandoned = true;
- finishSpeakingUi(text, token, startTimerAfterSpeech);
- };
-
- try {
- window.speechSynthesis.speak(utterance);
- } catch (error) {
- clearTimeout(startupTimer);
- deviceSpeechAbandoned = true;
- console.warn('Device speech failed:', error);
- finishSpeakingUi(text, token, startTimerAfterSpeech);
- }
- } else {
- document.getElementById('aiQuestionText').innerText = text;
- renderStaticQuestionCaption(text);
- if (startTimerAfterSpeech) scheduleAutoTranscriptionStart(token);
- resolveSpeechCompletion(token);
- }
- }
 
  async function speakQuestion(text, options = {}) {
  if (interviewTerminated) return 'cancelled';
@@ -4586,36 +4478,23 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const token = ++questionSpeechToken;
  const startTimerAfterSpeech = options.startTimerAfterSpeech === true;
  const completion = new Promise(resolve => {
- const timeoutId = setTimeout(() => {
- if (token === questionSpeechToken) {
- finishSpeakingUi(text, token, startTimerAfterSpeech);
- }
- }, estimatedSpeechTimeoutMs(text));
- activeSpeechCompletion = { token, resolve, timeoutId };
+ activeSpeechCompletion = { token, resolve, timeoutId: null };
  });
 
  if (isRecording) {
  await pauseRecording();
  }
 
- let usedServerVoice = false;
  const speechText = options.speechText || '';
  const cleanSpeechText = cleanTranscriptText(speechText);
- const cacheKey = options.questionId? `q:${options.questionId}`: `text:${cleanSpeechText}`;
- const deviceVoiceAvailable = 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
  if (serverAiVoiceEnabled && (options.questionId || cleanSpeechText)) {
- const serverReady = serverSpeechUrlCache.has(cacheKey)
- || (!deviceVoiceAvailable && Boolean(await serverSpeechUrl(options.questionId, speechText)));
- if (serverReady && token === questionSpeechToken) {
- usedServerVoice = await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId, speechText);
- } else if (deviceVoiceAvailable && !serverVoiceUnavailable) {
- // Keep the first prompt immediate; a completed request can serve a repeat.
- void serverSpeechUrl(options.questionId, speechText);
- }
- }
+ const usedServerVoice = await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId, speechText);
  if (usedServerVoice || token!== questionSpeechToken || interviewTerminated) return completion;
-
- speakWithDeviceVoice(text, token, startTimerAfterSpeech);
+ }
+ if (token === questionSpeechToken && !interviewTerminated) {
+ showSessionNotice('Interviewer audio is unavailable. Read the text on screen.', 'warning');
+ finishSpeakingUi(text, token, startTimerAfterSpeech);
+ }
 
  return completion;
  }

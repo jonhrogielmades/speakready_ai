@@ -2998,7 +2998,10 @@ PROMPT;
  ? microtime(true) + max(1, min(60, (int) $options['deadline_seconds']))
  : null;
  $attempts = isset($options['attempts']) ? max(1, min(3, (int) $options['attempts'])) : null;
- $providers = self::speechSynthesisProviderPriority();
+ $providers = array_key_exists('provider', $options)
+  ? [self::normalizeSpeechProviderName($options['provider'])]
+  : self::speechSynthesisProviderPriority();
+ $providers = array_values(array_filter($providers, fn (string $provider): bool => in_array($provider, ['gemini', 'openai', 'elevenlabs'], true)));
 
  foreach ($providers as $providerIndex => $provider) {
  if ($deadlineAt!== null && $deadlineAt <= microtime(true)) {
@@ -3014,9 +3017,9 @@ PROMPT;
  // provider retries. Fast failures can still continue to the next provider.
  $providerAttempts = $deadlineAt === null ? $attempts : 1;
  $speech = match ($provider) {
- 'gemini' => self::synthesizeSpeechWithGemini($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $deadlineAt),
- 'openai' => self::synthesizeSpeechWithOpenAI($text, $targetLanguage, $timeoutSeconds, $providerAttempts),
- 'elevenlabs' => self::synthesizeSpeechWithElevenLabs($text, $targetLanguage, $timeoutSeconds, $providerAttempts),
+  'gemini' => self::synthesizeSpeechWithGemini($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $deadlineAt, $options),
+  'openai' => self::synthesizeSpeechWithOpenAI($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $options),
+  'elevenlabs' => self::synthesizeSpeechWithElevenLabs($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $options),
  default => null,
  };
 
@@ -3032,20 +3035,24 @@ PROMPT;
  string $text,
  array|string|null $targetLanguage = null,
 ?int $timeoutSeconds = null,
-?int $attempts = null
+?int $attempts = null,
+ array $options = []
  ):?array
  {
- $credentials = self::elevenLabsSpeechCredentials();
+ $credentials = self::elevenLabsSpeechCredentials(true, $options['voice'] ?? null);
  if (! $credentials) {
  return null;
  }
 
+ $model = trim((string) ($options['model'] ?? $credentials['model'])) ?: $credentials['model'];
+ $voiceId = trim((string) ($options['voice'] ?? $credentials['voice_id'])) ?: $credentials['voice_id'];
+
  $payload = [
  'text' => $text,
- 'model_id' => $credentials['model'],
+ 'model_id' => $model,
  ];
 
- $languageCode = self::elevenLabsSpeechLanguageCode($targetLanguage, $credentials['model']);
+ $languageCode = self::elevenLabsSpeechLanguageCode($targetLanguage, $model);
  if ($languageCode!== null) {
  $payload['language_code'] = $languageCode;
  }
@@ -3069,7 +3076,7 @@ PROMPT;
  ->post(
  self::elevenLabsSpeechEndpoint(
  $credentials['endpoint'],
- $credentials['voice_id'],
+  $voiceId,
  $credentials['output_format']
  ),
  $payload
@@ -3097,6 +3104,9 @@ PROMPT;
  return [
  'audio' => $audio,
  'mime_type' => $mimeType!== ''? $mimeType: self::elevenLabsMimeType($credentials['output_format']),
+  'provider' => 'elevenlabs',
+  'model' => $model,
+  'voice' => $voiceId,
  ];
  }
 
@@ -3104,7 +3114,8 @@ PROMPT;
  string $text,
  array|string|null $targetLanguage = null,
 ?int $timeoutSeconds = null,
-?int $attempts = null
+?int $attempts = null,
+ array $options = []
  ):?array
  {
  $credentials = self::openAiSpeechCredentials();
@@ -3113,8 +3124,8 @@ PROMPT;
  }
 
  $language = self::languageConfigFrom($targetLanguage);
- $model = (string) config('services.openai.tts_model', 'gpt-4o-mini-tts');
- $voice = self::openAiFemaleSpeechVoice((string) config('services.openai.tts_voice', 'nova'));
+ $model = trim((string) ($options['model'] ?? config('services.openai.tts_model', 'gpt-4o-mini-tts'))) ?: 'gpt-4o-mini-tts';
+ $voice = self::openAiFemaleSpeechVoice((string) ($options['voice'] ?? config('services.openai.tts_voice', 'nova')));
  $speed = (float) config('services.openai.tts_speed', 0.90);
  $speed = max(0.25, min(4.0, $speed));
 
@@ -3166,6 +3177,9 @@ PROMPT;
  return [
  'audio' => $audio,
  'mime_type' => $mimeType!== ''? $mimeType: 'audio/mpeg',
+  'provider' => 'openai',
+  'model' => $model,
+  'voice' => $voice,
  ];
  }
 
@@ -3182,16 +3196,17 @@ PROMPT;
  array|string|null $targetLanguage = null,
 ?int $timeoutSeconds = null,
 ?int $attempts = null,
-?float $deadlineAt = null
+?float $deadlineAt = null,
+ array $options = []
  ):?array
  {
- $model = trim((string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))?: 'gemini-3.1-flash-tts-preview';
+ $model = trim((string) ($options['model'] ?? config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview')))?: 'gemini-3.1-flash-tts-preview';
  $credentials = self::providerCredentials('gemini', $model);
  if ($credentials['api_key'] === '') {
  return null;
  }
 
- $voice = trim((string) config('services.gemini.tts_voice', 'Kore'))?: 'Kore';
+ $voice = trim((string) ($options['voice'] ?? config('services.gemini.tts_voice', 'Kore')))?: 'Kore';
  $prompt = self::geminiSpeechPrompt($text, $targetLanguage);
 
  try {
@@ -3280,6 +3295,9 @@ PROMPT;
  return [
  'audio' => str_starts_with($pcm, 'RIFF')? $pcm: self::wavFromPcm($pcm, $sampleRate, $channels),
  'mime_type' => 'audio/wav',
+  'provider' => 'gemini',
+  'model' => $model,
+  'voice' => $voice,
  ];
  }
 
@@ -4155,10 +4173,10 @@ PROMPT;
  return 'RIFF'.pack('V', 36 + $dataSize).'WAVE'.'fmt '.pack('VvvVVvv', 16, 1, $channels, $sampleRate, $byteRate, $blockAlign, $bitsPerSample).'data'.pack('V', $dataSize).$pcm;
  }
 
- private static function elevenLabsSpeechCredentials(bool $logInvalidKey = true):?array
+ private static function elevenLabsSpeechCredentials(bool $logInvalidKey = true, ?string $voiceIdOverride = null):?array
  {
  $apiKey = trim((string) config('services.elevenlabs.api_key', ''));
- $voiceId = trim((string) config('services.elevenlabs.tts_voice_id', ''));
+ $voiceId = trim((string) ($voiceIdOverride ?? config('services.elevenlabs.tts_voice_id', '')));
 
  if ($apiKey === '' || $voiceId === '') {
  return null;

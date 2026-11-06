@@ -36,40 +36,78 @@ function evaluate(source, names, context) {
 for (const layout of layouts) {
     const source = readFileSync(join(root, `resources/views/${layout}/interview/session.blade.php`), 'utf8');
 
-    test(`${layout} shows and speaks an uncached question without awaiting server TTS`, async () => {
+    test(`${layout} shows an uncached question while waiting for server audio`, async () => {
         const server = deferred();
         const shown = { innerText: '...' };
-        const spoken = [];
+        const notices = [];
+        let finished = false;
+        let serverCalls = 0;
+        let watchdogs = 0;
         const context = evaluate(source, ['speakQuestion'], {
             interviewTerminated: false,
             questionSpeechToken: 0,
             activeSpeechCompletion: null,
             isRecording: false,
             serverAiVoiceEnabled: true,
-            serverVoiceUnavailable: false,
-            serverSpeechUrlCache: new Map(),
             window: { speechSynthesis: {}, SpeechSynthesisUtterance() {} },
             document: { getElementById: () => shown },
             renderStaticQuestionCaption() {},
             cleanTranscriptText: value => value.trim(),
-            estimatedSpeechTimeoutMs: () => 10000,
-            setTimeout: () => 1,
+            setTimeout: () => { watchdogs++; return 1; },
             cancelQuestionSpeechOutput() { context.questionSpeechToken++; },
-            serverSpeechUrl() { return server.promise; },
-            speakWithServerVoice() { assert.fail('uncached server speech should not hold up a question'); },
-            speakWithDeviceVoice(text, token) {
-                spoken.push(text);
+            async speakWithServerVoice() {
+                serverCalls++;
+                await server.promise;
+                context.activeSpeechCompletion.resolve('finished');
+                return true;
+            },
+            speakWithDeviceVoice() { assert.fail('interviewer must not use browser speech'); },
+            showSessionNotice(message) { notices.push(message); },
+            finishSpeakingUi() { assert.fail('server audio is still pending'); },
+        });
+
+        const result = context.speakQuestion('Tell me about your project.', { questionId: 12 });
+        result.then(() => { finished = true; });
+        assert.equal(shown.innerText, 'Tell me about your project.');
+        assert.equal(serverCalls, 1);
+        assert.equal(watchdogs, 0, 'speech completion must not time out while audio is being fetched');
+        await Promise.resolve();
+        assert.equal(finished, false);
+        assert.deepEqual(notices, []);
+        server.resolve();
+        assert.equal(await result, 'finished');
+        assert.equal(serverCalls, 1);
+    });
+
+    test(`${layout} keeps the question readable and continues when server audio is unavailable`, async () => {
+        const shown = { innerText: '...' };
+        const notices = [];
+        let finished = 0;
+        const context = evaluate(source, ['speakQuestion'], {
+            interviewTerminated: false,
+            questionSpeechToken: 0,
+            activeSpeechCompletion: null,
+            isRecording: false,
+            serverAiVoiceEnabled: true,
+            document: { getElementById: () => shown },
+            renderStaticQuestionCaption() {},
+            cleanTranscriptText: value => value.trim(),
+            cancelQuestionSpeechOutput() { context.questionSpeechToken++; },
+            speakWithServerVoice: async () => false,
+            speakWithDeviceVoice() { assert.fail('interviewer must not use browser speech'); },
+            showSessionNotice(message, type) { notices.push([message, type]); },
+            finishSpeakingUi(_text, token) {
+                finished++;
                 context.activeSpeechCompletion.resolve('finished');
             },
         });
 
-        const result = context.speakQuestion('Tell me about your project.', { questionId: 12 });
+        assert.equal(await context.speakQuestion('Tell me about your project.', { questionId: 12 }), 'finished');
         assert.equal(shown.innerText, 'Tell me about your project.');
-        assert.deepEqual(spoken, ['Tell me about your project.']);
-        assert.equal(await result, 'finished');
-        server.resolve('blob:later');
-        await server.promise;
-        assert.equal(spoken.length, 1, 'late server audio must not interrupt device speech');
+        assert.equal(finished, 1);
+        assert.equal(notices.length, 1);
+        assert.match(notices[0][0], /audio is unavailable/i);
+        assert.equal(notices[0][1], 'warning');
     });
 
     test(`${layout} coalesces speech requests and caches completed audio`, async () => {
@@ -88,6 +126,8 @@ for (const layout of layouts) {
                 assert.equal(options.timeoutMs, 12000);
                 return response.promise;
             },
+            setTimeout,
+            clearTimeout,
             console,
         });
 
@@ -99,6 +139,57 @@ for (const layout of layouts) {
         assert.equal(await second, 'blob:question-12');
         assert.equal(await context.serverSpeechUrl(12), 'blob:question-12');
         assert.equal(requests, 1);
+    });
+
+    test(`${layout} retries server audio after a transient 503`, async () => {
+        let requests = 0;
+        const context = evaluate(source, ['serverSpeechUrl'], {
+            interviewSessionId: 7,
+            serverVoiceUnavailable: false,
+            serverSpeechUrlCache: new Map(),
+            serverSpeechRequestCache: new Map(),
+            cleanTranscriptText: value => value.trim(),
+            FormData: class FormData { append() {} },
+            URL: { createObjectURL: () => 'blob:question-12' },
+            managedFetch() {
+                requests++;
+                return Promise.resolve(requests === 1
+                    ? { ok: false, status: 503 }
+                    : { ok: true, blob: async () => ({ size: 256 }) });
+            },
+            setTimeout,
+            clearTimeout,
+            console,
+        });
+
+        assert.equal(await context.serverSpeechUrl(12), null);
+        assert.equal(context.serverVoiceUnavailable, false);
+        assert.equal(await context.serverSpeechUrl(12), 'blob:question-12');
+        assert.equal(requests, 2);
+    });
+
+    test(`${layout} stops waiting when an audio response body stalls`, async () => {
+        const timers = [];
+        const context = evaluate(source, ['serverSpeechUrl'], {
+            interviewSessionId: 7,
+            serverVoiceUnavailable: false,
+            serverSpeechUrlCache: new Map(),
+            serverSpeechRequestCache: new Map(),
+            cleanTranscriptText: value => value.trim(),
+            FormData: class FormData { append() {} },
+            URL: { createObjectURL() { assert.fail('stalled audio must not be cached'); } },
+            managedFetch: async () => ({ ok: true, blob: () => new Promise(() => {}) }),
+            setTimeout(callback, delay) { timers.push({ callback, delay }); return timers.length; },
+            clearTimeout() {},
+            console,
+        });
+
+        const result = context.serverSpeechUrl(12);
+        for (let turn = 0; turn < 10 && timers.length === 0; turn++) await Promise.resolve();
+        assert.equal(timers[0]?.delay, 12000);
+        timers[0].callback();
+        assert.equal(await result, null);
+        assert.equal(context.serverSpeechRequestCache.size, 0);
     });
 
     test(`${layout} bounds server playback and ignores late audio starts`, async () => {
@@ -123,7 +214,9 @@ for (const layout of layouts) {
             serverSpeechUrl: async () => 'blob:cached',
             startSpeakingUi() { speechUiStarts++; },
             finishSpeakingUi() {},
-            speakWithDeviceVoice() {},
+            activeSpeechCompletion: { token: 3, timeoutId: null },
+            estimatedSpeechTimeoutMs: () => 10000,
+            showSessionNotice() {},
             cancelQuestionAudio() {
                 context.activeQuestionAudio?.pause();
                 context.activeQuestionAudio = null;
@@ -134,54 +227,14 @@ for (const layout of layouts) {
 
         const result = context.speakWithServerVoice('Question', 3, true, 12);
         for (let turn = 0; turn < 10 && timers.length === 0; turn++) await Promise.resolve();
-        assert.equal(timers[0]?.delay, 700);
+        assert.equal(timers[0]?.delay, 4000);
         timers[0].callback();
         assert.equal(await result, false);
         assert.equal(paused, true);
         playback.resolve();
         await playback.promise;
         events.get('playing')?.();
-        assert.equal(speechUiStarts, 0, 'late audio must not overlap device fallback');
-    });
-
-    test(`${layout} releases the question when device speech never starts`, () => {
-        const timers = [];
-        let utterance;
-        let cancels = 0;
-        let spokenUiStarts = 0;
-        let finishes = 0;
-        const context = evaluate(source, ['speakWithDeviceVoice'], {
-            interviewTerminated: false,
-            questionSpeechToken: 4,
-            speechLocale: 'en-US',
-            interviewerSpeechRate: 1,
-            preferredVoice: null,
-            currentAmplitude: 0,
-            window: {
-                speechSynthesis: {
-                    cancel() { cancels++; },
-                    speak(value) { utterance = value; },
-                },
-                SpeechSynthesisUtterance: function SpeechSynthesisUtterance() {},
-            },
-            SpeechSynthesisUtterance: function SpeechSynthesisUtterance() {},
-            setTimeout(callback, delay) { timers.push({ callback, delay }); return timers.length; },
-            clearTimeout() {},
-            startSpeakingUi() { spokenUiStarts++; },
-            finishSpeakingUi() { finishes++; },
-            console,
-        });
-
-        context.speakWithDeviceVoice('Question', 4, true);
-        assert.equal(timers[0]?.delay, 1200);
-        assert.equal(finishes, 0);
-        timers[0].callback();
-        assert.equal(cancels, 2);
-        assert.equal(finishes, 1);
-        utterance.onstart();
-        utterance.onend();
-        assert.equal(spokenUiStarts, 0, 'late device speech must stay canceled');
-        assert.equal(finishes, 1);
+        assert.equal(speechUiStarts, 0, 'late audio must not start after playback timeout');
     });
 
     test(`${layout} ignores completion from an older question load`, async () => {

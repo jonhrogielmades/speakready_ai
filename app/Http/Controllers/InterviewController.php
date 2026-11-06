@@ -962,10 +962,62 @@ return response()->json([
  $speechText = $question->question_text;
  }
 
- $speech = AIService::synthesizeSpeech($speechText, $this->currentLanguageConfig(), [
+  $speechOptions = [
  'deadline_seconds' => 10,
  'attempts' => 1,
- ]);
+  ];
+  if ($session->tts_provider !== null) {
+   if (trim((string) $session->tts_provider) === ''
+    || trim((string) $session->tts_model) === ''
+    || trim((string) $session->tts_voice) === '') {
+    return response()->json(['error' => 'AI speech is not available.'], 503);
+   }
+
+   $speechOptions['provider'] = $session->tts_provider;
+   $speechOptions['model'] = $session->tts_model;
+   $speechOptions['voice'] = $session->tts_voice;
+  }
+
+  $language = $this->currentLanguageConfig();
+  $speech = AIService::synthesizeSpeech($speechText, $language, $speechOptions);
+  if ($speech && $session->tts_provider === null) {
+   $provider = trim((string) ($speech['provider']?? ''));
+   $model = trim((string) ($speech['model']?? ''));
+   $voice = trim((string) ($speech['voice']?? ''));
+   if ($provider === '' || $model === '' || $voice === '') {
+    return response()->json(['error' => 'AI speech is not available.'], 503);
+   }
+
+   $claimed = InterviewSession::query()
+    ->whereKey($session->id)
+    ->where('status', 'in_progress')
+    ->whereNull('tts_provider')
+    ->update([
+     'tts_provider' => $provider,
+     'tts_model' => $model,
+     'tts_voice' => $voice,
+    ]);
+
+   if ($claimed !== 1) {
+    // A concurrent speech request may have pinned a different voice first.
+    // Discard this audio and regenerate with the winning session voice.
+    $winner = $session->fresh();
+    if (! $winner || $winner->status !== 'in_progress'
+     || trim((string) $winner->tts_provider) === ''
+     || trim((string) $winner->tts_model) === ''
+     || trim((string) $winner->tts_voice) === '') {
+     return response()->json(['error' => 'AI speech is not available.'], 503);
+    }
+
+    if ($provider !== $winner->tts_provider || $model !== $winner->tts_model || $voice !== $winner->tts_voice) {
+     $speech = AIService::synthesizeSpeech($speechText, $language, array_merge($speechOptions, [
+      'provider' => $winner->tts_provider,
+      'model' => $winner->tts_model,
+      'voice' => $winner->tts_voice,
+     ]));
+    }
+   }
+  }
  if (! $speech) {
  return response()->json(['error' => 'AI speech is not available.'], 503);
  }

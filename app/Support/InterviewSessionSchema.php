@@ -69,6 +69,9 @@ class InterviewSessionSchema
             $table->integer('num_questions')->default(5);
             $table->string('coach_focus_mode')->default('balanced');
             $table->string('response_mode')->default('text');
+            $table->string('tts_provider', 32)->nullable();
+            $table->string('tts_model')->nullable();
+            $table->string('tts_voice')->nullable();
             $table->string('interview_focus')->nullable();
             $table->integer('time_limit')->default(0);
             $table->string('question_types')->nullable();
@@ -126,6 +129,15 @@ class InterviewSessionSchema
         }
         if (self::isMissing($missing, 'response_mode')) {
             $table->string('response_mode')->default('text');
+        }
+        if (self::isMissing($missing, 'tts_provider')) {
+            $table->string('tts_provider', 32)->nullable();
+        }
+        if (self::isMissing($missing, 'tts_model')) {
+            $table->string('tts_model')->nullable();
+        }
+        if (self::isMissing($missing, 'tts_voice')) {
+            $table->string('tts_voice')->nullable();
         }
         if (self::isMissing($missing, 'interview_focus')) {
             $table->string('interview_focus')->nullable();
@@ -239,6 +251,9 @@ class InterviewSessionSchema
             'num_questions',
             'coach_focus_mode',
             'response_mode',
+            'tts_provider',
+            'tts_model',
+            'tts_voice',
             'interview_focus',
             'time_limit',
             'question_types',
