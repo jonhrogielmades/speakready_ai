@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Schema;
 
 class InterviewSession extends Model
@@ -120,7 +122,8 @@ class InterviewSession extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function category()
+    /** @return BelongsTo<Category, $this> */
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
@@ -135,7 +138,8 @@ class InterviewSession extends Model
         return $this->hasMany(InterviewAnswer::class);
     }
 
-    public function score()
+    /** @return HasOne<Score, $this> */
+    public function score(): HasOne
     {
         return $this->hasOne(Score::class);
     }

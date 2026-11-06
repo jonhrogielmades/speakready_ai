@@ -6843,9 +6843,6 @@ PROMPT;
  }
 
  $totalWeight = array_sum($weights);
- if ($totalWeight <= 0) {
- return 0;
- }
 
  $weightedScore = 0;
  foreach ($weights as $field => $weight) {

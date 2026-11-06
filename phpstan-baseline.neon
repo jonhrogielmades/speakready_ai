@@ -223,12 +223,6 @@ parameters:
 			path: app/Http/Controllers/AdminController.php
 
 		-
-			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/AdminController.php
-
-		-
 			message: '#^Relation ''category'' is not found in App\\Models\\Question model\.$#'
 			identifier: larastan.relationExistence
 			count: 3
@@ -238,12 +232,6 @@ parameters:
 			message: '#^Relation ''questions'' is not found in App\\Models\\Category model\.$#'
 			identifier: larastan.relationExistence
 			count: 2
-			path: app/Http/Controllers/AdminController.php
-
-		-
-			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
 			path: app/Http/Controllers/AdminController.php
 
 		-
@@ -367,12 +355,6 @@ parameters:
 			path: app/Http/Controllers/AdminSessionController.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminSessionController.php
-
-		-
 			message: '#^Property App\\Models\\Profile\:\:\$last_activity_date \(Carbon\\Carbon\|null\) does not accept string\.$#'
 			identifier: assign.propertyType
 			count: 1
@@ -391,21 +373,9 @@ parameters:
 			path: app/Http/Controllers/AdminSessionController.php
 
 		-
-			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 3
-			path: app/Http/Controllers/AdminSessionController.php
-
-		-
 			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
 			count: 2
-			path: app/Http/Controllers/AdminSessionController.php
-
-		-
-			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 3
 			path: app/Http/Controllers/AdminSessionController.php
 
 		-
@@ -422,12 +392,6 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property App\\Models\\ChatbotConversation\:\:\$messages_count\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/AdminUserController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Controllers/AdminUserController.php
@@ -475,12 +439,6 @@ parameters:
 			path: app/Http/Controllers/AdminUserController.php
 
 		-
-			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/AdminUserController.php
-
-		-
 			message: '#^Relation ''interviewSession'' is not found in App\\Models\\InterviewAnswer model\.$#'
 			identifier: larastan.relationExistence
 			count: 3
@@ -506,12 +464,6 @@ parameters:
 
 		-
 			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Http/Controllers/AdminUserController.php
-
-		-
-			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
 			count: 1
 			path: app/Http/Controllers/AdminUserController.php
@@ -709,19 +661,7 @@ parameters:
 			path: app/Http/Controllers/InterviewController.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$category\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/InterviewController.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$country\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/InterviewController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Http/Controllers/InterviewController.php
@@ -775,12 +715,6 @@ parameters:
 			path: app/Http/Controllers/InterviewController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:nextQuestionInSequence\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: app/Http/Controllers/InterviewController.php
-
-		-
 			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:refreshCompletedSessionFeedback\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
@@ -829,12 +763,6 @@ parameters:
 			path: app/Http/Controllers/InterviewController.php
 
 		-
-			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 3
-			path: app/Http/Controllers/InterviewController.php
-
-		-
 			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
 			count: 2
@@ -856,12 +784,6 @@ parameters:
 			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
 			identifier: larastan.relationExistence
 			count: 7
-			path: app/Http/Controllers/InterviewController.php
-
-		-
-			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 3
 			path: app/Http/Controllers/InterviewController.php
 
 		-
@@ -901,12 +823,6 @@ parameters:
 			path: app/Http/Controllers/InterviewController.php
 
 		-
-			message: '#^Variable \$questions in empty\(\) always exists and is not falsy\.$#'
-			identifier: empty.variable
-			count: 1
-			path: app/Http/Controllers/InterviewController.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\Feedback\:\:\$score_id\.$#'
 			identifier: property.notFound
 			count: 1
@@ -922,12 +838,6 @@ parameters:
 			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$practice_scenario\.$#'
 			identifier: property.notFound
 			count: 3
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
-			identifier: property.notFound
-			count: 9
 			path: app/Http/Controllers/UserController.php
 
 		-
@@ -1069,12 +979,6 @@ parameters:
 			path: app/Http/Controllers/UserController.php
 
 		-
-			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 7
-			path: app/Http/Controllers/UserController.php
-
-		-
 			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
 			count: 4
@@ -1105,12 +1009,6 @@ parameters:
 			path: app/Http/Controllers/UserController.php
 
 		-
-			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 7
-			path: app/Http/Controllers/UserController.php
-
-		-
 			message: '#^Relation ''session'' is not found in App\\Models\\Score model\.$#'
 			identifier: larastan.relationExistence
 			count: 2
@@ -1125,12 +1023,6 @@ parameters:
 		-
 			message: '#^Ternary operator condition is always false\.$#'
 			identifier: ternary.alwaysFalse
-			count: 2
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Ternary operator condition is always true\.$#'
-			identifier: ternary.alwaysTrue
 			count: 2
 			path: app/Http/Controllers/UserController.php
 
@@ -1231,12 +1123,6 @@ parameters:
 			path: app/Models/UserOnboardingProgress.php
 
 		-
-			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Models/UserOnboardingProgress.php
-
-		-
 			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
 			identifier: larastan.noEnvCallsOutsideOfConfig
 			count: 8
@@ -1270,12 +1156,6 @@ parameters:
 			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
 			identifier: larastan.noEnvCallsOutsideOfConfig
 			count: 23
-			path: app/Services/AIService.php
-
-		-
-			message: '#^Comparison operation "\<\=" between 0\.8999999999999999\|0\.9999999999999999 and 0 is always false\.$#'
-			identifier: smallerOrEqual.alwaysFalse
-			count: 1
 			path: app/Services/AIService.php
 
 		-
@@ -1477,12 +1357,6 @@ parameters:
 			path: app/Services/AiProviderEvaluationService.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$category\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/AiProviderEvaluationService.php
-
-		-
 			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
 			identifier: larastan.noEnvCallsOutsideOfConfig
 			count: 1
@@ -1491,12 +1365,6 @@ parameters:
 		-
 			message: '#^Offset 0 on non\-empty\-list\<string\> on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
-			count: 1
-			path: app/Services/AiProviderEvaluationService.php
-
-		-
-			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
 			count: 1
 			path: app/Services/AiProviderEvaluationService.php
 
@@ -1615,12 +1483,6 @@ parameters:
 			path: app/Services/DetailedFeedbackReviewService.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/DetailedFeedbackReviewService.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$user\.$#'
 			identifier: property.notFound
 			count: 1
@@ -1646,12 +1508,6 @@ parameters:
 
 		-
 			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Services/DetailedFeedbackReviewService.php
-
-		-
-			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
 			count: 1
 			path: app/Services/DetailedFeedbackReviewService.php
@@ -1717,19 +1573,7 @@ parameters:
 			path: app/Services/InterviewSessionScoreRefreshService.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/InterviewSessionScoreRefreshService.php
-
-		-
 			message: '#^Relation ''answers'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Services/InterviewSessionScoreRefreshService.php
-
-		-
-			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
 			count: 1
 			path: app/Services/InterviewSessionScoreRefreshService.php
@@ -1807,12 +1651,6 @@ parameters:
 			path: app/Services/LearningRecommendationService.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/LearningRecommendationService.php
-
-		-
 			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
 			identifier: function.alreadyNarrowedType
 			count: 1
@@ -1825,21 +1663,9 @@ parameters:
 			path: app/Services/LearningRecommendationService.php
 
 		-
-			message: '#^Relation ''category'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 1
-			path: app/Services/LearningRecommendationService.php
-
-		-
 			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
 			count: 1
-			path: app/Services/LearningRecommendationService.php
-
-		-
-			message: '#^Relation ''score'' is not found in App\\Models\\InterviewSession model\.$#'
-			identifier: larastan.relationExistence
-			count: 2
 			path: app/Services/LearningRecommendationService.php
 
 		-
@@ -2059,12 +1885,6 @@ parameters:
 			path: app/Support/FeedbackEvidencePresenter.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Support/FeedbackEvidencePresenter.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),mixed\>\:\:map\(\) contains unresolvable type\.$#'
 			identifier: argument.unresolvableType
 			count: 1
@@ -2098,12 +1918,6 @@ parameters:
 			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$feedback\.$#'
 			identifier: property.notFound
 			count: 1
-			path: app/Support/FeedbackReportPresenter.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$score\.$#'
-			identifier: property.notFound
-			count: 3
 			path: app/Support/FeedbackReportPresenter.php
 
 		-

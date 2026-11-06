@@ -67,39 +67,40 @@ class FeedbackReportPresenter
  return [];
  }
 
+ $recordedScores = $score->getAttributes();
  $metrics = [
  [
  'name' => 'Fluency & Clarity',
- 'score' => $score->clarity_score,
+ 'score' => $recordedScores['clarity_score']?? null,
  'color' => '#3b82f6',
  ],
  [
  'name' => 'Answer Match',
- 'score' => $score->relevance_score,
+ 'score' => $recordedScores['relevance_score']?? null,
  'color' => '#10b981',
  ],
  [
  'name' => 'Grammar',
- 'score' => $score->grammar_score,
+ 'score' => $recordedScores['grammar_score']?? null,
  'color' => '#8b5cf6',
  ],
  [
  'name' => 'Professional Tone',
- 'score' => $score->professionalism_score,
+ 'score' => $recordedScores['professionalism_score']?? null,
  'color' => '#f59e0b',
  ],
  ];
 
- if (self::hasRecordedConfidence($score->confidence_score?? null)) {
+ if (self::hasRecordedConfidence($recordedScores['confidence_score']?? null)) {
  $metrics[] = [
  'name' => 'Confidence',
- 'score' => $score->confidence_score,
+ 'score' => $recordedScores['confidence_score'],
  'color' => '#0ea5e9',
  ];
  }
 
  return collect($metrics)
- ->filter(fn (array $metric): bool => is_numeric($metric['score']?? null))
+ ->filter(fn (array $metric): bool => is_numeric($metric['score']))
  ->map(fn (array $metric): array => [
  'name' => $metric['name'],
  'score' => self::score($metric['score']),

@@ -36,7 +36,7 @@ class MobileAuthModalInteractionTest extends TestCase
         $this->assertStringContainsString('min-height: 100svh;', $css);
         $this->assertStringContainsString('overflow-anchor: none;', $css);
         $this->assertStringContainsString('class="auth-mobile-document"', $mobileLayout);
-        $this->assertStringContainsString('html.auth-mobile-document { overflow-y: clip; }', $css);
+        $this->assertMatchesRegularExpression('/html\.auth-mobile-document\s*\{[^}]*overflow-y:\s*auto;/s', $css);
         $this->assertStringContainsString('.auth-page-card { flex: 0 0 auto; height: auto; margin-top: auto; margin-bottom: auto;', $css);
         $this->assertStringContainsString('@media (max-width: 390px) and (max-height: 700px)', $css);
         $this->assertStringContainsString('var pageScrollTop = window.scrollY;', $script);

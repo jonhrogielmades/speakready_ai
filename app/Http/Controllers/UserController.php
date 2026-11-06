@@ -293,8 +293,7 @@ class UserController extends Controller
  }
 
  // Notifications
- $userObj = Auth::user();
- $recentNotifications = $userObj->notifications? $userObj->notifications()->latest()->take(3)->get(): collect([]);
+ $recentNotifications = $userObj->notifications()->latest()->take(3)->get();
 
  // Dynamic Upcoming Goal
  $currentGoalScore = (ceil($avgScore / 10) * 10);

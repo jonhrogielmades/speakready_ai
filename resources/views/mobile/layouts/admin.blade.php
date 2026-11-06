@@ -3224,7 +3224,7 @@
       <script src="{{ asset('js/ui-notice.js?v=1') }}"></script>
       <script src="{{ asset('js/admin-ui.js?v=1') }}"></script>
       @include('shared.partials.flash-modal')
-      @if (request()->routeIs('admin.dashboard', 'admin.categories.details'))
+      @if (request()->routeIs('admin.dashboard', 'admin.categories.details', 'admin.sessions.index'))
       <script src="{{ asset('js/chart.umd.min.js') }}"></script>
       @endif
       <script src="{{ asset('js/main.js?v=7') }}"></script>
