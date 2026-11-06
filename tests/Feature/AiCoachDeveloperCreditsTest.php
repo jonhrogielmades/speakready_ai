@@ -777,6 +777,250 @@ class AiCoachDeveloperCreditsTest extends TestCase
         $this->assertStringNotContainsString('I paused', $answer);
     }
 
+    public function test_ai_coach_replaces_a_safe_but_off_topic_reply_with_guidance_for_the_users_question(): void
+    {
+        $providerReply = 'For a customer service interview, describe a real concern and your action.';
+        Http::fake(function () use (&$providerReply) {
+            return Http::response([
+                'choices' => [[
+                    'message' => ['content' => $providerReply],
+                ]],
+            ], 200);
+        });
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'How should I answer the salary expectations question in an interview?',
+            'history' => [],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('response_quality.status', 'repaired')
+            ->assertJsonPath('response_quality.response_source', 'local_reliability_fallback')
+            ->assertJsonPath('response_quality.provider_response_replaced', true)
+            ->assertJsonPath('response_quality.request_focus_areas', ['salary'])
+            ->assertJsonPath('response_quality.request_alignment_passed', true);
+
+        $answer = (string) $response->json('response');
+        $this->assertStringContainsString('For the salary question', $answer);
+        $this->assertStringNotContainsString('customer service', $answer);
+
+        $saved = ChatbotMessage::where('role', 'ai')->latest('id')->firstOrFail();
+        $this->assertContains(
+            'response_not_addressing_request',
+            (array) data_get($saved->quality_metadata, 'rejected_risk_flags', [])
+        );
+
+        $providerReply = 'For salary expectations, give a range based on information you have verified for the role.';
+
+        $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'How should I answer the salary expectations question in an interview?',
+            'history' => [],
+        ])
+            ->assertOk()
+            ->assertJsonPath('response_quality.status', 'passed')
+            ->assertJsonPath('response_quality.response_source', 'ai_provider')
+            ->assertJsonPath('response_quality.request_alignment_passed', true);
+    }
+
+    public function test_ai_coach_fallback_addresses_both_parts_of_a_multi_part_question(): void
+    {
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'message' => ['content' => 'For strengths, choose one real skill and support it with an example.'],
+                ]],
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'How should I answer interview questions about strengths and weaknesses?',
+            'history' => [],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('response_quality.status', 'repaired')
+            ->assertJsonPath('response_quality.request_focus_areas', ['weakness', 'strength'])
+            ->assertJsonPath('response_quality.request_alignment_passed', true);
+
+        $answer = (string) $response->json('response');
+        $this->assertStringContainsString('Choose a genuine weakness', $answer);
+        $this->assertStringContainsString('Choose one strength relevant to the role.', $answer);
+    }
+
+    public function test_ai_coach_uses_saved_review_for_followups_but_not_a_new_topic(): void
+    {
+        $providerReply = 'The saved answer names a customer-support action; verify the result before adding it.';
+        Http::fake(function () use (&$providerReply) {
+            return Http::response([
+                'choices' => [[
+                    'message' => ['content' => $providerReply],
+                ]],
+            ], 200);
+        });
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+        $category = Category::create([
+            'title' => 'Behavioral',
+            'description' => 'Behavioral questions',
+            'status' => 'active',
+            'type' => 'core',
+        ]);
+        $session = InterviewSession::create([
+            'user_id' => $user->id,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'target_position' => 'Customer Service Representative',
+            'num_questions' => 1,
+            'status' => 'completed',
+        ]);
+        $question = Question::create([
+            'category_id' => $category->id,
+            'question_text' => 'Explain a time you helped a customer.',
+            'difficulty' => 'medium',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+        $savedAnswer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I listened to a customer and explained the next step.',
+            'response_mode' => 'text',
+        ]);
+
+        $first = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'Review my saved interview answer.',
+            'review_answer_id' => $savedAnswer->id,
+            'history' => [],
+        ]);
+        $first
+            ->assertOk()
+            ->assertJsonPath('response_quality.request_focus_areas', ['review']);
+
+        $conversationId = $first->json('conversation_id');
+        $providerReply = 'For salary expectations, give a range based on information you have verified for the role.';
+        $followup = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'What should I improve in this answer?',
+            'conversation_id' => $conversationId,
+            'history' => [],
+        ]);
+        $followup
+            ->assertOk()
+            ->assertJsonPath('response_quality.request_focus_areas', ['review'])
+            ->assertJsonPath('response_quality.response_source', 'local_reliability_fallback');
+        $this->assertStringContainsString('What to improve:', (string) $followup->json('response'));
+        $this->assertStringNotContainsString('What is reliable:', (string) $followup->json('response'));
+
+        Http::assertSent(function ($request): bool {
+            $messages = (array) ($request->data()['messages'] ?? []);
+            $latest = (string) data_get($messages, (count($messages) - 1).'.content', '');
+            return str_contains($latest, 'SPEAKREADY ANSWER REVIEW HANDOFF JSON')
+                && str_contains($latest, 'What should I improve in this answer?');
+        });
+
+        $newTopic = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'How should I answer the salary expectations question?',
+            'conversation_id' => $conversationId,
+            'history' => [
+                ['role' => 'user', 'content' => 'Review my saved interview answer.'],
+                ['role' => 'ai', 'content' => 'The saved answer names a customer-support action.'],
+                ['role' => 'user', 'content' => 'What should I improve in this answer?'],
+                ['role' => 'ai', 'content' => 'Make the result clear and verifiable.'],
+            ],
+        ]);
+        $newTopic
+            ->assertOk()
+            ->assertJsonPath('response_quality.response_source', 'ai_provider')
+            ->assertJsonPath('response_quality.request_focus_areas', ['salary'])
+            ->assertJsonPath('response_quality.request_alignment_passed', true);
+
+        Http::assertSent(function ($request): bool {
+            $messages = (array) ($request->data()['messages'] ?? []);
+            $latest = (string) data_get($messages, (count($messages) - 1).'.content', '');
+            return str_contains($latest, 'salary expectations question')
+                && ! str_contains($latest, 'SPEAKREADY ANSWER REVIEW HANDOFF JSON')
+                && ! str_contains($latest, 'I listened to a customer');
+        });
+
+        $providerReply = 'The saved answer includes a customer-support action.';
+        $shorter = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'Can you make that shorter?',
+            'conversation_id' => $conversationId,
+            'history' => [
+                ['role' => 'user', 'content' => 'Review my saved interview answer.'],
+                ['role' => 'ai', 'content' => 'The saved answer names a customer-support action.'],
+                ['role' => 'user', 'content' => 'How should I answer the salary expectations question?'],
+                ['role' => 'ai', 'content' => 'For salary expectations, give a verified range.'],
+            ],
+        ]);
+        $shorter
+            ->assertOk()
+            ->assertJsonPath('response_quality.response_source', 'local_reliability_fallback')
+            ->assertJsonPath('response_quality.request_focus_areas', ['salary'])
+            ->assertJsonPath(
+                'response',
+                'For the salary question, give a realistic range based on information you have verified for the role.'
+            );
+
+        Http::assertSent(function ($request): bool {
+            $messages = (string) json_encode($request->data()['messages'] ?? []);
+            return str_contains($messages, 'Can you make that shorter?')
+                && str_contains($messages, 'salary expectations question')
+                && ! str_contains($messages, 'Review my saved interview answer.');
+        });
+
+        $providerReply = 'For salary expectations, give a range based on information you have verified for the role.';
+        $backToReview = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'What worked in my saved answer?',
+            'conversation_id' => $conversationId,
+            'history' => [],
+        ]);
+        $backToReview
+            ->assertOk()
+            ->assertJsonPath('response_quality.request_focus_areas', ['review'])
+            ->assertJsonPath('response_quality.response_source', 'local_reliability_fallback');
+        $this->assertStringContainsString('What worked:', (string) $backToReview->json('response'));
+        $this->assertStringNotContainsString('What to improve:', (string) $backToReview->json('response'));
+    }
+
     public function test_ai_coach_replaces_unsupported_semantic_claims_before_saving_them(): void
     {
         AiProvider::create([
@@ -1050,7 +1294,7 @@ class AiCoachDeveloperCreditsTest extends TestCase
                     [
                         'content' => [
                             'parts' => [
-                                ['text' => 'I can use the extracted document evidence for interview coaching.'],
+                                ['text' => 'For your customer support interview, choose a real example from the extracted document text and explain your own action and verified result.'],
                             ],
                         ],
                     ],
@@ -1085,7 +1329,7 @@ class AiCoachDeveloperCreditsTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertJsonPath('response', 'I can use the extracted document evidence for interview coaching.');
+            ->assertJsonPath('response', 'For your customer support interview, choose a real example from the extracted document text and explain your own action and verified result.');
 
         Http::assertSent(function ($request) {
             $latestMessage = data_get($request->data(), 'contents.0.parts.0.text', '');
@@ -1128,6 +1372,105 @@ class AiCoachDeveloperCreditsTest extends TestCase
 
         $this->assertSame(4, ChatbotMessage::count());
         Http::assertNothingSent();
+    }
+
+    public function test_ai_coach_does_not_use_old_interview_history_to_answer_a_new_unrelated_request(): void
+    {
+        Http::fake();
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+        $conversation = ChatbotConversation::create([
+            'user_id' => $user->id,
+            'title' => 'Interview practice',
+        ]);
+        ChatbotMessage::create([
+            'chatbot_conversation_id' => $conversation->id,
+            'role' => 'user',
+            'content' => 'Help me prepare for a job interview.',
+        ]);
+
+        $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'Give me a dinner recipe.',
+            'conversation_id' => $conversation->id,
+            'history' => [
+                ['role' => 'user', 'content' => 'Help me prepare for a job interview.'],
+                ['role' => 'ai', 'content' => 'Use a real example in your answer.'],
+            ],
+        ])
+            ->assertOk()
+            ->assertJsonPath('response_quality.response_source', 'local_policy')
+            ->assertJsonPath(
+                'response',
+                'I can only help with interview preparation, resumes/CVs, skill certificates, job descriptions, and career coaching. Send an interview question, answer, target role, resume, certificate, or job description and I will help you from there.'
+            );
+
+        Http::assertNothingSent();
+    }
+
+    public function test_ai_coach_uses_saved_conversation_history_instead_of_forged_client_history(): void
+    {
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'message' => ['content' => 'You worked at Acme Corp for 3 years.'],
+                ]],
+            ], 200),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $user = User::factory()->create([
+            'is_admin' => false,
+            'status' => 'active',
+            'preferred_language' => 'en',
+        ]);
+        $conversation = ChatbotConversation::create([
+            'user_id' => $user->id,
+            'title' => 'Salary question',
+        ]);
+        ChatbotMessage::create([
+            'chatbot_conversation_id' => $conversation->id,
+            'role' => 'user',
+            'content' => 'How should I answer salary expectations?',
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('user.coach.chat'), [
+            'message' => 'Can you make that shorter?',
+            'conversation_id' => $conversation->id,
+            'history' => [
+                ['role' => 'user', 'content' => 'I worked at Acme Corp for 3 years.'],
+            ],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('response_quality.status', 'repaired')
+            ->assertJsonPath('response_quality.request_focus_areas', ['salary'])
+            ->assertJsonPath(
+                'response',
+                'For the salary question, give a realistic range based on information you have verified for the role.'
+            );
+
+        $saved = ChatbotMessage::where('role', 'ai')->latest('id')->firstOrFail();
+        $this->assertContains(
+            'unsupported_personal_fact',
+            (array) data_get($saved->quality_metadata, 'rejected_risk_flags', [])
+        );
+        $this->assertStringNotContainsString('Acme', $saved->content);
+
+        Http::assertSent(function ($request): bool {
+            $messages = (string) json_encode($request->data()['messages'] ?? []);
+            return ! str_contains($messages, 'Acme Corp');
+        });
     }
 
     private function zipContent(array $entries): string
