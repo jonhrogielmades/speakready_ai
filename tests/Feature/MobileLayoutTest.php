@@ -15,6 +15,7 @@ use App\Models\InterviewSession;
 use App\Models\LearningModule;
 use App\Models\Question;
 use App\Models\User;
+use App\Support\InterviewerAvatar;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Tests\TestCase;
@@ -1625,27 +1626,22 @@ class MobileLayoutTest extends TestCase
             'status' => 'active',
         ]);
 
-        $avatars = [
-            'friendly_recruiter' => ['Friendly Recruiter', '06', 'img/interviewer-panel-room-bg.webp'],
-            'structured_hr' => ['Structured HR', '01', 'img/interviewers/structured_hr_room.webp'],
-            'hiring_manager' => ['Hiring Manager', '02', 'img/interviewers/hiring_manager_room.webp'],
-            'role_specialist' => ['Role Specialist', '03', 'img/interviewers/role_specialist_room.webp'],
-            'senior_leader' => ['Senior Leader', '04', 'img/interviewers/senior_leader_room.webp'],
-            'invalid_choice' => ['Friendly Recruiter', '06', 'img/interviewer-panel-room-bg.webp'],
-        ];
+        $avatars = array_merge(InterviewerAvatar::keys(), ['invalid_choice']);
         $userAgents = [
             'desktop' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36',
             'mobile' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
         ];
 
-        foreach ($avatars as $key => [$label, $imageNumber, $backgroundPath]) {
+        foreach ($avatars as $key) {
             $session->interviewer_avatar = $key;
             $session->save();
 
-            foreach ($userAgents as $userAgent) {
-                $pngPath = "img/interviewers/Filipina_Interviewer_{$imageNumber}.png";
-                $webpPath = "img/interviewers/Filipina_Interviewer_{$imageNumber}.webp";
+            $label = InterviewerAvatar::label($key);
+            $webpPath = InterviewerAvatar::image($key);
+            $pngPath = str_replace('.webp', '.png', $webpPath);
+            $backgroundPath = InterviewerAvatar::background($key);
 
+            foreach ($userAgents as $userAgent) {
                 $this->actingAs($user)
                     ->withSession(['active_interview_id' => $session->id])
                     ->withHeader('User-Agent', $userAgent)

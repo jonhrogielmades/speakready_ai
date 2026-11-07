@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=25') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=26') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -96,6 +96,7 @@
  'hiring_manager' => 'Practical questions about ownership and results.',
  'role_specialist' => 'Deeper questions tailored to your target position.',
  'senior_leader' => 'Concise questions about judgment and impact.',
+ 'panel_interviewer' => 'Challenging questions from multiple perspectives.',
  ];
  $selectedQuestionTypes = old('question_types', []);
  $selectedQuestionTypes = is_array($selectedQuestionTypes)? $selectedQuestionTypes: [];
@@ -477,12 +478,12 @@
  </button>
  <div class="setup-inline-error" id="interviewerAvatarError" role="alert" hidden>Choose an AI interviewer.</div>
  </div>
- <dialog class="interviewer-avatar-dialog" id="interviewerAvatarDialog" aria-labelledby="interviewerAvatarDialogTitle" aria-describedby="interviewerAvatarDialogHelp">
+ <dialog class="interviewer-avatar-dialog" id="interviewerAvatarDialog" aria-labelledby="interviewerAvatarDialogTitle" aria-describedby="interviewerAvatarDialogHelp" data-voice-preview-url="{{ route('interview.avatarVoicePreview') }}">
  <div class="interviewer-avatar-dialog-panel">
  <div class="interviewer-avatar-dialog-header">
  <div>
  <h2 class="interviewer-avatar-title" id="interviewerAvatarDialogTitle">Choose AI Interviewer</h2>
- <p class="interviewer-avatar-help" id="interviewerAvatarDialogHelp">Select a portrait and interview style.</p>
+ <p class="interviewer-avatar-help" id="interviewerAvatarDialogHelp">Select a portrait and interview style. Hear each voice before choosing.</p>
  </div>
  <button type="button" class="interviewer-avatar-dialog-close" id="interviewerAvatarClose" aria-label="Close interviewer choices"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
  </div>
@@ -490,23 +491,25 @@
  <div class="interviewer-avatar-grid" id="interviewerAvatarGroup" role="radiogroup" aria-label="AI interviewer">
  @foreach(\App\Support\InterviewerAvatar::keys() as $avatarKey)
  @php($avatarImage = \App\Support\InterviewerAvatar::image($avatarKey))
- <label class="interviewer-avatar-choice">
- <input type="radio" name="interviewer_avatar" form="setupForm" value="{{ $avatarKey }}" class="setup-input" data-summary-label="{{ \App\Support\InterviewerAvatar::label($avatarKey) }}" required {{ $setupDefaults['interviewer_avatar'] === $avatarKey? 'checked': '' }}>
- <span class="interviewer-avatar-card">
+ <div class="interviewer-avatar-choice">
+ <input type="radio" id="interviewerAvatarChoice-{{ $avatarKey }}" name="interviewer_avatar" form="setupForm" value="{{ $avatarKey }}" class="setup-input" data-summary-label="{{ \App\Support\InterviewerAvatar::label($avatarKey) }}" required {{ $setupDefaults['interviewer_avatar'] === $avatarKey? 'checked': '' }}>
+ <label class="interviewer-avatar-card" for="interviewerAvatarChoice-{{ $avatarKey }}">
  <span class="interviewer-avatar-portrait">
  <picture>
  <source srcset="{{ asset($avatarImage) }}" type="image/webp">
- <img src="{{ asset(str_replace('.webp', '.png', $avatarImage)) }}" alt="" loading="lazy" width="88" height="88">
+ <img src="{{ asset(str_replace('.webp', '.png', $avatarImage)) }}" alt="" loading="eager" width="88" height="88">
  </picture>
  </span>
  <span class="interviewer-avatar-card-copy">
  <span class="interviewer-avatar-name">{{ \App\Support\InterviewerAvatar::label($avatarKey) }}</span>
  <span class="interviewer-avatar-description">{{ $interviewerAvatarDescriptions[$avatarKey] }}</span>
  </span>
- </span>
  </label>
+ <button type="button" class="interviewer-avatar-voice-preview" data-avatar="{{ $avatarKey }}" data-avatar-label="{{ \App\Support\InterviewerAvatar::label($avatarKey) }}" aria-label="Preview {{ \App\Support\InterviewerAvatar::label($avatarKey) }} voice" aria-pressed="false" title="Preview {{ \App\Support\InterviewerAvatar::label($avatarKey) }} voice"><i class="fa-solid fa-volume-high" aria-hidden="true"></i><span class="interviewer-avatar-voice-preview-label">Hear</span></button>
+ </div>
  @endforeach
  </div>
+ <p class="interviewer-avatar-voice-status" id="interviewerAvatarVoiceStatus" role="status" aria-live="polite" hidden></p>
  </div>
  <div class="interviewer-avatar-dialog-footer">
  <button type="button" id="interviewerAvatarCancel">Cancel</button>
@@ -743,7 +746,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json($interviewSetupDraftKey) };
 </script>
 <script src="{{ asset('js/interview-setup-draft.js?v=1') }}"></script>
-<script src="{{ asset('js/interview-setup-avatar-modal.js?v=2') }}"></script>
+<script src="{{ asset('js/interview-setup-avatar-modal.js?v=3') }}"></script>
 <script>
  const setupRequiredFieldIds = [
  'valScenario',

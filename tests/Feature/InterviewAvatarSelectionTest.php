@@ -38,7 +38,7 @@ class InterviewAvatarSelectionTest extends TestCase
             $response->assertOk()
                 ->assertSeeInOrder(['id="interviewerAvatarTrigger"', 'id="interviewerAvatarDialog"', 'id="interviewerAvatarGroup"'], false)
                 ->assertSee('id="interviewerAvatarConfirm"', false)
-                ->assertSee('js/interview-setup-avatar-modal.js?v=2', false);
+                ->assertSee('js/interview-setup-avatar-modal.js?v=3', false);
 
             foreach (InterviewerAvatar::keys() as $key) {
                 $response->assertSee('name="interviewer_avatar" form="setupForm" value="'.$key.'"', false);
@@ -62,10 +62,10 @@ class InterviewAvatarSelectionTest extends TestCase
             $backgrounds[] = $background;
         }
 
-        $this->assertCount(5, array_unique($portraits));
-        $this->assertCount(5, array_unique($backgrounds));
-        $this->assertCount(5, array_unique(array_map(fn (string $path): string => sha1_file(public_path($path)), $portraits)));
-        $this->assertCount(5, array_unique(array_map(fn (string $path): string => sha1_file(public_path($path)), $backgrounds)));
+        $this->assertCount(6, array_unique($portraits));
+        $this->assertCount(6, array_unique($backgrounds));
+        $this->assertCount(6, array_unique(array_map(fn (string $path): string => sha1_file(public_path($path)), $portraits)));
+        $this->assertCount(6, array_unique(array_map(fn (string $path): string => sha1_file(public_path($path)), $backgrounds)));
     }
 
     public function test_each_interviewer_selection_is_persisted_and_used_for_the_local_opening(): void
@@ -78,6 +78,7 @@ class InterviewAvatarSelectionTest extends TestCase
             'hiring_manager' => 'work you would bring',
             'role_specialist' => 'experience behind your approach',
             'senior_leader' => 'shaped your judgment',
+            'panel_interviewer' => 'support your answers',
         ];
 
         foreach ($openingCues as $avatar => $openingCue) {
@@ -143,8 +144,8 @@ class InterviewAvatarSelectionTest extends TestCase
             $replies[] = $reply;
         }
 
-        $this->assertCount(5, array_unique($questions));
-        $this->assertCount(5, array_unique($replies));
+        $this->assertCount(6, array_unique($questions));
+        $this->assertCount(6, array_unique($replies));
     }
 
     public function test_interviewer_style_keeps_the_requested_assistance_level_in_local_follow_ups(): void

@@ -1355,6 +1355,7 @@ return [
  'hiring_manager' => "What constraint affected delivery, and how did you handle it for the {$targetPosition} role?",
  'role_specialist' => "What constraint affected your method, and how did you verify your choice for the {$targetPosition} role?",
  'senior_leader' => "What tradeoff did you weigh, and what impact did your decision have for the {$targetPosition} role?",
+ 'panel_interviewer' => "What evidence would persuade a skeptical panel that your decision was the right one for the {$targetPosition} role?",
  default => null,
  };
  }
@@ -1368,6 +1369,7 @@ return [
  'hiring_manager' => $anchor !== '' ? "Thanks for that practical example. You mentioned {$anchor}. " : 'Thanks for explaining your work. ',
  'role_specialist' => $anchor !== '' ? "I want to understand the method behind that. You mentioned {$anchor}. " : 'I would like to understand the detail behind that. ',
  'senior_leader' => $anchor !== '' ? "Thank you. You mentioned {$anchor}; let us look at the wider impact. " : 'Thank you for outlining your approach. ',
+ 'panel_interviewer' => $anchor !== '' ? "Let us examine the evidence behind {$anchor}. " : 'Thank you. Let us examine the evidence. ',
  default => $default,
  };
  }
@@ -1417,6 +1419,7 @@ return [
  'hiring_manager' => 'I am interested in the work you would bring to this role.',
  'role_specialist' => 'I would like to understand the experience behind your approach.',
  'senior_leader' => 'Let us start with the experience that shaped your judgment.',
+ 'panel_interviewer' => 'I will ask you to support your answers with clear evidence.',
  default => 'No need to be perfect; answer naturally.',
  };
 
@@ -3251,7 +3254,7 @@ PROMPT;
  }
 
  $voice = trim((string) ($options['voice'] ?? config('services.gemini.tts_voice', 'Kore')))?: 'Kore';
- $prompt = self::geminiSpeechPrompt($text, $targetLanguage);
+ $prompt = self::geminiSpeechPrompt($text, $targetLanguage, $options['style'] ?? null);
 
  try {
  $response = self::providerRequest(
@@ -4043,6 +4046,22 @@ PROMPT;
  return false;
  }
 
+ public static function interviewerSpeechAvailable(?string $pinnedProvider = null): bool
+ {
+ if (! self::speechSynthesisEnabled()) {
+ return false;
+ }
+
+ $provider = $pinnedProvider === null ? 'gemini' : self::normalizeSpeechProviderName($pinnedProvider);
+
+ return match ($provider) {
+ 'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== '',
+ 'openai' => self::openAiSpeechCredentials() !== null,
+ 'elevenlabs' => self::elevenLabsSpeechCredentials(false) !== null,
+ default => false,
+ };
+ }
+
  public static function speechSynthesisCacheSignature(): array
  {
  return [
@@ -4116,10 +4135,15 @@ PROMPT;
  )));
  }
 
- private static function geminiSpeechPrompt(string $text, array|string|null $targetLanguage = null): string
+ private static function geminiSpeechPrompt(string $text, array|string|null $targetLanguage = null, ?string $styleOverride = null): string
  {
  $language = self::languageConfigFrom($targetLanguage);
  $target = $language['ai_label']?? $language['label']?? 'the selected language';
+ $style = trim((string) $styleOverride);
+ if ($style !== '') {
+ return "{$style}. Use natural {$target} pronunciation. Speak only this transcript: {$text}";
+ }
+
  $style = trim((string) config('services.gemini.tts_style', ''));
  if ($style === '') {
  $style = 'Say in a warm, clear, professional female interviewer voice with medium, measured pacing';

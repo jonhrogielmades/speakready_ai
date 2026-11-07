@@ -87,13 +87,14 @@ class FakeNode {
     querySelector(selector) { return this.queries?.get(selector) || null; }
     querySelectorAll(selector) {
         if (selector === 'input[type="radio"][name="interviewer_avatar"]') return this.radios || [];
+        if (selector === '.interviewer-avatar-voice-preview') return this.voiceButtons || [];
         if (selector.startsWith('button, input,')) return this.focusables || [];
         return [];
     }
     getBoundingClientRect() { return { left: 100, right: 500, top: 100, bottom: 500 }; }
 }
 
-function makePage({ native = true } = {}) {
+function makePage({ native = true, fetchImpl, playImpl } = {}) {
     const document = new FakeNode('document');
     const elements = new Map();
     const add = (id, parent) => {
@@ -112,18 +113,31 @@ function makePage({ native = true } = {}) {
     document.getElementById = (id) => elements.get(id) || null;
     document.documentElement = add('html', document);
     document.body = add('body', document.documentElement);
+    const csrfMeta = add('csrfMeta', document.body);
+    csrfMeta.setAttribute('content', 'test-csrf-token');
+    document.queries = new Map([['meta[name="csrf-token"]', csrfMeta]]);
     const form = add('setupForm', document.body);
     const trigger = add('interviewerAvatarTrigger', form);
     const previewImage = add('interviewerAvatarSelectedImage', trigger);
     const previewName = add('interviewerAvatarSelectedName', trigger);
     const previewDescription = add('interviewerAvatarSelectedDescription', trigger);
     const dialog = add('interviewerAvatarDialog', form);
+    dialog.dataset.voicePreviewUrl = '/interview/avatar-voice-preview';
     const group = add('interviewerAvatarGroup', dialog);
+    const voiceStatus = add('interviewerAvatarVoiceStatus', dialog);
     const close = add('interviewerAvatarClose', dialog);
     const cancel = add('interviewerAvatarCancel', dialog);
     const confirm = add('interviewerAvatarConfirm', dialog);
     const radios = [];
-    for (const [value, name] of [['friendly_recruiter', 'Friendly Recruiter'], ['role_specialist', 'Role Specialist'], ['senior_leader', 'Senior Leader']]) {
+    const voiceButtons = [];
+    for (const [value, name] of [
+        ['friendly_recruiter', 'Friendly Recruiter'],
+        ['role_specialist', 'Role Specialist'],
+        ['senior_leader', 'Senior Leader'],
+        ['structured_hr', 'Structured HR'],
+        ['hiring_manager', 'Hiring Manager'],
+        ['panel_interviewer', 'Panel Interviewer'],
+    ]) {
         const card = add(`card-${value}`, group);
         const radio = add(`radio-${value}`, card);
         radio.card = card;
@@ -144,10 +158,17 @@ function makePage({ native = true } = {}) {
             ['.interviewer-avatar-portrait img', image],
             ['.interviewer-avatar-portrait source[type="image/webp"]', webp],
         ]);
+        const voiceButton = add(`voice-${value}`, card);
+        voiceButton.dataset.avatar = value;
+        voiceButton.dataset.avatarLabel = name;
+        const voiceLabel = add(`voice-label-${value}`, voiceButton);
+        voiceButton.queries = new Map([['.interviewer-avatar-voice-preview-label', voiceLabel]]);
+        voiceButtons.push(voiceButton);
         radios.push(radio);
     }
     group.radios = radios;
-    dialog.focusables = [close, ...radios, cancel, confirm];
+    dialog.voiceButtons = voiceButtons;
+    dialog.focusables = [close, ...radios, ...voiceButtons, cancel, confirm];
     if (native) {
         dialog.showModal = () => dialog.setAttribute('open', '');
         dialog.close = () => {
@@ -155,8 +176,49 @@ function makePage({ native = true } = {}) {
             dialog.dispatchEvent(new FakeEvent('close'));
         };
     }
-    const window = { setTimeout: (callback) => callback() };
-    vm.runInNewContext(source, { document, window, Event: FakeEvent });
+    const timers = [];
+    const window = {
+        setTimeout(callback, delay = 0) {
+            if (delay === 0) { callback(); return 0; }
+            const timer = { callback, delay, cleared: false };
+            timers.push(timer);
+            return timer;
+        },
+        clearTimeout(timer) { if (timer) timer.cleared = true; },
+        addEventListener() {},
+    };
+    const fetchCalls = [];
+    const audioInstances = [];
+    const revokedUrls = [];
+    class FakeAudio extends FakeNode {
+        constructor(src) {
+            super('audio');
+            this.src = src;
+            this.paused = false;
+            this.playCount = 0;
+            audioInstances.push(this);
+        }
+        play() {
+            this.playCount++;
+            this.paused = false;
+            return playImpl ? playImpl(this) : Promise.resolve();
+        }
+        pause() { this.paused = true; }
+    }
+    const mockFetch = (url, options) => {
+        fetchCalls.push({ url, options });
+        return fetchImpl ? fetchImpl(url, options) : Promise.resolve({
+            ok: true,
+            status: 200,
+            headers: { get: () => 'audio/wav' },
+            blob: async () => ({ size: 40 }),
+        });
+    };
+    const URL = {
+        createObjectURL: () => 'blob:voice-preview',
+        revokeObjectURL: (url) => revokedUrls.push(url),
+    };
+    vm.runInNewContext(source, { document, window, Event: FakeEvent, fetch: mockFetch, Audio: FakeAudio, AbortController, URL });
     const fire = (node, type, options = {}) => {
         const event = new FakeEvent(type, options);
         node.dispatchEvent(event);
@@ -166,8 +228,10 @@ function makePage({ native = true } = {}) {
         for (const radio of radios) radio.checked = radio.value === value;
         fire(radios.find((radio) => radio.value === value), 'change', { bubbles: true });
     };
-    return { document, form, trigger, previewImage, previewName, previewDescription, dialog, group, confirm, cancel, radios, fire, choose };
+    return { document, form, trigger, previewImage, previewName, previewDescription, dialog, group, confirm, cancel, radios, voiceButtons, voiceStatus, fetchCalls, audioInstances, revokedUrls, timers, fire, choose };
 }
+
+const settlePromises = () => new Promise((resolve) => setImmediate(resolve));
 
 test('modal initializes from restored selection, commits a new choice, and restores focus', () => {
     const page = makePage();
@@ -253,5 +317,84 @@ test('both setup forms keep moved radio options associated with the setup form',
     for (const layout of ['desktop', 'mobile']) {
         const view = readFileSync(join(root, `resources/views/${layout}/interview/setup.blade.php`), 'utf8');
         assert.match(view, /name="interviewer_avatar" form="setupForm"/);
+        assert.match(view, /data-voice-preview-url="\{\{ route\('interview\.avatarVoicePreview'\) \}\}"/);
+        assert.match(view, /class="interviewer-avatar-voice-preview"/);
     }
+});
+
+test('voice preview sends the selected avatar to the server without selecting it or submitting the form', async () => {
+    const page = makePage();
+    page.fire(page.document, 'DOMContentLoaded');
+    page.fire(page.trigger, 'click');
+    let submits = 0;
+    page.form.addEventListener('submit', () => submits++);
+
+    const previewClick = page.fire(page.voiceButtons[5], 'click', { bubbles: true });
+    await settlePromises();
+    assert.equal(previewClick.defaultPrevented, true);
+    assert.equal(previewClick.propagationStopped, true);
+    assert.equal(page.radios[0].checked, true);
+    assert.equal(submits, 0);
+    assert.equal(page.fetchCalls.length, 1);
+    assert.equal(page.fetchCalls[0].url, '/interview/avatar-voice-preview');
+    assert.deepEqual(JSON.parse(page.fetchCalls[0].options.body), { interviewer_avatar: 'panel_interviewer' });
+    assert.equal(page.fetchCalls[0].options.headers['X-CSRF-TOKEN'], 'test-csrf-token');
+    assert.equal(page.voiceButtons[5].dataset.state, 'playing');
+    assert.equal(page.audioInstances[0].playCount, 1);
+
+    page.fire(page.voiceButtons[5], 'click');
+    assert.equal(page.audioInstances[0].paused, true);
+    assert.deepEqual(page.revokedUrls, ['blob:voice-preview']);
+    assert.equal(page.voiceButtons[5].dataset.state, 'idle');
+});
+
+test('slow voice generation still lets the user play the fetched sample after autoplay is blocked', async () => {
+    let playAttempts = 0;
+    const page = makePage({ playImpl: () => {
+        playAttempts++;
+        if (playAttempts === 1) return Promise.reject(Object.assign(new Error('User activation expired'), { name: 'NotAllowedError' }));
+        return Promise.resolve();
+    } });
+    page.fire(page.document, 'DOMContentLoaded');
+    page.fire(page.trigger, 'click');
+    page.fire(page.voiceButtons[0], 'click');
+    await settlePromises();
+    assert.equal(page.voiceButtons[0].dataset.state, 'ready');
+    assert.match(page.voiceStatus.textContent, /Tap Play/);
+    assert.equal(page.revokedUrls.length, 0);
+
+    page.fire(page.voiceButtons[0], 'click');
+    await settlePromises();
+    assert.equal(page.voiceButtons[0].dataset.state, 'playing');
+    assert.equal(page.fetchCalls.length, 1, 'second tap should reuse the fetched audio');
+    page.fire(page.cancel, 'click');
+    assert.equal(page.audioInstances[0].paused, true);
+    assert.deepEqual(page.revokedUrls, ['blob:voice-preview']);
+});
+
+test('voice preview reports provider errors and a 55-second timeout', async () => {
+    const unavailable = makePage({ fetchImpl: async () => ({
+        ok: false,
+        status: 503,
+        json: async () => ({ error: 'AI voice preview is not available.' }),
+    }) });
+    unavailable.fire(unavailable.document, 'DOMContentLoaded');
+    unavailable.fire(unavailable.trigger, 'click');
+    unavailable.fire(unavailable.voiceButtons[0], 'click');
+    await settlePromises();
+    assert.equal(unavailable.voiceStatus.textContent, 'AI voice preview is not available.');
+    assert.equal(unavailable.voiceButtons[0].dataset.state, 'idle');
+
+    const timeout = makePage({ fetchImpl: (_url, options) => new Promise((_resolve, reject) => {
+        options.signal.addEventListener('abort', () => reject(Object.assign(new Error('Aborted'), { name: 'AbortError' })));
+    }) });
+    timeout.fire(timeout.document, 'DOMContentLoaded');
+    timeout.fire(timeout.trigger, 'click');
+    timeout.fire(timeout.voiceButtons[0], 'click');
+    const timer = timeout.timers.find((entry) => entry.delay === 55000);
+    assert.ok(timer);
+    timer.callback();
+    await settlePromises();
+    assert.match(timeout.voiceStatus.textContent, /took too long/);
+    assert.equal(timeout.voiceButtons[0].dataset.state, 'idle');
 });

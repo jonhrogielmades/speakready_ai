@@ -485,7 +485,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const cameraPreviewEnabled = cameraDetectionEnabled;
  let cameraUnavailableReason = null;
  @php
- $serverAiVoiceEnabledForUi = \App\Services\AIService::speechSynthesisAvailable();
+ $serverAiVoiceEnabledForUi = \App\Services\AIService::interviewerSpeechAvailable($sessionRecord->tts_provider);
  @endphp
  const serverAiVoiceEnabled = @json($serverAiVoiceEnabledForUi);
  let currentQIdx = Number(savedSessionState.currentQIdx?? {{ (int) ($sessionRecord->current_question_index?? 0) }}) || 0;
@@ -4329,6 +4329,14 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  caption.style.setProperty('text-shadow', '0 2px 6px rgba(0, 0, 0, 0.98), 0 0 10px rgba(0, 0, 0, 0.72)', 'important');
  }
 
+ function showPreparingVoiceCaption() {
+ const caption = document.getElementById('questionCaptionText');
+ if (!caption) return;
+ caption.textContent = 'Preparing interviewer voice…';
+ caption.classList.remove('is-speaking');
+ caption.classList.add('has-caption', 'is-static');
+ }
+
  function wordIndexFromChar(words, charIndex) {
  const safeChar = Number(charIndex) || 0;
  const found = words.findIndex(word => safeChar >= word.start && safeChar < word.end);
@@ -4485,7 +4493,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  'Accept': 'audio/*',
  'X-Requested-With': 'XMLHttpRequest',
  },
- timeoutMs: 12000,
+ timeoutMs: 50000,
  });
 
  if (!response.ok) {
@@ -4501,7 +4509,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  blob = await Promise.race([
  response.blob(),
  new Promise(resolve => {
- bodyTimeoutId = setTimeout(() => resolve(null), 12000);
+ bodyTimeoutId = setTimeout(() => resolve(null), 50000);
  }),
  ]);
  } finally {
@@ -4603,6 +4611,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  const speechText = options.speechText || '';
  const cleanSpeechText = cleanTranscriptText(speechText);
  if (serverAiVoiceEnabled && (options.questionId || cleanSpeechText)) {
+ showPreparingVoiceCaption();
  const usedServerVoice = await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId, speechText);
  if (usedServerVoice || token!== questionSpeechToken || interviewTerminated) return completion;
  }

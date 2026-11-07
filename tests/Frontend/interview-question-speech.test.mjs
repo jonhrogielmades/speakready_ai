@@ -44,6 +44,7 @@ for (const layout of layouts) {
         let serverCalls = 0;
         let watchdogs = 0;
         let earlyCaptions = 0;
+        let preparingCues = 0;
         const context = evaluate(source, ['speakQuestion'], {
             interviewTerminated: false,
             questionSpeechToken: 0,
@@ -53,6 +54,7 @@ for (const layout of layouts) {
             window: { speechSynthesis: {}, SpeechSynthesisUtterance() {} },
             document: { getElementById: () => shown },
             renderStaticQuestionCaption() { earlyCaptions++; },
+            showPreparingVoiceCaption() { preparingCues++; },
             cleanTranscriptText: value => value.trim(),
             setTimeout: () => { watchdogs++; return 1; },
             cancelQuestionSpeechOutput() { context.questionSpeechToken++; },
@@ -73,6 +75,7 @@ for (const layout of layouts) {
         assert.equal(serverCalls, 1);
         assert.equal(watchdogs, 0, 'speech completion must not time out while audio is being fetched');
         assert.equal(earlyCaptions, 0, 'the full question must stay hidden while audio loads');
+        assert.equal(preparingCues, 1, 'a neutral loading cue should appear while voice audio loads');
         await Promise.resolve();
         assert.equal(finished, false);
         assert.deepEqual(notices, []);
@@ -80,6 +83,24 @@ for (const layout of layouts) {
         assert.equal(await result, 'finished');
         assert.equal(serverCalls, 1);
         assert.equal(earlyCaptions, 0);
+    });
+
+    test(`${layout} shows a neutral loading cue in the caption overlay`, () => {
+        const classes = new Set(['is-speaking']);
+        const caption = {
+            textContent: '',
+            classList: {
+                remove: (name) => classes.delete(name),
+                add: (...names) => names.forEach((name) => classes.add(name)),
+            },
+        };
+        const context = evaluate(source, ['showPreparingVoiceCaption'], {
+            document: { getElementById: () => caption },
+        });
+        context.showPreparingVoiceCaption();
+        assert.equal(caption.textContent, 'Preparing interviewer voice…');
+        assert.equal(classes.has('is-static'), true);
+        assert.equal(classes.has('is-speaking'), false);
     });
 
     test(`${layout} starts highlighted captions when server audio plays`, async () => {
@@ -186,6 +207,7 @@ for (const layout of layouts) {
             serverAiVoiceEnabled: true,
             document: { getElementById: () => shown },
             renderStaticQuestionCaption() {},
+            showPreparingVoiceCaption() {},
             cleanTranscriptText: value => value.trim(),
             cancelQuestionSpeechOutput() { context.questionSpeechToken++; },
             speakWithServerVoice: async () => false,
@@ -218,7 +240,7 @@ for (const layout of layouts) {
             URL: { createObjectURL: () => 'blob:question-12' },
             managedFetch(_url, options) {
                 requests++;
-                assert.equal(options.timeoutMs, 12000);
+                assert.equal(options.timeoutMs, 50000);
                 return response.promise;
             },
             setTimeout,
@@ -281,7 +303,7 @@ for (const layout of layouts) {
 
         const result = context.serverSpeechUrl(12);
         for (let turn = 0; turn < 10 && timers.length === 0; turn++) await Promise.resolve();
-        assert.equal(timers[0]?.delay, 12000);
+        assert.equal(timers[0]?.delay, 50000);
         timers[0].callback();
         assert.equal(await result, null);
         assert.equal(context.serverSpeechRequestCache.size, 0);

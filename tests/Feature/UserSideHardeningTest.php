@@ -1055,7 +1055,7 @@ class UserSideHardeningTest extends TestCase
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=25', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=26', false)
  ->assertSee('id="customTargetPositionDraft"', false)
  ->assertSee('id="saveCustomTargetPositionButton"', false)
  ->assertSee('<input type="hidden" id="customTargetPositionInput" name="custom_position"', false)

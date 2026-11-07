@@ -191,6 +191,9 @@ Route::middleware(['auth', 'user', 'auth.session'])->group(function () {
     Route::post('/interview/coach-answer', [InterviewController::class, 'coachAnswer'])->middleware('throttle:ai')->name('interview.coachAnswer');
     Route::post('/interview/closing', [InterviewController::class, 'closing'])->middleware('throttle:ai')->name('interview.closing');
     Route::post('/interview/speech', [InterviewController::class, 'speech'])->middleware('throttle:ai')->name('interview.speech');
+    Route::post('/interview/avatar-voice-preview', [InterviewController::class, 'avatarVoicePreview'])
+        ->middleware('throttle:12,1')
+        ->name('interview.avatarVoicePreview');
     Route::post('/interview/transcribe', [InterviewController::class, 'transcribe'])
         ->middleware('throttle:ai-transcribe')
         ->name('interview.transcribe');

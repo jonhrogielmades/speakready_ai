@@ -967,8 +967,11 @@ return response()->json([
  }
 
   $speechOptions = [
- 'deadline_seconds' => 10,
- 'attempts' => 1,
+   'provider' => 'gemini',
+   'voice' => InterviewerAvatar::voice($session->interviewer_avatar),
+   'style' => InterviewerAvatar::voiceStyle($session->interviewer_avatar),
+   'deadline_seconds' => 40,
+   'attempts' => 1,
   ];
   if ($session->tts_provider !== null) {
    if (trim((string) $session->tts_provider) === ''
@@ -1030,6 +1033,41 @@ return response()->json([
  ->header('Content-Type', $speech['mime_type'])
  ->header('Cache-Control', 'private, no-store, max-age=0')
  ->header('X-Content-Type-Options', 'nosniff');
+ }
+
+ public function avatarVoicePreview(Request $request)
+ {
+  if (! Auth::check()) {
+   abort(403);
+  }
+
+  $validated = $request->validate([
+   'interviewer_avatar' => ['required', 'string', Rule::in(InterviewerAvatar::keys())],
+   'text' => ['prohibited'],
+   'speech_text' => ['prohibited'],
+  ]);
+
+  $avatar = $validated['interviewer_avatar'];
+  $speech = AIService::synthesizeSpeech(
+   'Hello. I am your AI interviewer. Tell me about yourself.',
+   $this->currentLanguageConfig(),
+   [
+    'provider' => 'gemini',
+    'voice' => InterviewerAvatar::voice($avatar),
+    'style' => InterviewerAvatar::voiceStyle($avatar),
+    'deadline_seconds' => 40,
+    'attempts' => 1,
+   ]
+  );
+
+  if (! $speech || $speech['provider'] !== 'gemini' || $speech['voice'] !== InterviewerAvatar::voice($avatar)) {
+   return response()->json(['error' => 'AI voice preview is not available.'], 503);
+  }
+
+  return response($speech['audio'], 200)
+   ->header('Content-Type', $speech['mime_type'])
+   ->header('Cache-Control', 'private, no-store, max-age=0')
+   ->header('X-Content-Type-Options', 'nosniff');
  }
 
  public function transcribe(Request $request)

@@ -1519,7 +1519,7 @@ body.interviewer-avatar-fallback-backdrop::before {
 #interviewerAvatarDialog .interviewer-avatar-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
 }
 
@@ -1548,14 +1548,68 @@ body.interviewer-avatar-fallback-backdrop::before {
     display: flex;
     align-items: center;
     gap: 10px;
-    min-height: 60px;
-    padding: 6px 9px;
+    min-height: 61px;
+    padding: 4px 76px 4px 9px;
     border: 1.5px solid #cbd5e1;
     border-radius: 12px;
     background: #fff;
     box-sizing: border-box;
     text-align: left;
     transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease;
+    cursor: pointer;
+}
+
+#interviewerAvatarDialog .interviewer-avatar-voice-preview {
+    position: absolute;
+    top: 50%;
+    right: 9px;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 62px;
+    min-height: 34px;
+    padding: 5px 6px;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    background: #fff;
+    color: #1d4ed8;
+    font-size: .7rem;
+    font-weight: 750;
+    line-height: 1.1;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+#interviewerAvatarDialog .interviewer-avatar-voice-preview:hover {
+    border-color: #60a5fa;
+    background: #eff6ff;
+}
+
+#interviewerAvatarDialog .interviewer-avatar-voice-preview[data-state="loading"] {
+    cursor: progress;
+}
+
+#interviewerAvatarDialog .interviewer-avatar-voice-preview[data-state="playing"] {
+    border-color: #1d4ed8;
+    background: #1d4ed8;
+    color: #fff;
+}
+
+#interviewerAvatarDialog .interviewer-avatar-voice-status {
+    margin: 8px 0 0;
+    color: #b91c1c;
+    font-size: .74rem;
+    line-height: 1.35;
+}
+
+#interviewerAvatarDialog .interviewer-avatar-voice-status[hidden] {
+    display: none;
+}
+
+#interviewerAvatarDialog .interviewer-avatar-voice-status[data-kind="ready"] {
+    color: #1d4ed8;
 }
 
 #interviewerAvatarDialog .interviewer-avatar-choice:hover .interviewer-avatar-card {
@@ -1637,6 +1691,30 @@ html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-choice:hover .intervi
 html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-choice > input:checked + .interviewer-avatar-card {
     border-color: #60a5fa;
     background: #19375e;
+}
+
+html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-voice-preview {
+    border-color: #365c8c;
+    background: #20314b;
+    color: #bfdbfe;
+}
+
+html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-voice-preview:hover {
+    background: #28466b;
+}
+
+html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-voice-preview[data-state="playing"] {
+    border-color: #60a5fa;
+    background: #1d4ed8;
+    color: #fff;
+}
+
+html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-voice-status {
+    color: #fca5a5;
+}
+
+html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-voice-status[data-kind="ready"] {
+    color: #93c5fd;
 }
 
 html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-trigger-action {
