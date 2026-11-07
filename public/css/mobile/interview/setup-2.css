@@ -1395,6 +1395,14 @@ html:not(.lm) body #roleFinderModal .btn-close {
     }
 }
 
+/* Keep the dialog aligned with its trigger on wider mobile layouts. */
+html body #sec-interview-setup #targetPositionDropdownMenu {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
 /* Match the native Job Category picker with a viewport-sized selection sheet. */
 @media (max-width: 991.98px) {
     html.setup-target-position-modal-open,
@@ -1418,29 +1426,10 @@ html:not(.lm) body #roleFinderModal .btn-close {
         z-index: 5300 !important;
     }
 
-    html body.user-mobile-shell #sec-interview-setup .setup-target-modal-backdrop,
-    html body #mob-content #sec-interview-setup .setup-target-modal-backdrop,
-    html body #sec-interview-setup .setup-target-modal-backdrop {
-        position: fixed !important;
-        inset: 0 !important;
-        z-index: 5190 !important;
-        display: block !important;
-        width: 100vw !important;
-        height: 100dvh !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        border: 0 !important;
-        border-radius: 0 !important;
-        background: rgba(2, 6, 23, 0.62) !important;
-        backdrop-filter: blur(2px) !important;
-        -webkit-backdrop-filter: blur(2px) !important;
-        cursor: default !important;
-    }
-
-    html body.user-mobile-shell #sec-interview-setup .setup-target-modal-backdrop[hidden],
-    html body #mob-content #sec-interview-setup .setup-target-modal-backdrop[hidden],
-    html body #sec-interview-setup .setup-target-modal-backdrop[hidden] {
-        display: none !important;
+    html body #targetPositionDropdownMenu::backdrop {
+        background: rgba(2, 6, 23, 0.56) !important;
+        backdrop-filter: blur(7px) !important;
+        -webkit-backdrop-filter: blur(7px) !important;
     }
 
     html body #sec-interview-setup #panel-basic .setup-target-dropdown-open #targetPositionDropdownMenu {
@@ -1451,6 +1440,7 @@ html:not(.lm) body #roleFinderModal .btn-close {
         right: auto !important;
         bottom: auto !important;
         width: min(680px, calc(100vw - 20px)) !important;
+        max-width: none !important;
         max-height: min(760px, calc(100vh - 24px)) !important;
         max-height: min(760px, calc(var(--setup-target-viewport-height, 100dvh) - 24px)) !important;
         margin: 0 !important;

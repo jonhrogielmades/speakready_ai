@@ -1048,14 +1048,17 @@ class UserSideHardeningTest extends TestCase
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=17', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=18', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)
  ->assertSee('function isSetupCompactMobile()', false)
  ->assertSee('function syncSetupTargetMenuViewport()', false)
+ ->assertSee('menu.showModal();', false)
  ->assertSee('menu.focus({ preventScroll: true });', false)
  ->assertSee("targetPositionDropdownMenu?.addEventListener('touchmove'", false)
+ ->assertSee('<dialog class="setup-target-menu" id="targetPositionDropdownMenu"', false)
+ ->assertDontSee('id="targetPositionModalBackdrop"', false)
  ->assertSee('role="dialog" aria-modal="true" aria-label="Choose target position" tabindex="-1"', false);
 
  $mobileSetupCss = file_get_contents(public_path('css/mobile/interview/setup.css'));
@@ -1064,6 +1067,8 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('setup-target-dropdown-open .setup-target-menu', $mobileSetupCss);
  $this->assertStringContainsString('position: relative !important;', $mobileSetupCss);
  $this->assertStringContainsString('setup-target-dropdown-open #targetPositionDropdownMenu', $mobileModalCss);
+ $this->assertStringContainsString('#targetPositionDropdownMenu::backdrop', $mobileModalCss);
+ $this->assertStringContainsString('backdrop-filter: blur(7px) !important;', $mobileModalCss);
  $this->assertStringContainsString('max-height: min(760px, calc(var(--setup-target-viewport-height, 100dvh) - 24px)) !important;', $mobileModalCss);
  $this->assertStringContainsString('setup-target-choice-selected i::after', $mobileModalCss);
  }

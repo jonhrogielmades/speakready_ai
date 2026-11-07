@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=17') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=18') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -217,8 +217,7 @@
  <span class="setup-target-trigger-text {{ $targetPositionDefault === ''? 'setup-target-placeholder': '' }}" id="targetPositionDropdownLabel">{{ $targetPositionDefault !== ''? $targetPositionDefault: $targetFieldCopy['placeholder'] }}</span>
  <i class="fa-solid fa-chevron-down setup-target-trigger-icon" aria-hidden="true"></i>
  </button>
- <button type="button" class="setup-target-modal-backdrop" id="targetPositionModalBackdrop" aria-label="Close target position picker" hidden></button>
- <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="dialog" aria-modal="true" aria-label="Choose target position" tabindex="-1" hidden>
+ <dialog class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="dialog" aria-modal="true" aria-label="Choose target position" tabindex="-1" autofocus hidden>
  <div class="setup-target-menu-search">
  <label class="visually-hidden" for="targetPositionSearch">Search target positions</label>
  <input type="search" class="oinp" id="targetPositionSearch" placeholder="Search positions" autocomplete="off">
@@ -240,7 +239,7 @@
  @endforeach
  <p class="setup-target-empty" id="targetPositionEmpty" hidden>No matching positions. You can enter your own role below.</p>
  <button type="button" class="setup-target-custom-action" id="customTargetPositionAction"><i class="fa-solid fa-pen" aria-hidden="true"></i> Click here to input your role!</button>
- </div>
+ </dialog>
  </div>
  <div class="setup-custom-position" id="customTargetPositionWrap" hidden>
  <label class="setup-card-label" for="customTargetPositionInput">Enter your role</label>
@@ -913,7 +912,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  function setSetupTargetDropdownOpen(open) {
  const dropdown = document.querySelector('[data-target-dropdown]');
  const trigger = document.getElementById('targetPositionDropdownButton');
- const backdrop = document.getElementById('targetPositionModalBackdrop');
  const menu = document.getElementById('targetPositionDropdownMenu');
 
  if (!dropdown || !trigger || !menu) return;
@@ -922,8 +920,16 @@ Begin Interview <i class="fa-solid fa-play"></i>
  document.documentElement.classList.toggle('setup-target-position-modal-open', open);
  document.body.classList.toggle('setup-target-position-modal-open', open);
  trigger.setAttribute('aria-expanded', open? 'true': 'false');
- if (backdrop) backdrop.hidden = !open;
- menu.hidden = !open;
+ if (open) {
+ menu.hidden = false;
+ if (!menu.open) {
+ if (isSetupCompactMobile()) menu.showModal();
+ else menu.show();
+ }
+ } else {
+ if (menu.open) menu.close();
+ menu.hidden = true;
+ }
 
  if (open) {
  filterSetupTargetChoices();
@@ -1280,7 +1286,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  const targetPositionDropdown = document.querySelector('[data-target-dropdown]');
  const targetPositionDropdownButton = document.getElementById('targetPositionDropdownButton');
- const targetPositionModalBackdrop = document.getElementById('targetPositionModalBackdrop');
  const targetPositionDropdownMenu = document.getElementById('targetPositionDropdownMenu');
  const targetPositionSearch = document.getElementById('targetPositionSearch');
  const jobCategoryFilter = document.getElementById('jobCategoryFilter');
@@ -1497,7 +1502,16 @@ Begin Interview <i class="fa-solid fa-play"></i>
  syncSetupTargetFieldCopy();
  setSetupTargetDropdownOpen(willOpen);
  });
- targetPositionModalBackdrop?.addEventListener('click', () => {
+ targetPositionDropdownMenu?.addEventListener('click', (event) => {
+ if (event.target !== targetPositionDropdownMenu) return;
+ const rect = targetPositionDropdownMenu.getBoundingClientRect();
+ if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) return;
+ setSetupTargetDropdownOpen(false);
+ targetPositionDropdownButton?.focus();
+ });
+
+ targetPositionDropdownMenu?.addEventListener('cancel', (event) => {
+ event.preventDefault();
  setSetupTargetDropdownOpen(false);
  targetPositionDropdownButton?.focus();
  });
