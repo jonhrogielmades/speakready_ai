@@ -1019,6 +1019,9 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('id="jobCategoryFilter"', false)
  ->assertSee('id="targetPositionSearch"', false)
  ->assertSee('name="custom_position"', false)
+ ->assertSee('class="setup-target-custom-entry"', false)
+ ->assertSee("Don't worry if you can't find your role. Enter it below to add your role.", false)
+ ->assertDontSee('Click here to input your role!')
  ->assertSee('id="roleSkills"', false)
  ->assertSee('id="roleInterests"', false)
  ->assertSee('id="roleQualifications"', false)
@@ -1044,11 +1047,15 @@ class UserSideHardeningTest extends TestCase
  }
 
  $desktopResponse
- ->assertSee('css/desktop/interview/setup-role-discovery.css?v=4', false);
+ ->assertSee('css/desktop/interview/setup-role-discovery.css?v=5', false)
+ ->assertSee('id="targetPositionCustomInput"', false)
+ ->assertSee('id="targetPositionCustomSave"', false);
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=19', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=20', false)
+ ->assertSee('id="customTargetPositionDraft"', false)
+ ->assertSee('id="saveCustomTargetPositionButton"', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)

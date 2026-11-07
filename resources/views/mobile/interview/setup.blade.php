@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=19') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=20') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -237,8 +237,13 @@
  </div>
  @endforeach
  @endforeach
- <p class="setup-target-empty" id="targetPositionEmpty" hidden>No matching positions. You can enter your own role below.</p>
- <button type="button" class="setup-target-custom-action" id="customTargetPositionAction"><i class="fa-solid fa-pen" aria-hidden="true"></i> Click here to input your role!</button>
+ <p class="setup-target-empty" id="targetPositionEmpty" hidden>Don't worry if you can't find your role. Enter it below to add your role.</p>
+ <div class="setup-target-custom-entry">
+ <label class="visually-hidden" for="customTargetPositionDraft">Enter your role</label>
+ <input type="text" class="oinp" id="customTargetPositionDraft" maxlength="255" autocomplete="organization-title" placeholder="Enter your role" aria-describedby="customTargetPositionError">
+ <button type="button" class="setup-target-custom-save" id="saveCustomTargetPositionButton">Save</button>
+ </div>
+ <p class="setup-target-custom-error" id="customTargetPositionError" role="alert" hidden>Enter a role before saving.</p>
  </dialog>
  </div>
  <div class="setup-custom-position" id="customTargetPositionWrap" hidden>
@@ -921,6 +926,15 @@ Begin Interview <i class="fa-solid fa-play"></i>
  document.body.classList.toggle('setup-target-position-modal-open', open);
  trigger.setAttribute('aria-expanded', open? 'true': 'false');
  if (open) {
+ const draft = document.getElementById('customTargetPositionDraft');
+ const savedCustom = document.getElementById('customTargetPositionInput');
+ const positionField = document.getElementById('valPosition');
+ const draftError = document.getElementById('customTargetPositionError');
+ if (draft) {
+ draft.value = positionField?.dataset.customTarget === 'true'? (savedCustom?.value || ''): '';
+ draft.removeAttribute('aria-invalid');
+ }
+ if (draftError) draftError.hidden = true;
  menu.hidden = false;
  if (!menu.open) {
  if (isSetupCompactMobile()) menu.showModal();
@@ -1290,6 +1304,9 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const targetPositionSearch = document.getElementById('targetPositionSearch');
  const jobCategoryFilter = document.getElementById('jobCategoryFilter');
  const customTargetPositionInput = document.getElementById('customTargetPositionInput');
+ const customTargetPositionDraft = document.getElementById('customTargetPositionDraft');
+ const customTargetPositionError = document.getElementById('customTargetPositionError');
+ const saveCustomTargetPositionButton = document.getElementById('saveCustomTargetPositionButton');
 
  function setSetupTargetPosition(value, category = '') {
  const positionField = document.getElementById('valPosition');
@@ -1341,19 +1358,39 @@ Begin Interview <i class="fa-solid fa-play"></i>
  } else if (event.key === 'ArrowDown') {
  event.preventDefault();
  visibleSetupTargetChoices()[0]?.focus();
+ } else if (event.key === 'Enter') {
+ event.preventDefault();
+ const first = visibleSetupTargetChoices()[0];
+ if (first) chooseSetupTargetValue(first);
+ else {
+ if (customTargetPositionDraft && targetPositionSearch.value.trim()) customTargetPositionDraft.value = targetPositionSearch.value.trim();
+ customTargetPositionDraft?.focus();
+ }
  }
  });
 
- document.getElementById('customTargetPositionAction')?.addEventListener('click', () => {
- const positionField = document.getElementById('valPosition');
- if (!positionField) return;
- positionField.dataset.customTarget = 'true';
- setSetupTargetInputValue(positionField, '', 'job');
- if (customTargetPositionInput) customTargetPositionInput.value = '';
- syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
- positionField.dispatchEvent(new Event('change', { bubbles: true }));
+ function saveCustomTargetPosition() {
+ const value = String(customTargetPositionDraft?.value || '').trim();
+ if (!value) {
+ if (customTargetPositionError) customTargetPositionError.hidden = false;
+ customTargetPositionDraft?.setAttribute('aria-invalid', 'true');
+ customTargetPositionDraft?.focus();
+ return;
+ }
+ setSetupTargetPosition(value);
  setSetupTargetDropdownOpen(false);
- customTargetPositionInput?.focus();
+ targetPositionDropdownButton?.focus();
+ }
+
+ saveCustomTargetPositionButton?.addEventListener('click', saveCustomTargetPosition);
+ customTargetPositionDraft?.addEventListener('input', () => {
+ if (customTargetPositionError) customTargetPositionError.hidden = true;
+ customTargetPositionDraft.removeAttribute('aria-invalid');
+ });
+ customTargetPositionDraft?.addEventListener('keydown', (event) => {
+ if (event.key !== 'Enter') return;
+ event.preventDefault();
+ saveCustomTargetPosition();
  });
 
  customTargetPositionInput?.addEventListener('input', () => {
