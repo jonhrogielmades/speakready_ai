@@ -1518,6 +1518,11 @@ html body #sec-interview-setup #targetPositionDropdownMenu {
         box-shadow: none !important;
     }
 
+    html body #sec-interview-setup #panel-basic #targetPositionDropdownMenu .setup-target-choice[hidden],
+    html body #sec-interview-setup #panel-basic #targetPositionDropdownMenu .setup-target-choice-group[hidden] {
+        display: none !important;
+    }
+
     html body #sec-interview-setup #panel-basic #targetPositionDropdownMenu .setup-target-choice:hover,
     html body #sec-interview-setup #panel-basic #targetPositionDropdownMenu .setup-target-choice:focus-visible {
         background: #f3f4f6 !important;
