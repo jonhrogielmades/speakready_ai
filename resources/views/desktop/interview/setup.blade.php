@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=30') }}" data-page-style="interview-setup-2">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=7') }}" data-page-style="interview-role-discovery">
-<link rel="stylesheet" href="{{ asset('css/shared/interview-setup-clear.css?v=1') }}" data-page-style="interview-setup-clear">
+<link rel="stylesheet" href="{{ asset('css/shared/interview-setup-clear.css?v=2') }}" data-page-style="interview-setup-clear">
 @endpush
 
 @section('content')
@@ -179,11 +179,11 @@
  <div class="setup-details-icon" aria-hidden="true">
  <i class="fa-solid fa-briefcase"></i>
  </div>
- <div>
+ <div class="setup-panel-heading-copy">
  <h5 class="setup-details-card-title">Interview Details</h5>
  </div>
+ <button type="button" class="setup-clear-step" data-clear-setup-step="panel-basic" aria-label="Clear Interview Details selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button>
  </div>
- <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-basic" aria-label="Clear Interview Details selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
 
  <div class="setup-card-fields">
  <div class="setup-card-field">
@@ -306,8 +306,8 @@
  <i class="fa-solid fa-layer-group"></i>
  </div>
  <h5 class="setup-structure-title">Interview Structure</h5>
+ <button type="button" class="setup-clear-step" data-clear-setup-step="panel-structure" aria-label="Clear Interview Structure selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button>
  </div>
- <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-structure" aria-label="Clear Interview Structure selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
 
  <div class="setup-structure-section-title">Difficulty Level</div>
  <div class="structure-difficulty-list">
@@ -371,8 +371,8 @@
  <i class="fa-solid fa-video"></i>
  </div>
  <h5 class="setup-inclusive-title">Camera Detection</h5>
+ <button type="button" class="setup-clear-step" data-clear-setup-step="panel-inclusive" aria-label="Clear Camera Detection selection"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button>
  </div>
- <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-inclusive" aria-label="Clear Camera Detection selection"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
  <p class="setup-inclusive-copy">Turn camera-based body-language detection on or off for this interview.</p>
  @php
  $cameraDetectionValue = old('camera_detection', old('camera_coaching', null));
@@ -414,8 +414,8 @@
  <i class="fa-solid fa-brain"></i>
  </div>
  <h5 class="assistance-title">Scenario</h5>
+ <button type="button" class="setup-clear-step" data-clear-setup-step="panel-content" aria-label="Clear Scenario selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button>
  </div>
- <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-content" aria-label="Clear Scenario selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
 
  <div class="assistance-stack">
  <div class="assistance-field assistance-feedback-field">
@@ -467,8 +467,8 @@
  <i class="fa-solid fa-microphone"></i>
  </div>
  <h5 class="response-title">Response Mode</h5>
+ <button type="button" class="setup-clear-step" data-clear-setup-step="panel-response" aria-label="Clear Response Mode and AI interviewer selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button>
  </div>
- <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-response" aria-label="Clear Response Mode and AI interviewer selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
  <div class="response-mode-list">
  <label class="response-mode-card">
  <input type="radio" name="response_mode" value="text" class="setup-input" {{ $setupDefaults['response_mode'] === 'text'? 'checked': '' }}>
@@ -551,8 +551,10 @@
  <div class="col-lg-4 animate-fade-up delay-200">
  <div class="setup-summary-wrap">
  <div class="setup-panel setup-summary-panel" id="panel-summary">
+ <div class="setup-summary-head">
  <h5 class="setup-summary-title"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
- <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-summary" aria-label="Clear all interview setup selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear all</button></div>
+ <button type="button" class="setup-clear-step" data-clear-setup-step="panel-summary" aria-label="Clear all interview setup selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear all</button>
+ </div>
 
  <div class="summary-row">
  <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>

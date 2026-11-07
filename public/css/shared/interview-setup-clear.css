@@ -1,8 +1,61 @@
-/* Clear the choices in the current interview setup panel. */
-html body #sec-interview-setup .setup-clear-step-row {
+/* Keep each panel's icon, title, and Clear action on the same line. */
+html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) :is(
+    #panel-basic.setup-panel .setup-details-card-head,
+    #panel-structure.setup-panel .setup-structure-head,
+    #panel-inclusive.setup-panel .setup-inclusive-head,
+    #panel-content.setup-panel .assistance-head,
+    #panel-response.setup-panel .response-head
+) {
+    display: grid !important;
+    grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+    align-items: center !important;
+    justify-content: stretch !important;
+    column-gap: 8px !important;
+    width: 100% !important;
+}
+
+html body #sec-interview-setup .setup-panel-heading-copy,
+html body #sec-interview-setup :is(
+    .setup-details-card-title,
+    .setup-structure-title,
+    .setup-inclusive-title,
+    .assistance-title,
+    .response-title
+) {
+    min-width: 0 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+}
+
+html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) #panel-summary.setup-panel .setup-summary-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content !important;
+    align-items: center !important;
+    column-gap: 8px !important;
+    margin: 0 0 12px !important;
+    padding: 0 0 10px !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.22) !important;
+}
+
+html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) #panel-summary.setup-panel .setup-summary-head .setup-summary-title {
     display: flex !important;
-    justify-content: flex-start !important;
-    margin: 0 0 14px !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    font-size: 0.85rem !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+}
+
+html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) #panel-summary.setup-panel .setup-summary-head .setup-summary-title i {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    margin-right: 0 !important;
 }
 
 html body #sec-interview-setup .setup-clear-step {
@@ -21,7 +74,18 @@ html body #sec-interview-setup .setup-clear-step {
     font-size: 0.8rem !important;
     line-height: 1 !important;
     font-weight: 800 !important;
+    justify-self: end !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
     cursor: pointer !important;
+}
+
+html body #sec-interview-setup #panel-summary .setup-summary-head .setup-clear-step {
+    min-height: 34px !important;
+    padding: 6px !important;
+    gap: 4px !important;
+    font-size: 0.72rem !important;
 }
 
 html body #sec-interview-setup .setup-clear-step:hover {
@@ -48,5 +112,93 @@ html:not(.lm) body #sec-interview-setup .setup-clear-step:hover {
 @media (max-width: 991.98px) {
     html body #sec-interview-setup .setup-clear-step {
         min-height: 40px !important;
+    }
+}
+
+@media (max-width: 420px) {
+    html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) :is(
+        #panel-basic.setup-panel .setup-details-icon,
+        #panel-structure.setup-panel .setup-structure-head-icon,
+        #panel-inclusive.setup-panel .setup-inclusive-head-icon,
+        #panel-content.setup-panel .assistance-head-icon,
+        #panel-response.setup-panel .response-head-icon
+    ) {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        flex: 0 0 34px !important;
+    }
+
+    html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) :is(
+        #panel-basic.setup-panel .setup-details-card-title,
+        #panel-structure.setup-panel .setup-structure-title,
+        #panel-inclusive.setup-panel .setup-inclusive-title,
+        #panel-content.setup-panel .assistance-title,
+        #panel-response.setup-panel .response-title
+    ) {
+        font-size: 0.88rem !important;
+    }
+}
+
+@media (max-width: 380px) {
+    html body #sec-interview-setup .setup-clear-step {
+        min-height: 34px !important;
+        padding: 5px 8px !important;
+        gap: 4px !important;
+        font-size: 0.7rem !important;
+    }
+
+    html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) #panel-summary.setup-panel .setup-summary-head .setup-summary-title {
+        gap: 6px !important;
+        font-size: 0.8rem !important;
+    }
+
+    html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) #panel-summary.setup-panel .setup-summary-head .setup-summary-title i {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+    }
+}
+
+@media (max-width: 340px) {
+    html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) :is(
+        #panel-basic.setup-panel .setup-details-icon,
+        #panel-structure.setup-panel .setup-structure-head-icon,
+        #panel-inclusive.setup-panel .setup-inclusive-head-icon,
+        #panel-content.setup-panel .assistance-head-icon,
+        #panel-response.setup-panel .response-head-icon
+    ) {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        flex: 0 0 28px !important;
+    }
+
+    html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) :is(
+        #panel-basic.setup-panel .setup-details-card-title,
+        #panel-structure.setup-panel .setup-structure-title,
+        #panel-inclusive.setup-panel .setup-inclusive-title,
+        #panel-content.setup-panel .assistance-title,
+        #panel-response.setup-panel .response-title
+    ) {
+        font-size: 0.8rem !important;
+    }
+
+    html body #sec-interview-setup .setup-clear-step i {
+        display: none !important;
+    }
+
+    html body #sec-interview-setup .setup-clear-step {
+        padding-inline: 6px !important;
+    }
+
+    html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) #panel-summary.setup-panel .setup-summary-head .setup-summary-title {
+        font-size: 0.76rem !important;
+    }
+
+    html body :is(#sec-interview-setup, #mob-content #sec-interview-setup) #panel-summary.setup-panel .setup-summary-head .setup-summary-title i {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
     }
 }
