@@ -2622,20 +2622,28 @@ class UserController extends Controller
 
  $answer = InterviewAnswer::query()
  ->whereKey((int) $answerId)
- ->whereHas('interviewSession', fn ($query) => $query->where('user_id', Auth::id()))
- ->with([
- 'question',
- 'interviewSession' => function ($query) {
- $query->with(['answers.question', 'feedback', 'score']);
- },
- ])
+ ->whereIn('interview_session_id', InterviewSession::query()
+  ->select('id')
+  ->where('user_id', Auth::id()))
  ->first();
 
  if (! $answer) {
  return null;
  }
 
- $question = trim((string) ($answer->question?->question_text?? ''));
+ $session = InterviewSession::query()
+ ->whereKey($answer->interview_session_id)
+ ->where('user_id', Auth::id())
+ ->with('score')
+ ->first();
+ if (! $session) {
+ return null;
+ }
+
+ $questionModel = $answer->question_id
+  ? Question::query()->find($answer->question_id)
+  : null;
+ $question = trim((string) data_get($questionModel, 'question_text', ''));
  $savedAnswer = trim((string) ($answer->answer_text?? ''));
  if ($savedAnswer === '') {
  $savedAnswer = trim((string) ($answer->delivery_transcript?? ''));
@@ -2649,8 +2657,6 @@ class UserController extends Controller
  }
 
  $guidance = [];
- $session = $answer->interviewSession;
- if ($session) {
  $reviewEvidence = FeedbackEvidencePresenter::forSession($session);
  $answerCard = $reviewEvidence?->answers?->first(
  fn ($item): bool => (int) ($item->answer_id?? 0) === (int) $answer->id
@@ -2669,7 +2675,6 @@ class UserController extends Controller
  'limitation' => $this->coachReviewScalar($answerCard->limitation?? null),
  ];
  $guidance = array_filter($guidance, static fn ($value): bool => $value !== '' && $value !== []);
- }
  }
 
  return [

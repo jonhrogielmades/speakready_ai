@@ -3080,8 +3080,7 @@ PROMPT;
  $speech = match ($provider) {
   'gemini' => self::synthesizeSpeechWithGemini($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $deadlineAt, $providerOptions),
   'openai' => self::synthesizeSpeechWithOpenAI($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $providerOptions),
-  'elevenlabs' => self::synthesizeSpeechWithElevenLabs($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $providerOptions),
- default => null,
+ default => self::synthesizeSpeechWithElevenLabs($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $providerOptions),
  };
 
  if ($speech!== null) {
