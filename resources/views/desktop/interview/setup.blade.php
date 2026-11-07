@@ -3,7 +3,7 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=20') }}" data-page-style="interview-setup-2">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=6') }}" data-page-style="interview-role-discovery">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=7') }}" data-page-style="interview-role-discovery">
 @endpush
 
 @section('content')

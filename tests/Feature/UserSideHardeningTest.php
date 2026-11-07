@@ -1047,7 +1047,7 @@ class UserSideHardeningTest extends TestCase
  }
 
  $desktopResponse
- ->assertSee('css/desktop/interview/setup-role-discovery.css?v=6', false)
+ ->assertSee('css/desktop/interview/setup-role-discovery.css?v=7', false)
  ->assertSee('id="targetPositionCustomInput"', false)
  ->assertSee('id="targetPositionCustomSave"', false)
  ->assertSee('<input type="hidden" name="custom_position" id="customPositionInput"', false)

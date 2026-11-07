@@ -120,7 +120,7 @@ html body #sec-interview-setup #panel-basic .setup-target-custom-error[hidden] {
 html body #sec-interview-setup #panel-basic .setup-target-custom-entry {
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(90px, 3fr);
-    align-items: center;
+    align-items: stretch;
     gap: 8px;
     width: 100%;
     margin-top: 2px;
@@ -130,6 +130,7 @@ html body #sec-interview-setup #panel-basic #targetPositionCustomInput {
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
+    margin: 0 !important;
     height: 48px !important;
     min-height: 48px !important;
     max-height: 48px !important;
@@ -153,6 +154,7 @@ html body #sec-interview-setup #panel-basic #targetPositionCustomInput[aria-inva
 html body #sec-interview-setup #panel-basic .setup-target-custom-save {
     min-width: 0;
     box-sizing: border-box;
+    margin: 0 !important;
     height: 48px !important;
     min-height: 48px !important;
     max-height: 48px !important;
