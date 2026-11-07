@@ -1746,17 +1746,12 @@ Begin Interview <i class="fa-solid fa-play"></i>
  return missingSetupItems(stepId).length === 0;
  }
 
- function canReviewSummaryWithPendingInterviewer() {
- const missing = missingSetupItems('panel-response');
- return missing.length === 1 && missing[0].name === 'interviewer_avatar';
- }
-
  function getMaxAccessibleSetupStepIndex(steps = getSetupSteps()) {
  let maxAccessibleIndex = 0;
 
  for (let index = 0; index < steps.length - 1; index++) {
  const stepId = steps[index]?.id;
- if (!isSetupStepComplete(stepId) && !(stepId === 'panel-response' && canReviewSummaryWithPendingInterviewer())) break;
+ if (!isSetupStepComplete(stepId)) break;
  maxAccessibleIndex = index + 1;
  }
 
@@ -1816,7 +1811,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (targetIndex > setupStepState.index) {
  for (let index = setupStepState.index; index < targetIndex; index++) {
  const stepId = steps[index]?.id;
- if (!(stepId === 'panel-response' && canReviewSummaryWithPendingInterviewer()) && !validateSetupStep(stepId, true)) return;
+ if (!validateSetupStep(stepId, true)) return;
  }
  }
  showSetupStep(targetIndex);
@@ -1933,7 +1928,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  document.getElementById('setupStepNext')?.addEventListener('click', () => {
  const currentPanelId = getSetupSteps()[setupStepState.index]?.id;
- if (!(currentPanelId === 'panel-response' && canReviewSummaryWithPendingInterviewer()) && !validateSetupStep(currentPanelId, true)) return;
+ if (!validateSetupStep(currentPanelId, true)) return;
  showSetupStep(setupStepState.index + 1);
  });
 
@@ -2263,7 +2258,10 @@ startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'P
  });
 
  window.addEventListener('pageshow', function(event) {
- if (!event.persisted && @json(!$errors->any())) setupDraftApi?.clearInterviewerSelection(setupForm);
+ if (!event.persisted && @json(!$errors->any())) {
+ setupDraftApi?.clearInterviewerSelection(setupForm);
+ showSetupStep(setupStepState.index);
+ }
  setupFormSubmitting = false;
  setupTransitionOverlay.classList.remove('active');
  document.documentElement.classList.remove('finish-transition-active');

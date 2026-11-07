@@ -98,7 +98,7 @@ test('a fresh setup clears browser-restored avatar even without a saved draft', 
 test('desktop and mobile clear browser restoration on a new load but keep bfcache and validation choices', () => {
     for (const layout of ['desktop', 'mobile']) {
         const view = readFileSync(join(root, `resources/views/${layout}/interview/setup.blade.php`), 'utf8');
-        const guard = view.match(/if \((!event\.persisted && @json\(!\$errors->any\(\)\))\) setupDraftApi\?\.clearInterviewerSelection\(setupForm\);/)?.[1];
+        const guard = view.match(/if \((!event\.persisted && @json\(!\$errors->any\(\)\))\)\s*\{?\s*setupDraftApi\?\.clearInterviewerSelection\(setupForm\);/)?.[1];
         assert.ok(guard, `${layout} must guard pageshow avatar clearing`);
 
         for (const [persisted, hasErrors, expectedClear] of [
