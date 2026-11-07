@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=27') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=28') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -745,7 +745,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
 <script>
  window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json($interviewSetupDraftKey) };
 </script>
-<script src="{{ asset('js/interview-setup-draft.js?v=1') }}"></script>
+<script src="{{ asset('js/interview-setup-draft.js?v=2') }}"></script>
 <script src="{{ asset('js/interview-setup-avatar-modal.js?v=4') }}"></script>
 <script>
  const setupRequiredFieldIds = [

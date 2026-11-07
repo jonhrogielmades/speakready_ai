@@ -463,7 +463,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  <script>
  window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json('speakready.interview.setupDraft.'.auth()->id()) };
  </script>
- <script src="{{ asset('js/interview-setup-draft.js?v=1') }}"></script>
+ <script src="{{ asset('js/interview-setup-draft.js?v=2') }}"></script>
  <script>
  const savedSessionState = @json($clientSavedStateForUi);
  const initialQuestions = @json($clientQuestionsForUi);

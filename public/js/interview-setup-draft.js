@@ -1,6 +1,7 @@
 (function () {
  const DEFAULT_STORAGE_KEY = 'speakready.interview.setupDraft';
  const SAVE_DEBOUNCE_MS = 140;
+ const FRESH_SELECTION_NAME = 'interviewer_avatar';
  const root = window;
 
  function configuredStorageKey(explicitKey, form) {
@@ -64,6 +65,7 @@
  function serializeForm(form, options) {
  const values = {};
  formControlNames(form).forEach((name) => {
+ if (name === FRESH_SELECTION_NAME) return;
  values[name] = serializeControlValue(controlsForName(form, name));
  });
 
@@ -163,13 +165,23 @@
  }
 
  function restore(form, options = {}) {
- if (!form || !canUseStorage) return null;
+ if (!form) return null;
+
+ // A new setup must ask for an interviewer even when a previous draft or the
+ // browser's own form restoration still has an avatar radio checked.
+ controlsForName(form, FRESH_SELECTION_NAME).forEach((control) => {
+ if (String(control.type || '').toLowerCase() !== 'radio' || !control.checked) return;
+ control.checked = false;
+ control.dispatchEvent(new Event('change', { bubbles: true }));
+ });
+ if (!canUseStorage) return null;
 
  const storageKey = configuredStorageKey(options.storageKey, form);
  const draft = read(storageKey);
  if (!draft?.values || typeof draft.values !== 'object') return null;
 
  Object.entries(draft.values).forEach(([name, value]) => {
+ if (name === FRESH_SELECTION_NAME) return;
  restoreControlValue(controlsForName(form, name), value, draft);
  });
 

@@ -1713,6 +1713,13 @@ html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-choice:hover .intervi
     background: #20314b;
 }
 
+html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-trigger.setup-field-invalid,
+html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-picker.setup-field-invalid .interviewer-avatar-trigger {
+    border-color: #ef4444;
+    border-style: solid;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, .16);
+}
+
 html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-choice > input:checked + .interviewer-avatar-card {
     border-color: #60a5fa;
     background: #19375e;
