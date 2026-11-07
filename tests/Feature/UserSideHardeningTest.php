@@ -1044,7 +1044,7 @@ class UserSideHardeningTest extends TestCase
  }
 
  $desktopResponse
- ->assertSee('css/desktop/interview/setup-role-discovery.css?v=3', false);
+ ->assertSee('css/desktop/interview/setup-role-discovery.css?v=4', false);
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)

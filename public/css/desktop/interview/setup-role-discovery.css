@@ -177,7 +177,9 @@ html body #roleFinderModal .setup-role-results {
 }
 
 html body #roleFinderModal .setup-role-suggest-btn {
-    margin-top: 14px;
+    display: block;
+    width: fit-content;
+    margin: 14px auto 0;
     padding: 10px 16px;
     border: 0;
     border-radius: 9px;
