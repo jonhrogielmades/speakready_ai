@@ -1159,6 +1159,9 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('#panel-content .assistance-feedback-field', $desktopSetupCss);
  $this->assertStringContainsString('#sec-interview-setup.setup-page-booting', $desktopSetupCss);
  $this->assertStringContainsString('#sec-interview-setup.setup-page-booting', $mobileSetupCss);
+ $initialSetupGuard = 'id="sec-interview-setup" aria-busy="true" data-setup-ready="false" style="visibility:hidden!important;opacity:0!important;pointer-events:none!important"';
+ $this->assertStringContainsString($initialSetupGuard, $desktopResponse->getContent());
+ $this->assertStringContainsString($initialSetupGuard, $mobileResponse->getContent());
  $this->assertStringContainsString('data-setup-ready="false"', $desktopResponse->getContent());
  $this->assertStringContainsString('data-setup-ready="false"', $mobileResponse->getContent());
  $this->assertStringContainsString('function revealInterviewSetupPage()', $desktopResponse->getContent());

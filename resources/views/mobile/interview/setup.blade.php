@@ -104,7 +104,7 @@
  $interviewSetupDraftKey = 'speakready.interview.setupDraft.'.auth()->id();
 @endphp
 
-<div class="db-section active setup-step-mode setup-page-booting" id="sec-interview-setup" aria-busy="true" data-setup-ready="false">
+<div class="db-section active setup-step-mode setup-page-booting" id="sec-interview-setup" aria-busy="true" data-setup-ready="false" style="visibility:hidden!important;opacity:0!important;pointer-events:none!important">
  <div class="setup-hero">
  <div class="setup-hero-inner">
  <span class="setup-hero-icon" aria-hidden="true">
@@ -1812,7 +1812,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  });
  }
 
- function showSetupStep(nextIndex) {
+ function showSetupStep(nextIndex, animate = true) {
  const section = document.getElementById('sec-interview-setup');
  const stepper = document.getElementById('setupStepper');
  const prevButton = document.getElementById('setupStepPrev');
@@ -1850,8 +1850,10 @@ Begin Interview <i class="fa-solid fa-play"></i>
  panel.classList.toggle('setup-step-active', isActivePanel);
  panel.classList.remove('setup-step-transition-in');
  if (isActivePanel) {
+ if (animate && !section.classList.contains('setup-page-booting')) {
  void panel.offsetWidth;
  panel.classList.add('setup-step-transition-in');
+ }
  }
  }
 
@@ -1939,6 +1941,9 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  const reveal = () => {
  section.classList.remove('setup-page-booting');
+ section.style.removeProperty('visibility');
+ section.style.removeProperty('opacity');
+ section.style.removeProperty('pointer-events');
  section.setAttribute('aria-busy', 'false');
  section.dataset.setupReady = 'true';
  };
@@ -1951,8 +1956,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  }
 
  initializeInterviewSetupPage();
- revealInterviewSetupPage();
- window.addEventListener('load', initializeInterviewSetupPage, { once: true });
+ document.addEventListener('DOMContentLoaded', revealInterviewSetupPage, { once: true });
 
  const setupForm = document.getElementById('setupForm');
  const setupTransitionOverlay = document.getElementById('setupTransitionOverlay');
@@ -2253,7 +2257,7 @@ startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'P
  window.addEventListener('pageshow', function(event) {
  if (!event.persisted && @json(!$errors->any())) {
  setupDraftApi?.clearInterviewerSelection(setupForm);
- showSetupStep(setupStepState.index);
+ showSetupStep(setupStepState.index, false);
  }
  setupFormSubmitting = false;
  setupTransitionOverlay.classList.remove('active');
