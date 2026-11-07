@@ -4085,16 +4085,20 @@ PROMPT;
  }
 
  if ($pinnedProvider === null) {
-  return self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== ''
-   || self::openAiSpeechCredentials() !== null;
+  return self::openAiSpeechCredentials() !== null
+   || self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== ''
+   || self::elevenLabsSpeechCredentials(false) !== null;
  }
 
  $provider = self::normalizeSpeechProviderName($pinnedProvider);
 
  return match ($provider) {
+ 'openai' => self::openAiSpeechCredentials() !== null
+  || self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== ''
+  || self::elevenLabsSpeechCredentials(false) !== null,
  'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== ''
-  || self::openAiSpeechCredentials() !== null,
- 'openai' => self::openAiSpeechCredentials() !== null,
+  || self::openAiSpeechCredentials() !== null
+  || self::elevenLabsSpeechCredentials(false) !== null,
  'elevenlabs' => self::elevenLabsSpeechCredentials(false) !== null,
  default => false,
  };
@@ -4139,7 +4143,7 @@ PROMPT;
 
  private static function speechSynthesisProviderPriority(): array
  {
- $configured = config('services.ai_tts.provider', 'elevenlabs,openai,gemini');
+ $configured = config('services.ai_tts.provider', 'openai,gemini,elevenlabs');
  $providers = is_array($configured)
  ? $configured
  : preg_split('/[,|]+/', (string) $configured);

@@ -968,10 +968,10 @@ return response()->json([
 
   $avatar = InterviewerAvatar::normalize($session->interviewer_avatar);
   $speechOptions = [
-   'providers' => ['gemini', 'openai'],
+   'providers' => ['openai', 'gemini', 'elevenlabs'],
    'provider_voices' => [
-    'gemini' => InterviewerAvatar::voice($avatar),
     'openai' => InterviewerAvatar::openAiVoice($avatar),
+    'gemini' => InterviewerAvatar::voice($avatar),
    ],
    'interviewer_avatar' => $avatar,
    'style' => InterviewerAvatar::voiceStyle($avatar),
@@ -985,11 +985,20 @@ return response()->json([
     return response()->json(['error' => 'AI speech is not available.'], 503);
    }
 
-   if ($originalProvider === 'gemini') {
-    // Keep the existing Gemini voice until it fails, then let OpenAI take over.
-    $speechOptions['provider_voices']['gemini'] = $session->tts_voice;
-    $speechOptions['provider_models'] = ['gemini' => $session->tts_model];
-   } else {
+   $providerIndex = array_search($originalProvider, $speechOptions['providers'], true);
+   if ($providerIndex === false) {
+    return response()->json(['error' => 'AI speech is not available.'], 503);
+   }
+
+   // Keep the session voice first, then try the remaining providers in priority order.
+   // This also lets sessions pinned to Gemini before an upgrade recover through OpenAI.
+   $speechOptions['providers'] = array_merge(
+    [$originalProvider],
+    array_values(array_filter($speechOptions['providers'], fn (string $provider): bool => $provider !== $originalProvider))
+   );
+   $speechOptions['provider_voices'][$originalProvider] = $session->tts_voice;
+   $speechOptions['provider_models'] = [$originalProvider => $session->tts_model];
+   if ($originalProvider === 'elevenlabs') {
     $speechOptions['provider'] = $originalProvider;
     $speechOptions['model'] = $session->tts_model;
     $speechOptions['voice'] = $session->tts_voice;
@@ -1016,11 +1025,11 @@ return response()->json([
     ->where('status', 'in_progress')
     ->whereNull('tts_provider')
     ->update(['tts_provider' => $provider, 'tts_model' => $model, 'tts_voice' => $voice]);
-  } elseif ($originalProvider === 'gemini' && $provider === 'openai') {
+  } elseif ($originalProvider !== $provider) {
    InterviewSession::query()
     ->whereKey($session->id)
     ->where('status', 'in_progress')
-    ->where('tts_provider', 'gemini')
+    ->where('tts_provider', $originalProvider)
     ->where('tts_model', $session->tts_model)
     ->where('tts_voice', $session->tts_voice)
     ->update(['tts_provider' => $provider, 'tts_model' => $model, 'tts_voice' => $voice]);
@@ -1075,10 +1084,10 @@ return response()->json([
    'Hello. I am your AI interviewer. Tell me about yourself.',
    $this->currentLanguageConfig(),
    [
-    'providers' => ['gemini', 'openai'],
+    'providers' => ['openai', 'gemini', 'elevenlabs'],
     'provider_voices' => [
-     'gemini' => InterviewerAvatar::voice($avatar),
      'openai' => InterviewerAvatar::openAiVoice($avatar),
+     'gemini' => InterviewerAvatar::voice($avatar),
     ],
     'interviewer_avatar' => $avatar,
     'style' => InterviewerAvatar::voiceStyle($avatar),
@@ -1088,8 +1097,9 @@ return response()->json([
   );
 
   $expectedVoice = match ($speech['provider'] ?? null) {
-   'gemini' => InterviewerAvatar::voice($avatar),
    'openai' => InterviewerAvatar::openAiVoice($avatar),
+   'gemini' => InterviewerAvatar::voice($avatar),
+   'elevenlabs' => trim((string) config('services.elevenlabs.tts_voice_id', '')),
    default => null,
   };
   if (! $speech || $expectedVoice === null || $speech['voice'] !== $expectedVoice) {

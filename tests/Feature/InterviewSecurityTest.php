@@ -360,10 +360,13 @@ class InterviewSecurityTest extends TestCase
         config([
             'services.ai_tts.enabled' => true,
             'services.ai_tts.provider' => 'gemini',
+            'services.openai.api_key' => '',
+            'services.elevenlabs.api_key' => '',
             'services.gemini.tts_model' => 'gemini-3.1-flash-tts-preview',
             'services.gemini.tts_voice' => 'Leda',
             'services.gemini.tts_style' => 'Say clearly',
         ]);
+        $this->setEnvValue('OPENAI_API_KEY', '');
 
         Http::fake([
             'https://generativelanguage.googleapis.com/v1beta/interactions' => Http::response([
@@ -510,6 +513,7 @@ class InterviewSecurityTest extends TestCase
             'services.ai_tts.provider' => 'openai,elevenlabs',
             'services.gemini.tts_model' => 'gemini-3.1-flash-tts-preview',
             'services.openai.api_key' => '',
+            'services.elevenlabs.api_key' => '',
         ]);
         $this->setEnvValue('OPENAI_API_KEY', '');
 
@@ -612,6 +616,11 @@ class InterviewSecurityTest extends TestCase
         $session = $this->sessionFor($user, $category, ['interviewer_avatar' => 'role_specialist']);
         $question = $this->sessionQuestion($session, $category);
         $request = ['session_id' => $session->id, 'question_id' => $question->id];
+        $session->forceFill([
+            'tts_provider' => 'gemini',
+            'tts_model' => 'gemini-3.1-flash-tts-preview',
+            'tts_voice' => 'Iapetus',
+        ])->save();
 
         $this->actingAs($user)->withSession(['active_interview_id' => $session->id]);
         $this->post(route('interview.speech'), $request)
@@ -653,8 +662,11 @@ class InterviewSecurityTest extends TestCase
         config([
             'services.ai_tts.enabled' => true,
             'services.ai_tts.provider' => 'openai',
+            'services.openai.api_key' => '',
+            'services.elevenlabs.api_key' => '',
             'services.gemini.tts_model' => 'gemini-3.1-flash-tts-preview',
         ]);
+        $this->setEnvValue('OPENAI_API_KEY', '');
 
         AiProvider::create([
             'name' => 'Gemini',
@@ -701,7 +713,7 @@ class InterviewSecurityTest extends TestCase
         }
     }
 
-    public function test_interview_speech_falls_back_on_gemini_rate_limit_and_pins_the_openai_voice(): void
+    public function test_interview_speech_prefers_openai_and_pins_the_selected_avatar_voice(): void
     {
         config([
             'services.ai_tts.enabled' => true,
@@ -768,9 +780,8 @@ class InterviewSecurityTest extends TestCase
 
         $geminiRequests = array_values(array_filter($requests, fn ($request) => str_contains($request->url(), 'generativelanguage.googleapis.com')));
         $openAiRequests = array_values(array_filter($requests, fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'));
-        $this->assertCount(1, $geminiRequests, 'A pinned OpenAI session should not retry Gemini on the next question.');
+        $this->assertCount(0, $geminiRequests, 'An available OpenAI voice should be used before Gemini.');
         $this->assertCount(2, $openAiRequests);
-        $this->assertSame('Orus', data_get($geminiRequests[0]->data(), 'generation_config.speech_config.0.voice'));
         $this->assertSame([$firstQuestion->question_text, $secondQuestion->question_text], array_map(fn ($request) => $request['input'], $openAiRequests));
         foreach ($openAiRequests as $request) {
             $this->assertSame('gpt-4o-mini-tts', $request['model']);
@@ -779,7 +790,7 @@ class InterviewSecurityTest extends TestCase
         }
     }
 
-    public function test_avatar_voice_preview_falls_back_to_six_distinct_openai_voices(): void
+    public function test_avatar_voice_preview_prefers_six_distinct_openai_voices(): void
     {
         config([
             'services.ai_tts.enabled' => true,
@@ -834,7 +845,7 @@ class InterviewSecurityTest extends TestCase
 
         $geminiRequests = array_values(array_filter($requests, fn ($request) => str_contains($request->url(), 'generativelanguage.googleapis.com')));
         $openAiRequests = array_values(array_filter($requests, fn ($request) => $request->url() === 'https://api.openai.com/v1/audio/speech'));
-        $this->assertNotEmpty($geminiRequests);
+        $this->assertCount(0, $geminiRequests, 'Preview should not call Gemini when OpenAI succeeds.');
         $this->assertCount(6, $openAiRequests);
         foreach (array_values($expected) as $index => [$gender, $voice]) {
             $request = $openAiRequests[$index];
@@ -842,6 +853,186 @@ class InterviewSecurityTest extends TestCase
             $this->assertSame('Hello. I am your AI interviewer. Tell me about yourself.', $request['input']);
             $this->assertStringContainsString($gender === 'woman' ? 'female interviewer' : 'male interviewer', (string) $request['instructions']);
         }
+    }
+
+    public function test_new_interview_session_falls_back_through_all_three_speech_providers_and_pins_elevenlabs(): void
+    {
+        $this->configureInterviewerSpeechProviderChain();
+
+        $requests = [];
+        Http::fake(function ($request) use (&$requests) {
+            $requests[] = $request;
+
+            if ($request->url() === 'https://api.openai.com/v1/audio/speech') {
+                return Http::response(['error' => ['message' => 'OpenAI rate limit']], 429);
+            }
+            if ($request->url() === 'https://generativelanguage.googleapis.com/v1beta/interactions') {
+                return Http::response(['error' => ['message' => 'Gemini rate limit']], 429);
+            }
+
+            return Http::response('elevenlabs-backup-audio', 200, ['Content-Type' => 'audio/mpeg']);
+        });
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['interviewer_avatar' => 'hiring_manager']);
+        $question = $this->sessionQuestion($session, $category);
+        $payload = ['session_id' => $session->id, 'question_id' => $question->id];
+
+        $this->actingAs($user)->withSession(['active_interview_id' => $session->id]);
+        $this->post(route('interview.speech'), $payload)
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertSee('elevenlabs-backup-audio');
+
+        $session->refresh();
+        $this->assertSame('elevenlabs', $session->tts_provider);
+        $this->assertSame('eleven_multilingual_v2', $session->tts_model);
+        $this->assertSame('21m00Tcm4TlvDq8ikWAM', $session->tts_voice);
+
+        $this->post(route('interview.speech'), $payload)->assertOk();
+
+        $this->assertSame([
+            'https://api.openai.com/v1/audio/speech',
+            'https://generativelanguage.googleapis.com/v1beta/interactions',
+            'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128',
+            'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128',
+        ], array_map(fn ($request) => $request->url(), $requests));
+        $this->assertSame('onyx', $requests[0]['voice']);
+        $this->assertSame('Orus', data_get($requests[1]->data(), 'generation_config.speech_config.0.voice'));
+        $this->assertSame($question->question_text, $requests[2]['text']);
+    }
+
+    public function test_openai_pinned_session_switches_to_gemini_when_openai_reaches_its_limit(): void
+    {
+        $this->configureInterviewerSpeechProviderChain();
+
+        $requests = [];
+        Http::fake(function ($request) use (&$requests) {
+            $requests[] = $request;
+
+            if ($request->url() === 'https://api.openai.com/v1/audio/speech') {
+                return Http::response(['error' => ['message' => 'OpenAI rate limit']], 429);
+            }
+
+            return Http::response([
+                'interaction' => ['output_audio' => ['data' => base64_encode(str_repeat("\0", 480))]],
+            ], 200);
+        });
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['interviewer_avatar' => 'role_specialist']);
+        $question = $this->sessionQuestion($session, $category);
+        $session->forceFill([
+            'tts_provider' => 'openai',
+            'tts_model' => 'gpt-4o-mini-tts',
+            'tts_voice' => 'echo',
+        ])->save();
+        $payload = ['session_id' => $session->id, 'question_id' => $question->id];
+
+        $this->actingAs($user)->withSession(['active_interview_id' => $session->id]);
+        $this->post(route('interview.speech'), $payload)->assertOk()->assertHeader('Content-Type', 'audio/wav');
+
+        $session->refresh();
+        $this->assertSame('gemini', $session->tts_provider);
+        $this->assertSame('gemini-3.1-flash-tts-preview', $session->tts_model);
+        $this->assertSame('Iapetus', $session->tts_voice);
+
+        config(['services.gemini.tts_model' => 'gemini-new-default-model']);
+        $this->post(route('interview.speech'), $payload)->assertOk()->assertHeader('Content-Type', 'audio/wav');
+
+        $this->assertSame([
+            'https://api.openai.com/v1/audio/speech',
+            'https://generativelanguage.googleapis.com/v1beta/interactions',
+            'https://generativelanguage.googleapis.com/v1beta/interactions',
+        ], array_map(fn ($request) => $request->url(), $requests));
+        $this->assertSame('echo', $requests[0]['voice']);
+        $this->assertSame('gpt-4o-mini-tts', $requests[0]['model']);
+        foreach (array_slice($requests, 1) as $request) {
+            $this->assertSame('gemini-3.1-flash-tts-preview', $request['model']);
+            $this->assertSame('Iapetus', data_get($request->data(), 'generation_config.speech_config.0.voice'));
+        }
+    }
+
+    public function test_gemini_pinned_session_switches_to_elevenlabs_after_openai_and_gemini_fail(): void
+    {
+        $this->configureInterviewerSpeechProviderChain();
+
+        $requests = [];
+        Http::fake(function ($request) use (&$requests) {
+            $requests[] = $request;
+
+            if ($request->url() === 'https://generativelanguage.googleapis.com/v1beta/interactions'
+                || $request->url() === 'https://api.openai.com/v1/audio/speech') {
+                return Http::response(['error' => ['message' => 'Provider unavailable']], 503);
+            }
+
+            return Http::response('elevenlabs-pinned-audio', 200, ['Content-Type' => 'audio/mpeg']);
+        });
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category, ['interviewer_avatar' => 'senior_leader']);
+        $question = $this->sessionQuestion($session, $category);
+        $session->forceFill([
+            'tts_provider' => 'gemini',
+            'tts_model' => 'gemini-3.1-flash-tts-preview',
+            'tts_voice' => 'Gacrux',
+        ])->save();
+        $payload = ['session_id' => $session->id, 'question_id' => $question->id];
+
+        $this->actingAs($user)->withSession(['active_interview_id' => $session->id]);
+        $this->post(route('interview.speech'), $payload)
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertSee('elevenlabs-pinned-audio');
+
+        $session->refresh();
+        $this->assertSame('elevenlabs', $session->tts_provider);
+        $this->assertSame('eleven_multilingual_v2', $session->tts_model);
+        $this->assertSame('21m00Tcm4TlvDq8ikWAM', $session->tts_voice);
+
+        $this->post(route('interview.speech'), $payload)->assertOk();
+        $this->assertSame([
+            'https://generativelanguage.googleapis.com/v1beta/interactions',
+            'https://api.openai.com/v1/audio/speech',
+            'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128',
+            'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128',
+        ], array_map(fn ($request) => $request->url(), $requests));
+        $this->assertSame('Gacrux', data_get($requests[0]->data(), 'generation_config.speech_config.0.voice'));
+        $this->assertSame('shimmer', $requests[1]['voice']);
+    }
+
+    public function test_avatar_voice_preview_reaches_elevenlabs_after_openai_and_gemini_fail(): void
+    {
+        $this->configureInterviewerSpeechProviderChain();
+
+        $requests = [];
+        Http::fake(function ($request) use (&$requests) {
+            $requests[] = $request;
+
+            if (count($requests) <= 2) {
+                return Http::response(['error' => ['message' => 'Provider rate limit']], 429);
+            }
+
+            return Http::response('elevenlabs-preview-audio', 200, ['Content-Type' => 'audio/mpeg']);
+        });
+
+        $this->actingAs(User::factory()->create(['is_admin' => false, 'status' => 'active']))
+            ->postJson(route('interview.avatarVoicePreview'), ['interviewer_avatar' => 'panel_interviewer'])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertSee('elevenlabs-preview-audio');
+
+        $this->assertSame([
+            'https://api.openai.com/v1/audio/speech',
+            'https://generativelanguage.googleapis.com/v1beta/interactions',
+            'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM?output_format=mp3_44100_128',
+        ], array_map(fn ($request) => $request->url(), $requests));
+        $this->assertSame('ash', $requests[0]['voice']);
+        $this->assertSame('Algenib', data_get($requests[1]->data(), 'generation_config.speech_config.0.voice'));
+        $this->assertSame('Hello. I am your AI interviewer. Tell me about yourself.', $requests[2]['text']);
     }
 
     public function test_openai_only_credentials_keep_interviewer_speech_available(): void
@@ -1913,6 +2104,35 @@ class InterviewSecurityTest extends TestCase
             ->assertForbidden();
 
         Http::assertNothingSent();
+    }
+
+    private function configureInterviewerSpeechProviderChain(): void
+    {
+        config([
+            'services.ai_tts.enabled' => true,
+            'services.ai_tts.provider' => 'openai,gemini,elevenlabs',
+            'services.openai.tts_enabled' => true,
+            'services.openai.tts_model' => 'gpt-4o-mini-tts',
+            'services.gemini.tts_model' => 'gemini-3.1-flash-tts-preview',
+            'services.elevenlabs.api_key' => 'sk_test-eleven-key',
+            'services.elevenlabs.api_endpoint' => 'https://api.elevenlabs.io/v1',
+            'services.elevenlabs.tts_model' => 'eleven_multilingual_v2',
+            'services.elevenlabs.tts_voice_id' => '21m00Tcm4TlvDq8ikWAM',
+            'services.elevenlabs.tts_output_format' => 'mp3_44100_128',
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+        ]);
+        AiProvider::create([
+            'name' => 'Gemini',
+            'api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta',
+            'api_key' => Crypt::encryptString('test-gemini-key'),
+            'status' => 'active',
+        ]);
     }
 
     private function category(): Category
