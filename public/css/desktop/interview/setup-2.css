@@ -449,7 +449,8 @@ html.interview-setup-page-root,
         left: 50% !important;
         right: auto !important;
         width: min(680px, calc(100vw - 64px)) !important;
-        max-height: min(680px, calc(100vh - 96px)) !important;
+        max-height: min(640px, calc(100vh - 144px)) !important;
+        max-height: min(640px, calc(100dvh - 144px)) !important;
         transform: translate(-50%, -50%) !important;
         z-index: 5200 !important;
         padding: 18px !important;

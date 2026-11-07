@@ -985,7 +985,7 @@ class UserSideHardeningTest extends TestCase
  }
  }
 
- public function test_interview_setup_uses_downward_custom_target_dropdown_on_desktop_and_mobile(): void
+ public function test_interview_setup_uses_custom_target_picker_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
@@ -1048,23 +1048,24 @@ class UserSideHardeningTest extends TestCase
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=16', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=17', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)
  ->assertSee('function isSetupCompactMobile()', false)
  ->assertSee('function syncSetupTargetMenuViewport()', false)
+ ->assertSee('menu.focus({ preventScroll: true });', false)
  ->assertSee("targetPositionDropdownMenu?.addEventListener('touchmove'", false)
- ->assertSee('setup-target-dropdown-open .setup-target-menu', false)
- ->assertSee('-webkit-overflow-scrolling: touch!important;', false);
+ ->assertSee('role="dialog" aria-modal="true" aria-label="Choose target position" tabindex="-1"', false);
 
  $mobileSetupCss = file_get_contents(public_path('css/mobile/interview/setup.css'));
+ $mobileModalCss = file_get_contents(public_path('css/mobile/interview/setup-2.css'));
 
  $this->assertStringContainsString('setup-target-dropdown-open .setup-target-menu', $mobileSetupCss);
  $this->assertStringContainsString('position: relative !important;', $mobileSetupCss);
- $this->assertStringContainsString('scroll-margin-bottom: calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 24px) !important;', $mobileSetupCss);
- $this->assertStringContainsString('pointer-events: auto !important;', $mobileSetupCss);
- $this->assertStringContainsString('-webkit-overflow-scrolling: touch !important;', $mobileSetupCss);
+ $this->assertStringContainsString('setup-target-dropdown-open #targetPositionDropdownMenu', $mobileModalCss);
+ $this->assertStringContainsString('max-height: min(760px, calc(var(--setup-target-viewport-height, 100dvh) - 24px)) !important;', $mobileModalCss);
+ $this->assertStringContainsString('setup-target-choice-selected i::after', $mobileModalCss);
  }
 
  public function test_interview_setup_starts_without_auto_selected_choices_and_locks_future_steps(): void

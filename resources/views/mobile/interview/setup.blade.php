@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=16') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=17') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -218,7 +218,7 @@
  <i class="fa-solid fa-chevron-down setup-target-trigger-icon" aria-hidden="true"></i>
  </button>
  <button type="button" class="setup-target-modal-backdrop" id="targetPositionModalBackdrop" aria-label="Close target position picker" hidden></button>
- <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="dialog" aria-modal="true" aria-label="Choose target position" hidden>
+ <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="dialog" aria-modal="true" aria-label="Choose target position" tabindex="-1" hidden>
  <div class="setup-target-menu-search">
  <label class="visually-hidden" for="targetPositionSearch">Search target positions</label>
  <input type="search" class="oinp" id="targetPositionSearch" placeholder="Search positions" autocomplete="off">
@@ -895,33 +895,19 @@ Begin Interview <i class="fa-solid fa-play"></i>
  }
  }
 
- function setupNumericCssVar(name, fallback = 0) {
- const rootValue = getComputedStyle(document.documentElement).getPropertyValue(name);
- const bodyValue = document.body? getComputedStyle(document.body).getPropertyValue(name): '';
- const value = parseFloat(rootValue || bodyValue);
- return Number.isFinite(value)? value: fallback;
- }
-
  function isSetupCompactMobile() {
- return window.matchMedia('(max-width: 767.98px)').matches;
+ return window.matchMedia('(max-width: 991.98px)').matches;
  }
 
  function syncSetupTargetMenuViewport() {
- const trigger = document.getElementById('targetPositionDropdownButton');
  const menu = document.getElementById('targetPositionDropdownMenu');
- if (!trigger || !menu) return;
+ if (!menu || !isSetupCompactMobile()) return;
 
- const viewportHeight = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 640;
- const triggerRect = trigger.getBoundingClientRect();
- const isMobile = isSetupCompactMobile();
- const topChrome = isMobile? setupNumericCssVar('--mob-top-h', 64) + setupNumericCssVar('--mob-safe-top', 0) + 16: 16;
- const bottomChrome = isMobile? setupNumericCssVar('--mob-nav-h', 72) + setupNumericCssVar('--mob-safe-bottom', 0) + 24: 24;
- const viewportRoom = viewportHeight - topChrome - bottomChrome;
- const hardMax = Math.max(isMobile? 160: 180, Math.min(isMobile? 440: 420, viewportRoom));
- const minHeight = Math.min(220, hardMax);
- const spaceBelow = Math.max(0, viewportHeight - triggerRect.bottom - bottomChrome);
- const maxHeight = Math.min(hardMax, Math.max(minHeight, spaceBelow));
- menu.style.setProperty('--setup-target-menu-max-height', `${Math.round(maxHeight)}px`);
+ const viewport = window.visualViewport;
+ const viewportHeight = viewport?.height || window.innerHeight || document.documentElement.clientHeight || 640;
+ const viewportTop = viewport?.offsetTop || 0;
+ menu.style.setProperty('--setup-target-viewport-height', `${Math.round(viewportHeight)}px`);
+ menu.style.setProperty('--setup-target-viewport-center', `${Math.round(viewportTop + viewportHeight / 2)}px`);
  }
 
  function setSetupTargetDropdownOpen(open) {
@@ -942,6 +928,14 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (open) {
  filterSetupTargetChoices();
  menu.scrollTop = 0;
+ syncSetupTargetMenuViewport();
+ const selectedChoice = menu.querySelector('.setup-target-choice-selected');
+ if (selectedChoice && !selectedChoice.hidden && !selectedChoice.closest('[hidden]')) {
+ const menuRect = menu.getBoundingClientRect();
+ const choiceRect = selectedChoice.getBoundingClientRect();
+ menu.scrollTop = Math.max(0, choiceRect.top - menuRect.top - (menu.clientHeight - choiceRect.height) / 2);
+ }
+ menu.focus({ preventScroll: true });
  }
  }
 
@@ -952,6 +946,8 @@ Begin Interview <i class="fa-solid fa-play"></i>
  function filterSetupTargetChoices() {
  const category = document.getElementById('jobCategoryFilter')?.value || '';
  const search = (document.getElementById('targetPositionSearch')?.value || '').trim().toLocaleLowerCase();
+ const menu = document.getElementById('targetPositionDropdownMenu');
+ if (menu) menu.dataset.categorySelected = category? 'true': 'false';
  let visibleCount = 0;
  document.querySelectorAll('[data-target-dropdown-group-kind]').forEach((group) => {
  const categoryMatches = !category || group.dataset.jobCategory === category;
@@ -1328,7 +1324,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  filterSetupTargetChoices();
  if (jobCategoryFilter.value) {
  setSetupTargetDropdownOpen(true);
- window.setTimeout(() => targetPositionSearch?.focus(), 0);
  }
  });
 
@@ -1501,7 +1496,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const willOpen = targetPositionDropdownButton.getAttribute('aria-expanded') !== 'true';
  syncSetupTargetFieldCopy();
  setSetupTargetDropdownOpen(willOpen);
- if (willOpen) window.setTimeout(() => targetPositionSearch?.focus(), 0);
  });
  targetPositionModalBackdrop?.addEventListener('click', () => {
  setSetupTargetDropdownOpen(false);
@@ -2194,46 +2188,6 @@ startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'P
  body.interview-setup-page #sec-interview-setup .col-lg-4 > div {
  position: static!important;
  top: auto!important;
- }
-
- @media (max-width: 767.98px) {
- body.interview-setup-page #sec-interview-setup .setup-target-dropdown {
- isolation: isolate!important;
- overflow: visible!important;
- scroll-margin-top: calc(var(--mob-top-h, 64px) + var(--mob-safe-top, 0px) + 16px)!important;
- scroll-margin-bottom: calc(var(--mob-nav-h, 72px) + var(--mob-safe-bottom, 0px) + 24px)!important;
- }
-
- body.interview-setup-page #sec-interview-setup .setup-target-dropdown-open {
- z-index: 10000!important;
- }
-
- body.interview-setup-page #sec-interview-setup .setup-target-dropdown-open .setup-target-menu {
- position: relative!important;
- top: auto!important;
- left: auto!important;
- right: auto!important;
- width: 100%!important;
- max-height: var(--setup-target-menu-max-height, min(420px, 52vh))!important;
- margin-top: 8px!important;
- padding: 6px 6px calc(8px + env(safe-area-inset-bottom, 0px))!important;
- overflow-y: auto!important;
- -webkit-overflow-scrolling: touch!important;
- touch-action: pan-y!important;
- overscroll-behavior: contain!important;
- pointer-events: auto!important;
- scrollbar-gutter: stable!important;
- transform: translateZ(0)!important;
- }
-
- body.interview-setup-page #sec-interview-setup .setup-target-choice {
- min-height: 44px!important;
- position: relative!important;
- z-index: 2!important;
- pointer-events: auto!important;
- touch-action: manipulation!important;
- -webkit-tap-highlight-color: transparent!important;
- }
  }
 
  body.interview-setup-page #dashboard .db-nav,
