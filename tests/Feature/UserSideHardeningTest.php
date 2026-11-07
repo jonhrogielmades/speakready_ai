@@ -495,6 +495,26 @@ class UserSideHardeningTest extends TestCase
  $this->assertDatabaseCount('interview_sessions', 0);
  }
 
+ public function test_interview_start_saves_a_selected_category_for_an_unlisted_title(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category(['title' => 'Job Interview']);
+
+ $this->actingAs($user)
+ ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+ 'target_position' => 'Other',
+ 'custom_position' => 'Arborist',
+ 'job_category' => 'Agriculture and Fisheries',
+ ]))
+ ->assertRedirect(route('interview.session'));
+
+ $this->assertDatabaseHas('interview_sessions', [
+ 'user_id' => $user->id,
+ 'target_position' => 'Arborist',
+ 'job_category' => 'Agriculture and Fisheries',
+ ]);
+ }
+
  public function test_role_suggestions_use_the_users_background(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -542,6 +562,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertDatabaseHas('interview_sessions', [
  'user_id' => $user->id,
  'target_position' => 'Maritime Safety Officer',
+ 'job_category' => 'Maritime and Seafaring',
  ]);
  }
 
@@ -560,6 +581,43 @@ class UserSideHardeningTest extends TestCase
  $this->assertDatabaseHas('interview_sessions', [
  'user_id' => $user->id,
  'target_position' => 'Florist',
+ 'job_category' => 'Retail and Personal Services',
+ ]);
+ }
+
+ public function test_interview_start_rejects_a_position_under_the_wrong_job_category(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category(['title' => 'Job Interview']);
+
+ $this->actingAs($user)
+ ->from(route('interview.setup'))
+ ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+ 'job_category' => 'IT and Digital',
+ 'target_position' => 'Seaman',
+ ]))
+ ->assertRedirect(route('interview.setup'))
+ ->assertSessionHasErrors('job_category');
+
+ $this->assertDatabaseCount('interview_sessions', 0);
+ }
+
+ public function test_interview_start_saves_seaman_in_the_maritime_job_category(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category(['title' => 'Job Interview']);
+
+ $this->actingAs($user)
+ ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+ 'job_category' => 'Maritime and Seafaring',
+ 'target_position' => 'Seaman',
+ ]))
+ ->assertRedirect(route('interview.session'));
+
+ $this->assertDatabaseHas('interview_sessions', [
+ 'user_id' => $user->id,
+ 'target_position' => 'Seaman',
+ 'job_category' => 'Maritime and Seafaring',
  ]);
  }
 
@@ -936,7 +994,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertContains('Network Engineer', $configuredGroups['IT and Digital']);
  $this->assertContains('Computer Programmer', $configuredGroups['IT and Digital']);
 
- $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active', 'target_position' => 'Seaman']);
  $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
@@ -962,6 +1020,8 @@ class UserSideHardeningTest extends TestCase
  foreach ($xpath->query('//*[@id="jobCategoryFilter"]/option[@value]') as $option) {
  $categoryOptions[] = $option->getAttribute('value');
  }
+ $selectedJobCategory = $xpath->query('//*[@id="jobCategoryFilter"]/option[@selected]')->item(0);
+ $this->assertSame('Maritime and Seafaring', $selectedJobCategory?->getAttribute('value'), "{$layout}: the saved Seaman position should select its category");
 
  $renderedGroups = [];
  $renderedRoleCategories = [];

@@ -69,6 +69,14 @@
  if (strcasecmp(trim((string) $targetPositionDefault), 'Other') === 0) {
  $targetPositionDefault = trim((string) old('custom_position', ''));
  }
+ $matchedJobCategory = $jobPositionOptionGroups
+ ->filter(fn (array $positions): bool => collect($positions)->contains(
+     fn ($position): bool => strcasecmp(trim((string) $targetPositionDefault), trim((string) $position)) === 0
+ ))
+ ->keys()
+ ->first();
+ $requestedJobCategory = trim((string) old('job_category', ''));
+ $selectedJobCategory = $matchedJobCategory ?? ($jobPositionOptionGroups->has($requestedJobCategory) ? $requestedJobCategory : '');
  $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
  $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 20);
  $maxQuestionSetting = $questionOptions->contains($maxQuestionSetting) ? $maxQuestionSetting : 20;
@@ -213,7 +221,7 @@
  <select class="oinp" id="jobCategoryFilter" name="job_category">
  <option value="">All job categories</option>
  @foreach($jobPositionOptionGroups as $jobCategory => $targetChoices)
- <option value="{{ $jobCategory }}">{{ $jobCategory }}</option>
+ <option value="{{ $jobCategory }}" @selected($selectedJobCategory === $jobCategory)>{{ $jobCategory }}</option>
  @endforeach
  </select>
  </div>
@@ -241,7 +249,7 @@
  <div class="setup-target-choice-group-title">{{ $jobCategory }}</div>
  <div class="setup-target-choice-list">
  @foreach($targetChoices as $targetChoice)
- <button type="button" class="setup-target-choice" data-target-dropdown-choice-kind="{{ $targetKind }}" data-target-dropdown-choice-value="{{ $targetChoice }}" aria-pressed="{{ $targetFieldMode === $targetKind && strcasecmp($targetPositionDefault, $targetChoice) === 0? 'true': 'false' }}">
+ <button type="button" class="setup-target-choice" data-target-dropdown-choice-kind="{{ $targetKind }}" data-target-dropdown-choice-value="{{ $targetChoice }}" data-job-category="{{ $jobCategory }}" aria-pressed="{{ $targetFieldMode === $targetKind && strcasecmp($targetPositionDefault, $targetChoice) === 0? 'true': 'false' }}">
  <span>{{ $targetChoice }}</span>
  <i class="fa-solid fa-check" aria-hidden="true"></i>
  </button>
@@ -1062,6 +1070,11 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  const selectedValue = setupTargetFieldValue(positionField);
  const catalogValue = availableValues.find((value) => value.toLocaleLowerCase() === selectedValue.toLocaleLowerCase());
+ const selectedChoice = Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]'))
+ .find((choice) => (choice.dataset.targetDropdownChoiceValue || '').toLocaleLowerCase() === selectedValue.toLocaleLowerCase());
+ const selectedCategory = selectedChoice?.dataset.jobCategory || '';
+ const categoryField = document.getElementById('jobCategoryFilter');
+ if (categoryField && selectedCategory && categoryField.value !== selectedCategory) categoryField.value = selectedCategory;
  const customInput = document.getElementById('customTargetPositionInput');
  const isCustom = Boolean(selectedValue && !catalogValue) || positionField.dataset.customTarget === 'true';
  if (customInput) customInput.value = isCustom? selectedValue: '';
@@ -1391,7 +1404,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  positionField.dataset.customTarget = isCustom? 'true': 'false';
  setSetupTargetInputValue(positionField, value, 'job');
  if (customTargetPositionInput) customTargetPositionInput.value = isCustom? String(value || ''): '';
- const selectedCategory = catalogChoice?.closest('[data-job-category]')?.dataset.jobCategory || category;
+ const selectedCategory = catalogChoice?.dataset.jobCategory || category;
  if (selectedCategory && Array.from(jobCategoryFilter?.options || []).some((option) => option.value === selectedCategory)) {
  jobCategoryFilter.value = selectedCategory;
  }
@@ -1412,8 +1425,8 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const selected = setupTargetFieldValue(document.getElementById('valPosition'));
  const selectedChoice = Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]'))
  .find((choice) => (choice.dataset.targetDropdownChoiceValue || '').toLocaleLowerCase() === selected.toLocaleLowerCase());
- const selectedCategory = selectedChoice?.closest('[data-job-category]')?.dataset.jobCategory || '';
- if (selectedChoice && jobCategoryFilter.value && selectedCategory !== jobCategoryFilter.value) {
+ const selectedCategory = selectedChoice?.dataset.jobCategory || '';
+ if (selectedChoice && selectedCategory !== jobCategoryFilter.value) {
  setSetupTargetPosition('');
  }
  if (targetPositionSearch) targetPositionSearch.value = '';

@@ -19,6 +19,7 @@ class InterviewSession extends Model
         'category_id',
         'difficulty',
         'target_position',
+        'job_category',
         'resume_text',
         'job_description',
         'num_questions',

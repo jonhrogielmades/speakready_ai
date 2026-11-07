@@ -251,7 +251,9 @@ class QuestionDatasetProvider
     continue;
    }
 
-   $groups['Other Interview Roles'][] = $role;
+   $category = app(JobPositionCategoryService::class)->categoryFor($role)
+    ?? JobPositionCategoryService::OTHER_CATEGORY;
+   $groups[$category][] = $role;
    $seen[$key] = true;
   }
  }

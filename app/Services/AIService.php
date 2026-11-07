@@ -356,6 +356,10 @@ class AIService
  $targetPosition = trim((string) $position)!== ''? trim((string) $position): 'the target role';
 
  $prompt = "Generate $num mock interview questions for the user's target position: '$targetPosition'. The difficulty level should be '$difficulty'. The interview focus is '$focus'. ";
+ $jobCategory = app(JobPositionCategoryService::class)->categoryFor($targetPosition);
+ if ($jobCategory !== null) {
+  $prompt.= "The job category is '{$jobCategory}'. Use it to understand the field, while matching the duties of the exact target position. ";
+ }
  $prompt.= 'Make the questions sound like a real live interviewer: concise, natural, role-specific, and professionally probing. ';
  $prompt.= "Every question must be based on '$targetPosition': mention the role name or directly test responsibilities, tools, situations, deliverables, stakeholders, or competencies expected for that position. ";
  $roleGuidance = app(InterviewQuestionAlignmentService::class)->roleGuidance($targetPosition);
@@ -667,6 +671,13 @@ class AIService
  $targetPosition = trim((string) ($session->target_position?? 'General'))?: 'General';
  $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
  $prompt = "You are an expert Interviewer conducting a realistic mock interview for a '{$targetPosition}' role. ";
+ $jobCategory = trim((string) ($session->job_category?? ''));
+ if ($jobCategory === '') {
+  $jobCategory = app(JobPositionCategoryService::class)->categoryFor($targetPosition)?? '';
+ }
+ if ($jobCategory !== '' && $jobCategory !== JobPositionCategoryService::OTHER_CATEGORY) {
+  $prompt.= "The job category is '{$jobCategory}'. Use it as field context while keeping each question specific to the {$targetPosition} position. ";
+ }
  $prompt.= "The difficulty is '".($session->difficulty?? 'Medium')."'. ";
  $prompt.= 'Stay in interviewer mode. Sound calm, concise, curious, professionally probing, and never sarcastic or discouraging. ';
  $prompt.= 'Selected interviewer style: '.InterviewerAvatar::label($session->interviewer_avatar?? null).'. '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' This style changes only the interviewer tone and emphasis; preserve the requested difficulty, question type, and feedback rules. ';

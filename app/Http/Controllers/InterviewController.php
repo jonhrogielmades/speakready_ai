@@ -23,6 +23,7 @@ use App\Services\ChallengePositionService;
 use App\Services\CareerRoleSuggestionService;
 use App\Services\EvidenceBasedCoachingService;
 use App\Services\InterviewQuestionAlignmentService;
+use App\Services\JobPositionCategoryService;
 use App\Services\LearningGameCertificateService;
 use App\Services\LocalSpeechAssessmentService;
 use App\Services\QuestionDatasetProvider;
@@ -132,6 +133,7 @@ class InterviewController extends Controller
  ],
  'difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
  'target_position' => 'required|string|max:255',
+ 'job_category' => 'nullable|string|max:100',
  'custom_position' => 'nullable|string|max:255',
  'resume_text' => 'nullable|string|max:20000',
  'job_description' => 'nullable|string|max:20000',
@@ -195,6 +197,21 @@ class InterviewController extends Controller
  ->withInput();
  }
 
+ $submittedJobCategory = trim((string) ($validated['job_category']?? ''));
+ $positionCategories = app(JobPositionCategoryService::class);
+ if ($submittedJobCategory !== '' && ! $positionCategories->isAvailableCategory($submittedJobCategory)) {
+  return back()
+   ->withErrors(['job_category' => 'Choose a valid job category.'])
+   ->withInput();
+ }
+ $matchedJobCategory = $positionCategories->categoryFor($position);
+ if ($matchedJobCategory !== null && $submittedJobCategory !== '' && $submittedJobCategory !== $matchedJobCategory) {
+  return back()
+   ->withErrors(['job_category' => "{$position} belongs to {$matchedJobCategory}. Choose that job category to continue."])
+   ->withInput();
+ }
+ $jobCategory = $matchedJobCategory?? ($submittedJobCategory?: JobPositionCategoryService::OTHER_CATEGORY);
+
  $questionTypes = $validated['question_types']?? [];
 
  $validated['interview_focus'] = $this->interviewFocus(
@@ -226,6 +243,7 @@ class InterviewController extends Controller
   'category_id' => (int) $category->id,
   'validated' => $validated,
   'position' => $position,
+  'job_category' => $jobCategory,
   'question_types' => $questionTypes,
   'accommodations' => $accommodationProfile,
  ]));
@@ -273,6 +291,7 @@ class InterviewController extends Controller
  'category_id' => $category->id,
  'difficulty' => $validated['difficulty'],
  'target_position' => $position,
+ 'job_category' => $jobCategory,
  'resume_text' => $validated['resume_text']?? null,
  'job_description' => $validated['job_description']?? null,
  'num_questions' => $validated['num_questions'],

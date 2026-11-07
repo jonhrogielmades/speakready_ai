@@ -64,6 +64,7 @@ class InterviewSessionSchema
             self::foreignId($table, 'category_id', 'categories', true);
             $table->string('difficulty')->default('medium');
             $table->string('target_position')->nullable();
+            $table->string('job_category', 100)->nullable();
             $table->longText('resume_text')->nullable();
             $table->longText('job_description')->nullable();
             $table->integer('num_questions')->default(5);
@@ -115,6 +116,9 @@ class InterviewSessionSchema
         }
         if (self::isMissing($missing, 'target_position')) {
             $table->string('target_position')->nullable();
+        }
+        if (self::isMissing($missing, 'job_category')) {
+            $table->string('job_category', 100)->nullable();
         }
         if (self::isMissing($missing, 'resume_text')) {
             $table->longText('resume_text')->nullable();
@@ -250,6 +254,7 @@ class InterviewSessionSchema
             'category_id',
             'difficulty',
             'target_position',
+            'job_category',
             'resume_text',
             'job_description',
             'num_questions',
