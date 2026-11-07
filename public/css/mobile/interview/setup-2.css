@@ -619,8 +619,7 @@ html body #sec-interview-setup #panel-basic .setup-target-empty {
     font-size: 0.82rem;
 }
 
-html body #sec-interview-setup #panel-basic .setup-target-empty[hidden],
-html body #sec-interview-setup #panel-basic .setup-custom-position[hidden] {
+html body #sec-interview-setup #panel-basic .setup-target-empty[hidden] {
     display: none !important;
 }
 
@@ -637,7 +636,10 @@ html body #sec-interview-setup #panel-basic .setup-target-custom-entry {
 html body #sec-interview-setup #panel-basic .setup-target-custom-entry .oinp {
     min-width: 0;
     width: 100%;
-    min-height: 44px;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    box-sizing: border-box !important;
     border: 1px solid #cbd5e1;
     border-radius: 10px;
     background: #fff;
@@ -651,7 +653,10 @@ html body #sec-interview-setup #panel-basic .setup-target-custom-entry .oinp[ari
 
 html body #sec-interview-setup #panel-basic .setup-target-custom-save {
     min-width: 0;
-    min-height: 44px;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    box-sizing: border-box !important;
     padding: 8px;
     border: 0;
     border-radius: 10px;
@@ -669,12 +674,6 @@ html body #sec-interview-setup #panel-basic .setup-target-custom-error {
 
 html body #sec-interview-setup #panel-basic .setup-target-custom-error[hidden] {
     display: none !important;
-}
-
-html body #sec-interview-setup #panel-basic .setup-custom-position {
-    display: grid;
-    gap: 6px;
-    margin-top: 10px;
 }
 
 html body #sec-interview-setup #panel-basic .setup-role-discovery {
@@ -1619,7 +1618,10 @@ html body #sec-interview-setup #targetPositionDropdownMenu {
 
     html body #sec-interview-setup #panel-basic #targetPositionDropdownMenu .setup-target-custom-entry .oinp,
     html body #sec-interview-setup #panel-basic #targetPositionDropdownMenu .setup-target-custom-save {
+        height: 48px !important;
         min-height: 48px !important;
+        max-height: 48px !important;
+        box-sizing: border-box !important;
         font-size: 16px !important;
     }
 

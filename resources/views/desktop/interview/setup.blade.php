@@ -3,7 +3,7 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=20') }}" data-page-style="interview-setup-2">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=5') }}" data-page-style="interview-role-discovery">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=6') }}" data-page-style="interview-role-discovery">
 @endpush
 
 @section('content')
@@ -67,6 +67,9 @@
  'target_position',
  Auth::user()?->target_position ?? ''
  );
+ if (strcasecmp(trim((string) $targetPositionDefault), 'Other') === 0) {
+     $targetPositionDefault = trim((string) old('custom_position', ''));
+ }
  $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
  $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 20);
  $maxQuestionSetting = $questionOptions->contains($maxQuestionSetting) ? $maxQuestionSetting : 20;
@@ -245,11 +248,7 @@
  <p class="setup-target-custom-error" id="targetPositionCustomError" role="alert" hidden>Enter a role before saving.</p>
  </div>
  </div>
- <div class="setup-custom-position-wrap" id="customPositionWrap" hidden>
- <label for="customPositionInput">Enter your target role</label>
- <input type="text" class="oinp setup-input" name="custom_position" id="customPositionInput" value="{{ old('custom_position', '') }}" maxlength="255" placeholder="e.g. Pharmacy Assistant" autocomplete="organization-title">
- <small>Use a specific job title so your interview questions can match it.</small>
- </div>
+ <input type="hidden" name="custom_position" id="customPositionInput" value="{{ old('custom_position', '') }}">
  <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>{{ $targetFieldCopy['required_message'] }}</div>
  </div>
 
@@ -874,10 +873,9 @@ Begin Interview <i class="fa-solid fa-play"></i>
  menu.hidden = !open;
 
  if (open) {
- const customWrap = document.getElementById('customPositionWrap');
  const customInput = document.getElementById('customPositionInput');
  const customDraft = document.getElementById('targetPositionCustomInput');
- if (customDraft) customDraft.value = customWrap?.dataset.active === 'true'? (customInput?.value || ''): '';
+ if (customDraft) customDraft.value = customInput?.dataset.active === 'true'? (customInput?.value || ''): '';
  customDraft?.setAttribute('aria-invalid', 'false');
  const customError = document.getElementById('targetPositionCustomError');
  if (customError) customError.hidden = true;
@@ -893,22 +891,20 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (!positionField) return;
  const choiceGroups = setupTargetChoiceGroups[targetKind] || {};
  const previousKind = positionField.dataset.targetKind || targetKind;
- const previousValue = previousKind === targetKind? String(positionField.value || positionField.dataset.selectedTarget || '').trim(): '';
+ const rawValue = previousKind === targetKind? String(positionField.value || positionField.dataset.selectedTarget || '').trim(): '';
+ const customInput = document.getElementById('customPositionInput');
+ const previousValue = rawValue.toLocaleLowerCase() === 'other'? String(customInput?.value || '').trim(): rawValue;
  const availableValues = flattenSetupTargetChoices(choiceGroups);
 
  positionField.value = previousValue;
  positionField.dataset.selectedTarget = positionField.value;
  positionField.dataset.targetKind = targetKind;
 
- const customWrap = document.getElementById('customPositionWrap');
- const customInput = document.getElementById('customPositionInput');
- const wasCustomMode = customWrap?.dataset.active === 'true';
- const isCustom = Boolean(previousValue && !availableValues.includes(previousValue)) || wasCustomMode;
- if (customWrap) {
- customWrap.hidden = !isCustom;
- customWrap.dataset.active = isCustom? 'true': 'false';
+ const isCustom = Boolean(previousValue && !availableValues.includes(previousValue));
+ if (customInput) {
+ customInput.dataset.active = isCustom? 'true': 'false';
+ customInput.value = isCustom? previousValue: '';
  }
- if (isCustom && customInput && previousValue && !wasCustomMode && customInput.value !== previousValue) customInput.value = previousValue;
 
  const selectedValue = String(positionField.value || '').trim();
  const trigger = document.getElementById('targetPositionDropdownButton');
@@ -1215,7 +1211,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const targetPositionCustomSave = document.getElementById('targetPositionCustomSave');
  const targetPositionCustomError = document.getElementById('targetPositionCustomError');
  const jobCategoryFilter = document.getElementById('jobCategoryFilter');
- const customPositionWrap = document.getElementById('customPositionWrap');
  const customPositionInput = document.getElementById('customPositionInput');
 
  function filterSetupTargetChoices() {
@@ -1239,18 +1234,17 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  function chooseCustomSetupTarget(title = '') {
  const positionField = document.getElementById('valPosition');
- if (!positionField || !customPositionWrap || !customPositionInput) return;
+ if (!positionField || !customPositionInput) return;
  const value = String(title || '').trim().slice(0, 255);
  if (!value) return;
- customPositionWrap.dataset.active = 'true';
- customPositionWrap.hidden = false;
+ customPositionInput.dataset.active = 'true';
  customPositionInput.value = value;
  positionField.value = value;
  positionField.dataset.selectedTarget = value;
  syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
  positionField.dispatchEvent(new Event('change', { bubbles: true }));
  setSetupTargetDropdownOpen(false);
- customPositionInput.focus();
+ targetPositionDropdownButton?.focus();
  }
 
  function chooseSetupTargetValue(choice) {
@@ -1263,11 +1257,10 @@ Begin Interview <i class="fa-solid fa-play"></i>
  positionField.value = choice.dataset.targetDropdownChoiceValue || '';
  positionField.dataset.selectedTarget = positionField.value;
  positionField.dataset.targetKind = targetKind;
- if (customPositionWrap) {
- customPositionWrap.dataset.active = 'false';
- customPositionWrap.hidden = true;
+ if (customPositionInput) {
+ customPositionInput.dataset.active = 'false';
+ customPositionInput.value = '';
  }
- if (customPositionInput) customPositionInput.value = '';
  if (targetPositionCustomInput) targetPositionCustomInput.value = '';
  if (jobCategoryFilter && choice.dataset.targetCategory) jobCategoryFilter.value = choice.dataset.targetCategory;
  syncSetupTargetDropdown(positionField, targetKind, currentSetupTargetFieldCopy());
@@ -1354,14 +1347,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  event.preventDefault();
  saveCustomSetupTarget();
  });
- customPositionInput?.addEventListener('input', () => {
- const positionField = document.getElementById('valPosition');
- if (!positionField) return;
- positionField.value = customPositionInput.value.trim();
- positionField.dataset.selectedTarget = positionField.value;
- positionField.dispatchEvent(new Event('change', { bubbles: true }));
- });
-
  const suggestRolesButton = document.getElementById('suggestRolesButton');
  const suggestRolesStatus = document.getElementById('suggestRolesStatus');
  const suggestedRoles = document.getElementById('suggestedRoles');
@@ -1375,9 +1360,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  });
  roleFinderModal?.addEventListener('shown.bs.modal', () => document.getElementById('roleSkills')?.focus());
  roleFinderModal?.addEventListener('hidden.bs.modal', () => {
- const target = roleFinderSelectedPosition
- ? (customPositionWrap && !customPositionWrap.hidden? customPositionInput: targetPositionDropdownButton)
- : document.getElementById('roleFinderOpenButton');
+ const target = roleFinderSelectedPosition? targetPositionDropdownButton: document.getElementById('roleFinderOpenButton');
  roleFinderSelectedPosition = false;
  target?.focus();
  });

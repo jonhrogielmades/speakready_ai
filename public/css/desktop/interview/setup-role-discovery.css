@@ -54,7 +54,6 @@ html body #sec-interview-setup #panel-basic .setup-category-field {
 }
 
 html body #sec-interview-setup #panel-basic .setup-category-field small,
-html body #sec-interview-setup #panel-basic .setup-custom-position-wrap small,
 html body #roleFinderModal small {
     display: block;
     margin-top: 6px;
@@ -68,8 +67,7 @@ html body #sec-interview-setup #panel-basic .setup-category-field .setup-card-la
 }
 
 html body #sec-interview-setup #panel-basic #jobCategoryFilter,
-html body #roleFinderModal .oinp,
-html body #sec-interview-setup #panel-basic #customPositionInput {
+html body #roleFinderModal .oinp {
     width: 100%;
     min-height: 46px;
     padding: 10px 14px;
@@ -115,15 +113,14 @@ html body #sec-interview-setup #panel-basic .setup-target-empty {
 }
 
 html body #sec-interview-setup #panel-basic .setup-target-empty[hidden],
-html body #sec-interview-setup #panel-basic .setup-target-custom-error[hidden],
-html body #sec-interview-setup #panel-basic .setup-custom-position-wrap[hidden] {
+html body #sec-interview-setup #panel-basic .setup-target-custom-error[hidden] {
     display: none !important;
 }
 
 html body #sec-interview-setup #panel-basic .setup-target-custom-entry {
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(90px, 3fr);
-    align-items: stretch;
+    align-items: center;
     gap: 8px;
     width: 100%;
     margin-top: 2px;
@@ -132,7 +129,10 @@ html body #sec-interview-setup #panel-basic .setup-target-custom-entry {
 html body #sec-interview-setup #panel-basic #targetPositionCustomInput {
     min-width: 0;
     width: 100%;
-    min-height: 44px !important;
+    box-sizing: border-box;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
     padding: 9px 12px !important;
     border: 1px solid #93b9eb !important;
     border-radius: 8px !important;
@@ -152,7 +152,10 @@ html body #sec-interview-setup #panel-basic #targetPositionCustomInput[aria-inva
 
 html body #sec-interview-setup #panel-basic .setup-target-custom-save {
     min-width: 0;
-    min-height: 44px;
+    box-sizing: border-box;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
     padding: 9px 12px;
     border: 0;
     border-radius: 8px;
@@ -187,11 +190,6 @@ html body #sec-interview-setup #panel-basic .setup-target-custom-save:active {
     filter: brightness(.96);
 }
 
-html body #sec-interview-setup #panel-basic .setup-custom-position-wrap {
-    margin-top: 10px;
-}
-
-html body #sec-interview-setup #panel-basic .setup-custom-position-wrap label,
 html body #roleFinderModal .setup-role-finder-fields label {
     display: block;
     margin-bottom: 5px;
@@ -316,7 +314,6 @@ html:not(.lm) body #roleFinderModal .btn-close {
 }
 
 html:not(.lm) body #roleFinderModal .modal-title,
-html:not(.lm) body #sec-interview-setup #panel-basic .setup-custom-position-wrap label,
 html:not(.lm) body #roleFinderModal .setup-role-finder-fields label {
     color: #e2e8f0;
 }
@@ -324,14 +321,12 @@ html:not(.lm) body #roleFinderModal .setup-role-finder-fields label {
 html:not(.lm) body #roleFinderModal #roleFinderIntro,
 html:not(.lm) body #roleFinderModal .setup-role-suggest-status,
 html:not(.lm) body #roleFinderModal small,
-html:not(.lm) body #sec-interview-setup #panel-basic .setup-category-field small,
-html:not(.lm) body #sec-interview-setup #panel-basic .setup-custom-position-wrap small {
+html:not(.lm) body #sec-interview-setup #panel-basic .setup-category-field small {
     color: #b8cce5;
 }
 
 html:not(.lm) body #sec-interview-setup #panel-basic #jobCategoryFilter,
 html:not(.lm) body #roleFinderModal .oinp,
-html:not(.lm) body #sec-interview-setup #panel-basic #customPositionInput,
 html:not(.lm) body #sec-interview-setup #panel-basic #targetPositionSearch,
 html:not(.lm) body #roleFinderModal .setup-role-result {
     border-color: #47617d;

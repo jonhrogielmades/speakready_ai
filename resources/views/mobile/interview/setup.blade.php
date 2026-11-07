@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=20') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=21') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -66,6 +66,9 @@
  'target_position',
  Auth::user()?->target_position ?? ''
  );
+ if (strcasecmp(trim((string) $targetPositionDefault), 'Other') === 0) {
+ $targetPositionDefault = trim((string) old('custom_position', ''));
+ }
  $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
  $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 20);
  $maxQuestionSetting = $questionOptions->contains($maxQuestionSetting) ? $maxQuestionSetting : 20;
@@ -246,11 +249,7 @@
  <p class="setup-target-custom-error" id="customTargetPositionError" role="alert" hidden>Enter a role before saving.</p>
  </dialog>
  </div>
- <div class="setup-custom-position" id="customTargetPositionWrap" hidden>
- <label class="setup-card-label" for="customTargetPositionInput">Enter your role</label>
- <input type="text" class="oinp" id="customTargetPositionInput" name="custom_position" maxlength="255" autocomplete="organization-title" placeholder="e.g. Pharmacy Assistant" aria-describedby="customTargetPositionHelp">
- <div class="desc-text" id="customTargetPositionHelp">Use a specific job title so your interview questions can match the role.</div>
- </div>
+ <input type="hidden" id="customTargetPositionInput" name="custom_position" value="{{ old('custom_position', '') }}">
  <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>{{ $targetFieldCopy['required_message'] }}</div>
  </div>
 
@@ -738,11 +737,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  trigger.classList.toggle('setup-field-invalid', invalid);
  trigger.setAttribute('aria-invalid', invalid? 'true': 'false');
  }
- const custom = document.getElementById('customTargetPositionInput');
- if (custom && !document.getElementById('customTargetPositionWrap')?.hidden) {
- custom.classList.toggle('setup-field-invalid', invalid);
- custom.setAttribute('aria-invalid', invalid? 'true': 'false');
- }
  }
  }
 
@@ -793,8 +787,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  targetPositionAlertVisible = true;
  modalElement.addEventListener('hidden.bs.modal', () => {
  targetPositionAlertVisible = false;
- const customWrap = document.getElementById('customTargetPositionWrap');
- (customWrap && !customWrap.hidden? document.getElementById('customTargetPositionInput'): document.getElementById('targetPositionDropdownButton'))?.focus();
+ document.getElementById('targetPositionDropdownButton')?.focus();
  }, { once: true });
 
  if (window.bootstrap?.Modal) {
@@ -928,10 +921,9 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (open) {
  const draft = document.getElementById('customTargetPositionDraft');
  const savedCustom = document.getElementById('customTargetPositionInput');
- const positionField = document.getElementById('valPosition');
  const draftError = document.getElementById('customTargetPositionError');
  if (draft) {
- draft.value = positionField?.dataset.customTarget === 'true'? (savedCustom?.value || ''): '';
+ draft.value = savedCustom?.value || '';
  draft.removeAttribute('aria-invalid');
  }
  if (draftError) draftError.hidden = true;
@@ -997,11 +989,9 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  const selectedValue = setupTargetFieldValue(positionField);
  const catalogValue = availableValues.find((value) => value.toLocaleLowerCase() === selectedValue.toLocaleLowerCase());
- const customWrap = document.getElementById('customTargetPositionWrap');
  const customInput = document.getElementById('customTargetPositionInput');
  const isCustom = Boolean(selectedValue && !catalogValue) || positionField.dataset.customTarget === 'true';
- if (customWrap) customWrap.hidden = !isCustom;
- if (customInput && isCustom && customInput.value !== selectedValue) customInput.value = selectedValue;
+ if (customInput) customInput.value = isCustom? selectedValue: '';
  const trigger = document.getElementById('targetPositionDropdownButton');
  const label = document.getElementById('targetPositionDropdownLabel');
 
@@ -1145,8 +1135,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  window.setTimeout(() => {
  if (item.type === 'field') {
  if (item.id === 'valPosition') {
- const customWrap = document.getElementById('customTargetPositionWrap');
- (customWrap && !customWrap.hidden? document.getElementById('customTargetPositionInput'): document.getElementById('targetPositionDropdownButton'))?.focus();
+ document.getElementById('targetPositionDropdownButton')?.focus();
  return;
  }
  document.getElementById(item.id)?.focus();
@@ -1391,15 +1380,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (event.key !== 'Enter') return;
  event.preventDefault();
  saveCustomTargetPosition();
- });
-
- customTargetPositionInput?.addEventListener('input', () => {
- const positionField = document.getElementById('valPosition');
- if (!positionField) return;
- positionField.dataset.customTarget = 'true';
- setSetupTargetInputValue(positionField, customTargetPositionInput.value, 'job');
- syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
- positionField.dispatchEvent(new Event('change', { bubbles: true }));
  });
 
  const suggestRolesButton = document.getElementById('suggestRolesButton');

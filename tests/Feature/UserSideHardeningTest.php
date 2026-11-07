@@ -1047,15 +1047,19 @@ class UserSideHardeningTest extends TestCase
  }
 
  $desktopResponse
- ->assertSee('css/desktop/interview/setup-role-discovery.css?v=5', false)
+ ->assertSee('css/desktop/interview/setup-role-discovery.css?v=6', false)
  ->assertSee('id="targetPositionCustomInput"', false)
- ->assertSee('id="targetPositionCustomSave"', false);
+ ->assertSee('id="targetPositionCustomSave"', false)
+ ->assertSee('<input type="hidden" name="custom_position" id="customPositionInput"', false)
+ ->assertDontSee('id="customPositionWrap"', false);
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=20', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=21', false)
  ->assertSee('id="customTargetPositionDraft"', false)
  ->assertSee('id="saveCustomTargetPositionButton"', false)
+ ->assertSee('<input type="hidden" id="customTargetPositionInput" name="custom_position"', false)
+ ->assertDontSee('id="customTargetPositionWrap"', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)
@@ -1078,6 +1082,33 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('backdrop-filter: blur(7px) !important;', $mobileModalCss);
  $this->assertStringContainsString('max-height: min(760px, calc(var(--setup-target-viewport-height, 100dvh) - 24px)) !important;', $mobileModalCss);
  $this->assertStringContainsString('setup-target-choice-selected i::after', $mobileModalCss);
+ }
+
+ public function test_interview_setup_restores_custom_role_from_old_input_without_duplicate_editor(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
+ $oldInput = ['target_position' => 'Other', 'custom_position' => 'AI Engineer'];
+ $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+ $desktopResponse = $this->actingAs($user)
+ ->withSession(['_old_input' => $oldInput])
+ ->get(route('interview.setup'))
+ ->assertOk();
+ $mobileResponse = $this->actingAs($user)
+ ->withSession(['_old_input' => $oldInput])
+ ->withHeader('User-Agent', $mobileUserAgent)
+ ->get(route('interview.setup'))
+ ->assertOk();
+
+ foreach ([$desktopResponse, $mobileResponse] as $response) {
+ $response
+ ->assertSee('name="target_position" id="valPosition" value="AI Engineer"', false)
+ ->assertDontSee('id="customPositionWrap"', false)
+ ->assertDontSee('id="customTargetPositionWrap"', false);
+ }
+ $desktopResponse->assertSee('name="custom_position" id="customPositionInput" value="AI Engineer"', false);
+ $mobileResponse->assertSee('id="customTargetPositionInput" name="custom_position" value="AI Engineer"', false);
  }
 
  public function test_interview_setup_starts_without_auto_selected_choices_and_locks_future_steps(): void
