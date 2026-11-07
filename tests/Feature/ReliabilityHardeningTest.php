@@ -246,6 +246,28 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertNotEmpty($response->json('source_type'));
  }
 
+ public function test_admin_question_generation_replaces_an_unrelated_seaman_dataset_question(): void
+ {
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $category = $this->category(['title' => 'Behavioral']);
+
+ $response = $this->actingAs($admin)
+ ->postJson(route('admin.questions.ai-generate'), [
+ 'category_id' => $category->id,
+ 'position' => 'Seaman',
+ 'difficulty' => 'Hard',
+ 'ai_provider' => 'local',
+ ])
+ ->assertOk()
+ ->assertJsonPath('source', 'fallback')
+ ->assertJsonPath('source_type', 'local_question_fallback');
+
+ $question = (string) $response->json('question_text');
+ $this->assertStringContainsString('Seaman', $question);
+ $this->assertMatchesRegularExpression('/\b(?:vessel|deck|crew|cargo|watch|mooring|lifeboat)\b/i', $question);
+ $this->assertStringNotContainsStringIgnoringCase('software', $question);
+ }
+
  public function test_default_ai_provider_uses_openai_first_when_no_primary_or_env_override_is_set(): void
  {
  $this->unsetEnvValue('INTERVIEW_CHATBOT_DEFAULT_PROVIDER');

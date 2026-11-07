@@ -15,6 +15,7 @@ use App\Models\LearningModule;
 use App\Models\ModuleChapter;
 use App\Services\AIService;
 use App\Services\CsvExportService;
+use App\Services\InterviewQuestionAlignmentService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\UserContentUpdateNotificationService;
 use App\Support\ModuleChapterHtml;
@@ -633,6 +634,23 @@ class AdminController extends Controller
  }
  } elseif ($requestedProvider!== 'local') {
  $notice = 'The selected AI provider is not configured, so a reliable source-based question was used.';
+ }
+
+ $alignment = app(InterviewQuestionAlignmentService::class);
+ if (! $alignment->isRoleRelevant((string) ($questionRecord['question_text']?? ''), $position)) {
+ $questionRecord['question_text'] = $alignment->fallbackQuestion(
+ $position,
+ (string) ($questionRecord['type']?? 'Behavioral'),
+ ''
+ )?? $this->fallbackInterviewQuestion($category, $position, $difficulty);
+ $questionRecord['expected_guide'] = null;
+ $questionRecord['mapped_skills'] = [];
+ $questionRecord['source_name'] = 'SpeakReady role-specific fallback';
+ $questionRecord['source_url'] = null;
+ $questionRecord['source_type'] = 'local_question_fallback';
+ $source = 'fallback';
+ $providerUsed = 'local';
+ $notice = 'An unrelated question was replaced with a role-specific practice question.';
  }
 
  $questionText = $this->roleAlignedQuestionText(

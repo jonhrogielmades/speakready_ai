@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\AiProvider;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\Question;
@@ -11,6 +12,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class InterviewChatReplyFlowTest extends TestCase
@@ -101,6 +104,52 @@ class InterviewChatReplyFlowTest extends TestCase
 
         $this->assertStringContainsString('Developer', $skippedResponse->json('next_question_text'));
         $this->assertSame(1, substr_count($skippedResponse->json('next_question_text'), '?'));
+    }
+
+    public function test_seaman_session_discards_an_ai_software_follow_up_after_a_lifeboat_answer(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => ['content' => 'You mentioned inspecting the lifeboat. How did you debug the cloud software deployment for the Seaman role?'],
+                ]],
+            ]),
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+        $session->forceFill(['target_position' => 'Seaman', 'num_questions' => 3])->save();
+        $question->forceFill(['question_text' => 'Describe a time you inspected shipboard safety equipment.'])->save();
+
+        $response = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'response_mode' => 'text',
+                'answer_text' => 'I inspected the lifeboat before departure, found expired flares, and reported the safety issue to the captain.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
+        $next = Question::findOrFail($response->json('next_question_id'));
+        $this->assertSame($next->question_text, $response->json('next_question_text'));
+        $this->assertSame('local_question_fallback', $next->source_type);
+        $this->assertMatchesRegularExpression(
+            '/\b(?:vessel|ship|deck|watchkeeping|navigation|maritime|lifeboat|cargo|bridge|port|crew|safety|emergency)\b/i',
+            $next->question_text
+        );
+        $this->assertDoesNotMatchRegularExpression('/\b(?:cloud|software|deployment|debug)\b/i', $next->question_text);
     }
 
     private function category(): Category

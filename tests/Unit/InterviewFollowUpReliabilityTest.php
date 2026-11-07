@@ -59,10 +59,47 @@ class InterviewFollowUpReliabilityTest extends TestCase
         );
     }
 
-    private function isReliable(string $question, string $answer): bool
+    public function test_seaman_follow_up_rejects_software_topic_even_with_role_title_appended(): void
+    {
+        $answer = 'I inspected the lifeboat before departure, found expired flares, and reported the safety issue to the captain.';
+        $method = new ReflectionMethod(InterviewController::class, 'roleAlignedQuestionText');
+        $method->setAccessible(true);
+        $question = $method->invoke(
+            app(InterviewController::class),
+            'You mentioned the lifeboat inspection. How did you debug the cloud software deployment?',
+            'Seaman'
+        );
+
+        $this->assertStringContainsString('Seaman', $question);
+        $this->assertFalse($this->isReliable($question, $answer, 'Seaman'));
+    }
+
+    public function test_seaman_follow_up_accepts_a_maritime_question_grounded_in_the_answer(): void
+    {
+        $answer = 'I inspected the lifeboat before departure, found expired flares, and reported the safety issue to the captain.';
+
+        $this->assertTrue($this->isReliable(
+            'You mentioned expired flares in the lifeboat. What specific steps did you take to report that safety issue to the captain?',
+            $answer,
+            'Seaman'
+        ));
+    }
+
+    public function test_developer_follow_up_rejects_patient_care_despite_answer_acknowledgement(): void
+    {
+        $answer = 'I coordinated a software deployment, checked the release, and reported the result to the team.';
+
+        $this->assertFalse($this->isReliable(
+            'You mentioned the software deployment. How did you care for a hospital patient as a Developer?',
+            $answer,
+            'Developer'
+        ));
+    }
+
+    private function isReliable(string $question, string $answer, string $position = 'Billing Specialist'): bool
     {
         $session = new InterviewSession;
-        $session->setRawAttributes(['target_position' => 'Billing Specialist']);
+        $session->setRawAttributes(['target_position' => $position]);
         $method = new ReflectionMethod(InterviewController::class, 'isReliableInterviewFollowUpText');
         $method->setAccessible(true);
 

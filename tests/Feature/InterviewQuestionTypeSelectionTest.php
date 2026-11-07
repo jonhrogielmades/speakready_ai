@@ -65,6 +65,40 @@ class InterviewQuestionTypeSelectionTest extends TestCase
         $this->assertNull($this->invoke('firstLocalSourceQuestionRecord', $dataset, ['Technical'], 'medium', 'Developer', []));
     }
 
+    public function test_seaman_source_selection_skips_software_and_requires_a_maritime_match(): void
+    {
+        $software = [
+            'question_text' => 'How would you debug a cloud software deployment for the Seaman role?',
+            'type' => 'Technical',
+            'difficulty' => 'Medium',
+        ];
+        $maritime = [
+            'question_text' => 'What procedure would you use to inspect lifeboat safety equipment before vessel departure?',
+            'type' => 'Technical',
+            'difficulty' => 'Medium',
+        ];
+
+        $record = $this->invoke(
+            'firstLocalSourceQuestionRecord',
+            ['questions' => [$software, $maritime]],
+            ['Technical'],
+            'medium',
+            'Seaman',
+            []
+        );
+
+        $this->assertNotNull($record);
+        $this->assertStringContainsString('lifeboat safety equipment', $record['question_text']);
+        $this->assertNull($this->invoke(
+            'firstLocalSourceQuestionRecord',
+            ['questions' => [$software]],
+            ['Technical'],
+            'medium',
+            'Seaman',
+            []
+        ));
+    }
+
     public function test_type_specific_fallbacks_match_each_selected_type(): void
     {
         [$session] = $this->makeSession(['Behavioral', 'Situational', 'Technical', 'Personal']);
@@ -75,6 +109,47 @@ class InterviewQuestionTypeSelectionTest extends TestCase
             $this->assertStringContainsString('Developer', $text);
             $this->assertSame(1, substr_count($text, '?'));
         }
+    }
+
+    public function test_seaman_fallbacks_use_maritime_situations_and_keep_the_selected_type(): void
+    {
+        [$session] = $this->makeSession(['Behavioral', 'Situational', 'Technical', 'Personal']);
+        $session->target_position = 'Seaman';
+        $answer = 'I inspected lifeboat equipment before departure and reported expired flares to the captain.';
+
+        foreach (['Behavioral', 'Situational', 'Technical', 'Personal'] as $type) {
+            $text = $this->invoke('fallbackQuestionForSelectedType', $session, $type, $answer, false);
+
+            $this->assertMatchesRegularExpression(
+                '/\b(?:vessel|ship|deck|watchkeeping|navigation|maritime|lifeboat|cargo|bridge|port|crew|safety|emergency)\b/i',
+                $text,
+                "Fallback lacks a maritime situation for {$type}: {$text}"
+            );
+            $this->assertTrue($this->invoke('questionMatchesSelectedType', $text, $type), "Wrong wording for {$type}: {$text}");
+            $this->assertSame(1, substr_count($text, '?'));
+        }
+    }
+
+    public function test_duplicate_seaman_question_stays_maritime_and_keeps_its_type(): void
+    {
+        [$session] = $this->makeSession(['Technical']);
+        $session->target_position = 'Seaman';
+        $answer = 'I inspected the lifeboat equipment and reported expired flares to the captain.';
+        $original = $this->invoke('fallbackQuestionForSelectedType', $session, 'Technical', $answer, false);
+
+        $alternative = $this->invoke('uniqueQuestionTextForSession', $session, $original, [$original], 'Technical', $answer);
+
+        $this->assertNotSame($original, $alternative);
+        $this->assertMatchesRegularExpression('/\b(?:vessel|deck|crew|lifeboat)\b/i', $alternative);
+        $this->assertTrue($this->invoke('questionMatchesSelectedType', $alternative, 'Technical'));
+
+        $exhausted = $this->invoke('uniqueQuestionTextForSession', $session, $original, [
+            $original,
+            $alternative,
+            "What procedure would you use to check deck equipment before a vessel departs?",
+        ], 'Technical', $answer);
+        $this->assertMatchesRegularExpression('/\b(?:vessel|deck|crew|lifeboat)\b/i', $exhausted);
+        $this->assertTrue($this->invoke('questionMatchesSelectedType', $exhausted, 'Technical'));
     }
 
     public function test_question_intent_wins_over_incidental_type_words(): void

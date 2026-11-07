@@ -22,6 +22,7 @@ use App\Services\AudioDurationService;
 use App\Services\ChallengePositionService;
 use App\Services\CareerRoleSuggestionService;
 use App\Services\EvidenceBasedCoachingService;
+use App\Services\InterviewQuestionAlignmentService;
 use App\Services\LearningGameCertificateService;
 use App\Services\LocalSpeechAssessmentService;
 use App\Services\QuestionDatasetProvider;
@@ -783,13 +784,24 @@ class InterviewController extends Controller
  $provider = 'local';
  $followUpText = $requiredQuestionType !== null
  ? $this->fallbackQuestionForSelectedType($session, $requiredQuestionType, $interviewerInputText, $isFinal)
- : ($isFinal
+ : (app(InterviewQuestionAlignmentService::class)->fallbackQuestion(
+ (string) $session->target_position,
+ null,
+ $interviewerInputText,
+ $isFinal
+ )?? ($isFinal
  ? "For the final question, what specific evidence best proves your fit for the {$session->target_position} role?"
- : "What specific example, decision, or result best shows how you would succeed in the {$session->target_position} role?");
+ : "What specific example, decision, or result best shows how you would succeed in the {$session->target_position} role?"));
+ if (app(InterviewQuestionAlignmentService::class)->roleGuidance((string) $session->target_position) !== '') {
+ $followUpSourceMetadata = [
+ 'source_name' => 'SpeakReady role-specific fallback',
+ 'source_type' => 'local_question_fallback',
+ ];
+ }
  }
 
  try {
- return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $followUpSourceMetadata, $requiredQuestionType) {
+ return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $followUpSourceMetadata, $requiredQuestionType, $interviewerInputText) {
  $lockedSession = InterviewSession::with('category')
  ->where('user_id', Auth::id())
  ->where('status', 'in_progress')
@@ -821,7 +833,7 @@ class InterviewController extends Controller
  // 4. Save new AI Question
  $sourceMetadata = $followUpSourceMetadata;
  $existingQuestionTexts = $questionSequence->pluck('question_text')->all();
- $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts, $requiredQuestionType);
+ $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts, $requiredQuestionType, $interviewerInputText);
  $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
  $this->deleteUnansweredFutureQuestions($lockedSession, $question);
 
@@ -4116,7 +4128,8 @@ return response()->json([
  [$initialType],
  $difficulty,
  $position,
- $existingQuestionTexts
+ $existingQuestionTexts,
+ (string) ($session->job_description?? '')
  );
  if ($record) {
  $records[] = $record;
@@ -4129,7 +4142,12 @@ return response()->json([
 
  if (empty($records) && $dataset) {
  $datasetFallback = QuestionDatasetProvider::fallbackQuestion($dataset, $category, $position, $difficulty);
- if ($this->canonicalQuestionType($datasetFallback['type']?? null) === $initialType) {
+ if ($this->canonicalQuestionType($datasetFallback['type']?? null) === $initialType
+ && app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
+ (string) ($datasetFallback['question_text']?? ''),
+ $position,
+ (string) ($session->job_description?? '')
+ )) {
  $records[] = $datasetFallback;
  }
  }
@@ -4180,7 +4198,7 @@ return response()->json([
  );
  }
 
- private function firstLocalSourceQuestionRecord(array $dataset, array $selectedTypes, string $difficulty, string $position, array $existingQuestionTexts):?array
+ private function firstLocalSourceQuestionRecord(array $dataset, array $selectedTypes, string $difficulty, string $position, array $existingQuestionTexts, string $jobDescription = ''):?array
  {
  $metadata = QuestionDatasetProvider::sourceMetadata($dataset);
  $difficulty = ucfirst(strtolower(trim($difficulty)))?: 'Medium';
@@ -4219,6 +4237,10 @@ return response()->json([
  continue;
  }
  if ($pass['difficulty'] && $questionDifficulty!== $difficulty) {
+ continue;
+ }
+
+ if (! app(InterviewQuestionAlignmentService::class)->isRoleRelevant($questionText, $position, $jobDescription)) {
  continue;
  }
 
@@ -4272,6 +4294,11 @@ return response()->json([
 
  private function defaultInitialPracticeQuestionText(string $position, string $questionType): string
  {
+ $roleQuestion = app(InterviewQuestionAlignmentService::class)->fallbackQuestion($position, $questionType, '');
+ if ($roleQuestion !== null) {
+ return $roleQuestion;
+ }
+
  return match (strtolower(trim($questionType))) {
  'technical' => "For the {$position} role, walk me through how you would diagnose and solve a realistic work problem.",
  'situational' => "For the {$position} role, what would you do first if priorities changed suddenly during an important task?",
@@ -4364,7 +4391,7 @@ return response()->json([
  ->delete();
  }
 
- private function uniqueQuestionTextForSession(InterviewSession $session, string $questionText, array $existingQuestionTexts,?string $requiredQuestionType = null): string
+ private function uniqueQuestionTextForSession(InterviewSession $session, string $questionText, array $existingQuestionTexts,?string $requiredQuestionType = null, string $latestAnswer = ''): string
  {
  $normalizedExisting = collect($existingQuestionTexts)
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))
@@ -4376,6 +4403,33 @@ return response()->json([
  }
 
  $targetPosition = trim((string) $session->target_position)?: 'the role';
+ $alignment = app(InterviewQuestionAlignmentService::class);
+ $roleAlternative = $alignment->fallbackQuestion($targetPosition, $requiredQuestionType, $latestAnswer);
+ if ($roleAlternative !== null) {
+ foreach ([$roleAlternative, $alignment->fallbackQuestion($targetPosition, $requiredQuestionType, '')] as $alternative) {
+ if ($alternative !== null && ! in_array($this->normalizedQuestionText($alternative), $normalizedExisting, true)) {
+ return $alternative;
+ }
+ }
+
+ $maritimeAlternatives = match ($requiredQuestionType) {
+ 'Behavioral' => ["Tell me about another time you followed a safety procedure during deck work on a vessel. What did you do?"],
+ 'Situational' => ["If you noticed a new hazard during deck work on a vessel, how would you alert the crew?"],
+ 'Technical' => ["What procedure would you use to check deck equipment before a vessel departs?"],
+ 'Personal' => ["Which strength helps you communicate clearly with a vessel's deck crew?"],
+ default => ["What past experience best shows your attention to safety during deck work on a vessel?"],
+ };
+ foreach ($maritimeAlternatives as $alternative) {
+ if (! in_array($this->normalizedQuestionText($alternative), $normalizedExisting, true)) {
+ return $alternative;
+ }
+ }
+
+ // An exhausted local pool may repeat a maritime question, but it must not
+ // switch to an unrelated generic template.
+ return $roleAlternative;
+ }
+
  $alternatives = match ($requiredQuestionType) {
  'Behavioral' => [
  "Can you describe a different time you solved a work problem relevant to the {$targetPosition} role?",
@@ -4422,7 +4476,13 @@ return response()->json([
  ->where('difficulty', $session->difficulty)
  ->when(! empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes));
 
- $questions = $query->inRandomOrder()->limit($limit)->get();
+ $alignment = app(InterviewQuestionAlignmentService::class);
+ $roleRelevant = fn (Question $question): bool => $alignment->isRoleRelevant(
+ (string) $question->question_text,
+ (string) $session->target_position,
+ (string) ($session->job_description?? '')
+ );
+ $questions = $query->inRandomOrder()->limit(max(20, $limit))->get()->filter($roleRelevant);
 
  if ($questions->isEmpty()) {
  $questions = Question::where('category_id', $session->category_id)
@@ -4430,9 +4490,12 @@ return response()->json([
  ->where('status', 'active')
  ->when(! empty($selectedQuestionTypes), fn ($query) => $query->whereIn('type', $selectedQuestionTypes))
  ->inRandomOrder()
- ->limit($limit)
- ->get();
+ ->limit(max(20, $limit))
+ ->get()
+ ->filter($roleRelevant);
  }
+
+ $questions = $questions->take($limit);
 
  $records = $questions->map(fn (Question $question): array => [
  'question_text' => $question->question_text,
@@ -4460,6 +4523,7 @@ return response()->json([
  $existingQuestionTexts = Question::where('interview_session_id', $session->id)
  ->pluck('question_text')
  ->all();
+ $alignment = app(InterviewQuestionAlignmentService::class);
  $questionRecommendations = app(QuestionRecommendationService::class);
  $candidateLimit = $questionRecommendations->candidatePoolLimit($limit);
  $datasetRanked = QuestionDatasetProvider::rankedQuestions(
@@ -4470,6 +4534,14 @@ return response()->json([
  $candidateLimit,
  $existingQuestionTexts
  );
+ $datasetRanked = array_values(array_filter(
+ $datasetRanked,
+ fn (array $record): bool => $alignment->isRoleRelevant(
+ (string) ($record['question_text']?? ''),
+ $position,
+ (string) ($session->job_description?? '')
+ )
+ ));
 
  if (! empty($datasetRanked)) {
  $modelRanked = $questionRecommendations->rerankCandidatesForContext([
@@ -4502,6 +4574,14 @@ return response()->json([
  'latest_answer' => $latestAnswer,
  'exclude_question_texts' => $existingQuestionTexts,
  ], $dataset, $selectedTypes, $limit);
+ $recommended = array_values(array_filter(
+ $recommended,
+ fn (array $record): bool => $alignment->isRoleRelevant(
+ (string) ($record['question_text']?? ''),
+ $position,
+ (string) ($session->job_description?? '')
+ )
+ ));
  if (! empty($recommended)) {
  $alignedTexts = $this->roleAlignedQuestionTexts(array_column($recommended, 'question_text'), $position);
 
@@ -4512,7 +4592,12 @@ return response()->json([
  }, $recommended, array_keys($recommended));
  }
 
- $questions = collect($dataset['questions']?? []);
+ $questions = collect($dataset['questions']?? [])
+ ->filter(fn ($question): bool => is_array($question) && $alignment->isRoleRelevant(
+ (string) ($question['question_text']?? ''),
+ $position,
+ (string) ($session->job_description?? '')
+ ));
 
  if (! empty($selectedTypes)) {
  $questions = $questions->filter(fn (array $question) => in_array($question['type']?? '', $selectedTypes, true));
@@ -4527,7 +4612,14 @@ return response()->json([
  );
 
  if ($questions->isEmpty() && empty($selectedTypes)) {
- $questions = $this->limitedUniqueQuestionRecords(collect($dataset['questions']?? []), $limit);
+ $questions = $this->limitedUniqueQuestionRecords(
+ collect($dataset['questions']?? [])->filter(fn ($question): bool => is_array($question) && $alignment->isRoleRelevant(
+ (string) ($question['question_text']?? ''),
+ $position,
+ (string) ($session->job_description?? '')
+ )),
+ $limit
+ );
  }
 
  $records = $questions->take($limit)->map(fn (array $question): array => [
@@ -4930,6 +5022,12 @@ return response()->json([
  return false;
  }
 
+ $alignment = app(InterviewQuestionAlignmentService::class);
+ if (! $alignment->isRoleRelevant($questionText, $position, (string) ($session->job_description?? ''))
+ || ! $alignment->isAnswerGrounded($questionText, $latestAnswer, $position)) {
+ return false;
+ }
+
  $mentionsPosition = Str::contains(Str::lower($questionText), Str::lower($position));
  $answerTokens = $this->interviewGroundingTokens($latestAnswer, $position);
  $questionTokens = $this->interviewGroundingTokens($questionText, $position);
@@ -5183,6 +5281,15 @@ return response()->json([
 
  private function aiGeneratedQuestionSourceMetadata(array $sourceMetadata, string $provider): array
  {
+ if (($sourceMetadata['source_type']?? null) === 'local_question_fallback') {
+ return [
+ 'source_name' => 'SpeakReady role-specific fallback',
+ 'source_url' => null,
+ 'source_type' => 'local_question_fallback',
+ 'ai_provider' => 'local',
+ ];
+ }
+
  $sourceName = trim((string) ($sourceMetadata['source_name']?? ''));
 
  return [
@@ -5348,6 +5455,10 @@ return response()->json([
  private function fallbackQuestionForSelectedType(InterviewSession $session, string $requiredType, string $latestAnswer, bool $isFinal): string
  {
  $position = trim((string) $session->target_position)?: 'this position';
+ $roleQuestion = app(InterviewQuestionAlignmentService::class)->fallbackQuestion($position, $requiredType, $latestAnswer, $isFinal);
+ if ($roleQuestion !== null) {
+ return $roleQuestion;
+ }
  $hasAnswer = trim($latestAnswer) !== ''
  && ! preg_match('/^\((?:Skipped or no answer|No answer before the time limit)\)/i', trim($latestAnswer))
  && ! str_starts_with(trim($latestAnswer), '[Voice answer saved for playback.');

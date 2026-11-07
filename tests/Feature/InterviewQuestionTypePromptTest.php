@@ -110,4 +110,40 @@ class InterviewQuestionTypePromptTest extends TestCase
         $this->assertStringContainsString('The required Personal type takes priority', $prompt);
         $this->assertStringContainsString('FINAL question', $prompt);
     }
+
+    public function test_generated_seaman_questions_exclude_an_unrelated_software_question(): void
+    {
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+        ]);
+        Http::fake([
+            'api.openai.com/*' => Http::response([
+                'choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => ['content' => json_encode([
+                        'questions' => [
+                            'How would you debug a cloud software deployment for the Seaman role?',
+                            'How would you check lifeboat safety equipment before a vessel departure?',
+                        ],
+                    ])],
+                ]],
+            ]),
+        ]);
+
+        $questions = AIService::generateQuestions(
+            2,
+            'Seaman',
+            'medium',
+            'Job Interview',
+            'openai',
+            null,
+            'Inspect deck safety equipment before departure.',
+            ['Technical']
+        );
+
+        $this->assertSame(['How would you check lifeboat safety equipment before a vessel departure?'], $questions);
+    }
 }

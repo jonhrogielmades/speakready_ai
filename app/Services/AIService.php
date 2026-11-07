@@ -358,7 +358,12 @@ class AIService
  $prompt = "Generate $num mock interview questions for the user's target position: '$targetPosition'. The difficulty level should be '$difficulty'. The interview focus is '$focus'. ";
  $prompt.= 'Make the questions sound like a real live interviewer: concise, natural, role-specific, and professionally probing. ';
  $prompt.= "Every question must be based on '$targetPosition': mention the role name or directly test responsibilities, tools, situations, deliverables, stakeholders, or competencies expected for that position. ";
+ $roleGuidance = app(InterviewQuestionAlignmentService::class)->roleGuidance($targetPosition);
+ if ($roleGuidance !== '') {
+ $prompt.= $roleGuidance.' ';
+ }
  $prompt.= "Do not output generic interview questions that could apply to any job unless they are rewritten around '$targetPosition'. ";
+ $prompt.= 'Adding the job title to an unrelated occupation question does not make it relevant. Do not assume the candidate has a certificate, rank, employer, task history, or equipment experience that they have not supplied. ';
  $prompt.= 'Each question must ask for one clear answer, avoid coaching the candidate, and avoid generic classroom phrasing. ';
  $prompt.= 'Calibrate depth to the difficulty: easy asks for foundational experience, medium asks for evidence and tradeoffs, and hard asks for ambiguity, judgment, impact, and follow-up depth. ';
  $prompt.= self::languageOutputInstruction($targetLanguage, 'all interviewer questions');
@@ -445,6 +450,14 @@ class AIService
  array_merge(['module' => 'question_generation'], $requestOptions)
  )
  );
+ $questions = array_values(array_filter(
+ $questions,
+ fn (string $question): bool => app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
+ $question,
+ $targetPosition,
+ $jobDescription
+ )
+ ));
 
  if (! empty($questions)) {
  return array_slice($questions, 0, (int) $num);
@@ -495,7 +508,13 @@ class AIService
  }
 
  $examples = collect($matches)
- ->filter(fn ($match): bool => is_array($match) && trim((string) ($match['question_text']?? ''))!== '')
+ ->filter(fn ($match): bool => is_array($match)
+ && trim((string) ($match['question_text']?? ''))!== ''
+ && app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
+ (string) ($match['question_text']?? ''),
+ $targetPosition,
+ $jobDescription
+ ))
  ->take($limit)
  ->map(fn (array $match): array => [
  'question' => self::truncateText((string) ($match['question_text']?? ''), 260),
@@ -652,6 +671,11 @@ class AIService
  $prompt.= 'Stay in interviewer mode. Sound calm, concise, curious, professionally probing, and never sarcastic or discouraging. ';
  $prompt.= 'Selected interviewer style: '.InterviewerAvatar::label($session->interviewer_avatar?? null).'. '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' This style changes only the interviewer tone and emphasis; preserve the requested difficulty, question type, and feedback rules. ';
  $prompt.= "Every new question or follow-up must stay grounded in the '{$targetPosition}' target position by probing role responsibilities, required skills, deliverables, stakeholders, tools, or role-fit evidence. Avoid generic follow-ups that ignore the target position. ";
+ $roleGuidance = app(InterviewQuestionAlignmentService::class)->roleGuidance($targetPosition);
+ if ($roleGuidance !== '') {
+ $prompt.= $roleGuidance.' ';
+ }
+ $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. ';
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
  $prompt.= 'The next interviewer turn must be based on the candidate answer immediately before it, not on a generic question list. When natural, briefly reference one concrete detail the candidate just mentioned before asking the next question. ';
