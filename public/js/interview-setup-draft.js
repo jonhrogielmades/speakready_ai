@@ -164,16 +164,22 @@
  }
  }
 
- function restore(form, options = {}) {
- if (!form) return null;
+ function clearInterviewerSelection(form) {
+ if (!form) return;
 
- // A new setup must ask for an interviewer even when a previous draft or the
- // browser's own form restoration still has an avatar radio checked.
+ // Browsers can restore a checked radio after the initial script runs, so
+ // setup also calls this on pageshow when no validation errors are present.
  controlsForName(form, FRESH_SELECTION_NAME).forEach((control) => {
  if (String(control.type || '').toLowerCase() !== 'radio' || !control.checked) return;
  control.checked = false;
  control.dispatchEvent(new Event('change', { bubbles: true }));
  });
+ }
+
+ function restore(form, options = {}) {
+ if (!form) return null;
+
+ clearInterviewerSelection(form);
  if (!canUseStorage) return null;
 
  const storageKey = configuredStorageKey(options.storageKey, form);
@@ -244,6 +250,7 @@
  read,
  save,
  restore,
+ clearInterviewerSelection,
  clear,
  watch,
  storageKey: configuredStorageKey,

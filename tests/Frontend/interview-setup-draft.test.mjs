@@ -94,3 +94,25 @@ test('a fresh setup clears browser-restored avatar even without a saved draft', 
     assert.equal(avatarOne.checked, false);
     assert.equal(avatarTwo.checked, false);
 });
+
+test('desktop and mobile clear browser restoration on a new load but keep bfcache and validation choices', () => {
+    for (const layout of ['desktop', 'mobile']) {
+        const view = readFileSync(join(root, `resources/views/${layout}/interview/setup.blade.php`), 'utf8');
+        const guard = view.match(/if \((!event\.persisted && @json\(!\$errors->any\(\)\))\) setupDraftApi\?\.clearInterviewerSelection\(setupForm\);/)?.[1];
+        assert.ok(guard, `${layout} must guard pageshow avatar clearing`);
+
+        for (const [persisted, hasErrors, expectedClear] of [
+            [false, false, true],
+            [true, false, false],
+            [false, true, false],
+        ]) {
+            let clears = 0;
+            const setupDraftApi = { clearInterviewerSelection() { clears++; } };
+            const event = { persisted };
+            const setupForm = {};
+            const renderedGuard = guard.replace('@json(!$errors->any())', String(!hasErrors));
+            Function('event', 'setupDraftApi', 'setupForm', `if (${renderedGuard}) setupDraftApi?.clearInterviewerSelection(setupForm);`)(event, setupDraftApi, setupForm);
+            assert.equal(clears > 0, expectedClear, `${layout} persisted=${persisted}, errors=${hasErrors}`);
+        }
+    }
+});

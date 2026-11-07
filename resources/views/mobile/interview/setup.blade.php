@@ -80,7 +80,7 @@
  $defaultTimeLimitSetting = (int) \App\Support\SystemSettings::value('int_time_limit', 0);
  $requestedLiveFeedbackMode = request()->query('live_feedback_mode');
  $requestedLiveFeedbackMode = in_array($requestedLiveFeedbackMode, ['coaching', 'real_interview'], true) ? $requestedLiveFeedbackMode : '';
- $oldInterviewerAvatar = old('interviewer_avatar');
+ $oldInterviewerAvatar = $errors->any() ? old('interviewer_avatar') : null;
  $setupDefaults = [
  'difficulty' => old('difficulty', ''),
  'num_questions' => (string) old('num_questions', ''),
@@ -744,7 +744,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
 <script>
  window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json($interviewSetupDraftKey) };
 </script>
-<script src="{{ asset('js/interview-setup-draft.js?v=2') }}"></script>
+<script src="{{ asset('js/interview-setup-draft.js?v=3') }}"></script>
 <script src="{{ asset('js/interview-setup-avatar-modal.js?v=5') }}"></script>
 <script>
  const setupRequiredFieldIds = [
@@ -2262,7 +2262,8 @@ startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'P
  }
  });
 
- window.addEventListener('pageshow', function() {
+ window.addEventListener('pageshow', function(event) {
+ if (!event.persisted && @json(!$errors->any())) setupDraftApi?.clearInterviewerSelection(setupForm);
  setupFormSubmitting = false;
  setupTransitionOverlay.classList.remove('active');
  document.documentElement.classList.remove('finish-transition-active');

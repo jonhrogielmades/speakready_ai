@@ -15,6 +15,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\MessageBag;
+use Illuminate\Support\ViewErrorBag;
 use Tests\TestCase;
 
 class InterviewAvatarSelectionTest extends TestCase
@@ -75,6 +77,48 @@ class InterviewAvatarSelectionTest extends TestCase
         $this->assertCount(6, array_unique($backgrounds));
         $this->assertCount(6, array_unique(array_map(fn (string $path): string => sha1_file(public_path($path)), $portraits)));
         $this->assertCount(6, array_unique(array_map(fn (string $path): string => sha1_file(public_path($path)), $backgrounds)));
+    }
+
+    public function test_setup_ignores_stale_old_avatar_without_validation_errors_but_keeps_it_after_an_error(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $this->category();
+        $userAgents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+        ];
+
+        foreach ($userAgents as $userAgent) {
+            $fresh = $this->actingAs($user)
+                ->withSession([
+                    '_old_input' => ['interviewer_avatar' => 'role_specialist'],
+                    'errors' => new ViewErrorBag,
+                ])
+                ->withHeader('User-Agent', $userAgent)
+                ->get(route('interview.setup'));
+
+            $fresh->assertOk()
+                ->assertSee('id="interviewerAvatarSelectedName">Choose an AI interviewer</span>', false);
+            preg_match('/<input[^>]*name="interviewer_avatar"[^>]*value="role_specialist"[^>]*>/', $fresh->getContent(), $freshInput);
+            $this->assertNotEmpty($freshInput);
+            $this->assertDoesNotMatchRegularExpression('/\schecked(?:\s|>)/', $freshInput[0]);
+
+            $errors = new ViewErrorBag;
+            $errors->put('default', new MessageBag(['target_position' => ['Target position is required.']]));
+            $retry = $this->actingAs($user)
+                ->withSession([
+                    '_old_input' => ['interviewer_avatar' => 'role_specialist'],
+                    'errors' => $errors,
+                ])
+                ->withHeader('User-Agent', $userAgent)
+                ->get(route('interview.setup'));
+
+            $retry->assertOk()
+                ->assertSee('id="interviewerAvatarSelectedName">Role Specialist</span>', false);
+            preg_match('/<input[^>]*name="interviewer_avatar"[^>]*value="role_specialist"[^>]*>/', $retry->getContent(), $retryInput);
+            $this->assertNotEmpty($retryInput);
+            $this->assertMatchesRegularExpression('/\schecked(?:\s|>)/', $retryInput[0]);
+        }
     }
 
     public function test_desktop_dashboard_mock_form_requires_an_explicit_interviewer_choice(): void
