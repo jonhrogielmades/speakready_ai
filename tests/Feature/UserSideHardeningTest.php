@@ -928,6 +928,63 @@ class UserSideHardeningTest extends TestCase
  }
  }
 
+ public function test_interview_setup_groups_every_configured_position_under_its_job_category_on_desktop_and_mobile(): void
+ {
+ $configuredGroups = config('speakready_scope.job_positions', []);
+ $this->assertIsArray($configuredGroups);
+ $this->assertArrayHasKey('IT and Digital', $configuredGroups);
+ $this->assertContains('Network Engineer', $configuredGroups['IT and Digital']);
+ $this->assertContains('Computer Programmer', $configuredGroups['IT and Digital']);
+
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $this->category(['title' => 'Job Interview', 'sort_order' => 1]);
+ $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+
+ $desktopResponse = $this->actingAs($user)
+ ->get(route('interview.setup'))
+ ->assertOk();
+ $mobileResponse = $this->actingAs($user)
+ ->withHeader('User-Agent', $mobileUserAgent)
+ ->get(route('interview.setup'))
+ ->assertOk();
+
+ foreach (['desktop' => $desktopResponse, 'mobile' => $mobileResponse] as $layout => $response) {
+ $document = new \DOMDocument;
+ $previousErrorHandling = libxml_use_internal_errors(true);
+ try {
+ $this->assertTrue($document->loadHTML($response->getContent(), LIBXML_NONET));
+ } finally {
+ libxml_clear_errors();
+ libxml_use_internal_errors($previousErrorHandling);
+ }
+ $xpath = new \DOMXPath($document);
+ $categoryOptions = [];
+ foreach ($xpath->query('//*[@id="jobCategoryFilter"]/option[@value]') as $option) {
+ $categoryOptions[] = $option->getAttribute('value');
+ }
+
+ $renderedGroups = [];
+ $renderedRoleCategories = [];
+ foreach ($xpath->query('//*[@data-target-dropdown-group-kind="job"]') as $group) {
+ $category = $group->getAttribute('data-target-category') ?: $group->getAttribute('data-job-category');
+ foreach ($xpath->query('.//*[@data-target-dropdown-choice-value]', $group) as $choice) {
+ $position = $choice->getAttribute('data-target-dropdown-choice-value');
+ $renderedGroups[$category][] = $position;
+ $renderedRoleCategories[$position][] = $category;
+ }
+ }
+
+ foreach ($configuredGroups as $category => $positions) {
+ $this->assertContains($category, $categoryOptions, "{$layout}: missing Job Category option {$category}");
+ $this->assertArrayHasKey($category, $renderedGroups, "{$layout}: missing Target Position group {$category}");
+ foreach ($positions as $position) {
+ $this->assertContains($position, $renderedGroups[$category], "{$layout}: {$position} is missing from {$category}");
+ $this->assertSame([$category], $renderedRoleCategories[$position] ?? [], "{$layout}: {$position} appears under an unrelated category");
+ }
+ }
+ }
+ }
+
  public function test_interview_setup_uses_downward_custom_target_dropdown_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -991,7 +1048,7 @@ class UserSideHardeningTest extends TestCase
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=15', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=16', false)
  ->assertSee('function setupTargetFieldValue(positionField)', false)
  ->assertSee('function setSetupTargetInputValue(positionField, value, targetKind = null)', false)
  ->assertSee("positionField.setAttribute('value', nextValue);", false)

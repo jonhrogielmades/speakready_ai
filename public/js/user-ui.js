@@ -28,12 +28,14 @@
         'coach-fullscreen-active',
         'finish-transition-active',
         'sr-page-transition-active',
+        'setup-target-position-modal-open',
         'modal-open'
     ];
     var TRANSIENT_USER_PAGE_HTML_CLASSES = [
         'interview-setup-page-root',
         'interview-session-fullscreen-root',
-        'finish-transition-active'
+        'finish-transition-active',
+        'setup-target-position-modal-open'
     ];
     var DETACHED_USER_PAGE_ARTIFACT_IDS = [
         'setupTransitionOverlay',

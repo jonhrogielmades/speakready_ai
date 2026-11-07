@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=15') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=16') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -217,7 +217,8 @@
  <span class="setup-target-trigger-text {{ $targetPositionDefault === ''? 'setup-target-placeholder': '' }}" id="targetPositionDropdownLabel">{{ $targetPositionDefault !== ''? $targetPositionDefault: $targetFieldCopy['placeholder'] }}</span>
  <i class="fa-solid fa-chevron-down setup-target-trigger-icon" aria-hidden="true"></i>
  </button>
- <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="dialog" aria-label="Choose target position" hidden>
+ <button type="button" class="setup-target-modal-backdrop" id="targetPositionModalBackdrop" aria-label="Close target position picker" hidden></button>
+ <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="dialog" aria-modal="true" aria-label="Choose target position" hidden>
  <div class="setup-target-menu-search">
  <label class="visually-hidden" for="targetPositionSearch">Search target positions</label>
  <input type="search" class="oinp" id="targetPositionSearch" placeholder="Search positions" autocomplete="off">
@@ -923,36 +924,24 @@ Begin Interview <i class="fa-solid fa-play"></i>
  menu.style.setProperty('--setup-target-menu-max-height', `${Math.round(maxHeight)}px`);
  }
 
- function scrollSetupTargetMenuIntoView() {
- const dropdown = document.querySelector('[data-target-dropdown]');
- const menu = document.getElementById('targetPositionDropdownMenu');
- if (!dropdown || !menu) return;
-
- dropdown.scrollIntoView({ block: isSetupCompactMobile()? 'start': 'nearest', inline: 'nearest', behavior: 'auto' });
- window.requestAnimationFrame(() => {
- syncSetupTargetMenuViewport();
- window.setTimeout(() => {
- syncSetupTargetMenuViewport();
- menu.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'auto' });
- }, 60);
- });
- }
-
  function setSetupTargetDropdownOpen(open) {
  const dropdown = document.querySelector('[data-target-dropdown]');
  const trigger = document.getElementById('targetPositionDropdownButton');
+ const backdrop = document.getElementById('targetPositionModalBackdrop');
  const menu = document.getElementById('targetPositionDropdownMenu');
 
  if (!dropdown || !trigger || !menu) return;
 
  dropdown.classList.toggle('setup-target-dropdown-open', open);
+ document.documentElement.classList.toggle('setup-target-position-modal-open', open);
+ document.body.classList.toggle('setup-target-position-modal-open', open);
  trigger.setAttribute('aria-expanded', open? 'true': 'false');
+ if (backdrop) backdrop.hidden = !open;
  menu.hidden = !open;
 
  if (open) {
- syncSetupTargetMenuViewport();
+ filterSetupTargetChoices();
  menu.scrollTop = 0;
- scrollSetupTargetMenuIntoView();
  }
  }
 
@@ -1295,6 +1284,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  const targetPositionDropdown = document.querySelector('[data-target-dropdown]');
  const targetPositionDropdownButton = document.getElementById('targetPositionDropdownButton');
+ const targetPositionModalBackdrop = document.getElementById('targetPositionModalBackdrop');
  const targetPositionDropdownMenu = document.getElementById('targetPositionDropdownMenu');
  const targetPositionSearch = document.getElementById('targetPositionSearch');
  const jobCategoryFilter = document.getElementById('jobCategoryFilter');
@@ -1334,7 +1324,12 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (selectedChoice && jobCategoryFilter.value && selectedCategory !== jobCategoryFilter.value) {
  setSetupTargetPosition('');
  }
+ if (targetPositionSearch) targetPositionSearch.value = '';
  filterSetupTargetChoices();
+ if (jobCategoryFilter.value) {
+ setSetupTargetDropdownOpen(true);
+ window.setTimeout(() => targetPositionSearch?.focus(), 0);
+ }
  });
 
  targetPositionSearch?.addEventListener('input', filterSetupTargetChoices);
@@ -1507,6 +1502,10 @@ Begin Interview <i class="fa-solid fa-play"></i>
  syncSetupTargetFieldCopy();
  setSetupTargetDropdownOpen(willOpen);
  if (willOpen) window.setTimeout(() => targetPositionSearch?.focus(), 0);
+ });
+ targetPositionModalBackdrop?.addEventListener('click', () => {
+ setSetupTargetDropdownOpen(false);
+ targetPositionDropdownButton?.focus();
  });
 
  targetPositionDropdownButton?.addEventListener('keydown', (event) => {

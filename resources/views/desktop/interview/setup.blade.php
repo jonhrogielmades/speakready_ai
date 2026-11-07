@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=18') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=19') }}" data-page-style="interview-setup-2">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=3') }}" data-page-style="interview-role-discovery">
 @endpush
 
@@ -211,11 +211,12 @@
  </label>
  <input type="hidden" class="setup-input setup-target-hidden-input" name="target_position" id="valPosition" value="{{ $targetPositionDefault }}" required data-selected-target="{{ $targetPositionDefault }}" data-target-kind="{{ $targetFieldMode }}">
  <div class="setup-target-dropdown" data-target-dropdown>
- <button type="button" class="oinp setup-target-trigger" id="targetPositionDropdownButton" aria-haspopup="true" aria-expanded="false" aria-controls="targetPositionDropdownMenu" aria-describedby="targetPositionError">
+ <button type="button" class="oinp setup-target-trigger" id="targetPositionDropdownButton" aria-haspopup="dialog" aria-expanded="false" aria-controls="targetPositionDropdownMenu" aria-describedby="targetPositionError">
  <span class="setup-target-trigger-text {{ $targetPositionDefault === ''? 'setup-target-placeholder': '' }}" id="targetPositionDropdownLabel">{{ $targetPositionDefault !== ''? $targetPositionDefault: $targetFieldCopy['placeholder'] }}</span>
  <i class="fa-solid fa-chevron-down setup-target-trigger-icon" aria-hidden="true"></i>
  </button>
- <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="group" aria-labelledby="targetPositionLabelText" hidden>
+ <button type="button" class="setup-target-modal-backdrop" id="targetPositionModalBackdrop" aria-label="Close target position picker" hidden></button>
+ <div class="setup-target-menu" id="targetPositionDropdownMenu" data-target-dropdown-menu role="dialog" aria-modal="true" aria-labelledby="targetPositionLabelText" hidden>
  <label class="visually-hidden" for="targetPositionSearch">Search target positions</label>
  <input type="search" id="targetPositionSearch" class="oinp setup-target-search" placeholder="Search positions" autocomplete="off" aria-controls="targetPositionChoices">
  <div id="targetPositionChoices">
@@ -855,17 +856,20 @@ Begin Interview <i class="fa-solid fa-play"></i>
  function setSetupTargetDropdownOpen(open) {
  const dropdown = document.querySelector('[data-target-dropdown]');
  const trigger = document.getElementById('targetPositionDropdownButton');
+ const backdrop = document.getElementById('targetPositionModalBackdrop');
  const menu = document.getElementById('targetPositionDropdownMenu');
 
  if (!dropdown || !trigger || !menu) return;
 
  dropdown.classList.toggle('setup-target-dropdown-open', open);
+ document.documentElement.classList.toggle('setup-target-position-modal-open', open);
+ document.body.classList.toggle('setup-target-position-modal-open', open);
  trigger.setAttribute('aria-expanded', open? 'true': 'false');
+ if (backdrop) backdrop.hidden = !open;
  menu.hidden = !open;
 
  if (open) {
  filterSetupTargetChoices();
- window.setTimeout(() => menu.scrollIntoView({ block: 'nearest', inline: 'nearest' }), 0);
  }
  }
 
@@ -1193,6 +1197,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  const targetPositionDropdown = document.querySelector('[data-target-dropdown]');
  const targetPositionDropdownButton = document.getElementById('targetPositionDropdownButton');
+ const targetPositionModalBackdrop = document.getElementById('targetPositionModalBackdrop');
  const targetPositionSearch = document.getElementById('targetPositionSearch');
  const jobCategoryFilter = document.getElementById('jobCategoryFilter');
  const customPositionWrap = document.getElementById('customPositionWrap');
@@ -1260,6 +1265,10 @@ Begin Interview <i class="fa-solid fa-play"></i>
  setSetupTargetDropdownOpen(willOpen);
  if (willOpen) window.setTimeout(() => targetPositionSearch?.focus(), 0);
  });
+ targetPositionModalBackdrop?.addEventListener('click', () => {
+ setSetupTargetDropdownOpen(false);
+ targetPositionDropdownButton?.focus();
+ });
 
  targetPositionDropdownButton?.addEventListener('keydown', (event) => {
  if (!['ArrowDown', 'Enter', ' '].includes(event.key)) return;
@@ -1285,7 +1294,24 @@ Begin Interview <i class="fa-solid fa-play"></i>
  else chooseCustomSetupTarget(targetPositionSearch.value);
  }
  });
- jobCategoryFilter?.addEventListener('change', filterSetupTargetChoices);
+ jobCategoryFilter?.addEventListener('change', () => {
+ const positionField = document.getElementById('valPosition');
+ const selected = String(positionField?.value || '').trim().toLocaleLowerCase();
+ const selectedChoice = Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]'))
+ .find((choice) => (choice.dataset.targetDropdownChoiceValue || '').toLocaleLowerCase() === selected);
+ if (selectedChoice && jobCategoryFilter.value && selectedChoice.dataset.targetCategory !== jobCategoryFilter.value && positionField) {
+ positionField.value = '';
+ positionField.dataset.selectedTarget = '';
+ syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
+ positionField.dispatchEvent(new Event('change', { bubbles: true }));
+ }
+ if (targetPositionSearch) targetPositionSearch.value = '';
+ filterSetupTargetChoices();
+ if (jobCategoryFilter.value) {
+ setSetupTargetDropdownOpen(true);
+ window.setTimeout(() => targetPositionSearch?.focus(), 0);
+ }
+ });
  document.getElementById('targetPositionCustomChoice')?.addEventListener('click', () => chooseCustomSetupTarget(targetPositionSearch?.value));
  customPositionInput?.addEventListener('input', () => {
  const positionField = document.getElementById('valPosition');
