@@ -17,7 +17,6 @@
         const triggerAction = document.getElementById('interviewerAvatarTriggerAction');
         const confirmButton = document.getElementById('interviewerAvatarConfirm');
         const cancelButton = document.getElementById('interviewerAvatarCancel');
-        const closeButton = document.getElementById('interviewerAvatarClose');
         const voiceStatus = document.getElementById('interviewerAvatarVoiceStatus');
         const voiceButtons = Array.from(dialog.querySelectorAll('.interviewer-avatar-voice-preview'));
         const setupForm = document.getElementById('setupForm');
@@ -339,11 +338,9 @@
             event.preventDefault();
             closeModal(true);
         });
-        [cancelButton, closeButton].forEach((button) => {
-            button?.addEventListener('click', (event) => {
-                event.preventDefault();
-                closeModal(false);
-            });
+        cancelButton?.addEventListener('click', (event) => {
+            event.preventDefault();
+            closeModal(false);
         });
         group.addEventListener('change', () => {
             stopVoicePreview();
@@ -374,13 +371,15 @@
             const bounds = dialog.getBoundingClientRect();
             const outside = event.clientX < bounds.left || event.clientX > bounds.right ||
                 event.clientY < bounds.top || event.clientY > bounds.bottom;
-            if (outside) closeModal(false);
+            if (outside) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
         });
         document.addEventListener('click', (event) => {
-            if (!isOpen || nativeModal || event.target === trigger || dialog.contains(event.target)) return;
+            if (!isOpen || nativeModal || dialog.contains(event.target)) return;
             event.preventDefault();
             event.stopPropagation();
-            closeModal(false);
         }, true);
         document.addEventListener('keydown', (event) => {
             if (!isOpen) return;

@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=27') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=28') }}" data-page-style="interview-setup-2">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=7') }}" data-page-style="interview-role-discovery">
 @endpush
 
@@ -505,7 +505,6 @@
  <h2 class="interviewer-avatar-title" id="interviewerAvatarDialogTitle">Choose AI Interviewer</h2>
  <p class="interviewer-avatar-help" id="interviewerAvatarDialogHelp">Select a portrait and interview style. Hear each voice before choosing.</p>
  </div>
- <button type="button" class="interviewer-avatar-dialog-close" id="interviewerAvatarClose" aria-label="Close interviewer choices"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
  </div>
  <div class="interviewer-avatar-dialog-body">
  <div class="interviewer-avatar-grid" id="interviewerAvatarGroup" role="radiogroup" aria-label="AI interviewer">
@@ -737,7 +736,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json($interviewSetupDraftKey) };
 </script>
 <script src="{{ asset('js/interview-setup-draft.js?v=2') }}"></script>
-<script src="{{ asset('js/interview-setup-avatar-modal.js?v=4') }}"></script>
+<script src="{{ asset('js/interview-setup-avatar-modal.js?v=5') }}"></script>
 <script>
  const setupRequiredFieldIds = [
  'valScenario',

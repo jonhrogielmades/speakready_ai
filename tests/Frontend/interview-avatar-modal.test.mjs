@@ -36,15 +36,32 @@ class FakeNode {
         this.dataset = {};
         this.hidden = false;
     }
-    addEventListener(type, callback) {
+    addEventListener(type, callback, options = {}) {
         const callbacks = this.listeners.get(type) || [];
-        callbacks.push(callback);
+        callbacks.push({ callback, capture: options === true || Boolean(options.capture) });
         this.listeners.set(type, callbacks);
     }
     dispatchEvent(event) {
         if (!event.target) event.target = this;
-        for (const callback of this.listeners.get(event.type) || []) callback(event);
-        if (event.bubbles && !event.propagationStopped && this.parentNode) this.parentNode.dispatchEvent(event);
+        const ancestors = [];
+        for (let node = this.parentNode; node; node = node.parentNode) ancestors.push(node);
+        const notify = (node, capture) => {
+            for (const listener of node.listeners.get(event.type) || []) {
+                if (listener.capture === capture) listener.callback(event);
+            }
+        };
+        for (const node of ancestors.reverse()) {
+            notify(node, true);
+            if (event.propagationStopped) return !event.defaultPrevented;
+        }
+        notify(this, true);
+        notify(this, false);
+        if (event.bubbles && !event.propagationStopped) {
+            for (const node of ancestors.reverse()) {
+                notify(node, false);
+                if (event.propagationStopped) break;
+            }
+        }
         return !event.defaultPrevented;
     }
     setAttribute(name, value) {
@@ -118,6 +135,7 @@ function makePage({ native = true, fetchImpl, playImpl, initialSelection = 'frie
     document.queries = new Map([['meta[name="csrf-token"]', csrfMeta]]);
     const form = add('setupForm', document.body);
     const trigger = add('interviewerAvatarTrigger', form);
+    const backgroundAction = add('backgroundAction', form);
     const previewImage = add('interviewerAvatarSelectedImage', trigger);
     const placeholderIcon = add('interviewerAvatarPlaceholderIcon', trigger);
     const previewName = add('interviewerAvatarSelectedName', trigger);
@@ -129,7 +147,6 @@ function makePage({ native = true, fetchImpl, playImpl, initialSelection = 'frie
     dialog.dataset.voicePreviewUrl = '/interview/avatar-voice-preview';
     const group = add('interviewerAvatarGroup', dialog);
     const voiceStatus = add('interviewerAvatarVoiceStatus', dialog);
-    const close = add('interviewerAvatarClose', dialog);
     const cancel = add('interviewerAvatarCancel', dialog);
     const confirm = add('interviewerAvatarConfirm', dialog);
     const radios = [];
@@ -172,7 +189,7 @@ function makePage({ native = true, fetchImpl, playImpl, initialSelection = 'frie
     }
     group.radios = radios;
     dialog.voiceButtons = voiceButtons;
-    dialog.focusables = [close, ...radios, ...voiceButtons, cancel, confirm];
+    dialog.focusables = [...radios, ...voiceButtons, cancel, confirm];
     if (native) {
         dialog.showModal = () => dialog.setAttribute('open', '');
         dialog.close = () => {
@@ -232,7 +249,7 @@ function makePage({ native = true, fetchImpl, playImpl, initialSelection = 'frie
         for (const radio of radios) radio.checked = radio.value === value;
         fire(radios.find((radio) => radio.value === value), 'change', { bubbles: true });
     };
-    return { document, form, trigger, previewImage, placeholderIcon, previewName, previewDescription, triggerAction, dialog, group, confirm, cancel, radios, voiceButtons, voiceStatus, fetchCalls, audioInstances, revokedUrls, timers, fire, choose };
+    return { document, form, trigger, backgroundAction, previewImage, placeholderIcon, previewName, previewDescription, triggerAction, dialog, group, confirm, cancel, radios, voiceButtons, voiceStatus, fetchCalls, audioInstances, revokedUrls, timers, fire, choose };
 }
 
 const settlePromises = () => new Promise((resolve) => setImmediate(resolve));
@@ -287,23 +304,37 @@ test('modal initializes from restored selection, commits a new choice, and resto
     assert.equal(page.document.body.classList.contains('interviewer-avatar-modal-open'), false);
 });
 
-test('Cancel, Escape, and backdrop clicks restore the committed selection', () => {
+test('Cancel and Escape restore the committed selection', () => {
     const page = makePage();
     page.fire(page.document, 'DOMContentLoaded');
     let changeCount = 0;
     page.form.addEventListener('change', () => changeCount++);
-    for (const cancelWith of ['button', 'escape', 'backdrop']) {
+    for (const cancelWith of ['button', 'escape']) {
         page.fire(page.trigger, 'click');
         page.choose('senior_leader');
         const beforeCancel = changeCount;
         if (cancelWith === 'button') page.fire(page.cancel, 'click');
         if (cancelWith === 'escape') page.fire(page.document, 'keydown', { key: 'Escape' });
-        if (cancelWith === 'backdrop') page.fire(page.dialog, 'click', { clientX: 50, clientY: 50 });
         assert.equal(page.radios[0].checked, true);
         assert.equal(page.previewName.textContent, 'Friendly Recruiter');
         assert.ok(changeCount > beforeCancel, `${cancelWith} must notify setup listeners`);
         assert.equal(page.dialog.open, false);
     }
+});
+
+test('native backdrop clicks are blocked and leave the pending selection open', () => {
+    const page = makePage();
+    page.fire(page.document, 'DOMContentLoaded');
+    page.fire(page.trigger, 'click');
+    page.choose('senior_leader');
+
+    const backdropClick = page.fire(page.dialog, 'click', { bubbles: true, clientX: 50, clientY: 50 });
+    assert.equal(backdropClick.defaultPrevented, true);
+    assert.equal(backdropClick.propagationStopped, true);
+    assert.equal(page.dialog.open, true);
+    assert.equal(page.radios[2].checked, true, 'the new choice should remain pending');
+    assert.equal(page.previewName.textContent, 'Friendly Recruiter', 'the committed choice should stay unchanged');
+    assert.equal(page.document.body.classList.contains('interviewer-avatar-modal-open'), true);
 });
 
 test('Enter on a focused radio commits without submitting the setup form', () => {
@@ -339,11 +370,17 @@ test('fallback dialog escapes clipped form container and still updates draft lis
 
     page.fire(page.trigger, 'click');
     page.choose('role_specialist');
-    const backdropClick = page.fire(page.form, 'click', { bubbles: true });
-    assert.equal(backdropClick.defaultPrevented, true);
-    assert.equal(backdropClick.propagationStopped, true);
-    assert.equal(page.dialog.parentNode, page.form);
-    assert.equal(page.radios[2].checked, true);
+    let backgroundClicks = 0;
+    page.backgroundAction.addEventListener('click', () => backgroundClicks++);
+    const backgroundClick = page.fire(page.backgroundAction, 'click', { bubbles: true });
+    assert.equal(backgroundClick.defaultPrevented, true);
+    assert.equal(backgroundClick.propagationStopped, true);
+    assert.equal(backgroundClicks, 0, 'the background control must not receive the click');
+    assert.equal(page.dialog.parentNode, page.document.body);
+    assert.equal(page.dialog.open, true);
+    assert.equal(page.radios[1].checked, true, 'the new choice should remain pending');
+    assert.equal(page.previewName.textContent, 'Senior Leader', 'the committed choice should stay unchanged');
+    assert.equal(page.document.body.classList.contains('interviewer-avatar-fallback-backdrop'), true);
 });
 
 test('both setup forms keep moved radio options associated with the setup form', () => {
@@ -352,6 +389,8 @@ test('both setup forms keep moved radio options associated with the setup form',
         assert.match(view, /name="interviewer_avatar" form="setupForm"/);
         assert.match(view, /data-voice-preview-url="\{\{ route\('interview\.avatarVoicePreview'\) \}\}"/);
         assert.match(view, /class="interviewer-avatar-voice-preview"/);
+        assert.doesNotMatch(view, /id="interviewerAvatarClose"/);
+        assert.match(view, /id="interviewerAvatarCancel"/);
     }
 });
 

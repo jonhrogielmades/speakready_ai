@@ -1510,26 +1510,6 @@ body.interviewer-avatar-fallback-backdrop::before {
     margin: 0;
 }
 
-#interviewerAvatarDialog .interviewer-avatar-dialog-close {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    flex: 0 0 30px;
-    padding: 0;
-    border: 0;
-    border-radius: 8px;
-    background: #f1f5f9;
-    color: #475569;
-    font-size: 1.2rem;
-    line-height: 1;
-    cursor: pointer;
-}
-
-#interviewerAvatarDialog .interviewer-avatar-dialog-close:hover {
-    background: #e2e8f0;
-}
-
 #interviewerAvatarDialog .interviewer-avatar-dialog-body {
     min-height: 0;
     padding: 6px 14px 8px;
@@ -1756,11 +1736,6 @@ html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-trigger-a
 html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-dialog-panel {
     background: #101b2d;
     color: #f8fafc;
-}
-
-html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-dialog-close {
-    background: #233249;
-    color: #e2e8f0;
 }
 
 html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-dialog-footer {
