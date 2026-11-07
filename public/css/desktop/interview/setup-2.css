@@ -849,8 +849,8 @@ html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-dialog-footer button:
     html body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-item.is-locked .setup-stepper-dot {
         border-color: rgba(148, 163, 184, 0.48) !important;
         border-style: dashed !important;
-        background: #f8fafc !important;
-        color: #94a3b8 !important;
+        background: var(--setup-saas-soft, var(--bg3, #f8fafc)) !important;
+        color: var(--tx2, #475569) !important;
         box-shadow: none !important;
     }
 
@@ -862,7 +862,7 @@ html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-dialog-footer button:
         width: 100% !important;
         min-width: 0 !important;
         margin: 0 !important;
-        color: #475569 !important;
+        color: var(--tx2, #475569) !important;
         font-size: 0.74rem !important;
         line-height: 1.1 !important;
         font-weight: 900 !important;
@@ -900,6 +900,49 @@ html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-dialog-footer button:
 
     html:not(.lm) body.user-desktop-shell:not(.admin-shell) #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-label {
         color: #93c5fd !important;
+    }
+
+    /* The shared theme contrast layer also targets button children and labels. */
+    html body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-item.is-locked {
+        opacity: 0.78 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-dot,
+    html body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-dot::before {
+        color: var(--tx2, #475569) !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-item:is(.is-active, .is-ready) .setup-stepper-dot,
+    html body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-item:is(.is-active, .is-ready) .setup-stepper-dot::before {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-item .setup-stepper-label {
+        color: var(--tx2, #475569) !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-item .setup-stepper-label-text {
+        color: inherit !important;
+        -webkit-text-fill-color: currentColor !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-label {
+        color: #1d4ed8 !important;
+    }
+
+    html body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-label {
+        color: #166534 !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-item.is-active .setup-stepper-label {
+        color: #93c5fd !important;
+    }
+
+    html:not(.lm) body.user-desktop-shell:not(.admin-shell) #dashboard #userAppContent #sec-interview-setup .setup-stepper-item.is-ready .setup-stepper-label {
+        color: #86efac !important;
     }
 }
 
