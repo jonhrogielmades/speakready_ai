@@ -966,68 +966,91 @@ return response()->json([
  $speechText = $question->question_text;
  }
 
+  $avatar = InterviewerAvatar::normalize($session->interviewer_avatar);
   $speechOptions = [
-   'provider' => 'gemini',
-   'voice' => InterviewerAvatar::voice($session->interviewer_avatar),
-   'style' => InterviewerAvatar::voiceStyle($session->interviewer_avatar),
+   'providers' => ['gemini', 'openai'],
+   'provider_voices' => [
+    'gemini' => InterviewerAvatar::voice($avatar),
+    'openai' => InterviewerAvatar::openAiVoice($avatar),
+   ],
+   'interviewer_avatar' => $avatar,
+   'style' => InterviewerAvatar::voiceStyle($avatar),
    'deadline_seconds' => 40,
    'attempts' => 1,
   ];
-  if ($session->tts_provider !== null) {
-   if (trim((string) $session->tts_provider) === ''
-    || trim((string) $session->tts_model) === ''
+  $originalProvider = $session->tts_provider === null ? null : trim((string) $session->tts_provider);
+  if ($originalProvider !== null) {
+   if ($originalProvider === '' || trim((string) $session->tts_model) === ''
     || trim((string) $session->tts_voice) === '') {
     return response()->json(['error' => 'AI speech is not available.'], 503);
    }
 
-   $speechOptions['provider'] = $session->tts_provider;
-   $speechOptions['model'] = $session->tts_model;
-   $speechOptions['voice'] = $session->tts_voice;
+   if ($originalProvider === 'gemini') {
+    // Keep the existing Gemini voice until it fails, then let OpenAI take over.
+    $speechOptions['provider_voices']['gemini'] = $session->tts_voice;
+    $speechOptions['provider_models'] = ['gemini' => $session->tts_model];
+   } else {
+    $speechOptions['provider'] = $originalProvider;
+    $speechOptions['model'] = $session->tts_model;
+    $speechOptions['voice'] = $session->tts_voice;
+   }
   }
 
   $language = $this->currentLanguageConfig();
+  $speechStartedAt = microtime(true);
   $speech = AIService::synthesizeSpeech($speechText, $language, $speechOptions);
-  if ($speech && $session->tts_provider === null) {
-   $provider = trim((string) ($speech['provider']?? ''));
-   $model = trim((string) ($speech['model']?? ''));
-   $voice = trim((string) ($speech['voice']?? ''));
-   if ($provider === '' || $model === '' || $voice === '') {
-    return response()->json(['error' => 'AI speech is not available.'], 503);
-   }
+  if (! $speech) {
+   return response()->json(['error' => 'AI speech is not available.'], 503);
+  }
 
-   $claimed = InterviewSession::query()
+  $provider = trim((string) ($speech['provider'] ?? ''));
+  $model = trim((string) ($speech['model'] ?? ''));
+  $voice = trim((string) ($speech['voice'] ?? ''));
+  if ($provider === '' || $model === '' || $voice === '') {
+   return response()->json(['error' => 'AI speech is not available.'], 503);
+  }
+
+  if ($originalProvider === null) {
+   InterviewSession::query()
     ->whereKey($session->id)
     ->where('status', 'in_progress')
     ->whereNull('tts_provider')
-    ->update([
-     'tts_provider' => $provider,
-     'tts_model' => $model,
-     'tts_voice' => $voice,
-    ]);
+    ->update(['tts_provider' => $provider, 'tts_model' => $model, 'tts_voice' => $voice]);
+  } elseif ($originalProvider === 'gemini' && $provider === 'openai') {
+   InterviewSession::query()
+    ->whereKey($session->id)
+    ->where('status', 'in_progress')
+    ->where('tts_provider', 'gemini')
+    ->where('tts_model', $session->tts_model)
+    ->where('tts_voice', $session->tts_voice)
+    ->update(['tts_provider' => $provider, 'tts_model' => $model, 'tts_voice' => $voice]);
+  }
 
-   if ($claimed !== 1) {
-    // A concurrent speech request may have pinned a different voice first.
-    // Discard this audio and regenerate with the winning session voice.
-    $winner = $session->fresh();
-    if (! $winner || $winner->status !== 'in_progress'
-     || trim((string) $winner->tts_provider) === ''
-     || trim((string) $winner->tts_model) === ''
-     || trim((string) $winner->tts_voice) === '') {
-     return response()->json(['error' => 'AI speech is not available.'], 503);
-    }
+  // A concurrent request may have selected or switched the session voice.
+  // Return only audio that matches the voice currently pinned to the session.
+  $winner = $session->fresh();
+  if (! $winner || $winner->status !== 'in_progress'
+   || trim((string) $winner->tts_provider) === ''
+   || trim((string) $winner->tts_model) === ''
+   || trim((string) $winner->tts_voice) === '') {
+   return response()->json(['error' => 'AI speech is not available.'], 503);
+  }
 
-    if ($provider !== $winner->tts_provider || $model !== $winner->tts_model || $voice !== $winner->tts_voice) {
-     $speech = AIService::synthesizeSpeech($speechText, $language, array_merge($speechOptions, [
-      'provider' => $winner->tts_provider,
-      'model' => $winner->tts_model,
-      'voice' => $winner->tts_voice,
-     ]));
-    }
+  if ($provider !== $winner->tts_provider || $model !== $winner->tts_model || $voice !== $winner->tts_voice) {
+   $remainingSeconds = 40 - (int) ceil(microtime(true) - $speechStartedAt);
+   if ($remainingSeconds < 1) {
+    return response()->json(['error' => 'AI speech is not available.'], 503);
+   }
+   $speech = AIService::synthesizeSpeech($speechText, $language, array_merge($speechOptions, [
+    'provider' => $winner->tts_provider,
+    'model' => $winner->tts_model,
+    'voice' => $winner->tts_voice,
+    'deadline_seconds' => $remainingSeconds,
+   ]));
+   if (! $speech) {
+    return response()->json(['error' => 'AI speech is not available.'], 503);
    }
   }
- if (! $speech) {
- return response()->json(['error' => 'AI speech is not available.'], 503);
- }
 
  return response($speech['audio'], 200)
  ->header('Content-Type', $speech['mime_type'])
@@ -1052,15 +1075,24 @@ return response()->json([
    'Hello. I am your AI interviewer. Tell me about yourself.',
    $this->currentLanguageConfig(),
    [
-    'provider' => 'gemini',
-    'voice' => InterviewerAvatar::voice($avatar),
+    'providers' => ['gemini', 'openai'],
+    'provider_voices' => [
+     'gemini' => InterviewerAvatar::voice($avatar),
+     'openai' => InterviewerAvatar::openAiVoice($avatar),
+    ],
+    'interviewer_avatar' => $avatar,
     'style' => InterviewerAvatar::voiceStyle($avatar),
     'deadline_seconds' => 40,
     'attempts' => 1,
    ]
   );
 
-  if (! $speech || $speech['provider'] !== 'gemini' || $speech['voice'] !== InterviewerAvatar::voice($avatar)) {
+  $expectedVoice = match ($speech['provider'] ?? null) {
+   'gemini' => InterviewerAvatar::voice($avatar),
+   'openai' => InterviewerAvatar::openAiVoice($avatar),
+   default => null,
+  };
+  if (! $speech || $expectedVoice === null || $speech['voice'] !== $expectedVoice) {
    return response()->json(['error' => 'AI voice preview is not available.'], 503);
   }
 

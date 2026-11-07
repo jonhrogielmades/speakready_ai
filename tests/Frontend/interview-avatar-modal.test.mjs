@@ -339,6 +339,7 @@ test('voice preview sends the selected avatar to the server without selecting it
     assert.equal(page.fetchCalls[0].url, '/interview/avatar-voice-preview');
     assert.deepEqual(JSON.parse(page.fetchCalls[0].options.body), { interviewer_avatar: 'panel_interviewer' });
     assert.equal(page.fetchCalls[0].options.headers['X-CSRF-TOKEN'], 'test-csrf-token');
+    assert.equal(page.fetchCalls[0].options.headers.Accept, 'audio/*');
     assert.equal(page.voiceButtons[5].dataset.state, 'playing');
     assert.equal(page.audioInstances[0].playCount, 1);
 
@@ -346,6 +347,24 @@ test('voice preview sends the selected avatar to the server without selecting it
     assert.equal(page.audioInstances[0].paused, true);
     assert.deepEqual(page.revokedUrls, ['blob:voice-preview']);
     assert.equal(page.voiceButtons[5].dataset.state, 'idle');
+});
+
+test('voice preview plays OpenAI MP3 audio when Gemini is unavailable', async () => {
+    const page = makePage({ fetchImpl: async () => ({
+        ok: true,
+        status: 200,
+        headers: { get: () => 'audio/mpeg' },
+        blob: async () => ({ size: 512, type: 'audio/mpeg' }),
+    }) });
+    page.fire(page.document, 'DOMContentLoaded');
+    page.fire(page.trigger, 'click');
+    page.fire(page.voiceButtons[5], 'click');
+    await settlePromises();
+
+    assert.equal(page.fetchCalls[0].options.headers.Accept, 'audio/*');
+    assert.equal(page.audioInstances.length, 1);
+    assert.equal(page.audioInstances[0].playCount, 1);
+    assert.equal(page.voiceButtons[5].dataset.state, 'playing');
 });
 
 test('slow voice generation still lets the user play the fetched sample after autoplay is blocked', async () => {

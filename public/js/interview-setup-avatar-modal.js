@@ -146,7 +146,7 @@
                     credentials: 'same-origin',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'audio/wav',
+                        'Accept': 'audio/*',
                         'X-CSRF-TOKEN': csrfToken,
                         'X-Requested-With': 'XMLHttpRequest',
                     },

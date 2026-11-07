@@ -13,6 +13,7 @@ final class InterviewerAvatar
             'background' => 'img/interviewer-panel-room-bg.webp',
             'gender' => 'woman',
             'voice' => 'Sulafat',
+            'openai_voice' => 'nova',
             'voice_style' => 'Speak warmly and confidently as a professional woman interviewer, with a calm, welcoming pace',
             'opening' => 'Welcome the candidate in a relaxed, reassuring way while remaining professional.',
             'follow_up' => 'Use an inviting, supportive tone and help the candidate expand on a real example.',
@@ -23,6 +24,7 @@ final class InterviewerAvatar
             'background' => 'img/interviewers/structured_hr_room.webp',
             'gender' => 'woman',
             'voice' => 'Kore',
+            'openai_voice' => 'coral',
             'voice_style' => 'Speak firmly and clearly as a professional woman interviewer, with precise, measured pacing',
             'opening' => 'Greet the candidate clearly and professionally, with a concise and orderly transition into the introduction.',
             'follow_up' => 'Ask a clear, focused question about the candidate\'s own actions and evidence. Keep the flow organized.',
@@ -33,6 +35,7 @@ final class InterviewerAvatar
             'background' => 'img/interviewers/hiring_manager_room.webp',
             'gender' => 'man',
             'voice' => 'Orus',
+            'openai_voice' => 'onyx',
             'voice_style' => 'Speak with practical, assured authority as a professional man interviewer, at a measured pace',
             'opening' => 'Sound practical and interested in how the candidate would contribute to the role.',
             'follow_up' => 'Probe practical ownership, delivery, collaboration, and results in the target role.',
@@ -43,6 +46,7 @@ final class InterviewerAvatar
             'background' => 'img/interviewers/role_specialist_room.webp',
             'gender' => 'man',
             'voice' => 'Iapetus',
+            'openai_voice' => 'echo',
             'voice_style' => 'Speak with crisp, analytical clarity as a professional man interviewer, at a focused pace',
             'opening' => 'Sound curious about the candidate\'s role-specific experience, without adding another question.',
             'follow_up' => 'Probe the role-specific method, tools, reasoning, or verification behind the candidate\'s answer.',
@@ -53,6 +57,7 @@ final class InterviewerAvatar
             'background' => 'img/interviewers/senior_leader_room.webp',
             'gender' => 'woman',
             'voice' => 'Gacrux',
+            'openai_voice' => 'shimmer',
             'voice_style' => 'Speak with composed, mature authority as a professional woman interviewer, at a concise, unhurried pace',
             'opening' => 'Use a concise, composed executive tone and invite the candidate to connect their background to the role.',
             'follow_up' => 'Probe judgment, tradeoffs, stakeholder impact, and the significance of the candidate\'s result.',
@@ -63,6 +68,7 @@ final class InterviewerAvatar
             'background' => 'img/interviewers/panel_interviewer_room.webp',
             'gender' => 'man',
             'voice' => 'Algenib',
+            'openai_voice' => 'ash',
             'voice_style' => 'Speak with a challenging yet respectful gravelly tone as a professional man interviewer, at a controlled pace',
             'opening' => 'Greet the candidate with calm authority and introduce a rigorous but fair interview.',
             'follow_up' => 'Challenge the candidate to defend decisions and evidence with respectful, probing follow-up questions.',
@@ -103,6 +109,11 @@ final class InterviewerAvatar
     public static function voice(mixed $key): string
     {
         return self::OPTIONS[self::normalize($key)]['voice'];
+    }
+
+    public static function openAiVoice(mixed $key): string
+    {
+        return self::OPTIONS[self::normalize($key)]['openai_voice'];
     }
 
     public static function voiceStyle(mixed $key): string

@@ -3045,10 +3045,15 @@ PROMPT;
  ? microtime(true) + max(1, min(60, (int) $options['deadline_seconds']))
  : null;
  $attempts = isset($options['attempts']) ? max(1, min(3, (int) $options['attempts'])) : null;
- $providers = array_key_exists('provider', $options)
-  ? [self::normalizeSpeechProviderName($options['provider'])]
-  : self::speechSynthesisProviderPriority();
- $providers = array_values(array_filter($providers, fn (string $provider): bool => in_array($provider, ['gemini', 'openai', 'elevenlabs'], true)));
+ $requestedProviders = array_key_exists('provider', $options)
+  ? [$options['provider']]
+  : ($options['providers'] ?? self::speechSynthesisProviderPriority());
+ $providers = collect(is_array($requestedProviders) ? $requestedProviders : [])
+  ->map(fn ($provider): string => self::normalizeSpeechProviderName($provider))
+  ->filter(fn (string $provider): bool => in_array($provider, ['gemini', 'openai', 'elevenlabs'], true))
+  ->unique()
+  ->values()
+  ->all();
 
  foreach ($providers as $providerIndex => $provider) {
  if ($deadlineAt!== null && $deadlineAt <= microtime(true)) {
@@ -3063,10 +3068,19 @@ PROMPT;
  // A latency-bounded request must never multiply its remaining budget with
  // provider retries. Fast failures can still continue to the next provider.
  $providerAttempts = $deadlineAt === null ? $attempts : 1;
+ $providerOptions = $options;
+ if (! array_key_exists('provider', $options) && is_array($options['provider_voices'] ?? null)
+  && isset($options['provider_voices'][$provider])) {
+  $providerOptions['voice'] = $options['provider_voices'][$provider];
+ }
+ if (! array_key_exists('provider', $options) && is_array($options['provider_models'] ?? null)
+  && isset($options['provider_models'][$provider])) {
+  $providerOptions['model'] = $options['provider_models'][$provider];
+ }
  $speech = match ($provider) {
-  'gemini' => self::synthesizeSpeechWithGemini($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $deadlineAt, $options),
-  'openai' => self::synthesizeSpeechWithOpenAI($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $options),
-  'elevenlabs' => self::synthesizeSpeechWithElevenLabs($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $options),
+  'gemini' => self::synthesizeSpeechWithGemini($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $deadlineAt, $providerOptions),
+  'openai' => self::synthesizeSpeechWithOpenAI($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $providerOptions),
+  'elevenlabs' => self::synthesizeSpeechWithElevenLabs($text, $targetLanguage, $timeoutSeconds, $providerAttempts, $providerOptions),
  default => null,
  };
 
@@ -3172,7 +3186,14 @@ PROMPT;
 
  $language = self::languageConfigFrom($targetLanguage);
  $model = trim((string) ($options['model'] ?? config('services.openai.tts_model', 'gpt-4o-mini-tts'))) ?: 'gpt-4o-mini-tts';
- $voice = self::openAiFemaleSpeechVoice((string) ($options['voice'] ?? config('services.openai.tts_voice', 'nova')));
+ $avatarSpeech = array_key_exists('interviewer_avatar', $options);
+ $configuredVoice = (string) ($options['voice'] ?? config('services.openai.tts_voice', 'nova'));
+ $voice = $avatarSpeech
+  ? self::openAiInterviewerSpeechVoice($configuredVoice)
+  : self::openAiFemaleSpeechVoice($configuredVoice);
+ if ($voice === null) {
+  return null;
+ }
  $speed = (float) config('services.openai.tts_speed', 0.90);
  $speed = max(0.25, min(4.0, $speed));
 
@@ -3186,7 +3207,10 @@ PROMPT;
 
  if (! in_array($model, ['tts-1', 'tts-1-hd'], true)) {
  $target = $language['ai_label']?? $language['label']?? 'the selected language';
- $payload['instructions'] = "Speak as a calm, professional female interviewer. Use natural {$target} pronunciation at a slightly slower, measured pace, and keep company names, role titles, acronyms, and numbers clear.";
+ $gender = $avatarSpeech && InterviewerAvatar::gender($options['interviewer_avatar']) === 'man' ? 'male' : 'female';
+ $style = $avatarSpeech ? trim((string) ($options['style'] ?? '')) : '';
+ $styleInstruction = $style !== '' ? " {$style}." : '';
+ $payload['instructions'] = "Speak as a calm, professional {$gender} interviewer.{$styleInstruction} Use natural {$target} pronunciation at a slightly slower, measured pace, and keep company names, role titles, acronyms, and numbers clear.";
  }
 
  try {
@@ -3236,6 +3260,14 @@ PROMPT;
  $femaleVoices = ['nova', 'shimmer', 'coral'];
 
  return in_array($voice, $femaleVoices, true)? $voice: 'nova';
+ }
+
+ private static function openAiInterviewerSpeechVoice(string $configuredVoice): ?string
+ {
+  $voice = strtolower(trim($configuredVoice));
+  $supportedVoices = ['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer', 'verse', 'marin', 'cedar'];
+
+  return in_array($voice, $supportedVoices, true) ? $voice : null;
  }
 
  private static function synthesizeSpeechWithGemini(
@@ -4052,10 +4084,16 @@ PROMPT;
  return false;
  }
 
- $provider = $pinnedProvider === null ? 'gemini' : self::normalizeSpeechProviderName($pinnedProvider);
+ if ($pinnedProvider === null) {
+  return self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== ''
+   || self::openAiSpeechCredentials() !== null;
+ }
+
+ $provider = self::normalizeSpeechProviderName($pinnedProvider);
 
  return match ($provider) {
- 'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== '',
+ 'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== ''
+  || self::openAiSpeechCredentials() !== null,
  'openai' => self::openAiSpeechCredentials() !== null,
  'elevenlabs' => self::elevenLabsSpeechCredentials(false) !== null,
  default => false,

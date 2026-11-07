@@ -663,6 +663,8 @@ ELEVENLABS_TTS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
 ELEVENLABS_TTS_SPEED=0.90
 ```
 
+Interview voice previews and sessions try Gemini first. If Gemini reaches a usage limit or cannot produce audio, they use OpenAI instead. The six interviewers have distinct voices on both providers. An active session switches its saved voice to the matching OpenAI voice if Gemini later fails, then keeps using that OpenAI voice. Enable `AI_TTS_ENABLED` and configure credentials for both providers to use the fallback. The current OpenAI Speech API model, `gpt-4o-mini-tts`, is [scheduled to shut down on January 6, 2027](https://developers.openai.com/api/docs/guides/text-to-speech); migrate the fallback before then.
+
 Optional local speech assessment:
 
 ```env
