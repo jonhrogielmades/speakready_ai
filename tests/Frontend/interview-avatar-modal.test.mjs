@@ -94,7 +94,7 @@ class FakeNode {
     getBoundingClientRect() { return { left: 100, right: 500, top: 100, bottom: 500 }; }
 }
 
-function makePage({ native = true, fetchImpl, playImpl } = {}) {
+function makePage({ native = true, fetchImpl, playImpl, initialSelection = 'friendly_recruiter' } = {}) {
     const document = new FakeNode('document');
     const elements = new Map();
     const add = (id, parent) => {
@@ -119,8 +119,12 @@ function makePage({ native = true, fetchImpl, playImpl } = {}) {
     const form = add('setupForm', document.body);
     const trigger = add('interviewerAvatarTrigger', form);
     const previewImage = add('interviewerAvatarSelectedImage', trigger);
+    const placeholderIcon = add('interviewerAvatarPlaceholderIcon', trigger);
     const previewName = add('interviewerAvatarSelectedName', trigger);
     const previewDescription = add('interviewerAvatarSelectedDescription', trigger);
+    const triggerAction = add('interviewerAvatarTriggerAction', trigger);
+    previewImage.hidden = initialSelection === null;
+    placeholderIcon.hidden = initialSelection !== null;
     const dialog = add('interviewerAvatarDialog', form);
     dialog.dataset.voicePreviewUrl = '/interview/avatar-voice-preview';
     const group = add('interviewerAvatarGroup', dialog);
@@ -142,7 +146,7 @@ function makePage({ native = true, fetchImpl, playImpl } = {}) {
         const radio = add(`radio-${value}`, card);
         radio.card = card;
         radio.value = value;
-        radio.checked = value === 'friendly_recruiter';
+        radio.checked = value === initialSelection;
         radio.dataset.summaryLabel = name;
         const nameNode = add(`name-${value}`, card);
         nameNode.textContent = name;
@@ -228,10 +232,39 @@ function makePage({ native = true, fetchImpl, playImpl } = {}) {
         for (const radio of radios) radio.checked = radio.value === value;
         fire(radios.find((radio) => radio.value === value), 'change', { bubbles: true });
     };
-    return { document, form, trigger, previewImage, previewName, previewDescription, dialog, group, confirm, cancel, radios, voiceButtons, voiceStatus, fetchCalls, audioInstances, revokedUrls, timers, fire, choose };
+    return { document, form, trigger, previewImage, placeholderIcon, previewName, previewDescription, triggerAction, dialog, group, confirm, cancel, radios, voiceButtons, voiceStatus, fetchCalls, audioInstances, revokedUrls, timers, fire, choose };
 }
 
 const settlePromises = () => new Promise((resolve) => setImmediate(resolve));
+
+test('unselected setup shows a clear prompt and only changes after confirming an interviewer', () => {
+    const page = makePage({ initialSelection: null });
+    page.fire(page.document, 'DOMContentLoaded');
+    assert.equal(page.radios.some((radio) => radio.checked), false);
+    assert.equal(page.previewImage.hidden, true);
+    assert.equal(page.previewImage.getAttribute('src'), null);
+    assert.equal(page.placeholderIcon.hidden, false);
+    assert.equal(page.previewName.textContent, 'Choose an AI interviewer');
+    assert.equal(page.previewDescription.textContent, 'Select a portrait and voice to continue');
+    assert.equal(page.triggerAction.textContent, 'Choose');
+    assert.equal(page.trigger.dataset.selectedAvatar, undefined);
+
+    page.fire(page.trigger, 'click');
+    page.choose('role_specialist');
+    page.fire(page.cancel, 'click');
+    assert.equal(page.radios.some((radio) => radio.checked), false, 'cancel must not silently choose an avatar');
+    assert.equal(page.previewName.textContent, 'Choose an AI interviewer');
+    assert.equal(page.previewImage.hidden, true);
+
+    page.fire(page.trigger, 'click');
+    page.choose('role_specialist');
+    page.fire(page.confirm, 'click');
+    assert.equal(page.previewName.textContent, 'Role Specialist');
+    assert.equal(page.previewImage.hidden, false);
+    assert.equal(page.placeholderIcon.hidden, true);
+    assert.equal(page.triggerAction.textContent, 'Change');
+    assert.equal(page.trigger.dataset.selectedAvatar, 'role_specialist');
+});
 
 test('modal initializes from restored selection, commits a new choice, and restores focus', () => {
     const page = makePage();

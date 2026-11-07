@@ -11,8 +11,10 @@
         if (!trigger || !dialog || !group) return;
 
         const previewImage = document.getElementById('interviewerAvatarSelectedImage');
+        const placeholderIcon = document.getElementById('interviewerAvatarPlaceholderIcon');
         const previewName = document.getElementById('interviewerAvatarSelectedName');
         const previewDescription = document.getElementById('interviewerAvatarSelectedDescription');
+        const triggerAction = document.getElementById('interviewerAvatarTriggerAction');
         const confirmButton = document.getElementById('interviewerAvatarConfirm');
         const cancelButton = document.getElementById('interviewerAvatarCancel');
         const closeButton = document.getElementById('interviewerAvatarClose');
@@ -200,7 +202,20 @@
         }
 
         function updatePreview(radio = selectedRadio()) {
-            if (!radio) return;
+            if (!radio) {
+                if (previewImage) {
+                    previewImage.hidden = true;
+                    previewImage.removeAttribute('src');
+                    previewImage.alt = '';
+                }
+                if (placeholderIcon) placeholderIcon.hidden = false;
+                if (previewName) previewName.textContent = 'Choose an AI interviewer';
+                if (previewDescription) previewDescription.textContent = 'Select a portrait and voice to continue';
+                if (triggerAction) triggerAction.textContent = 'Choose';
+                trigger.setAttribute('aria-label', 'Choose an AI interviewer');
+                delete trigger.dataset.selectedAvatar;
+                return;
+            }
             const card = radio.closest('.interviewer-avatar-choice');
             if (!card) return;
 
@@ -210,10 +225,15 @@
             const webp = card.querySelector('.interviewer-avatar-portrait source[type="image/webp"]')?.getAttribute('srcset');
             const imageUrl = webp?.split(',')[0]?.trim().split(/\s+/)[0] || portrait?.getAttribute('src') || '';
 
-            if (previewImage && imageUrl) previewImage.src = imageUrl;
+            if (previewImage && imageUrl) {
+                previewImage.src = imageUrl;
+                previewImage.hidden = false;
+            }
             if (previewImage) previewImage.alt = name ? `${name} portrait` : '';
+            if (placeholderIcon) placeholderIcon.hidden = Boolean(imageUrl);
             if (previewName) previewName.textContent = name;
             if (previewDescription) previewDescription.textContent = description;
+            if (triggerAction) triggerAction.textContent = 'Change';
             if (name) trigger.setAttribute('aria-label', `Change AI interviewer, ${name} selected`);
             trigger.dataset.selectedAvatar = radio.value;
         }
@@ -227,6 +247,7 @@
             const original = radios.find((radio) => radio.value === initialValue) || null;
             radios.forEach((radio) => { radio.checked = radio === original; });
             notifyChange(original || previouslySelected || radios[0]);
+            updatePreview(original);
         }
 
         function closeModal(commit) {

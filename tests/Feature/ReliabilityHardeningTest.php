@@ -439,6 +439,7 @@ class ReliabilityHardeningTest extends TestCase
  'target_position' => 'Backend Developer',
  'num_questions' => 5,
  'response_mode' => 'text',
+ 'interviewer_avatar' => 'friendly_recruiter',
  'time_limit' => 0,
  'ai_provider' => 'openai',
  ])

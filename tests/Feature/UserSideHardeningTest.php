@@ -1055,7 +1055,7 @@ class UserSideHardeningTest extends TestCase
 
  $mobileResponse
  ->assertSee('css/mobile/interview/setup.css?v=25', false)
- ->assertSee('css/mobile/interview/setup-2.css?v=26', false)
+ ->assertSee('css/mobile/interview/setup-2.css?v=27', false)
  ->assertSee('id="customTargetPositionDraft"', false)
  ->assertSee('id="saveCustomTargetPositionButton"', false)
  ->assertSee('<input type="hidden" id="customTargetPositionInput" name="custom_position"', false)
@@ -5055,6 +5055,7 @@ class UserSideHardeningTest extends TestCase
  'target_position' => 'Developer',
  'num_questions' => 5,
  'response_mode' => 'text',
+ 'interviewer_avatar' => 'friendly_recruiter',
  'time_limit' => 0,
  'ai_provider' => 'local',
  ];

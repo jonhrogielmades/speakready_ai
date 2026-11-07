@@ -137,7 +137,7 @@ class InterviewController extends Controller
  'num_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10, 15, 20, 25, 30])],
  'coach_focus_mode' => 'nullable|string|max:80',
  'response_mode' => ['nullable', Rule::in(self::ACCEPTED_RESPONSE_MODES)],
- 'interviewer_avatar' => ['nullable', Rule::in(InterviewerAvatar::keys())],
+ 'interviewer_avatar' => ['required', 'string', Rule::in(InterviewerAvatar::keys())],
  'interview_focus' => 'nullable|string|max:120',
  'time_limit' => ['nullable', 'integer', Rule::in([0, 1, 2, 3])],
  'question_types' => 'nullable|array',
@@ -154,7 +154,6 @@ class InterviewController extends Controller
  ]);
 
  $validated['response_mode'] = $this->normalizeResponseMode($validated['response_mode']?? 'voice');
- $validated['interviewer_avatar'] = InterviewerAvatar::normalize($validated['interviewer_avatar'] ?? null);
  $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
  $maxQuestions = (int) SystemSettings::value('int_max_questions', 20);
  $maxQuestions = $questionOptions->contains($maxQuestions)? $maxQuestions: 20;

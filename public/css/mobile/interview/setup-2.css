@@ -1321,6 +1321,12 @@ html:not(.lm) body #roleFinderModal .btn-close {
     background: #f8fbff;
 }
 
+#sec-interview-setup #panel-response .interviewer-avatar-trigger:not([data-selected-avatar]) {
+    border-style: dashed;
+    border-color: #60a5fa;
+    background: #f8fbff;
+}
+
 #sec-interview-setup #panel-response .interviewer-avatar-trigger:focus-visible {
     outline: 3px solid #2563eb;
     outline-offset: 3px;
@@ -1328,6 +1334,7 @@ html:not(.lm) body #roleFinderModal .btn-close {
 
 #sec-interview-setup #panel-response :is(.interviewer-avatar-trigger.setup-field-invalid, .interviewer-avatar-picker.setup-field-invalid .interviewer-avatar-trigger) {
     border-color: #ef4444;
+    border-style: solid;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
 }
 
@@ -1354,6 +1361,20 @@ html:not(.lm) body #roleFinderModal .btn-close {
 #interviewerAvatarDialog .interviewer-avatar-portrait img {
     object-fit: cover;
     object-position: center 32%;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-trigger-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #2563eb;
+    font-size: 1.1rem;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-trigger-portrait :is(img, .interviewer-avatar-trigger-placeholder)[hidden] {
+    display: none !important;
 }
 
 #sec-interview-setup #panel-response .interviewer-avatar-trigger-copy,
@@ -1680,6 +1701,10 @@ html:not(.lm) #interviewerAvatarDialog .interviewer-avatar-card {
     border-color: rgba(148, 163, 184, .4);
     background: #172338;
     color: #f8fafc;
+}
+
+html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-trigger:not([data-selected-avatar]) {
+    background: #1d304e;
 }
 
 html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-trigger:hover,

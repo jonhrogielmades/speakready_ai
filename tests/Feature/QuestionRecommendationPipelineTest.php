@@ -274,6 +274,7 @@ class QuestionRecommendationPipelineTest extends TestCase
  'job_description' => 'Handle employee relations, workplace conflict, policy communication, and onboarding.',
  'num_questions' => 3,
  'response_mode' => 'text',
+ 'interviewer_avatar' => 'friendly_recruiter',
  'question_types' => ['Behavioral'],
  'time_limit' => 0,
  ])

@@ -38,11 +38,18 @@ class InterviewAvatarSelectionTest extends TestCase
             $response->assertOk()
                 ->assertSeeInOrder(['id="interviewerAvatarTrigger"', 'id="interviewerAvatarDialog"', 'id="interviewerAvatarGroup"'], false)
                 ->assertSee('id="interviewerAvatarConfirm"', false)
-                ->assertSee('js/interview-setup-avatar-modal.js?v=3', false);
+                ->assertSee('js/interview-setup-avatar-modal.js?v=4', false);
 
             foreach (InterviewerAvatar::keys() as $key) {
                 $response->assertSee('name="interviewer_avatar" form="setupForm" value="'.$key.'"', false);
             }
+
+            preg_match_all('/<input[^>]*name="interviewer_avatar"[^>]*>/s', $response->getContent(), $avatarInputs);
+            $this->assertCount(6, $avatarInputs[0]);
+            foreach ($avatarInputs[0] as $avatarInput) {
+                $this->assertDoesNotMatchRegularExpression('/\schecked(?:\s|>)/', $avatarInput);
+            }
+            $response->assertSee('id="interviewerAvatarSelectedName">Choose an AI interviewer</span>', false);
         }
     }
 
@@ -66,6 +73,31 @@ class InterviewAvatarSelectionTest extends TestCase
         $this->assertCount(6, array_unique($backgrounds));
         $this->assertCount(6, array_unique(array_map(fn (string $path): string => sha1_file(public_path($path)), $portraits)));
         $this->assertCount(6, array_unique(array_map(fn (string $path): string => sha1_file(public_path($path)), $backgrounds)));
+    }
+
+    public function test_desktop_dashboard_mock_form_requires_an_explicit_interviewer_choice(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $this->category();
+        $desktopUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36';
+
+        $response = $this->actingAs($user)
+            ->withHeader('User-Agent', $desktopUserAgent)
+            ->get(route('dashboard'));
+
+        $response->assertOk()
+            ->assertSee('name="interviewer_avatar" id="dashboardMockInterviewerAvatar" required', false)
+            ->assertSee('<option value="" disabled selected>Choose an AI interviewer</option>', false);
+
+        foreach (InterviewerAvatar::keys() as $avatar) {
+            $response->assertSee('<option value="'.$avatar.'"', false);
+        }
+
+        $this->withSession(['_old_input' => ['interviewer_avatar' => 'role_specialist']])
+            ->withHeader('User-Agent', $desktopUserAgent)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('<option value="role_specialist" selected>Role Specialist</option>', false);
     }
 
     public function test_each_interviewer_selection_is_persisted_and_used_for_the_local_opening(): void
@@ -97,23 +129,28 @@ class InterviewAvatarSelectionTest extends TestCase
         }
     }
 
-    public function test_omitted_selection_uses_the_default_and_unknown_values_are_rejected(): void
+    public function test_start_requires_an_explicit_valid_interviewer_selection(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
 
         $this->actingAs($user)
+            ->from(route('interview.setup'))
             ->post(route('interview.start'), $this->payload($category))
-            ->assertRedirect(route('interview.session'));
+            ->assertRedirect(route('interview.setup'))
+            ->assertSessionHasErrors('interviewer_avatar');
 
-        $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
-        $this->assertSame(InterviewerAvatar::DEFAULT, $session->interviewer_avatar);
+        $this->actingAs($user)
+            ->from(route('interview.setup'))
+            ->post(route('interview.start'), $this->payload($category, ['interviewer_avatar' => '']))
+            ->assertRedirect(route('interview.setup'))
+            ->assertSessionHasErrors('interviewer_avatar');
 
         $this->actingAs($user)
             ->post(route('interview.start'), $this->payload($category, ['interviewer_avatar' => 'unsupported']))
             ->assertSessionHasErrors('interviewer_avatar');
 
-        $this->assertSame(1, InterviewSession::where('user_id', $user->id)->count());
+        $this->assertSame(0, InterviewSession::where('user_id', $user->id)->count());
         $this->assertSame(InterviewerAvatar::DEFAULT, (new InterviewSession)->interviewer_avatar);
 
         $this->actingAs($user)

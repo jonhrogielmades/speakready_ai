@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=26') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=27') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -88,7 +88,7 @@
  'interview_focus' => old('interview_focus', $selectedScenario['focus']?? ''),
  'live_feedback_mode' => old('live_feedback_mode', $requestedLiveFeedbackMode),
  'response_mode' => old('response_mode', ''),
- 'interviewer_avatar' => \App\Support\InterviewerAvatar::normalize(is_string($oldInterviewerAvatar) ? $oldInterviewerAvatar : null),
+ 'interviewer_avatar' => is_string($oldInterviewerAvatar) && in_array($oldInterviewerAvatar, \App\Support\InterviewerAvatar::keys(), true) ? $oldInterviewerAvatar : '',
  ];
  $interviewerAvatarDescriptions = [
  'friendly_recruiter' => 'Warm introductions and confidence building.',
@@ -154,7 +154,7 @@
  </div>
  @endif
 
- <form action="{{ route('interview.start') }}" method="POST" id="setupForm" data-sr-no-transition="true" data-setup-draft-key="{{ $interviewSetupDraftKey }}">
+ <form action="{{ route('interview.start') }}" method="POST" id="setupForm" novalidate data-sr-no-transition="true" data-setup-draft-key="{{ $interviewSetupDraftKey }}">
  @csrf
  <div class="row g-4">
  <!-- Left Column: Form Settings -->
@@ -459,7 +459,7 @@
  </label>
  </div>
  <div class="setup-inline-error" id="responseModeError" role="alert" hidden>Choose a response mode.</div>
- @php($initialAvatarImage = \App\Support\InterviewerAvatar::image($setupDefaults['interviewer_avatar']))
+ @php($initialAvatarImage = $setupDefaults['interviewer_avatar'] ? \App\Support\InterviewerAvatar::image($setupDefaults['interviewer_avatar']) : null)
  <div class="interviewer-avatar-picker" aria-describedby="interviewerAvatarPickerHelp interviewerAvatarError">
  <div class="response-head interviewer-avatar-heading">
  <div class="response-head-icon" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></div>
@@ -468,13 +468,13 @@
  <p class="interviewer-avatar-help" id="interviewerAvatarPickerHelp">Choose the interviewer style for this session.</p>
  </div>
  </div>
- <button type="button" class="interviewer-avatar-trigger" id="interviewerAvatarTrigger" aria-haspopup="dialog" aria-controls="interviewerAvatarDialog">
- <span class="interviewer-avatar-trigger-portrait"><img id="interviewerAvatarSelectedImage" src="{{ asset($initialAvatarImage) }}" alt="" width="52" height="52"></span>
+ <button type="button" class="interviewer-avatar-trigger" id="interviewerAvatarTrigger" aria-haspopup="dialog" aria-controls="interviewerAvatarDialog" aria-describedby="interviewerAvatarPickerHelp interviewerAvatarError" @if($setupDefaults['interviewer_avatar']) data-selected-avatar="{{ $setupDefaults['interviewer_avatar'] }}" @endif>
+ <span class="interviewer-avatar-trigger-portrait"><span id="interviewerAvatarPlaceholderIcon" class="interviewer-avatar-trigger-placeholder" aria-hidden="true" @if($initialAvatarImage) hidden @endif><i class="fa-solid fa-user-plus"></i></span><img id="interviewerAvatarSelectedImage" @if($initialAvatarImage) src="{{ asset($initialAvatarImage) }}" @else hidden @endif alt="" width="52" height="52"></span>
  <span class="interviewer-avatar-trigger-copy">
- <span class="interviewer-avatar-trigger-name" id="interviewerAvatarSelectedName">{{ \App\Support\InterviewerAvatar::label($setupDefaults['interviewer_avatar']) }}</span>
- <span class="interviewer-avatar-trigger-description" id="interviewerAvatarSelectedDescription">{{ $interviewerAvatarDescriptions[$setupDefaults['interviewer_avatar']] }}</span>
+ <span class="interviewer-avatar-trigger-name" id="interviewerAvatarSelectedName">{{ $setupDefaults['interviewer_avatar'] ? \App\Support\InterviewerAvatar::label($setupDefaults['interviewer_avatar']) : 'Choose an AI interviewer' }}</span>
+ <span class="interviewer-avatar-trigger-description" id="interviewerAvatarSelectedDescription">{{ $setupDefaults['interviewer_avatar'] ? $interviewerAvatarDescriptions[$setupDefaults['interviewer_avatar']] : 'Select a portrait and voice to continue' }}</span>
  </span>
- <span class="interviewer-avatar-trigger-action">Change <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+ <span class="interviewer-avatar-trigger-action"><span id="interviewerAvatarTriggerAction">{{ $setupDefaults['interviewer_avatar'] ? 'Change' : 'Choose' }}</span> <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
  </button>
  <div class="setup-inline-error" id="interviewerAvatarError" role="alert" hidden>Choose an AI interviewer.</div>
  </div>
@@ -746,7 +746,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json($interviewSetupDraftKey) };
 </script>
 <script src="{{ asset('js/interview-setup-draft.js?v=1') }}"></script>
-<script src="{{ asset('js/interview-setup-avatar-modal.js?v=3') }}"></script>
+<script src="{{ asset('js/interview-setup-avatar-modal.js?v=4') }}"></script>
 <script>
  const setupRequiredFieldIds = [
  'valScenario',
@@ -835,6 +835,12 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (group) {
  group.classList.toggle('setup-field-invalid', visible);
  group.setAttribute('aria-invalid', visible? 'true': 'false');
+ }
+
+ if (name === 'interviewer_avatar') {
+ const trigger = document.getElementById('interviewerAvatarTrigger');
+ trigger?.classList.toggle('setup-field-invalid', visible);
+ trigger?.setAttribute('aria-invalid', visible? 'true': 'false');
  }
 
  if (error) {
@@ -1356,10 +1362,11 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  startButton.hidden =!shouldShowStart;
  startButton.classList.toggle('setup-start-visible', shouldShowStart);
- startButton.disabled =!canStart;
- startButton.classList.toggle('setup-start-disabled',!canStart);
- startButton.setAttribute('aria-disabled', canStart? 'false': 'true');
- startButton.title = canStart? 'Start interview': (hasRequiredFields && !hasScenarioTargetMatch? 'Match the target to the selected scenario first': (hasCompleteSetupFields? 'Review all setup steps first': 'Complete all required details first'));
+ // Keep Start clickable so the custom validator can reveal and focus missing choices.
+ startButton.disabled =!shouldShowStart;
+ startButton.classList.remove('setup-start-disabled');
+ startButton.setAttribute('aria-disabled', shouldShowStart? 'false': 'true');
+ startButton.title = canStart? 'Start interview': 'Check required details before starting';
  syncSetupStepperState();
  }
 
@@ -1712,10 +1719,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const setupDraftApi = window.SpeakReadyInterviewSetupDraft;
  const setupDraftFormElement = document.getElementById('setupForm');
  const restoredSetupDraft = @json(!$errors->any())? setupDraftApi?.restore(setupDraftFormElement): null;
- if (!document.querySelector('input[name="interviewer_avatar"]:checked')) {
- const defaultInterviewerAvatar = document.querySelector('input[name="interviewer_avatar"][value="friendly_recruiter"]');
- if (defaultInterviewerAvatar) defaultInterviewerAvatar.checked = true;
- }
  if (Array.isArray(restoredSetupDraft?.visited_step_ids)) {
  restoredSetupDraft.visited_step_ids.forEach(stepId => visitedSetupStepIds.add(stepId));
  }
@@ -1744,11 +1747,17 @@ Begin Interview <i class="fa-solid fa-play"></i>
  return missingSetupItems(stepId).length === 0;
  }
 
+ function canReviewSummaryWithPendingInterviewer() {
+ const missing = missingSetupItems('panel-response');
+ return missing.length === 1 && missing[0].name === 'interviewer_avatar';
+ }
+
  function getMaxAccessibleSetupStepIndex(steps = getSetupSteps()) {
  let maxAccessibleIndex = 0;
 
  for (let index = 0; index < steps.length - 1; index++) {
- if (!isSetupStepComplete(steps[index]?.id)) break;
+ const stepId = steps[index]?.id;
+ if (!isSetupStepComplete(stepId) && !(stepId === 'panel-response' && canReviewSummaryWithPendingInterviewer())) break;
  maxAccessibleIndex = index + 1;
  }
 
@@ -1807,7 +1816,8 @@ Begin Interview <i class="fa-solid fa-play"></i>
  }
  if (targetIndex > setupStepState.index) {
  for (let index = setupStepState.index; index < targetIndex; index++) {
- if (!validateSetupStep(steps[index]?.id, true)) return;
+ const stepId = steps[index]?.id;
+ if (!(stepId === 'panel-response' && canReviewSummaryWithPendingInterviewer()) && !validateSetupStep(stepId, true)) return;
  }
  }
  showSetupStep(targetIndex);
@@ -1924,7 +1934,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  document.getElementById('setupStepNext')?.addEventListener('click', () => {
  const currentPanelId = getSetupSteps()[setupStepState.index]?.id;
- if (!validateSetupStep(currentPanelId, true)) return;
+ if (!(currentPanelId === 'panel-response' && canReviewSummaryWithPendingInterviewer()) && !validateSetupStep(currentPanelId, true)) return;
  showSetupStep(setupStepState.index + 1);
  });
 

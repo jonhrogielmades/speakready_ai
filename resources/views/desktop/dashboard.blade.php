@@ -396,6 +396,7 @@
     $dashboardMockSelectedScenario = $dashboardMockScenarios->first(fn ($scenario) => (string) $scenario['category_id'] === (string) $dashboardMockSelectedCategoryId)
         ?? $dashboardMockDefaultScenario;
     $dashboardMockQuestionTypes = collect(old('question_types', ['Behavioral', 'Situational']))->all();
+    $dashboardMockSelectedAvatar = old('interviewer_avatar', '');
     $dashboardMockHasScenarios = $dashboardMockScenarios->isNotEmpty();
 @endphp
 
@@ -485,6 +486,16 @@
                                     </label>
                                 @endforeach
                             </div>
+                        </div>
+
+                        <div class="sr-dashboard-mock-field">
+                            <label class="sr-dashboard-coach-label" for="dashboardMockInterviewerAvatar">AI interviewer</label>
+                            <select class="sr-dashboard-mock-control" name="interviewer_avatar" id="dashboardMockInterviewerAvatar" required>
+                                <option value="" disabled {{ in_array($dashboardMockSelectedAvatar, \App\Support\InterviewerAvatar::keys(), true) ? '' : 'selected' }}>Choose an AI interviewer</option>
+                                @foreach(\App\Support\InterviewerAvatar::keys() as $avatarKey)
+                                    <option value="{{ $avatarKey }}" {{ $dashboardMockSelectedAvatar === $avatarKey ? 'selected' : '' }}>{{ \App\Support\InterviewerAvatar::label($avatarKey) }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
                         <div class="sr-dashboard-mock-field">

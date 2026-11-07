@@ -705,6 +705,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  'target_position' => 'Developer',
  'num_questions' => 5,
  'response_mode' => 'text',
+ 'interviewer_avatar' => 'friendly_recruiter',
  'time_limit' => 0,
  ])
  ->assertRedirect(route('interview.session'))
