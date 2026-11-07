@@ -1,0 +1,52 @@
+/* Clear the choices in the current interview setup panel. */
+html body #sec-interview-setup .setup-clear-step-row {
+    display: flex !important;
+    justify-content: flex-start !important;
+    margin: 0 0 14px !important;
+}
+
+html body #sec-interview-setup .setup-clear-step {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 7px !important;
+    min-height: 36px !important;
+    padding: 7px 12px !important;
+    border: 1px solid #fecaca !important;
+    border-radius: 9px !important;
+    background: #fff7f7 !important;
+    color: #991b1b !important;
+    -webkit-text-fill-color: currentColor !important;
+    box-shadow: none !important;
+    font-size: 0.8rem !important;
+    line-height: 1 !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+}
+
+html body #sec-interview-setup .setup-clear-step:hover {
+    background: #fee2e2 !important;
+    border-color: #fca5a5 !important;
+}
+
+html body #sec-interview-setup .setup-clear-step:focus-visible {
+    outline: 2px solid #dc2626 !important;
+    outline-offset: 3px !important;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-clear-step {
+    border-color: #7f1d1d !important;
+    background: #2b1b23 !important;
+    color: #fecaca !important;
+}
+
+html:not(.lm) body #sec-interview-setup .setup-clear-step:hover {
+    background: #3b2029 !important;
+    border-color: #b91c1c !important;
+}
+
+@media (max-width: 991.98px) {
+    html body #sec-interview-setup .setup-clear-step {
+        min-height: 40px !important;
+    }
+}

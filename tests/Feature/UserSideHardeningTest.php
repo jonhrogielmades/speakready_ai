@@ -1197,6 +1197,10 @@ class UserSideHardeningTest extends TestCase
  ->assertSee('setup-stepper-lock', false)
  ->assertSee('function getMaxAccessibleSetupStepIndex', false);
 
+ foreach (['panel-basic', 'panel-structure', 'panel-inclusive', 'panel-content', 'panel-response', 'panel-summary'] as $panelId) {
+ $this->assertSame(1, substr_count($content, 'data-clear-setup-step="'.$panelId.'"'));
+ }
+
  $this->assertStringNotContainsString('name="difficulty" value="medium" class="setup-input" checked', $content);
  $this->assertStringNotContainsString('name="camera_detection" value="0" class="setup-input" checked', $content);
  $this->assertStringNotContainsString('<option value="10" selected', $content);

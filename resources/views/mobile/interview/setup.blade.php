@@ -3,6 +3,7 @@
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=30') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/shared/interview-setup-clear.css?v=1') }}" data-page-style="interview-setup-clear">
 @endpush
 
 @section('content')
@@ -181,6 +182,7 @@
  <h5 class="setup-details-card-title">Interview Details</h5>
  </div>
  </div>
+ <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-basic" aria-label="Clear Interview Details selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
 
  <div class="setup-card-fields">
  <div class="setup-card-field">
@@ -295,6 +297,7 @@
  </div>
  <h5 class="setup-structure-title">Interview Structure</h5>
  </div>
+ <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-structure" aria-label="Clear Interview Structure selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
 
  <div class="setup-structure-section-title">Difficulty Level</div>
  <div class="structure-difficulty-list">
@@ -359,6 +362,7 @@
  </div>
  <h5 class="setup-inclusive-title">Camera Detection</h5>
  </div>
+ <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-inclusive" aria-label="Clear Camera Detection selection"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
  <p class="setup-inclusive-copy">Turn camera-based body-language detection on or off for this interview.</p>
  @php
  $cameraDetectionValue = old('camera_detection', old('camera_coaching', null));
@@ -401,6 +405,7 @@
  </div>
  <h5 class="assistance-title">Scenario</h5>
  </div>
+ <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-content" aria-label="Clear Scenario selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
 
  <div class="assistance-stack">
  <div class="assistance-field assistance-feedback-field">
@@ -443,6 +448,7 @@
  </div>
  <h5 class="response-title">Response Mode</h5>
  </div>
+ <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-response" aria-label="Clear Response Mode and AI interviewer selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear</button></div>
  <div class="response-mode-list">
  <label class="response-mode-card">
  <input type="radio" name="response_mode" value="text" class="setup-input" {{ $setupDefaults['response_mode'] === 'text'? 'checked': '' }}>
@@ -534,6 +540,7 @@
  <div class="setup-summary-wrap">
  <div class="setup-panel" id="panel-summary" style="background:linear-gradient(145deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%); border:1px solid rgba(59,130,246,0.25); box-shadow: 0 15px 35px rgba(59,130,246,0.1), inset 0 1px 1px rgba(255, 255, 255, 0.1); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);">
  <h5 class="setup-summary-title" style="font-weight:800;margin-bottom:24px;color:var(--pur);text-align:center;letter-spacing:0.5px;"><i class="fa-solid fa-clipboard-list me-2"></i> Interview Summary</h5>
+ <div class="setup-clear-step-row"><button type="button" class="setup-clear-step" data-clear-setup-step="panel-summary" aria-label="Clear all interview setup selections"><i class="fa-solid fa-eraser" aria-hidden="true"></i> Clear all</button></div>
 
  <div class="summary-row">
  <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-globe"></i></span>
@@ -747,6 +754,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
 </script>
 <script src="{{ asset('js/interview-setup-draft.js?v=3') }}"></script>
 <script src="{{ asset('js/interview-setup-avatar-modal.js?v=5') }}"></script>
+<script src="{{ asset('js/shared/interview-setup-clear.js?v=1') }}"></script>
 <script>
  const setupRequiredFieldIds = [
  'valScenario',
@@ -1486,6 +1494,17 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const roleFinderModal = document.getElementById('roleFinderModal');
  const roleFinderOpenButton = document.getElementById('roleFinderOpenButton');
  let roleFinderSelected = false;
+ let roleSuggestionRequestId = 0;
+ let roleSuggestionAbortController = null;
+ function cancelRoleSuggestionRequest() {
+ roleSuggestionRequestId += 1;
+ roleSuggestionAbortController?.abort();
+ roleSuggestionAbortController = null;
+ if (suggestRolesButton) {
+ suggestRolesButton.disabled = false;
+ suggestRolesButton.removeAttribute('aria-busy');
+ }
+ }
 
  roleFinderModal?.addEventListener('show.bs.modal', () => {
  setSetupTargetDropdownOpen(false);
@@ -1561,6 +1580,10 @@ Begin Interview <i class="fa-solid fa-play"></i>
  document.getElementById('roleSkills')?.focus();
  return;
  }
+ roleSuggestionAbortController?.abort();
+ const requestId = ++roleSuggestionRequestId;
+ const requestController = new AbortController();
+ roleSuggestionAbortController = requestController;
  suggestRolesButton.disabled = true;
  suggestRolesButton.setAttribute('aria-busy', 'true');
  setRoleSuggestionStatus('Finding positions that may fit your background…');
@@ -1575,8 +1598,10 @@ Begin Interview <i class="fa-solid fa-play"></i>
  },
  credentials: 'same-origin',
  body: JSON.stringify(payload),
+ signal: requestController.signal,
  });
  const data = await response.json().catch(() => ({}));
+ if (requestId !== roleSuggestionRequestId) return;
  if (!response.ok) {
  const firstError = Object.values(data?.errors || {})[0];
  throw new Error(Array.isArray(firstError)? firstError[0]: (data?.message || 'Could not load suggestions.'));
@@ -1585,10 +1610,14 @@ Begin Interview <i class="fa-solid fa-play"></i>
  renderRoleSuggestions(roles);
  setRoleSuggestionStatus(roles.length? 'Choose a position to use for interview practice.': 'No suggestions yet. Try adding more specific details.', !roles.length);
  } catch (error) {
+ if (requestId !== roleSuggestionRequestId || error?.name === 'AbortError') return;
  setRoleSuggestionStatus(error?.message || 'Could not load suggestions. Please try again.', true);
  } finally {
+ if (requestId === roleSuggestionRequestId) {
  suggestRolesButton.disabled = false;
  suggestRolesButton.removeAttribute('aria-busy');
+ roleSuggestionAbortController = null;
+ }
  }
  });
 
@@ -1728,6 +1757,30 @@ Begin Interview <i class="fa-solid fa-play"></i>
  restoredSetupDraft.visited_step_ids.forEach(stepId => visitedSetupStepIds.add(stepId));
  }
  let initialSetupStepIndex = Number.isFinite(Number(restoredSetupDraft?.active_step_index))? Number(restoredSetupDraft.active_step_index): 0;
+
+ document.querySelectorAll('[data-clear-setup-step]').forEach(button => {
+ button.addEventListener('click', () => {
+ const panelId = button.dataset.clearSetupStep;
+ if (!window.SpeakReadyInterviewSetupClear?.clearPanel(setupDraftFormElement, panelId)) return;
+ if (panelId === 'panel-basic' || panelId === 'panel-summary') {
+ cancelRoleSuggestionRequest();
+ setSetupTargetDropdownOpen(false);
+ syncSetupTargetFieldCopy();
+ }
+ setupValidationVisible = false;
+ markSetupValidation([]);
+ if (panelId === 'panel-summary') {
+ visitedSetupStepIds.clear();
+ showSetupStep(0);
+ } else {
+ updateSummary();
+ }
+ setupDraftApi?.save(setupDraftFormElement, {
+ activeStepIndex: setupStepState.index,
+ visitedStepIds: Array.from(visitedSetupStepIds),
+ });
+ });
+ });
 
  document.querySelectorAll('input[name="camera_detection"]').forEach(el => {
  el.addEventListener('change', () => {
