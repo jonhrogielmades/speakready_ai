@@ -38,7 +38,7 @@ class InterviewAvatarSelectionTest extends TestCase
             $response->assertOk()
                 ->assertSeeInOrder(['id="interviewerAvatarTrigger"', 'id="interviewerAvatarDialog"', 'id="interviewerAvatarGroup"'], false)
                 ->assertSee('id="interviewerAvatarConfirm"', false)
-                ->assertSee('js/interview-setup-avatar-modal.js?v=1', false);
+                ->assertSee('js/interview-setup-avatar-modal.js?v=2', false);
 
             foreach (InterviewerAvatar::keys() as $key) {
                 $response->assertSee('name="interviewer_avatar" form="setupForm" value="'.$key.'"', false);

@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=23') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=24') }}" data-page-style="interview-setup-2">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=7') }}" data-page-style="interview-role-discovery">
 @endpush
 
@@ -480,8 +480,13 @@
  <div class="setup-inline-error" id="responseModeError" role="alert" hidden>Choose a response mode.</div>
  @php($initialAvatarImage = \App\Support\InterviewerAvatar::image($setupDefaults['interviewer_avatar']))
  <div class="interviewer-avatar-picker" aria-describedby="interviewerAvatarPickerHelp interviewerAvatarError">
- <h6 class="interviewer-avatar-title">AI Interviewer</h6>
+ <div class="response-head interviewer-avatar-heading">
+ <div class="response-head-icon" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></div>
+ <div class="interviewer-avatar-heading-copy">
+ <h6 class="response-title">AI Interviewer</h6>
  <p class="interviewer-avatar-help" id="interviewerAvatarPickerHelp">Choose the interviewer style for this session.</p>
+ </div>
+ </div>
  <button type="button" class="interviewer-avatar-trigger" id="interviewerAvatarTrigger" aria-haspopup="dialog" aria-controls="interviewerAvatarDialog">
  <span class="interviewer-avatar-trigger-portrait"><img id="interviewerAvatarSelectedImage" src="{{ asset($initialAvatarImage) }}" alt="" width="52" height="52"></span>
  <span class="interviewer-avatar-trigger-copy">
