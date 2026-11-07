@@ -202,6 +202,7 @@ class AiSpeechTranscriptionFailoverTest extends TestCase
         config([
             'services.ai_transcription.provider_priority' => 'openai',
             'services.ai_transcription.http_attempts' => 2,
+            'services.ai_transcription.request_timeout_ms' => 30000,
         ]);
         Http::fake([
             'https://api.openai.com/v1/audio/transcriptions' => Http::sequence()
@@ -231,6 +232,7 @@ class AiSpeechTranscriptionFailoverTest extends TestCase
             'services.ai_transcription.provider_priority' => 'gemini',
             'services.ai_transcription.http_attempts' => 2,
             'services.ai_transcription.total_timeout_seconds' => 30,
+            'services.ai_transcription.request_timeout_ms' => 30000,
         ]);
         Http::fake([
             'generativelanguage.googleapis.com/*' => Http::sequence()
@@ -284,6 +286,32 @@ class AiSpeechTranscriptionFailoverTest extends TestCase
         $this->assertGreaterThan($cloudDeadline, $sharedDeadline);
     }
 
+    public function test_short_live_chunk_timeout_still_allows_both_cloud_providers_to_run(): void
+    {
+        config([
+            'services.ai_transcription.request_timeout_ms' => 7000,
+            'services.local_speech.enabled' => false,
+        ]);
+
+        $startedAt = microtime(true);
+        $deadlineAt = AIService::speechTranscriptionDeadlineAt(false);
+        $this->assertEqualsWithDelta(5.0, $deadlineAt - $startedAt, 0.1);
+
+        Http::fake(function (Request $request) {
+            return str_contains($request->url(), 'api.openai.com')
+                ? Http::response(['text' => ''], 200)
+                : Http::response($this->geminiResponse('Short-window fallback transcript.'), 200);
+        });
+
+        $result = AIService::transcribeSpeechResult($this->audioFile(), null, [
+            '_transcription_deadline' => $deadlineAt,
+        ]);
+
+        $this->assertSame('Short-window fallback transcript.', $result['transcript']);
+        $this->assertSame(['openai', 'gemini'], $result['attempted_providers']);
+        Http::assertSentCount(2);
+    }
+
     public function test_each_cloud_provider_receives_only_its_fair_share_of_the_remaining_deadline(): void
     {
         $method = new \ReflectionMethod(AIService::class, 'fairWorkDeadlineAt');
@@ -330,6 +358,7 @@ class AiSpeechTranscriptionFailoverTest extends TestCase
             'services.ai_transcription.http_attempts' => 3,
             'services.ai_transcription.total_timeout_seconds' => 105,
             'services.ai_transcription.full_request_timeout_ms' => 120000,
+            'services.openai.transcription_timeout' => 90,
         ]);
         $timeouts = [];
         Http::fake(function (Request $request, array $options) use (&$timeouts) {

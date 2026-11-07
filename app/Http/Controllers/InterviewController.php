@@ -34,6 +34,7 @@ use App\Support\FeedbackCoachingRepair;
 use App\Support\FeedbackSchema;
 use App\Support\GameSchema;
 use App\Support\InterviewAnswerSchema;
+use App\Support\InterviewerAvatar;
 use App\Support\InterviewSessionSchema;
 use App\Support\InterviewScope;
 use App\Support\QuestionSchema;
@@ -136,6 +137,7 @@ class InterviewController extends Controller
  'num_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10, 15, 20, 25, 30])],
  'coach_focus_mode' => 'nullable|string|max:80',
  'response_mode' => ['nullable', Rule::in(self::ACCEPTED_RESPONSE_MODES)],
+ 'interviewer_avatar' => ['nullable', Rule::in(InterviewerAvatar::keys())],
  'interview_focus' => 'nullable|string|max:120',
  'time_limit' => ['nullable', 'integer', Rule::in([0, 1, 2, 3])],
  'question_types' => 'nullable|array',
@@ -152,6 +154,7 @@ class InterviewController extends Controller
  ]);
 
  $validated['response_mode'] = $this->normalizeResponseMode($validated['response_mode']?? 'voice');
+ $validated['interviewer_avatar'] = InterviewerAvatar::normalize($validated['interviewer_avatar'] ?? null);
  $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
  $maxQuestions = (int) SystemSettings::value('int_max_questions', 20);
  $maxQuestions = $questionOptions->contains($maxQuestions)? $maxQuestions: 20;
@@ -275,6 +278,7 @@ class InterviewController extends Controller
  'num_questions' => $validated['num_questions'],
  'coach_focus_mode' => $validated['coach_focus_mode']?? 'balanced',
  'response_mode' => $validated['response_mode']?? 'text',
+ 'interviewer_avatar' => $validated['interviewer_avatar'],
  'interview_focus' => $validated['interview_focus']?? 'Job Interview',
  'time_limit' => $validated['time_limit'],
  'question_types' =>! empty($questionTypes)? json_encode($questionTypes): null,

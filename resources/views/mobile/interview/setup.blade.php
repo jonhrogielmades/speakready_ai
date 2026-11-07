@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=21') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=22') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -80,6 +80,7 @@
  $defaultTimeLimitSetting = (int) \App\Support\SystemSettings::value('int_time_limit', 0);
  $requestedLiveFeedbackMode = request()->query('live_feedback_mode');
  $requestedLiveFeedbackMode = in_array($requestedLiveFeedbackMode, ['coaching', 'real_interview'], true) ? $requestedLiveFeedbackMode : '';
+ $oldInterviewerAvatar = old('interviewer_avatar');
  $setupDefaults = [
  'difficulty' => old('difficulty', ''),
  'num_questions' => (string) old('num_questions', ''),
@@ -87,6 +88,14 @@
  'interview_focus' => old('interview_focus', $selectedScenario['focus']?? ''),
  'live_feedback_mode' => old('live_feedback_mode', $requestedLiveFeedbackMode),
  'response_mode' => old('response_mode', ''),
+ 'interviewer_avatar' => \App\Support\InterviewerAvatar::normalize(is_string($oldInterviewerAvatar) ? $oldInterviewerAvatar : null),
+ ];
+ $interviewerAvatarDescriptions = [
+ 'friendly_recruiter' => 'Warm introductions and confidence building.',
+ 'structured_hr' => 'Clear behavioral questions and focused follow-ups.',
+ 'hiring_manager' => 'Practical questions about ownership and results.',
+ 'role_specialist' => 'Deeper questions tailored to your target position.',
+ 'senior_leader' => 'Concise questions about judgment and impact.',
  ];
  $selectedQuestionTypes = old('question_types', []);
  $selectedQuestionTypes = is_array($selectedQuestionTypes)? $selectedQuestionTypes: [];
@@ -449,6 +458,29 @@
  </label>
  </div>
  <div class="setup-inline-error" id="responseModeError" role="alert" hidden>Choose a response mode.</div>
+ <fieldset class="interviewer-avatar-fieldset" aria-describedby="interviewerAvatarHelp interviewerAvatarError">
+ <legend class="interviewer-avatar-title">Choose your AI Interviewer</legend>
+ <p class="interviewer-avatar-help" id="interviewerAvatarHelp">Pick a portrait and interview style. Difficulty and scoring stay the same.</p>
+ <div class="interviewer-avatar-grid" id="interviewerAvatarGroup">
+ @foreach(\App\Support\InterviewerAvatar::keys() as $avatarKey)
+ @php($avatarImage = \App\Support\InterviewerAvatar::image($avatarKey))
+ <label class="interviewer-avatar-choice">
+ <input type="radio" name="interviewer_avatar" value="{{ $avatarKey }}" class="setup-input" data-summary-label="{{ \App\Support\InterviewerAvatar::label($avatarKey) }}" required {{ $setupDefaults['interviewer_avatar'] === $avatarKey? 'checked': '' }}>
+ <span class="interviewer-avatar-card">
+ <span class="interviewer-avatar-portrait">
+ <picture>
+ <source srcset="{{ asset($avatarImage) }}" type="image/webp">
+ <img src="{{ asset(str_replace('.webp', '.png', $avatarImage)) }}" alt="" loading="lazy" width="88" height="88">
+ </picture>
+ </span>
+ <span class="interviewer-avatar-name">{{ \App\Support\InterviewerAvatar::label($avatarKey) }}</span>
+ <span class="interviewer-avatar-description">{{ $interviewerAvatarDescriptions[$avatarKey] }}</span>
+ </span>
+ </label>
+ @endforeach
+ </div>
+ <div class="setup-inline-error" id="interviewerAvatarError" role="alert" hidden>Choose an AI interviewer.</div>
+ </fieldset>
  </div>
 
  <div class="setup-stepper-actions" aria-label="Interview setup navigation">
@@ -491,6 +523,11 @@
  <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-microphone"></i></span>
  <span class="summary-label">Response Mode:</span>
  <span class="summary-val summary-val-pending" id="sumResponse">Not set yet</span>
+ </div>
+ <div class="summary-row">
+ <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></span>
+ <span class="summary-label">AI Interviewer:</span>
+ <span class="summary-val summary-val-pending" id="sumInterviewerAvatar">Not set yet</span>
  </div>
  <div class="summary-row">
  <span class="summary-icon" aria-hidden="true"><i class="fa-solid fa-video"></i></span>
@@ -694,6 +731,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  difficulty: { container: '.structure-difficulty-list', error: 'difficultyError' },
  camera_detection: { container: '.camera-mode-list', error: 'cameraDetectionError' },
  response_mode: { container: '.response-mode-list', error: 'responseModeError' },
+ interviewer_avatar: { container: '.interviewer-avatar-grid', error: 'interviewerAvatarError' },
  };
  let targetPositionAlertVisible = false;
  const setupScenarioMismatchMessages = {
@@ -1089,6 +1127,9 @@ Begin Interview <i class="fa-solid fa-play"></i>
  if (!hasCheckedSetupInput('response_mode')) {
  missing.push({ type: 'group', name: 'response_mode', panelId: 'panel-response' });
  }
+ if (!hasCheckedSetupInput('interviewer_avatar')) {
+ missing.push({ type: 'group', name: 'interviewer_avatar', panelId: 'panel-response' });
+ }
  }
 
  return missing;
@@ -1222,6 +1263,8 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  const resp = document.querySelector('input[name="response_mode"]:checked');
  setSummaryValue('sumResponse', resp? titleizeSetupValue(resp.value): '', responseReady);
+ const interviewerAvatar = document.querySelector('input[name="interviewer_avatar"]:checked');
+ setSummaryValue('sumInterviewerAvatar', interviewerAvatar?.dataset.summaryLabel || '', responseReady);
 
  const cameraDetection = document.querySelector('input[name="camera_detection"]:checked');
  setSummaryValue('sumCameraDetection', cameraDetection?.value === '1'? 'Camera On': 'Camera Off', cameraReady && Boolean(cameraDetection));
@@ -1256,9 +1299,10 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const hasDifficulty = hasCheckedSetupInput('difficulty');
  const hasCameraDetection = hasCheckedSetupInput('camera_detection');
  const hasResponseMode = hasCheckedSetupInput('response_mode');
+ const hasInterviewerAvatar = hasCheckedSetupInput('interviewer_avatar');
  const hasQuestionType = hasCheckedSetupInput('question_types[]');
  const hasScenarioTargetMatch = !setupScenarioTargetMismatch();
- const hasCompleteSetupFields = hasRequiredFields && hasDifficulty && hasCameraDetection && hasResponseMode && hasQuestionType && hasScenarioTargetMatch;
+ const hasCompleteSetupFields = hasRequiredFields && hasDifficulty && hasCameraDetection && hasResponseMode && hasInterviewerAvatar && hasQuestionType && hasScenarioTargetMatch;
  const hasReviewedSetupSteps = getRequiredSetupReviewStepIds().every(stepId => visitedSetupStepIds.has(stepId));
  const canStart = hasCompleteSetupFields && hasReviewedSetupSteps;
  const activeStepId = getSetupSteps()[setupStepState.index]?.id;
@@ -1626,6 +1670,10 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const setupDraftApi = window.SpeakReadyInterviewSetupDraft;
  const setupDraftFormElement = document.getElementById('setupForm');
  const restoredSetupDraft = @json(!$errors->any())? setupDraftApi?.restore(setupDraftFormElement): null;
+ if (!document.querySelector('input[name="interviewer_avatar"]:checked')) {
+ const defaultInterviewerAvatar = document.querySelector('input[name="interviewer_avatar"][value="friendly_recruiter"]');
+ if (defaultInterviewerAvatar) defaultInterviewerAvatar.checked = true;
+ }
  if (Array.isArray(restoredSetupDraft?.visited_step_ids)) {
  restoredSetupDraft.visited_step_ids.forEach(stepId => visitedSetupStepIds.add(stepId));
  }
@@ -2276,8 +2324,8 @@ startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'P
  { element: '#panel-inclusive', popover: { title: 'Camera Detection', description: 'Camera On enables body-language observations such as framing and posture. Camera Off leaves detection off.', side: 'top', align: 'center' }},
  { element: '#valFeedbackMode', popover: { title: 'Live Feedback', description: 'Choose Coaching On for help during the session, or Real Interview Mode for a quieter practice run.', side: 'bottom', align: 'start' }},
  { element: '#questionTypeGroup', popover: { title: 'Question Types', description: 'Select one or more Behavioral, Situational, Technical, or Personal question types.', side: 'top', align: 'center' }},
- { element: '#panel-response', popover: { title: 'Response Mode', description: 'Text lets you type. Voice records spoken answers without a text transcript. Hybrid turns speech into editable text.', side: 'top', align: 'center' }},
- { element: '#panel-summary', popover: { title: 'Interview Summary', description: 'Check the scenario, role, timing, camera, feedback, question mix, and response mode before starting.', side: 'top', align: 'center' }},
+ { element: '#panel-response', popover: { title: 'Response and AI Interviewer', description: 'Choose Text, Voice, or Hybrid for your answers, then select the interviewer portrait and style you want to practice with.', side: 'top', align: 'center' }},
+ { element: '#panel-summary', popover: { title: 'Interview Summary', description: 'Check the scenario, role, timing, camera, feedback, question mix, response mode, and AI interviewer before starting.', side: 'top', align: 'center' }},
  { element: '.setup-stepper-actions', popover: { title: 'Continue and Start', description: 'Use Next to complete the required steps. Start appears after you review the Summary.', side: 'top', align: 'center' }}
  ];
 

@@ -69,6 +69,7 @@ class InterviewSessionSchema
             $table->integer('num_questions')->default(5);
             $table->string('coach_focus_mode')->default('balanced');
             $table->string('response_mode')->default('text');
+            $table->string('interviewer_avatar', 40)->default(InterviewerAvatar::DEFAULT);
             $table->string('tts_provider', 32)->nullable();
             $table->string('tts_model')->nullable();
             $table->string('tts_voice')->nullable();
@@ -129,6 +130,9 @@ class InterviewSessionSchema
         }
         if (self::isMissing($missing, 'response_mode')) {
             $table->string('response_mode')->default('text');
+        }
+        if (self::isMissing($missing, 'interviewer_avatar')) {
+            $table->string('interviewer_avatar', 40)->default(InterviewerAvatar::DEFAULT);
         }
         if (self::isMissing($missing, 'tts_provider')) {
             $table->string('tts_provider', 32)->nullable();
@@ -251,6 +255,7 @@ class InterviewSessionSchema
             'num_questions',
             'coach_focus_mode',
             'response_mode',
+            'interviewer_avatar',
             'tts_provider',
             'tts_model',
             'tts_voice',
@@ -288,6 +293,7 @@ class InterviewSessionSchema
             'num_questions' => 5,
             'coach_focus_mode' => 'balanced',
             'response_mode' => 'text',
+            'interviewer_avatar' => InterviewerAvatar::DEFAULT,
             'time_limit' => 0,
             'ai_assistance_level' => 'standard',
             'live_feedback_mode' => 'coaching',

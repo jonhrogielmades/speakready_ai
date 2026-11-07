@@ -1268,6 +1268,152 @@ html:not(.lm) body #roleFinderModal .btn-close {
     }
 }
 
+/* Interviewer choice inside the Response step. */
+#sec-interview-setup #panel-response .interviewer-avatar-fieldset {
+    min-width: 0;
+    margin: 24px 0 0;
+    padding: 20px 0 0;
+    border: 0;
+    border-top: 1px solid rgba(148, 163, 184, .3);
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-title {
+    float: none;
+    width: auto;
+    margin: 0 0 5px;
+    padding: 0;
+    color: #0f172a;
+    font-size: 1.12rem;
+    font-weight: 850;
+    line-height: 1.25;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-help {
+    margin: 0 0 14px;
+    color: #64748b;
+    font-size: .84rem;
+    line-height: 1.4;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    min-width: 0;
+    border-radius: 14px;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-choice {
+    position: relative;
+    display: block;
+    min-width: 0;
+    margin: 0;
+    cursor: pointer;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-choice > input[type="radio"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: 0;
+    opacity: 0;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    min-height: 190px;
+    padding: 12px 8px;
+    border: 2px solid rgba(203, 213, 225, .86);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .78);
+    box-sizing: border-box;
+    text-align: center;
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-choice:hover .interviewer-avatar-card {
+    border-color: #60a5fa;
+    transform: translateY(-2px);
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-choice > input:checked + .interviewer-avatar-card {
+    border-color: #2563eb;
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .11);
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-choice > input:focus-visible + .interviewer-avatar-card {
+    outline: 3px solid #2563eb;
+    outline-offset: 3px;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-portrait {
+    display: block;
+    width: 70px;
+    height: 70px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #dbeafe;
+    box-shadow: 0 0 0 3px #fff, 0 3px 12px rgba(15, 23, 42, .12);
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-portrait picture,
+#sec-interview-setup #panel-response .interviewer-avatar-portrait img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-portrait img {
+    object-fit: cover;
+    object-position: center 32%;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-name {
+    color: #0f172a;
+    font-size: .88rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-description {
+    color: #475569;
+    font-size: .7rem;
+    line-height: 1.32;
+}
+
+#sec-interview-setup #panel-response .interviewer-avatar-grid.setup-field-invalid {
+    padding: 4px;
+    border: 1px solid #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, .12);
+}
+
+html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-title,
+html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-name {
+    color: #f8fafc;
+}
+
+html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-help,
+html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-description {
+    color: #cbd5e1;
+}
+
+html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-card {
+    border-color: rgba(148, 163, 184, .35);
+    background: rgba(15, 23, 42, .7);
+}
+
+html:not(.lm) #sec-interview-setup #panel-response .interviewer-avatar-choice > input:checked + .interviewer-avatar-card {
+    border-color: #60a5fa;
+    background: rgba(37, 99, 235, .2);
+}
+
 @media (max-width: 991.98px) {
     html body.user-mobile-shell #sec-interview-setup .setup-stepper-track,
     html body #mob-content #sec-interview-setup .setup-stepper-track,

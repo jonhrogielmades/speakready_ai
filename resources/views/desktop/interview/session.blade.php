@@ -64,13 +64,11 @@
  $initialQuestionTimerLabel = sprintf('%02d:%02d', intdiv($initialQuestionTimerSeconds, 60), $initialQuestionTimerSeconds % 60);
   $responseModeKey = strtolower((string) ($sessionRecord->response_mode?? 'text'));
   $isVoiceOnlyResponseMode = $responseModeKey === 'voice';
-  $interviewerAvatarImages = [
-  'img/interviewers/Filipina_Interviewer_06.png',
-  ];
-  $interviewerAvatarIndex = abs(crc32((string) $sessionRecord->id)) % count($interviewerAvatarImages);
-  $interviewerAvatarImage = $interviewerAvatarImages[$interviewerAvatarIndex];
-  $interviewerAvatarWebpImage = preg_replace('/\.png$/', '.webp', $interviewerAvatarImage);
-  $interviewerPanelBackgroundImage = 'img/interviewer-panel-room-bg.webp';
+  $interviewerAvatarKey = \App\Support\InterviewerAvatar::normalize($sessionRecord->interviewer_avatar);
+  $interviewerAvatarLabel = \App\Support\InterviewerAvatar::label($interviewerAvatarKey);
+  $interviewerAvatarWebpImage = \App\Support\InterviewerAvatar::image($interviewerAvatarKey);
+  $interviewerAvatarImage = preg_replace('/\.webp$/', '.png', $interviewerAvatarWebpImage);
+  $interviewerPanelBackgroundImage = \App\Support\InterviewerAvatar::background($interviewerAvatarKey);
   @endphp
  @push('styles')
  <link rel="preload" as="image" href="{{ asset($interviewerAvatarWebpImage) }}" type="image/webp" fetchpriority="high">
@@ -97,7 +95,7 @@
  <div style="position:absolute; top:15px; left:15px; z-index:50;">
  <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">{{ $initialQuestionCounter }}</span>
  </div>
- <span class="badge interviewer-panel-badge"><i class="fa-solid fa-bolt me-1"></i> interviewer</span>
+ <span class="badge interviewer-panel-badge" title="{{ $interviewerAvatarLabel }} AI interviewer"><i class="fa-solid fa-bolt me-1" aria-hidden="true"></i> {{ $interviewerAvatarLabel }}</span>
  @if($questionTimeLimitSeconds > 0)
  <div class="question-timer-anchor" aria-label="Time remaining for this question">
  <span class="session-chip" id="questionTimerChip" title="Time remaining for this question">
@@ -117,7 +115,7 @@
  <div class="avatar-frame">
  <picture style="display:block;width:100%;height:100%;">
  <source srcset="{{ asset($interviewerAvatarWebpImage) }}" type="image/webp">
- <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="AI Interviewer" width="110" height="110" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;">
+ <img id="interviewerAvatarImage" src="{{ asset($interviewerAvatarImage) }}" alt="{{ $interviewerAvatarLabel }} AI interviewer" width="110" height="110" loading="eager" fetchpriority="high" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;">
  </picture>
  </div>
  <div class="avatar-side-wave avatar-side-wave-right" aria-hidden="true">

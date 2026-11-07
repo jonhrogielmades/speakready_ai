@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\InterviewerAvatar;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,6 +24,7 @@ class InterviewSession extends Model
         'num_questions',
         'coach_focus_mode',
         'response_mode',
+        'interviewer_avatar',
         'tts_provider',
         'tts_model',
         'tts_voice',
@@ -118,6 +120,11 @@ class InterviewSession extends Model
     public function getAssessmentModeAttribute($value): string
     {
         return $value ?: 'legacy';
+    }
+
+    public function getInterviewerAvatarAttribute($value): string
+    {
+        return InterviewerAvatar::normalize(is_string($value) ? $value : null);
     }
 
     public function user()

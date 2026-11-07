@@ -7,6 +7,7 @@ use App\Exceptions\AiSpeechTranscriptionException;
 use App\Models\AiProvider;
 use App\Models\AiProviderLog;
 use App\Models\Setting;
+use App\Support\InterviewerAvatar;
 use App\Support\RuntimeConfiguration;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -648,7 +649,8 @@ class AIService
  $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
  $prompt = "You are an expert Interviewer conducting a realistic mock interview for a '{$targetPosition}' role. ";
  $prompt.= "The difficulty is '".($session->difficulty?? 'Medium')."'. ";
- $prompt.= 'Stay in interviewer mode. Sound like a calm, encouraging hiring manager: warm, concise, curious, professionally probing, and never sarcastic or discouraging. ';
+ $prompt.= 'Stay in interviewer mode. Sound calm, concise, curious, professionally probing, and never sarcastic or discouraging. ';
+ $prompt.= 'Selected interviewer style: '.InterviewerAvatar::label($session->interviewer_avatar?? null).'. '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' This style changes only the interviewer tone and emphasis; preserve the requested difficulty, question type, and feedback rules. ';
  $prompt.= "Every new question or follow-up must stay grounded in the '{$targetPosition}' target position by probing role responsibilities, required skills, deliverables, stakeholders, tools, or role-fit evidence. Avoid generic follow-ups that ignore the target position. ";
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
@@ -753,7 +755,7 @@ class AIService
 
  while ($attempt < $maxRetries) {
  try {
- $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation the way a live interviewer would, but stay in interview mode with a calm, encouraging tone that helps the candidate keep answering. If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation the way a live interviewer would. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
 
  // Rely on chatMessage for robust failover
  $response = self::chatMessage($prompt, [], $provider, $systemPrompt, $chatRequestOptions);
@@ -908,6 +910,7 @@ class AIService
  $prompt.= "Use the exact phrase \"Tell me about yourself\" as the only question or request in the opening, without asking separately for name, location, or background details. ";
  $prompt.= 'Do not mention how many questions there will be. Do not say "first question", "question count", or any number of questions. ';
  $prompt.= 'Use a warm, welcoming, confidence-building tone. Do not evaluate, coach, explain the rubric, or mention feedback timing unless it is necessary in a short natural phrase. ';
+ $prompt.= 'Selected interviewer style: '.InterviewerAvatar::label($session->interviewer_avatar?? null).'. '.InterviewerAvatar::openingTone($session->interviewer_avatar?? null).' The style changes only tone and emphasis, not difficulty or the introduction question. ';
  $prompt.= 'Use one concise paragraph for speech, under 55 words. ';
  $prompt.= 'Do not include markdown, labels, JSON, or prefixes like "Interviewer:". ';
  $prompt.= self::languageOutputInstruction($targetLanguage, 'the whole interviewer opening');
@@ -931,7 +934,7 @@ class AIService
  $prompt.= "Target job description summary: '".self::truncateText(trim(preg_replace('/\s+/', ' ', $session->job_description)?? ''), 140)."'. ";
  }
 
- $systemPrompt = 'You are a realistic AI hiring interviewer. Write only the spoken opening turn. Do not introduce yourself by a personal name. It must greet the candidate warmly and use the exact phrase "Tell me about yourself" as the self-introduction prompt. Never mention the number of interview questions. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $systemPrompt = 'You are a realistic AI hiring interviewer. Write only the spoken opening turn in the '.InterviewerAvatar::label($session->interviewer_avatar?? null).' style. '.InterviewerAvatar::openingTone($session->interviewer_avatar?? null).' Do not introduce yourself by a personal name. It must greet the candidate warmly and use the exact phrase "Tell me about yourself" as the self-introduction prompt. Never mention the number of interview questions. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
  $providers = self::providerPriorityList($provider);
  $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_INTERVIEW_OPENING_MAX_PROVIDERS', 2)));
  $providers = array_slice($providers, 0, $maxProviders);
@@ -1255,6 +1258,10 @@ return [
  $acknowledgement = $rapportReply.self::answerBasedAcknowledgement($answerText);
  }
 
+ if (! $answerUnavailable && ! $voiceTranscriptUnavailable && $rapportReply === '') {
+ $acknowledgement = self::personaFallbackAcknowledgement($session->interviewer_avatar?? null, $answerText, $acknowledgement);
+ }
+
  if ($isFinal) {
  $coachedFinalQuestion = match ($assistanceLevel) {
  'beginner' => "For my final question, in simple terms, what is the strongest example you want me to remember for the {$targetPosition} role?",
@@ -1325,6 +1332,11 @@ return [
  };
  }
 
+ $personaQuestion = self::personaGeneralFallbackQuestion($session->interviewer_avatar?? null, $targetPosition);
+ if ($personaQuestion !== null && $assistanceLevel === 'standard') {
+ return "{$acknowledgement}{$personaQuestion}";
+ }
+
  if ($isRealInterviewMode) {
  return "{$acknowledgement}What constraint made that decision difficult, and what evidence shows you handled it at the level expected for a {$targetPosition}?";
  }
@@ -1333,6 +1345,30 @@ return [
  'beginner' => "{$acknowledgement}You're doing the right thing by giving context. What was the main challenge, and how would you handle a similar situation as a {$targetPosition}?",
  'challenge' => "{$acknowledgement}Strong answers can handle pressure, so let's test the judgment. What constraint exposed the hardest judgment call, and how would you defend your decision as a {$targetPosition}?",
  default => "{$acknowledgement}That's a solid direction; let's bring out the judgment behind it. What constraint or tradeoff made that situation difficult, and how would you handle a similar case as a {$targetPosition}?",
+ };
+ }
+
+ private static function personaGeneralFallbackQuestion(?string $avatar, string $targetPosition): ?string
+ {
+ return match (InterviewerAvatar::normalize($avatar)) {
+ 'structured_hr' => "What constraint in that situation shaped your decision, and what evidence supports your approach for the {$targetPosition} role?",
+ 'hiring_manager' => "What constraint affected delivery, and how did you handle it for the {$targetPosition} role?",
+ 'role_specialist' => "What constraint affected your method, and how did you verify your choice for the {$targetPosition} role?",
+ 'senior_leader' => "What tradeoff did you weigh, and what impact did your decision have for the {$targetPosition} role?",
+ default => null,
+ };
+ }
+
+ private static function personaFallbackAcknowledgement(?string $avatar, string $answerText, string $default): string
+ {
+ $anchor = self::answerAnchor($answerText);
+
+ return match (InterviewerAvatar::normalize($avatar)) {
+ 'structured_hr' => $anchor !== '' ? "Thank you. You mentioned {$anchor}. " : 'Thank you. Let us make that specific. ',
+ 'hiring_manager' => $anchor !== '' ? "Thanks for that practical example. You mentioned {$anchor}. " : 'Thanks for explaining your work. ',
+ 'role_specialist' => $anchor !== '' ? "I want to understand the method behind that. You mentioned {$anchor}. " : 'I would like to understand the detail behind that. ',
+ 'senior_leader' => $anchor !== '' ? "Thank you. You mentioned {$anchor}; let us look at the wider impact. " : 'Thank you for outlining your approach. ',
+ default => $default,
  };
  }
 
@@ -1376,7 +1412,15 @@ return [
  {
  $targetPosition = trim((string) ($session->target_position?? ''))?: 'this role';
 
- return "Hi, nice to meet you. I will be your AI interviewer for the {$targetPosition} interview. No need to be perfect; answer naturally. Tell me about yourself.";
+ $transition = match (InterviewerAvatar::normalize($session->interviewer_avatar?? null)) {
+ 'structured_hr' => 'We will begin with your background.',
+ 'hiring_manager' => 'I am interested in the work you would bring to this role.',
+ 'role_specialist' => 'I would like to understand the experience behind your approach.',
+ 'senior_leader' => 'Let us start with the experience that shaped your judgment.',
+ default => 'No need to be perfect; answer naturally.',
+ };
+
+ return "Hi, nice to meet you. I will be your AI interviewer for the {$targetPosition} interview. {$transition} Tell me about yourself.";
  }
 
  private static function sanitizeInterviewOpeningIntro(string $reply): string
@@ -3320,9 +3364,10 @@ PROMPT;
  : 'services.ai_transcription.request_timeout_ms',
  $finalRecording? 120000: 30000
  );
- // Keep five seconds for transport/response handling so the browser timeout
- // remains strictly above all server-side transcription work.
- $clientBudgetSeconds = max(1, (int) floor($clientTimeoutMilliseconds / 1000) - 5);
+ // Keep transport/response time below the browser timeout without consuming
+ // most of a short live-chunk window (for example, a seven-second timeout).
+ $transportReserveSeconds = min(5, max(2, (int) floor($clientTimeoutMilliseconds / 5000)));
+ $clientBudgetSeconds = max(1, (int) floor($clientTimeoutMilliseconds / 1000) - $transportReserveSeconds);
  $totalTimeout = min($totalTimeout, $clientBudgetSeconds);
  if ($maximumSeconds!== null) {
  $totalTimeout = min($totalTimeout, max(1, $maximumSeconds));
