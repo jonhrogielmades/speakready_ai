@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=22') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=23') }}" data-page-style="interview-setup-2">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=7') }}" data-page-style="interview-role-discovery">
 @endpush
 
@@ -729,7 +729,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json($interviewSetupDraftKey) };
 </script>
 <script src="{{ asset('js/interview-setup-draft.js?v=1') }}"></script>
-<script src="{{ asset('js/interview-setup-avatar-modal.js?v=1') }}"></script>
+<script src="{{ asset('js/interview-setup-avatar-modal.js?v=2') }}"></script>
 <script>
  const setupRequiredFieldIds = [
  'valScenario',

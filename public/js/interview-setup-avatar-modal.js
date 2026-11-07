@@ -2,6 +2,7 @@
     'use strict';
 
     const SCROLL_LOCK_CLASS = 'interviewer-avatar-modal-open';
+    const FALLBACK_BACKDROP_CLASS = 'interviewer-avatar-fallback-backdrop';
 
     function initInterviewerAvatarModal() {
         const trigger = document.getElementById('interviewerAvatarTrigger');
@@ -78,6 +79,7 @@
             trigger.setAttribute('aria-expanded', 'false');
             document.documentElement.classList.remove(SCROLL_LOCK_CLASS);
             document.body.classList.remove(SCROLL_LOCK_CLASS);
+            document.body.classList.remove(FALLBACK_BACKDROP_CLASS);
             dialog.classList.remove('is-open');
             dialog.classList.remove('is-fallback');
 
@@ -117,6 +119,7 @@
                 dialog.setAttribute('open', '');
                 dialog.setAttribute('aria-modal', 'true');
                 dialog.classList.add('is-fallback');
+                document.body.classList.add(FALLBACK_BACKDROP_CLASS);
                 nativeModal = false;
             }
             isOpen = true;

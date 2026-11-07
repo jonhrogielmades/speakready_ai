@@ -230,12 +230,14 @@ test('fallback dialog escapes clipped form container and still updates draft lis
     assert.equal(page.dialog.parentNode, page.document.body);
     assert.equal(page.dialog.hasAttribute('open'), true);
     assert.equal(page.dialog.classList.contains('is-fallback'), true);
+    assert.equal(page.document.body.classList.contains('interviewer-avatar-fallback-backdrop'), true);
     page.choose('senior_leader');
     assert.ok(formChanges > 0);
     page.fire(page.confirm, 'click');
     assert.equal(page.dialog.parentNode, page.form);
     assert.equal(page.dialog.hasAttribute('open'), false);
     assert.equal(page.dialog.classList.contains('is-fallback'), false);
+    assert.equal(page.document.body.classList.contains('interviewer-avatar-fallback-backdrop'), false);
     assert.equal(page.previewName.textContent, 'Senior Leader');
 
     page.fire(page.trigger, 'click');
