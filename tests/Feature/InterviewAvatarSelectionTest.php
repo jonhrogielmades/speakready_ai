@@ -21,6 +21,31 @@ class InterviewAvatarSelectionTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_both_setup_layouts_offer_a_compact_interviewer_picker_and_modal_choices(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $this->category();
+        $userAgents = [
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36',
+            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+        ];
+
+        foreach ($userAgents as $userAgent) {
+            $response = $this->actingAs($user)
+                ->withHeader('User-Agent', $userAgent)
+                ->get(route('interview.setup'));
+
+            $response->assertOk()
+                ->assertSeeInOrder(['id="interviewerAvatarTrigger"', 'id="interviewerAvatarDialog"', 'id="interviewerAvatarGroup"'], false)
+                ->assertSee('id="interviewerAvatarConfirm"', false)
+                ->assertSee('js/interview-setup-avatar-modal.js?v=1', false);
+
+            foreach (InterviewerAvatar::keys() as $key) {
+                $response->assertSee('name="interviewer_avatar" form="setupForm" value="'.$key.'"', false);
+            }
+        }
+    }
+
     public function test_every_interviewer_has_distinct_existing_portrait_and_room_images(): void
     {
         $portraits = [];

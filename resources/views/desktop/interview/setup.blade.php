@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup.css?v=41') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=21') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-2.css?v=22') }}" data-page-style="interview-setup-2">
 <link rel="stylesheet" href="{{ asset('css/desktop/interview/setup-role-discovery.css?v=7') }}" data-page-style="interview-role-discovery">
 @endpush
 
@@ -478,14 +478,35 @@
  </label>
  </div>
  <div class="setup-inline-error" id="responseModeError" role="alert" hidden>Choose a response mode.</div>
- <fieldset class="interviewer-avatar-fieldset" aria-describedby="interviewerAvatarHelp interviewerAvatarError">
- <legend class="interviewer-avatar-title">Choose your AI Interviewer</legend>
- <p class="interviewer-avatar-help" id="interviewerAvatarHelp">Pick a portrait and interview style. Difficulty and scoring stay the same.</p>
- <div class="interviewer-avatar-grid" id="interviewerAvatarGroup">
+ @php($initialAvatarImage = \App\Support\InterviewerAvatar::image($setupDefaults['interviewer_avatar']))
+ <div class="interviewer-avatar-picker" aria-describedby="interviewerAvatarPickerHelp interviewerAvatarError">
+ <h6 class="interviewer-avatar-title">AI Interviewer</h6>
+ <p class="interviewer-avatar-help" id="interviewerAvatarPickerHelp">Choose the interviewer style for this session.</p>
+ <button type="button" class="interviewer-avatar-trigger" id="interviewerAvatarTrigger" aria-haspopup="dialog" aria-controls="interviewerAvatarDialog">
+ <span class="interviewer-avatar-trigger-portrait"><img id="interviewerAvatarSelectedImage" src="{{ asset($initialAvatarImage) }}" alt="" width="52" height="52"></span>
+ <span class="interviewer-avatar-trigger-copy">
+ <span class="interviewer-avatar-trigger-name" id="interviewerAvatarSelectedName">{{ \App\Support\InterviewerAvatar::label($setupDefaults['interviewer_avatar']) }}</span>
+ <span class="interviewer-avatar-trigger-description" id="interviewerAvatarSelectedDescription">{{ $interviewerAvatarDescriptions[$setupDefaults['interviewer_avatar']] }}</span>
+ </span>
+ <span class="interviewer-avatar-trigger-action">Change <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
+ </button>
+ <div class="setup-inline-error" id="interviewerAvatarError" role="alert" hidden>Choose an AI interviewer.</div>
+ </div>
+ <dialog class="interviewer-avatar-dialog" id="interviewerAvatarDialog" aria-labelledby="interviewerAvatarDialogTitle" aria-describedby="interviewerAvatarDialogHelp">
+ <div class="interviewer-avatar-dialog-panel">
+ <div class="interviewer-avatar-dialog-header">
+ <div>
+ <h2 class="interviewer-avatar-title" id="interviewerAvatarDialogTitle">Choose AI Interviewer</h2>
+ <p class="interviewer-avatar-help" id="interviewerAvatarDialogHelp">Select a portrait and interview style.</p>
+ </div>
+ <button type="button" class="interviewer-avatar-dialog-close" id="interviewerAvatarClose" aria-label="Close interviewer choices"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+ </div>
+ <div class="interviewer-avatar-dialog-body">
+ <div class="interviewer-avatar-grid" id="interviewerAvatarGroup" role="radiogroup" aria-label="AI interviewer">
  @foreach(\App\Support\InterviewerAvatar::keys() as $avatarKey)
  @php($avatarImage = \App\Support\InterviewerAvatar::image($avatarKey))
  <label class="interviewer-avatar-choice">
- <input type="radio" name="interviewer_avatar" value="{{ $avatarKey }}" class="setup-input" data-summary-label="{{ \App\Support\InterviewerAvatar::label($avatarKey) }}" required {{ $setupDefaults['interviewer_avatar'] === $avatarKey? 'checked': '' }}>
+ <input type="radio" name="interviewer_avatar" form="setupForm" value="{{ $avatarKey }}" class="setup-input" data-summary-label="{{ \App\Support\InterviewerAvatar::label($avatarKey) }}" required {{ $setupDefaults['interviewer_avatar'] === $avatarKey? 'checked': '' }}>
  <span class="interviewer-avatar-card">
  <span class="interviewer-avatar-portrait">
  <picture>
@@ -493,14 +514,21 @@
  <img src="{{ asset(str_replace('.webp', '.png', $avatarImage)) }}" alt="" loading="lazy" width="88" height="88">
  </picture>
  </span>
+ <span class="interviewer-avatar-card-copy">
  <span class="interviewer-avatar-name">{{ \App\Support\InterviewerAvatar::label($avatarKey) }}</span>
  <span class="interviewer-avatar-description">{{ $interviewerAvatarDescriptions[$avatarKey] }}</span>
+ </span>
  </span>
  </label>
  @endforeach
  </div>
- <div class="setup-inline-error" id="interviewerAvatarError" role="alert" hidden>Choose an AI interviewer.</div>
- </fieldset>
+ </div>
+ <div class="interviewer-avatar-dialog-footer">
+ <button type="button" id="interviewerAvatarCancel">Cancel</button>
+ <button type="button" id="interviewerAvatarConfirm">Use this interviewer</button>
+ </div>
+ </div>
+ </dialog>
  </div>
 
  </div>
@@ -701,6 +729,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  window.SpeakReadyInterviewSetupDraftConfig = { storageKey: @json($interviewSetupDraftKey) };
 </script>
 <script src="{{ asset('js/interview-setup-draft.js?v=1') }}"></script>
+<script src="{{ asset('js/interview-setup-avatar-modal.js?v=1') }}"></script>
 <script>
  const setupRequiredFieldIds = [
  'valScenario',
@@ -722,7 +751,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  camera_detection: { container: '.camera-mode-list', error: 'cameraDetectionError' },
  live_feedback_mode: { container: '.live-feedback-mode-list', error: 'feedbackModeError' },
  response_mode: { container: '.response-mode-list', error: 'responseModeError' },
- interviewer_avatar: { container: '.interviewer-avatar-grid', error: 'interviewerAvatarError' },
+ interviewer_avatar: { container: '.interviewer-avatar-picker', error: 'interviewerAvatarError' },
  };
  let targetPositionAlertVisible = false;
  const setupScenarioMismatchMessages = {
@@ -1102,6 +1131,11 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  if (item.name === 'question_types[]') {
  document.querySelector('input[name="question_types[]"]')?.focus();
+ return;
+ }
+
+ if (item.name === 'interviewer_avatar') {
+ document.getElementById('interviewerAvatarTrigger')?.focus();
  return;
  }
 
