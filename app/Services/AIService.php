@@ -3210,7 +3210,7 @@ PROMPT;
  $gender = $avatarSpeech && InterviewerAvatar::gender($options['interviewer_avatar']) === 'man' ? 'male' : 'female';
  $style = $avatarSpeech ? trim((string) ($options['style'] ?? '')) : '';
  $styleInstruction = $style !== '' ? " {$style}." : '';
- $payload['instructions'] = "Speak as a calm, professional {$gender} interviewer.{$styleInstruction} Use natural {$target} pronunciation at a slightly slower, measured pace, and keep company names, role titles, acronyms, and numbers clear.";
+ $payload['instructions'] = "Speak as a calm, professional {$gender} interviewer.{$styleInstruction} Use one consistent voice throughout. Do not imitate or add another speaker. Use natural {$target} pronunciation at a slightly slower, measured pace, and keep company names, role titles, acronyms, and numbers clear.";
  }
 
  try {
@@ -4093,12 +4093,8 @@ PROMPT;
  $provider = self::normalizeSpeechProviderName($pinnedProvider);
 
  return match ($provider) {
- 'openai' => self::openAiSpeechCredentials() !== null
-  || self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== ''
-  || self::elevenLabsSpeechCredentials(false) !== null,
- 'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== ''
-  || self::openAiSpeechCredentials() !== null
-  || self::elevenLabsSpeechCredentials(false) !== null,
+ 'openai' => self::openAiSpeechCredentials() !== null,
+ 'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== '',
  'elevenlabs' => self::elevenLabsSpeechCredentials(false) !== null,
  default => false,
  };
@@ -4183,7 +4179,7 @@ PROMPT;
  $target = $language['ai_label']?? $language['label']?? 'the selected language';
  $style = trim((string) $styleOverride);
  if ($style !== '') {
- return "{$style}. Use natural {$target} pronunciation. Speak only this transcript: {$text}";
+ return "{$style}. Use one consistent interviewer voice throughout. Do not imitate or add another speaker. Use natural {$target} pronunciation. Speak only this transcript: {$text}";
  }
 
  $style = trim((string) config('services.gemini.tts_style', ''));

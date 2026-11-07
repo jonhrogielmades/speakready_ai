@@ -985,24 +985,15 @@ return response()->json([
     return response()->json(['error' => 'AI speech is not available.'], 503);
    }
 
-   $providerIndex = array_search($originalProvider, $speechOptions['providers'], true);
-   if ($providerIndex === false) {
+   if (! in_array($originalProvider, $speechOptions['providers'], true)) {
     return response()->json(['error' => 'AI speech is not available.'], 503);
    }
 
-   // Keep the session voice first, then try the remaining providers in priority order.
-   // This also lets sessions pinned to Gemini before an upgrade recover through OpenAI.
-   $speechOptions['providers'] = array_merge(
-    [$originalProvider],
-    array_values(array_filter($speechOptions['providers'], fn (string $provider): bool => $provider !== $originalProvider))
-   );
-   $speechOptions['provider_voices'][$originalProvider] = $session->tts_voice;
-   $speechOptions['provider_models'] = [$originalProvider => $session->tts_model];
-   if ($originalProvider === 'elevenlabs') {
-    $speechOptions['provider'] = $originalProvider;
-    $speechOptions['model'] = $session->tts_model;
-    $speechOptions['voice'] = $session->tts_voice;
-   }
+   // Once a session has spoken, its provider, model, and voice are fixed.
+   // An unavailable pinned voice must fail instead of introducing another voice.
+   $speechOptions['provider'] = $originalProvider;
+   $speechOptions['model'] = $session->tts_model;
+   $speechOptions['voice'] = $session->tts_voice;
   }
 
   $language = $this->currentLanguageConfig();
@@ -1025,17 +1016,9 @@ return response()->json([
     ->where('status', 'in_progress')
     ->whereNull('tts_provider')
     ->update(['tts_provider' => $provider, 'tts_model' => $model, 'tts_voice' => $voice]);
-  } elseif ($originalProvider !== $provider) {
-   InterviewSession::query()
-    ->whereKey($session->id)
-    ->where('status', 'in_progress')
-    ->where('tts_provider', $originalProvider)
-    ->where('tts_model', $session->tts_model)
-    ->where('tts_voice', $session->tts_voice)
-    ->update(['tts_provider' => $provider, 'tts_model' => $model, 'tts_voice' => $voice]);
   }
 
-  // A concurrent request may have selected or switched the session voice.
+  // A concurrent first request may have selected the session voice.
   // Return only audio that matches the voice currently pinned to the session.
   $winner = $session->fresh();
   if (! $winner || $winner->status !== 'in_progress'
@@ -1059,6 +1042,13 @@ return response()->json([
    if (! $speech) {
     return response()->json(['error' => 'AI speech is not available.'], 503);
    }
+  }
+
+  // Never return audio unless it matches the voice currently pinned to this session.
+  if (($speech['provider'] ?? null) !== $winner->tts_provider
+   || ($speech['model'] ?? null) !== $winner->tts_model
+   || ($speech['voice'] ?? null) !== $winner->tts_voice) {
+   return response()->json(['error' => 'AI speech is not available.'], 503);
   }
 
  return response($speech['audio'], 200)

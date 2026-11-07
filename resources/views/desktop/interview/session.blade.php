@@ -3436,10 +3436,11 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let questionSpeechToken = 0;
  let questionLoadToken = 0;
  let activeQuestionAudio = null;
+ let activeQuestionAudioUrl = null;
  let captionInterval = null;
  let activeSpeechCompletion = null;
  let serverVoiceUnavailable =!serverAiVoiceEnabled;
- const serverSpeechUrlCache = new Map();
+ const serverSpeechObjectUrls = new Set();
  const serverSpeechRequestCache = new Map();
 
  function isVoiceTranscriptionMode() {
@@ -4407,13 +4408,23 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  resolveSpeechCompletion(token);
  }
 
- function cancelQuestionAudio() {
- if (activeQuestionAudio) {
- activeQuestionAudio.pause();
- activeQuestionAudio.removeAttribute('src');
- activeQuestionAudio.load();
- activeQuestionAudio = null;
+ function releaseQuestionAudioUrl(url) {
+ if (!url || !serverSpeechObjectUrls.has(url)) return;
+ serverSpeechObjectUrls.delete(url);
+ URL.revokeObjectURL(url);
  }
+
+ function cancelQuestionAudio() {
+ const audio = activeQuestionAudio;
+ const url = activeQuestionAudioUrl;
+ activeQuestionAudio = null;
+ activeQuestionAudioUrl = null;
+ if (audio) {
+ audio.pause();
+ audio.removeAttribute('src');
+ audio.load();
+ }
+ releaseQuestionAudioUrl(url);
  }
 
  function cancelQuestionSpeechOutput() {
@@ -4436,14 +4447,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if ((!questionId &&!cleanSpeechText) || serverVoiceUnavailable) return null;
 
  const cacheKey = questionId? `q:${questionId}`: `text:${cleanSpeechText}`;
- if (serverSpeechUrlCache.has(cacheKey)) {
- return serverSpeechUrlCache.get(cacheKey);
- }
- if (serverSpeechRequestCache.has(cacheKey)) {
- return serverSpeechRequestCache.get(cacheKey);
- }
-
- const request = (async () => {
+ let request = serverSpeechRequestCache.get(cacheKey);
+ if (!request) {
+ request = (async () => {
  const formData = new FormData();
  formData.append('_token', '{{ csrf_token() }}');
  formData.append('session_id', interviewSessionId);
@@ -4481,16 +4487,20 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
  if (!blob || blob.size < 128) return null;
 
- const url = URL.createObjectURL(blob);
- serverSpeechUrlCache.set(cacheKey, url);
- return url;
+ return blob;
  })().catch(error => {
  if (error?.name!== 'AbortError') console.warn('Server AI voice unavailable:', error);
  return null;
  }).finally(() => serverSpeechRequestCache.delete(cacheKey));
 
  serverSpeechRequestCache.set(cacheKey, request);
- return request;
+ }
+
+ const blob = await request;
+ if (!blob) return null;
+ const url = URL.createObjectURL(blob);
+ serverSpeechObjectUrls.add(url);
+ return url;
  }
 
  async function speakWithServerVoice(text, token, startTimerAfterSpeech, questionId, speechText = '') {
@@ -4498,14 +4508,20 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return false;
  }
 
+ let url = null;
  try {
- const url = await serverSpeechUrl(questionId, speechText);
- if (!url || token!== questionSpeechToken || interviewTerminated) return false;
+ url = await serverSpeechUrl(questionId, speechText);
+ if (!url) return false;
+ if (token!== questionSpeechToken || interviewTerminated) {
+ releaseQuestionAudioUrl(url);
+ return false;
+ }
 
  const audio = new Audio(url);
  audio.defaultPlaybackRate = interviewerServerAudioPlaybackRate;
  audio.playbackRate = interviewerServerAudioPlaybackRate;
  activeQuestionAudio = audio;
+ activeQuestionAudioUrl = url;
  let playbackReady = false;
 
  audio.addEventListener('playing', () => {
@@ -4516,12 +4532,16 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  audio.addEventListener('ended', () => {
  if (activeQuestionAudio!== audio) return;
  activeQuestionAudio = null;
+ activeQuestionAudioUrl = null;
+ releaseQuestionAudioUrl(url);
  finishSpeakingUi(text, token, startTimerAfterSpeech);
  }, { once: true });
 
  audio.addEventListener('error', () => {
  if (activeQuestionAudio!== audio) return;
  activeQuestionAudio = null;
+ activeQuestionAudioUrl = null;
+ releaseQuestionAudioUrl(url);
  if (token!== questionSpeechToken || interviewTerminated) return;
  if (playbackReady) {
  showSessionNotice('Interviewer audio stopped. Read the text on screen.', 'warning');
@@ -4549,7 +4569,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  return true;
  } catch (error) {
  console.warn('Server AI voice unavailable.', error);
- cancelQuestionAudio();
+ if (activeQuestionAudioUrl === url) cancelQuestionAudio();
+ else releaseQuestionAudioUrl(url);
 
  return false;
  }
@@ -6463,8 +6484,8 @@ showSessionNotice('The microphone stopped unexpectedly. Your captured audio was 
  setTranscriptionStatus('');
  updateAnswerTranscriptionOverlay();
  cancelQuestionSpeechOutput();
- serverSpeechUrlCache.forEach(url => URL.revokeObjectURL(url));
- serverSpeechUrlCache.clear();
+ serverSpeechObjectUrls.forEach(url => URL.revokeObjectURL(url));
+ serverSpeechObjectUrls.clear();
  ['userCamera', 'userCameraMobile'].forEach(id => {
  let video = document.getElementById(id);
  if (video && video.srcObject) {

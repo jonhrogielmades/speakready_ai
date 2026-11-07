@@ -120,7 +120,9 @@ for (const layout of layouts) {
             interviewTerminated: false,
             questionSpeechToken: 3,
             activeQuestionAudio: null,
+            activeQuestionAudioUrl: null,
             serverSpeechUrl: () => voiceUrl.promise,
+            releaseQuestionAudioUrl() {},
             startSpeakingUi() { captionsStarted++; },
             finishSpeakingUi() { captionsFinished++; },
             activeSpeechCompletion: { token: 3, timeoutId: null },
@@ -227,17 +229,18 @@ for (const layout of layouts) {
         assert.equal(notices[0][1], 'warning');
     });
 
-    test(`${layout} coalesces speech requests and caches completed audio`, async () => {
+    test(`${layout} coalesces in-flight speech requests but refetches completed audio`, async () => {
         const response = deferred();
         let requests = 0;
+        let urls = 0;
         const context = evaluate(source, ['serverSpeechUrl'], {
             interviewSessionId: 7,
             serverVoiceUnavailable: false,
-            serverSpeechUrlCache: new Map(),
+            serverSpeechObjectUrls: new Set(),
             serverSpeechRequestCache: new Map(),
             cleanTranscriptText: value => value.trim(),
             FormData: class FormData { append() {} },
-            URL: { createObjectURL: () => 'blob:question-12' },
+            URL: { createObjectURL: () => `blob:question-12-${++urls}` },
             managedFetch(_url, options) {
                 requests++;
                 assert.equal(options.timeoutMs, 50000);
@@ -252,10 +255,10 @@ for (const layout of layouts) {
         const second = context.serverSpeechUrl(12);
         assert.equal(requests, 1);
         response.resolve({ ok: true, blob: async () => ({ size: 256 }) });
-        assert.equal(await first, 'blob:question-12');
-        assert.equal(await second, 'blob:question-12');
-        assert.equal(await context.serverSpeechUrl(12), 'blob:question-12');
-        assert.equal(requests, 1);
+        assert.equal(await first, 'blob:question-12-1');
+        assert.equal(await second, 'blob:question-12-2', 'each playback owns a separate URL');
+        assert.equal(await context.serverSpeechUrl(12), 'blob:question-12-3');
+        assert.equal(requests, 2, 'a repeat must fetch current session voice instead of old audio');
     });
 
     test(`${layout} retries server audio after a transient 503`, async () => {
@@ -263,7 +266,7 @@ for (const layout of layouts) {
         const context = evaluate(source, ['serverSpeechUrl'], {
             interviewSessionId: 7,
             serverVoiceUnavailable: false,
-            serverSpeechUrlCache: new Map(),
+            serverSpeechObjectUrls: new Set(),
             serverSpeechRequestCache: new Map(),
             cleanTranscriptText: value => value.trim(),
             FormData: class FormData { append() {} },
@@ -290,7 +293,7 @@ for (const layout of layouts) {
         const context = evaluate(source, ['serverSpeechUrl'], {
             interviewSessionId: 7,
             serverVoiceUnavailable: false,
-            serverSpeechUrlCache: new Map(),
+            serverSpeechObjectUrls: new Set(),
             serverSpeechRequestCache: new Map(),
             cleanTranscriptText: value => value.trim(),
             FormData: class FormData { append() {} },
@@ -307,6 +310,49 @@ for (const layout of layouts) {
         timers[0].callback();
         assert.equal(await result, null);
         assert.equal(context.serverSpeechRequestCache.size, 0);
+    });
+
+    test(`${layout} stops and releases the previous question before another can speak`, () => {
+        const calls = [];
+        const url = 'blob:previous-question';
+        const context = evaluate(source, ['releaseQuestionAudioUrl', 'cancelQuestionAudio'], {
+            activeQuestionAudio: {
+                pause() { calls.push('pause'); },
+                removeAttribute(name) { calls.push(`remove:${name}`); },
+                load() { calls.push('load'); },
+            },
+            activeQuestionAudioUrl: url,
+            serverSpeechObjectUrls: new Set([url]),
+            URL: { revokeObjectURL(value) { calls.push(`revoke:${value}`); } },
+        });
+
+        context.cancelQuestionAudio();
+        assert.deepEqual(calls, ['pause', 'remove:src', 'load', `revoke:${url}`]);
+        assert.equal(context.activeQuestionAudio, null);
+        assert.equal(context.activeQuestionAudioUrl, null);
+        assert.equal(context.serverSpeechObjectUrls.size, 0);
+        context.cancelQuestionAudio();
+        assert.equal(calls.length, 4, 'the URL must be released once');
+    });
+
+    test(`${layout} discards audio arriving after the next question starts`, async () => {
+        const response = deferred();
+        const released = [];
+        const context = evaluate(source, ['speakWithServerVoice'], {
+            window: { Audio() {} },
+            Audio() { assert.fail('stale question audio must never be constructed'); },
+            serverVoiceUnavailable: false,
+            interviewTerminated: false,
+            questionSpeechToken: 3,
+            serverSpeechUrl: () => response.promise,
+            releaseQuestionAudioUrl(url) { released.push(url); },
+        });
+
+        const attempt = context.speakWithServerVoice('Old question', 3, true, 12);
+        context.questionSpeechToken = 4;
+        response.resolve('blob:old-question');
+        assert.equal(await attempt, false);
+        assert.deepEqual(released, ['blob:old-question']);
     });
 
     test(`${layout} bounds server playback and ignores late audio starts`, async () => {
@@ -328,7 +374,9 @@ for (const layout of layouts) {
             interviewTerminated: false,
             questionSpeechToken: 3,
             activeQuestionAudio: null,
+            activeQuestionAudioUrl: null,
             serverSpeechUrl: async () => 'blob:cached',
+            releaseQuestionAudioUrl() {},
             startSpeakingUi() { speechUiStarts++; },
             finishSpeakingUi() {},
             activeSpeechCompletion: { token: 3, timeoutId: null },
