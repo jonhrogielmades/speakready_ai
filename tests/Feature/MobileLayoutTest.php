@@ -1545,7 +1545,7 @@ class MobileLayoutTest extends TestCase
             ->get(route('interview.session'));
 
         $response->assertOk()
-            ->assertSee('css/desktop/interview/session.css?v=69', false)
+            ->assertSee('css/desktop/interview/session.css?v=70', false)
             ->assertSee('const cameraDetectionEnabled = true;', false)
             ->assertSee('interview-session-browser-fullscreen', false)
             ->assertDontSee('id="interviewStartModal"', false)
@@ -1629,11 +1629,11 @@ class MobileLayoutTest extends TestCase
         $layouts = [
             'desktop' => [
                 'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36',
-                'stylesheet' => 'css/desktop/interview/session.css?v=69',
+                'stylesheet' => 'css/desktop/interview/session.css?v=70',
             ],
             'mobile' => [
                 'user_agent' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-                'stylesheet' => 'css/mobile/interview/session.css?v=79',
+                'stylesheet' => 'css/mobile/interview/session.css?v=80',
             ],
         ];
 
@@ -2005,7 +2005,7 @@ class MobileLayoutTest extends TestCase
 
         $response->assertOk()
             ->assertSee('<body class="user-mobile-shell mobile-shell"', false)
-            ->assertSee('css/mobile/interview/session.css?v=79', false)
+            ->assertSee('css/mobile/interview/session.css?v=80', false)
             ->assertSee('const cameraDetectionEnabled = false;', false)
             ->assertSee('const cameraPreviewEnabled = cameraDetectionEnabled;', false)
             ->assertDontSee('id="interviewStartModal"', false)

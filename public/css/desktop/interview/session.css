@@ -1268,8 +1268,18 @@
         transition: opacity 0.18s ease, transform 0.24s ease;
     }
     .finish-review-check-row.is-checking .finish-review-row-check {
+        position: relative;
         background: #bfdbfe;
         transform: scale(0.94);
+    }
+    .finish-review-check-row.is-checking .finish-review-row-check::after {
+        content: "";
+        width: 12px;
+        height: 12px;
+        border: 2px solid rgba(37, 99, 235, 0.28);
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: finishReviewStatusSpin 0.8s linear infinite;
     }
     .finish-review-check-row.is-complete .finish-review-row-check {
         color: #ffffff;
@@ -1828,6 +1838,9 @@
         0% { transform: scale(0.45) rotate(-18deg); }
         65% { transform: scale(1.18) rotate(0deg); }
         100% { transform: scale(1) rotate(0deg); }
+    }
+    @keyframes finishReviewStatusSpin {
+        to { transform: rotate(360deg); }
     }
     @keyframes finishReviewButtonSpin {
         0% { transform: rotate(0deg); }
