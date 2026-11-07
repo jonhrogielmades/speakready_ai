@@ -248,16 +248,6 @@ html.interview-setup-page-root,
     border-top: 1px solid rgba(148, 163, 184, .3);
 }
 
-#sec-interview-setup #panel-response .response-head.interviewer-avatar-heading {
-    margin-bottom: 12px !important;
-    padding-bottom: 0 !important;
-    border-bottom: 0 !important;
-}
-
-#sec-interview-setup #panel-response .interviewer-avatar-heading-copy {
-    min-width: 0;
-}
-
 #sec-interview-setup #panel-response .interviewer-avatar-help {
     margin: 4px 0 0;
     color: #64748b;

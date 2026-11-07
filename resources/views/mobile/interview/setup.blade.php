@@ -2,7 +2,7 @@
 @section('title', 'Interview Setup')
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=29') }}" data-page-style="interview-setup-2">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=30') }}" data-page-style="interview-setup-2">
 @endpush
 
 @section('content')
@@ -460,15 +460,8 @@
  </div>
  <div class="setup-inline-error" id="responseModeError" role="alert" hidden>Choose a response mode.</div>
  @php($initialAvatarImage = $setupDefaults['interviewer_avatar'] ? \App\Support\InterviewerAvatar::image($setupDefaults['interviewer_avatar']) : null)
- <div class="interviewer-avatar-picker" aria-describedby="interviewerAvatarPickerHelp interviewerAvatarError">
- <div class="response-head interviewer-avatar-heading">
- <div class="response-head-icon" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></div>
- <div class="interviewer-avatar-heading-copy">
- <h6 class="response-title">AI Interviewer</h6>
- <p class="interviewer-avatar-help" id="interviewerAvatarPickerHelp">Choose the interviewer style for this session.</p>
- </div>
- </div>
- <button type="button" class="interviewer-avatar-trigger" id="interviewerAvatarTrigger" aria-haspopup="dialog" aria-controls="interviewerAvatarDialog" aria-describedby="interviewerAvatarPickerHelp interviewerAvatarError" @if($setupDefaults['interviewer_avatar']) data-selected-avatar="{{ $setupDefaults['interviewer_avatar'] }}" @endif>
+ <div class="interviewer-avatar-picker" aria-describedby="interviewerAvatarError">
+ <button type="button" class="interviewer-avatar-trigger" id="interviewerAvatarTrigger" aria-haspopup="dialog" aria-controls="interviewerAvatarDialog" aria-describedby="interviewerAvatarError" @if($setupDefaults['interviewer_avatar']) data-selected-avatar="{{ $setupDefaults['interviewer_avatar'] }}" @endif>
  <span class="interviewer-avatar-trigger-portrait"><span id="interviewerAvatarPlaceholderIcon" class="interviewer-avatar-trigger-placeholder" aria-hidden="true" @if($initialAvatarImage) hidden @endif><i class="fa-solid fa-user-plus"></i></span><img id="interviewerAvatarSelectedImage" @if($initialAvatarImage) src="{{ asset($initialAvatarImage) }}" @else hidden @endif alt="" width="52" height="52"></span>
  <span class="interviewer-avatar-trigger-copy">
  <span class="interviewer-avatar-trigger-name" id="interviewerAvatarSelectedName">{{ $setupDefaults['interviewer_avatar'] ? \App\Support\InterviewerAvatar::label($setupDefaults['interviewer_avatar']) : 'Choose an AI interviewer' }}</span>

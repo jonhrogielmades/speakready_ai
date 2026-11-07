@@ -1276,22 +1276,6 @@ html:not(.lm) body #roleFinderModal .btn-close {
     border-top: 1px solid rgba(148, 163, 184, .3);
 }
 
-#sec-interview-setup #panel-response .interviewer-avatar-picker .response-head.interviewer-avatar-heading {
-    margin: 0 0 12px !important;
-}
-
-#sec-interview-setup #panel-response .interviewer-avatar-heading-copy {
-    min-width: 0;
-}
-
-#sec-interview-setup #panel-response .interviewer-avatar-heading .response-title {
-    margin: 0 !important;
-}
-
-#sec-interview-setup #panel-response .interviewer-avatar-heading .interviewer-avatar-help {
-    margin: 2px 0 0 !important;
-}
-
 #sec-interview-setup #panel-response .interviewer-avatar-help {
     margin: 0 0 12px;
     color: #64748b;
