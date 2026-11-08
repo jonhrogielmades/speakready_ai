@@ -8,6 +8,11 @@
 /vendor
 /output/
 /tmp/
+/test-results/
+/.codex/
+.rnd
+/*.docx
+/qa_*/
 .env
 .env.backup
 .env.production
