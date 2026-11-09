@@ -7,8 +7,10 @@ use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\User;
+use App\Jobs\RefreshDetailedFeedbackReview;
 use App\Services\AIService;
 use App\Services\DetailedFeedbackReviewService;
+use App\Support\FeedbackCoachingRepair;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use ReflectionMethod;
 use Tests\TestCase;
@@ -151,6 +153,117 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         ]);
         $typed = $method->invoke($service, $answer);
         $this->assertFalse($typed['uses_asr_transcript']);
+    }
+
+    public function test_final_gate_rechecks_source_evidence_even_when_all_quality_flags_claim_success(): void
+    {
+        $answer = $this->answer();
+        $feedback = $this->validProviderFeedback($answer);
+
+        $fabricatedQuote = $feedback;
+        $fabricatedQuote['per_question_feedback'][0]['evidence_quotes'] = ['I improved customer satisfaction by 35%.'];
+        $validation = $this->validateProviderFeedback($answer, $fabricatedQuote);
+        $this->assertSame('rejected', $validation['status']);
+        $this->assertFalse($validation['answer_checks'][(string) $answer->id]['evidence_quotes_verbatim']);
+
+        $incorrectlyUnscored = $feedback;
+        $incorrectlyUnscored['per_question_feedback'][0]['is_too_short'] = true;
+        $incorrectlyUnscored['per_question_feedback'][0]['insufficient_data'] = true;
+        $incorrectlyUnscored['per_question_feedback'][0]['score'] = 5;
+        $incorrectlyUnscored['per_question_feedback'][0]['scoring_confidence'] = 10;
+        $validation = $this->validateProviderFeedback($answer, $incorrectlyUnscored);
+        $this->assertSame('rejected', $validation['status']);
+        $this->assertFalse($validation['answer_checks'][(string) $answer->id]['eligibility_matches_saved_answer']);
+
+        $unboundedScore = $feedback;
+        $unboundedScore['per_question_feedback'][0]['grammar_score'] = 150;
+        $validation = $this->validateProviderFeedback($answer, $unboundedScore);
+        $this->assertSame('rejected', $validation['status']);
+        $this->assertFalse($validation['answer_checks'][(string) $answer->id]['numeric_scores_safe']);
+
+        $falseCheckCounts = $feedback;
+        $falseCheckCounts['per_question_feedback'][0]['feedback_quality']['checks'] = ['pretend_check' => true];
+        $validation = $this->validateProviderFeedback($answer, $falseCheckCounts);
+        $this->assertSame('rejected', $validation['status']);
+        $this->assertFalse($validation['answer_checks'][(string) $answer->id]['all_safeguards_passed']);
+    }
+
+    public function test_final_gate_accepts_verbatim_evidence_with_transcript_whitespace_normalization(): void
+    {
+        $answer = $this->answer();
+        $feedback = $this->validProviderFeedback($answer);
+        $answer->answer_text = str_replace(', ', ",\n\t", $answer->answer_text);
+
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+
+        $this->assertSame('verified', $validation['status'], json_encode($validation['answer_checks']));
+        $this->assertTrue($validation['answer_checks'][(string) $answer->id]['evidence_quotes_verbatim']);
+    }
+
+    public function test_a_slow_provider_response_cannot_overwrite_feedback_after_the_answer_changes(): void
+    {
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $feedback = $this->validProviderFeedback($answer);
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+        $this->assertSame('verified', $validation['status']);
+
+        InterviewAnswer::whereKey($answer->id)->update([
+            'answer_text' => 'I have not yet handled this support handoff.',
+            'ai_feedback' => 'Newer saved feedback must be preserved.',
+        ]);
+
+        $persist = new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback');
+        try {
+            $persist->invoke($this->app->make(DetailedFeedbackReviewService::class), $session, collect([$answer]), $feedback, 'openai', $validation);
+            $this->fail('Stale provider feedback must be rejected.');
+        } catch (\RuntimeException $error) {
+            $this->assertStringContainsString('inputs changed', $error->getMessage());
+        }
+
+        $this->assertSame('Newer saved feedback must be preserved.', $answer->fresh()->ai_feedback);
+        $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
+    }
+
+    public function test_a_changed_question_invalidates_a_verified_review_snapshot(): void
+    {
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $feedback = $this->validProviderFeedback($answer);
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+        $service = $this->app->make(DetailedFeedbackReviewService::class);
+        $persist = new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback');
+        $persist->invoke($service, $session, collect([$answer]), $feedback, 'openai', $validation);
+
+        $saved = $session->fresh(['answers.question', 'feedback', 'score']);
+        $this->assertNotEmpty(data_get($saved->feedback->coaching_summary, 'review_context.detailed_review_validation.input_fingerprint'));
+        $this->assertFalse($service->shouldRefreshWithProvider($saved));
+
+        $answer->question->update(['expected_guide' => 'Explain a disagreement and how you resolved it.']);
+        $this->assertTrue($service->shouldRefreshWithProvider($session->fresh(['answers.question', 'feedback', 'score'])));
+    }
+
+    public function test_queued_local_repair_reloads_answers_after_a_provider_refresh_is_rejected(): void
+    {
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $replacement = 'I checked the current handoff log and escalated the unresolved approval.';
+        $service = \Mockery::mock(DetailedFeedbackReviewService::class);
+        $service->shouldReceive('refreshWithProvidersIfNeeded')->once()->andReturnUsing(
+            function (InterviewSession $candidate) use ($answer, $replacement): bool {
+                $candidate->load('answers.question');
+                InterviewAnswer::whereKey($answer->id)->update(['answer_text' => $replacement]);
+
+                return false;
+            }
+        );
+        $repair = \Mockery::mock(FeedbackCoachingRepair::class);
+        $repair->shouldReceive('repairSession')->once()->withArgs(
+            fn (InterviewSession $candidate): bool => $candidate->answers->first()->answer_text === $replacement
+        )->andReturn(true);
+
+        (new RefreshDetailedFeedbackReview((int) $session->id, (int) $session->user_id))->handle($service, $repair);
     }
 
     public function test_verified_mixed_summary_persists_its_source_and_does_not_refresh_again(): void

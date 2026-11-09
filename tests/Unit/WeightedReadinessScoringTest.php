@@ -235,8 +235,12 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertSame('A customer raised a concern. I needed to respond to the concern. I listened to the customer, checked the account, and explained the next step clearly. This gave the customer a clear next step.', $shownStarDraft);
 
         $unstructuredStarDraft = review_better_answer_text('I listened to the customer and explained the next step.', $starAnswer, $starQuestion);
-        $this->assertStringContainsString('In a customer situation', $unstructuredStarDraft);
-        $this->assertStringContainsString('I listened to the customer', $unstructuredStarDraft);
+        $this->assertStringContainsString($starAnswer['answer_text'], $unstructuredStarDraft);
+        $this->assertStringNotContainsString('In a customer situation', $unstructuredStarDraft);
+        $this->assertStringNotContainsString('My task was', $unstructuredStarDraft);
+        $this->assertStringContainsString('using only details I can confirm', $unstructuredStarDraft);
+        $this->assertGreaterThanOrEqual(3, review_feedback_sentence_count($unstructuredStarDraft));
+        $this->assertLessThanOrEqual(6, review_feedback_sentence_count($unstructuredStarDraft));
         $this->assertStringNotContainsString('Situation:', $unstructuredStarDraft);
         $this->assertStringNotContainsString('[', $unstructuredStarDraft);
 
@@ -281,8 +285,12 @@ class WeightedReadinessScoringTest extends TestCase
         $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
 
         $this->assertStringNotContainsString('A stronger answer would', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('I listened to the customer', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('In a customer situation', $normalized['better_sample_answer']);
+        $this->assertStringContainsString($answer['answer'], $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('In a customer situation', $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('My task was', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('using only details I can confirm', $normalized['better_sample_answer']);
+        $this->assertGreaterThanOrEqual(3, review_feedback_sentence_count($normalized['better_sample_answer']));
+        $this->assertLessThanOrEqual(6, review_feedback_sentence_count($normalized['better_sample_answer']));
         $this->assertStringNotContainsString('Situation:', $normalized['better_sample_answer']);
         $this->assertStringNotContainsString('[', $normalized['better_sample_answer']);
     }
@@ -339,7 +347,11 @@ class WeightedReadinessScoringTest extends TestCase
         $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
 
         $this->assertStringContainsString($answer['answer'], $normalized['better_sample_answer']);
-        $this->assertStringContainsString('In a customer situation', $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('In a customer situation', $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('My task was', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('using only details I can confirm', $normalized['better_sample_answer']);
+        $this->assertGreaterThanOrEqual(3, review_feedback_sentence_count($normalized['better_sample_answer']));
+        $this->assertLessThanOrEqual(6, review_feedback_sentence_count($normalized['better_sample_answer']));
         $this->assertStringNotContainsString('Situation:', $normalized['better_sample_answer']);
         $this->assertStringNotContainsString('[', $normalized['better_sample_answer']);
     }

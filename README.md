@@ -466,7 +466,11 @@ AI Coach chat uses a low temperature for more consistent guidance, bounded provi
 
 ### Feedback Reliability And Fallbacks
 
+Interview follow-ups use the latest saved answer and recent connected turns. Both hosted replies and local fallbacks check for repeated questions and already-supplied outcomes. Local probes quote a real answer detail, preserve uncertainty, and continue the same example while respecting the selected question type and role.
+
 Interview feedback tries the selected or evaluated provider first, then follows `AI_FEEDBACK_PROVIDER_PRIORITY` for fallbacks. Each provider receives one protected share of the total deadline; retries may use only that provider's remaining share, so a slow primary cannot consume the time reserved for later providers. It accepts a hosted response only after strict structured-output, answer-coverage, score-plausibility, and exact-evidence checks pass. A semantically invalid response fails over to the next configured provider. Only a complete, strictly validated API response that did not need provider-recovery repair may replace a saved Detailed Review. Accepted responses are still normalized through deterministic evidence and score guards before persistence. If every provider fails, interview completion uses the validation-gated local model and then deterministic evidence-based feedback, while a later review refresh keeps the already-saved result.
+
+Local and hosted scoring share action/result checks: dates and team sizes do not establish an outcome, and a hypothetical plan is not a completed behavioral example. Qualitative and unsuccessful outcomes still count as reported evidence. Provider numeric claims must preserve quantities and units from the answer. Detailed Review refreshes compare a locked input fingerprint before saving, so an in-flight API response cannot overwrite feedback after its answer or question changed. Displayed evidence excerpts are also checked against the saved answer.
 
 Learning Game provider feedback is narrative enrichment only. The deterministic game rubric remains authoritative for scores, pass/fail, XP, and progression; provider score fields are ignored, and any provider, validation, or persistence failure preserves the deterministic scorecard and coaching fallback.
 

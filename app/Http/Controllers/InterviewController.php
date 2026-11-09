@@ -22,13 +22,13 @@ use App\Services\AudioDurationService;
 use App\Services\ChallengePositionService;
 use App\Services\CareerRoleSuggestionService;
 use App\Services\EvidenceBasedCoachingService;
+use App\Services\InterviewConversationService;
 use App\Services\InterviewQuestionAlignmentService;
 use App\Services\JobPositionCategoryService;
 use App\Services\LearningGameCertificateService;
 use App\Services\LocalSpeechAssessmentService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
-use App\Services\QuestionRecommendationService;
 use App\Services\TranscriptService;
 use App\Services\TrustworthyAssessmentService;
 use App\Services\VoiceTranscriptionProofService;
@@ -718,6 +718,7 @@ class InterviewController extends Controller
  ->where('interview_session_id', $session->id)
  ->whereNull('retry_of_answer_id')
  ->orderBy('created_at', 'asc')
+ ->orderBy('id', 'asc')
  ->get()
  ->map(function ($ans) {
  return [
@@ -739,9 +740,10 @@ class InterviewController extends Controller
  }
 
  $dataset = $this->datasetForSession($session);
+ $conversation = app(InterviewConversationService::class);
  try {
  // Persisted questions and answers are the authoritative conversation.
- $followUpText = $followUpEnabled? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType): AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
+ $followUpText = $followUpEnabled? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType): $conversation->fallbackReply($session, $history, $interviewerInputText, $isFinal, $requiredQuestionType);
  } catch (\Throwable $error) {
  Log::warning('Interview follow-up generation failed; using local fallback.', [
  'session_id' => $session->id,
@@ -750,16 +752,19 @@ class InterviewController extends Controller
  'error_type' => $error::class,
  ]);
  $provider = 'local';
- $followUpText = AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
+ $followUpText = $conversation->fallbackReply($session, $history, $interviewerInputText, $isFinal, $requiredQuestionType);
  }
 
  if (! $followUpText) {
  $followUpText = "Thank you for sharing that. Could you tell me more about the experience that prepares you for the {$session->target_position} role?"; // fallback
  }
  $followUpText = trim($followUpText);
+ if ($followUpText === $conversation->fallbackReply($session, $history, $interviewerInputText, $isFinal, $requiredQuestionType)) {
+ $provider = 'local';
+ }
  // A concrete reference to the candidate's answer already keeps a natural
  // follow-up on topic; repeating the full job title in every turn sounds stiff.
- if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText)) {
+ if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText, $history)) {
  $followUpText = $this->roleAlignedQuestionText(
  $followUpText,
  (string) $session->target_position,
@@ -769,36 +774,16 @@ class InterviewController extends Controller
 
  // Treat provider output as a draft, never as an unchecked interviewer turn.
  // The guard requires one clean question and a meaningful connection to the
- // candidate's latest answer. If a provider misses that
- // bar, prefer a source-backed recommendation and finally a deterministic
- // answer-grounded fallback so the conversation cannot jump topics.
+ // candidate's latest answer and the questions already asked. A local
+ // conversational probe preserves that thread when a provider misses the bar.
  $followUpSourceMetadata = $dataset? QuestionDatasetProvider::sourceMetadata($dataset): [];
- if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText)
+ if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText, $history)
  || ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($followUpText, $requiredQuestionType))) {
- $recommendedFollowUp = $this->recommendedInterviewFollowUp(
- $dataset,
- $session,
- $interviewerInputText,
- $provider,
- $requiredQuestionType
- );
-
- if ($recommendedFollowUp !== null) {
- $followUpText = $recommendedFollowUp['text'];
- $provider = (string) ($recommendedFollowUp['provider']?? 'local');
- $followUpSourceMetadata = array_merge($followUpSourceMetadata, $recommendedFollowUp['metadata']);
- } else {
  $provider = 'local';
- $followUpText = AIService::fallbackInterviewReply($session, $history, $interviewerInputText, $isFinal);
- $followUpText = $this->roleAlignedQuestionText(
- $followUpText,
- (string) $session->target_position,
- $this->candidateAskedInterviewerNameQuestion($interviewerInputText)
- );
- }
+ $followUpText = $conversation->fallbackReply($session, $history, $interviewerInputText, $isFinal, $requiredQuestionType);
  }
 
- if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText)
+ if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText, $history)
  || ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($followUpText, $requiredQuestionType))) {
  $provider = 'local';
  $followUpText = $requiredQuestionType !== null
@@ -817,6 +802,9 @@ class InterviewController extends Controller
  'source_type' => 'local_question_fallback',
  ];
  }
+ }
+ if ($provider === 'local') {
+ $followUpSourceMetadata = ['source_name' => 'SpeakReady conversation follow-up', 'source_type' => 'local_question_fallback'];
  }
 
  try {
@@ -851,7 +839,9 @@ class InterviewController extends Controller
 
  // 4. Save new AI Question
  $sourceMetadata = $followUpSourceMetadata;
- $existingQuestionTexts = $questionSequence->pluck('question_text')->all();
+ // Unanswered future drafts are replaced below; only spoken questions
+ // should prevent a valid answer-based follow-up from being used.
+ $existingQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')->all();
  $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts, $requiredQuestionType, $interviewerInputText);
  $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
  $this->deleteUnansweredFutureQuestions($lockedSession, $question);
@@ -4534,160 +4524,6 @@ return response()->json([
  }, $records, array_keys($records));
  }
 
- private function sourceBackedQuestionRecords(array $dataset, InterviewSession $session, array $selectedQuestionTypes, int $limit, string $difficulty, string $position,?string $provider = null, string $latestAnswer = ''): array
- {
- $limit = max(1, min(30, $limit));
- $selectedTypes = array_values(array_filter($selectedQuestionTypes));
- $difficulty = ucfirst(strtolower($difficulty));
- $existingQuestionTexts = Question::where('interview_session_id', $session->id)
- ->pluck('question_text')
- ->all();
- $alignment = app(InterviewQuestionAlignmentService::class);
- $questionRecommendations = app(QuestionRecommendationService::class);
- $candidateLimit = $questionRecommendations->candidatePoolLimit($limit);
- $datasetRanked = QuestionDatasetProvider::rankedQuestions(
- $dataset,
- $position,
- $difficulty,
- $selectedTypes,
- $candidateLimit,
- $existingQuestionTexts
- );
- $datasetRanked = array_values(array_filter(
- $datasetRanked,
- fn (array $record): bool => $alignment->isRoleRelevant(
- (string) ($record['question_text']?? ''),
- $position,
- (string) ($session->job_description?? '')
- )
- ));
-
- if (! empty($datasetRanked)) {
- $modelRanked = $questionRecommendations->rerankCandidatesForContext([
- 'category' => $dataset['category']?? null,
- 'target_position' => $session->target_position,
- 'difficulty' => $difficulty,
- 'question_types' => $selectedTypes,
- 'interview_focus' => $session->interview_focus,
- 'resume_text' => $session->resume_text,
- 'job_description' => $session->job_description,
- 'ai_provider' => $provider,
- 'latest_answer' => $latestAnswer,
- ], $datasetRanked, $limit);
- $datasetRanked = ! empty($modelRanked)? $modelRanked: array_slice($datasetRanked, 0, $limit);
- $alignedTexts = $this->roleAlignedQuestionTexts(array_column($datasetRanked, 'question_text'), $position);
-
- return array_map(function (array $record, int $index) use ($alignedTexts): array {
- $record['question_text'] = $alignedTexts[$index]?? $record['question_text'];
-
- return $record;
- }, $datasetRanked, array_keys($datasetRanked));
- }
-
- $recommended = app(QuestionRecommendationService::class)->recommendForContext([
- 'target_position' => $session->target_position,
- 'difficulty' => $difficulty,
- 'interview_focus' => $session->interview_focus,
- 'resume_text' => $session->resume_text,
- 'job_description' => $session->job_description,
- 'latest_answer' => $latestAnswer,
- 'exclude_question_texts' => $existingQuestionTexts,
- ], $dataset, $selectedTypes, $limit);
- $recommended = array_values(array_filter(
- $recommended,
- fn (array $record): bool => $alignment->isRoleRelevant(
- (string) ($record['question_text']?? ''),
- $position,
- (string) ($session->job_description?? '')
- )
- ));
- if (! empty($recommended)) {
- $alignedTexts = $this->roleAlignedQuestionTexts(array_column($recommended, 'question_text'), $position);
-
- return array_map(function (array $record, int $index) use ($alignedTexts): array {
- $record['question_text'] = $alignedTexts[$index]?? $record['question_text'];
-
- return $record;
- }, $recommended, array_keys($recommended));
- }
-
- $questions = collect($dataset['questions']?? [])
- ->filter(fn ($question): bool => is_array($question) && $alignment->isRoleRelevant(
- (string) ($question['question_text']?? ''),
- $position,
- (string) ($session->job_description?? '')
- ));
-
- if (! empty($selectedTypes)) {
- $questions = $questions->filter(fn (array $question) => in_array($question['type']?? '', $selectedTypes, true));
- }
-
- $difficultyMatched = $questions->filter(fn (array $question) => ($question['difficulty']?? 'Medium') === $difficulty);
- $otherDifficulty = $questions->reject(fn (array $question) => ($question['difficulty']?? 'Medium') === $difficulty);
-
- $questions = $this->limitedUniqueQuestionRecords(
- $difficultyMatched->concat($otherDifficulty),
- $limit
- );
-
- if ($questions->isEmpty() && empty($selectedTypes)) {
- $questions = $this->limitedUniqueQuestionRecords(
- collect($dataset['questions']?? [])->filter(fn ($question): bool => is_array($question) && $alignment->isRoleRelevant(
- (string) ($question['question_text']?? ''),
- $position,
- (string) ($session->job_description?? '')
- )),
- $limit
- );
- }
-
- $records = $questions->take($limit)->map(fn (array $question): array => [
- 'question_text' => (string) $question['question_text'],
- 'type' => $question['type']?? null,
- 'expected_guide' => $question['expected_guide']?? null,
- 'mapped_skills' => $question['mapped_skills']?? [],
- 'source_name' => $question['source_name']?? null,
- 'source_url' => $question['source_url']?? null,
- 'source_type' => $question['source_type']?? null,
- ])->values()->all();
- $alignedTexts = $this->roleAlignedQuestionTexts(array_column($records, 'question_text'), $position);
-
- return array_map(function (array $record, int $index) use ($alignedTexts): array {
- $record['question_text'] = $alignedTexts[$index]?? $record['question_text'];
-
- return $record;
- }, $records, array_keys($records));
- }
-
- private function limitedUniqueQuestionRecords(Collection $questions, int $limit): Collection
- {
- $records = [];
- $seen = [];
-
- foreach ($questions as $question) {
- if (! is_array($question)) {
- continue;
- }
-
- $text = trim((string) ($question['question_text']?? ''));
- $key = $this->normalizedQuestionText($text);
-
- if ($text === '' || $key === '' || isset($seen[$key])) {
- continue;
- }
-
- $seen[$key] = true;
- $question['question_text'] = $text;
- $records[] = $question;
-
- if (count($records) >= $limit) {
- break;
- }
- }
-
- return collect($records);
- }
-
  private function defaultQuestionCoachingMetadata(string $questionType): array
  {
  return match (strtolower(trim($questionType))) {
@@ -5024,7 +4860,7 @@ return response()->json([
  return $questions;
  }
 
- private function isReliableInterviewFollowUpText(string $questionText, InterviewSession $session, string $latestAnswer): bool
+ private function isReliableInterviewFollowUpText(string $questionText, InterviewSession $session, string $latestAnswer, array $history = []): bool
  {
  $questionText = trim(preg_replace('/\s+/u', ' ', strip_tags($questionText))?? '');
 
@@ -5033,6 +4869,10 @@ return response()->json([
  || TranscriptService::wordCount($questionText) < 5
  || TranscriptService::wordCount($questionText) > 75
  || preg_match('/\b(?:score|scored|grade|graded|rubric|feedback|markdown|json|api key|system prompt|question count|how many questions|as an ai)\b/i', $questionText)) {
+ return false;
+ }
+
+ if (! app(InterviewConversationService::class)->isCoherentFollowUp($questionText, $latestAnswer, $history)) {
  return false;
  }
 
@@ -5051,13 +4891,17 @@ return response()->json([
  $answerTokens = $this->interviewGroundingTokens($latestAnswer, $position);
  $questionTokens = $this->interviewGroundingTokens($questionText, $position);
  $overlap = count(array_intersect($answerTokens, $questionTokens));
- $hasEvidenceProbe = preg_match('/\b(?:specific|example|situation|experience|result|outcome|impact|decision|action|responsib\w*|role|tradeoff|constraint|stakeholder|tool|process|metric|lesson|learn\w*|improv\w*|verif\w*|risk|priorit\w*|challenge|handle|apply|evidence|fit|strength|motivat\w*|weakness|ownership|personally|describe|walk|explain|tell|detail|approach)\b/i', $questionText) === 1;
+ $hasEvidenceProbe = preg_match('/\b(?:specific|example|situation|experience|result|outcome|impact|decision|action|responsib\w*|role|tradeoff|constraint|stakeholder|tool|process|metric|lesson|learn\w*|improv\w*|verif\w*|risk|priorit\w*|challenge|handle|apply|evidence|fit|strength|motivat\w*|weakness|ownership|personally|describe|walk|explain|tell|detail|approach|choose|check|happened|difficult|part|interests|skill|prepare|support)\b/i', $questionText) === 1;
 
  // A short or unavailable answer cannot support a claim about what happened.
  // Ask for evidence in the target role instead of treating a generic probe as
  // proof that an unrelated generated question follows the conversation.
- if ($this->unavailableInterviewAnswerText($latestAnswer) || count($answerTokens) < 4) {
+ if ($this->unavailableInterviewAnswerText($latestAnswer)) {
  return $mentionsPosition && $hasEvidenceProbe;
+ }
+
+ if (count($answerTokens) < 4) {
+ return $hasEvidenceProbe && ($mentionsPosition || ($overlap > 0 && str_contains($questionText, '“')));
  }
 
  return $hasEvidenceProbe && $overlap > 0;
@@ -5105,61 +4949,6 @@ return response()->json([
  $matches[0]?? [],
  fn (string $token): bool => ! in_array($token, $stopWords, true)
  )));
- }
-
- private function recommendedInterviewFollowUp(?array $dataset, InterviewSession $session, string $latestAnswer, string $provider,?string $requiredQuestionType = null):?array
- {
- if ($dataset === null) {
- return null;
- }
-
- try {
- $records = $this->sourceBackedQuestionRecords(
- $dataset,
- $session,
- $requiredQuestionType !== null? [$requiredQuestionType]: $this->decodeQuestionTypes($session->question_types),
- 5,
- (string) ($session->difficulty?? 'medium'),
- (string) ($session->target_position?? ''),
- $provider,
- $latestAnswer
- );
- } catch (\Throwable $error) {
- Log::warning('Source-backed interview follow-up recommendation failed; using local fallback.', [
- 'session_id' => $session->id,
- 'error_type' => $error::class,
- ]);
-
- return null;
- }
-
- foreach ($records as $record) {
- if (! is_array($record)) {
- continue;
- }
-
- $text = $this->roleAlignedQuestionText(
- (string) ($record['question_text']?? ''),
- (string) ($session->target_position?? '')
- );
- if (! $this->isReliableInterviewFollowUpText($text, $session, $latestAnswer)
- || ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($text, $requiredQuestionType))) {
- continue;
- }
-
- return [
- 'text' => $text,
- 'provider' => $record['ai_provider']?? 'local',
- 'metadata' => array_filter([
- 'source_name' => $record['source_name']?? null,
- 'source_url' => $record['source_url']?? null,
- 'mapped_skills' => $record['mapped_skills']?? [],
- 'ai_provider' => $record['ai_provider']?? null,
- ], static fn ($value): bool => $value !== null && $value !== ''),
- ];
- }
-
- return null;
  }
 
  private function roleAlignedQuestionTexts(array $questions, string $position): array
@@ -5454,8 +5243,8 @@ return response()->json([
 
  $clauses = preg_split('/[.!;]\s+/u', $beforeQuestionMark)?: [];
  $question = trim((string) end($clauses));
- $personal = preg_match('/\b(?:yourself|strengths?|weakness(?:es)?|motivat\w*|interests?|career|goals?|values?|work style|bring to|why (?:do|did|would|are) you)\b|\b(?:tell me about|describe|walk me through)\s+your background\b|\b(?:what|why|how|which)\b.*\bfit\b/i', $question) === 1;
- $behavioral = preg_match('/\b(?:tell me about|describe|share|give (?:me )?an example|walk me through)\b.*\b(?:time|experience|project|incident|challenge|problem|decision|situation|case|work)\b|\bgive (?:me )?an example of how you\b|\b(?:what|how|which)\b.*\b(?:did you|have you|was your|you handled|you learned)\b/i', $question) === 1
+ $personal = preg_match('/\b(?:yourself|strengths?|weakness(?:es)?|motivat\w*|interests?|career|goals?|values?|work style|bring to)\b|\bwhy (?:do|did|would|are) you\b.*\b(?:want|interested|apply|applying|pursue)\b|\b(?:tell me about|describe|walk me through)\s+your background\b|\b(?:what|why|how|which)\b.*\bfit\b/i', $question) === 1;
+ $behavioral = preg_match('/\b(?:tell me about|describe|share|give (?:me )?an example|walk me through)\b.*\b(?:time|experience|project|incident|challenge|problem|decision|situation|case|work)\b|\bgive (?:me )?an example of how you\b|\b(?:what|how|why|which)\b.*\b(?:did you|have you|was your|you handled|you learned)\b/i', $question) === 1
  && preg_match('/\b(?:would you|might you|suppose|imagine)\b/i', $question) !== 1;
  $technical = preg_match('/\b(?:technical|tools?|systems?|software|code|database|api|diagnos\w*|debug\w*|design|test\w*|verif\w*|troubleshoot\w*|deploy\w*|architecture|algorithm|procedure|protocol)\b/i', $question) === 1
  || (preg_match('/\b(?:process|workflow|method|steps?)\b/i', $question) === 1

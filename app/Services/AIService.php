@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Log;
 
 class AIService
 {
- public const REVIEW_POLICY_VERSION = 2;
+ public const REVIEW_POLICY_VERSION = 3;
 
  private const AI_FAILURE_MESSAGE = 'Sorry, I am having trouble connecting to my brain right now.';
 
@@ -45,8 +45,6 @@ class AIService
  ];
 
  private const ACTION_VERB_PATTERN = '(?:lead|led|own|owned|build|built|create|created|resolve|resolved|solve|solved|fix|fixed|improve|improved|reduce|reduced|increase|increased|deliver|delivered|design|designed|implement|implemented|organize|organized|manage|managed|test|tested|analyze|analyzed|coordinate|coordinated|decide|decided|handle|handled|support|supported|communicate|communicated|verify|verified|check|checked|plan|planned|inspect|inspected|diagnose|diagnosed|review|reviewed|prioritize|prioritized|explain|explained|validate|validated|measure|measured|compare|compared|document|documented|escalate|escalated|write|wrote|prepare|prepared|train|trained|assist|assisted|propose|proposed|research|researched|configure|configured|deploy|deployed|investigate|investigated|monitor|monitored|report|reported|present|presented|negotiate|negotiated|mentor|mentored|facilitate|facilitated|maintain|maintained|migrate|migrated|automate|automated|optimize|optimized|launch|launched|process|processed|schedule|scheduled|delegate|delegated|select|selected|evaluate|evaluated|gather|gathered|contact|contacted|collaborate|collaborated|update|updated|identify|identified|recommend|recommended)';
-
- private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|receiv(?:e|ed)|thank(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
 
  private const INTERVIEWER_DISPLAY_NAME = 'Karyl';
 
@@ -690,6 +688,7 @@ class AIService
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
  $prompt.= 'The next interviewer turn must be based on the candidate answer immediately before it, not on a generic question list. When natural, briefly reference one concrete detail the candidate just mentioned before asking the next question. ';
+ $prompt.= 'Read the earlier turns before choosing what to ask: do not ask again for an action, result, reason, or constraint already explained. Ask one narrow unanswered detail about the same example, or explicitly bridge from that detail when the required question type changes. Preserve negation and uncertainty; a plan is not a past achievement. Do not presume success, a problem, a tool, or a tradeoff the candidate never mentioned. ';
  $prompt.= $liveFeedbackMode === 'real_interview'
  ? 'Acknowledge the answer briefly and neutrally before the question. Do not assess or coach the candidate mid-interview. '
  : 'Use a confidence-building acknowledgement that helps the candidate keep answering, such as thanking them for a specific detail or naming the useful starting point they gave. Keep encouragement specific to effort or shared evidence, not performance scoring. ';
@@ -796,7 +795,8 @@ class AIService
  $response = self::chatMessage($prompt, [], $provider, $systemPrompt, $chatRequestOptions);
  $response = self::sanitizeInterviewerReply($response);
 
- if (! empty($response) && $response!== self::AI_FAILURE_MESSAGE) {
+ if (! empty($response) && $response!== self::AI_FAILURE_MESSAGE
+ && app(InterviewConversationService::class)->isCoherentFollowUp($response, (string) $latestAnswer, $history)) {
  return $response;
  }
  } catch (\Exception $e) {
@@ -809,7 +809,7 @@ class AIService
  }
  }
 
- return self::fallbackInterviewReply($session, $history, $latestAnswer, $isFinal);
+ return app(InterviewConversationService::class)->fallbackReply($session, $history, (string) $latestAnswer, $isFinal, $requiredQuestionType);
  }
 
  public static function generateDashboardBubbleMessages(array $context = [],?string $provider = null): array
@@ -1272,177 +1272,7 @@ return [
 
  public static function fallbackInterviewReply($session, array $history, string $latestAnswer, bool $isFinal = false): string
  {
- $targetPosition = trim((string) ($session->target_position?? 'the role'))?: 'the role';
- $answerText = trim(preg_replace('/\s+/', ' ', $latestAnswer)?? '');
- $wordCount = self::wordCount($answerText);
- $lastInteraction = $history === []? []: $history[array_key_last($history)];
- $question = trim((string) data_get($lastInteraction, 'question', ''));
- $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
- $isRealInterviewMode = $liveFeedbackMode === 'real_interview';
- $assistanceLevel = self::normalizedAssistanceLevel($session->ai_assistance_level?? 'standard');
- $answerUnavailable = $answerText === '' || preg_match('/^(?:\(Skipped or no answer\)|\(No answer before the time limit\)|\[User skipped the question\]|\[Time expired with no answer\])$/i', $answerText);
- $voiceTranscriptUnavailable = str_starts_with($answerText, '[Voice answer saved for playback. Automatic transcription was unavailable');
- $rapportReply = ! $answerUnavailable && ! $voiceTranscriptUnavailable? self::candidateSideQuestionReply($answerText): '';
- if ($voiceTranscriptUnavailable) {
- $acknowledgement = 'Thank you for recording your answer. ';
- } elseif ($answerUnavailable) {
- $acknowledgement = 'No problem. ';
- } elseif ($rapportReply !== '' && $wordCount < 15) {
- $acknowledgement = $rapportReply;
- } else {
- $acknowledgement = $rapportReply.self::answerBasedAcknowledgement($answerText);
- }
-
- if (! $answerUnavailable && ! $voiceTranscriptUnavailable && $rapportReply === '') {
- $acknowledgement = self::personaFallbackAcknowledgement($session->interviewer_avatar?? null, $answerText, $acknowledgement);
- }
-
- if ($isFinal) {
- $coachedFinalQuestion = match ($assistanceLevel) {
- 'beginner' => "For my final question, in simple terms, what is the strongest example you want me to remember for the {$targetPosition} role?",
- 'challenge' => "For my final question, what hard evidence best proves your fit for the {$targetPosition} role under pressure?",
- default => "For my final question, what is the strongest evidence you want me to remember about your fit for the {$targetPosition} role?",
- };
-
- return $isRealInterviewMode
- ? "Thank you for staying with the interview. For my final question, what is the strongest evidence I should weigh about your fit for the {$targetPosition} role?"
- : "{$acknowledgement}{$coachedFinalQuestion}";
- }
-
- if ($answerUnavailable || $voiceTranscriptUnavailable) {
- return $isRealInterviewMode
- ? "{$acknowledgement}What specific experience best shows you can handle the {$targetPosition} role?"
- : "{$acknowledgement}Could you share one specific project or situation that prepared you for the {$targetPosition} role?";
- }
-
- if ($wordCount < 15) {
- if ($rapportReply !== '') {
- return "{$rapportReply}To continue, what specific experience prepared you for the {$targetPosition} role?";
- }
-
- if ($isRealInterviewMode) {
- return "To assess this fairly, let's make it concrete. What specific situation can you walk me through for the {$targetPosition} role?";
- }
-
- return match ($assistanceLevel) {
- 'beginner' => "You can start small; one real moment is enough. What specific situation can you describe for the {$targetPosition} role?",
- 'challenge' => "You have a starting point; now let's add stronger evidence. What specific situation proves you can handle the {$targetPosition} role?",
- default => "You're started; let's build it into a stronger practice answer. What specific situation can you walk me through for the {$targetPosition} role?",
- };
- }
-
- if (! preg_match('/\b(I|my)\b/i', $answerText)) {
- if ($isRealInterviewMode) {
- return "{$acknowledgement}What personal responsibility did you own, and which decision would you defend for the {$targetPosition} role?";
- }
-
- return match ($assistanceLevel) {
- 'beginner' => "{$acknowledgement}Let's make your role easy to see. What part did you personally handle for the {$targetPosition} role?",
- 'challenge' => "{$acknowledgement}You're close; the next step is clearer ownership. What decision or action did you personally own for the {$targetPosition} role?",
- default => "{$acknowledgement}Let's make the answer clearer and easier to trust. What was your personal responsibility, and which decision or action did you directly own for the {$targetPosition} role?",
- };
- }
-
- if (! preg_match('/\b(result|outcome|impact|achieved|improved|reduced|increased|delivered|\d+%?|\bpercent\b|lesson)\b/i', $answerText)) {
- if ($isRealInterviewMode) {
- return "{$acknowledgement}What measurable result or consequence proves that action mattered for the {$targetPosition} role?";
- }
-
- return match ($assistanceLevel) {
- 'beginner' => "{$acknowledgement}You're almost at a complete answer. What result or lesson came from it for the {$targetPosition} role?",
- 'challenge' => "{$acknowledgement}Good, now make the evidence sharper. What measurable result proves your action worked, and why should that count for the {$targetPosition} role?",
- default => "{$acknowledgement}That's useful context; let's connect it to impact. What result, customer impact, metric, or lesson came from that, and why would it matter in the {$targetPosition} role?",
- };
- }
-
- if (preg_match('/\b(technical|debug|system|code|database|api|software|program|testing|diagnose|architecture)\b/i', $question.' '.$answerText)) {
- if ($isRealInterviewMode) {
- return "{$acknowledgement}What tradeoff did you make, and what risk would you defend if I challenged that decision for the {$targetPosition} role?";
- }
-
- return match ($assistanceLevel) {
- 'beginner' => "{$acknowledgement}That's a helpful start. What tradeoff did you consider, and what did you learn for the {$targetPosition} role?",
- 'challenge' => "{$acknowledgement}Good, let's raise the bar. Which tradeoff would you defend if the interviewer challenged your decision for the {$targetPosition} role?",
- default => "{$acknowledgement}That gives us something concrete to build on. What tradeoff did you consider, and how would you apply that same judgment as a {$targetPosition}?",
- };
- }
-
- $personaQuestion = self::personaGeneralFallbackQuestion($session->interviewer_avatar?? null, $targetPosition);
- if ($personaQuestion !== null && $assistanceLevel === 'standard') {
- return "{$acknowledgement}{$personaQuestion}";
- }
-
- if ($isRealInterviewMode) {
- return "{$acknowledgement}What constraint made that decision difficult, and what evidence shows you handled it at the level expected for a {$targetPosition}?";
- }
-
- return match ($assistanceLevel) {
- 'beginner' => "{$acknowledgement}You're doing the right thing by giving context. What was the main challenge, and how would you handle a similar situation as a {$targetPosition}?",
- 'challenge' => "{$acknowledgement}Strong answers can handle pressure, so let's test the judgment. What constraint exposed the hardest judgment call, and how would you defend your decision as a {$targetPosition}?",
- default => "{$acknowledgement}That's a solid direction; let's bring out the judgment behind it. What constraint or tradeoff made that situation difficult, and how would you handle a similar case as a {$targetPosition}?",
- };
- }
-
- private static function personaGeneralFallbackQuestion(?string $avatar, string $targetPosition): ?string
- {
- return match (InterviewerAvatar::normalize($avatar)) {
- 'structured_hr' => "What constraint in that situation shaped your decision, and what evidence supports your approach for the {$targetPosition} role?",
- 'hiring_manager' => "What constraint affected delivery, and how did you handle it for the {$targetPosition} role?",
- 'role_specialist' => "What constraint affected your method, and how did you verify your choice for the {$targetPosition} role?",
- 'senior_leader' => "What tradeoff did you weigh, and what impact did your decision have for the {$targetPosition} role?",
- 'panel_interviewer' => "What evidence would persuade a skeptical panel that your decision was the right one for the {$targetPosition} role?",
- default => null,
- };
- }
-
- private static function personaFallbackAcknowledgement(?string $avatar, string $answerText, string $default): string
- {
- $anchor = self::answerAnchor($answerText);
-
- return match (InterviewerAvatar::normalize($avatar)) {
- 'structured_hr' => $anchor !== '' ? "Thank you. You mentioned {$anchor}. " : 'Thank you. Let us make that specific. ',
- 'hiring_manager' => $anchor !== '' ? "Thanks for that practical example. You mentioned {$anchor}. " : 'Thanks for explaining your work. ',
- 'role_specialist' => $anchor !== '' ? "I want to understand the method behind that. You mentioned {$anchor}. " : 'I would like to understand the detail behind that. ',
- 'senior_leader' => $anchor !== '' ? "Thank you. You mentioned {$anchor}; let us look at the wider impact. " : 'Thank you for outlining your approach. ',
- 'panel_interviewer' => $anchor !== '' ? "Let us examine the evidence behind {$anchor}. " : 'Thank you. Let us examine the evidence. ',
- default => $default,
- };
- }
-
- private static function answerBasedAcknowledgement(string $answerText): string
- {
- $anchor = self::answerAnchor($answerText);
-
- return $anchor!== ''? "Thanks for sharing that; you mentioned {$anchor}. ": 'Thank you for continuing. ';
- }
-
- private static function candidateSideQuestionReply(string $answerText): string
- {
- $clean = trim(preg_replace('/\s+/u', ' ', $answerText)?? '');
- if ($clean === '') {
- return '';
- }
-
- $lower = strtolower($clean);
- if (str_contains($lower, 'what is your name')
- || str_contains($lower, "what's your name")
- || str_contains($lower, 'may i know your name')
- || str_contains($lower, 'can i ask your name')
- || str_contains($lower, 'who are you')
- || preg_match('/\b(?:what(?:\'s| is)|may i know|can i ask|who are you|tell me)\b.*\b(?:your name|you called|who you are)\b/i', $clean)
- || preg_match('/\b(?:your name|name of (?:the )?interviewer)\b/i', $clean)) {
- return 'I am your AI interviewer, nice to meet you. ';
- }
-
- if (preg_match('/\b(?:how are you|how do you do)\b/i', $clean)) {
- return 'I am doing well, thank you for asking. I am glad you are here. ';
- }
-
- if (preg_match('/\b(?:what happens next|what(?:\'s| is) next|next step|how will this work)\b/i', $clean)) {
- return 'I will guide the conversation one question at a time, and you can answer naturally. ';
- }
-
- return '';
+ return app(InterviewConversationService::class)->fallbackReply($session, $history, $latestAnswer, $isFinal);
  }
 
  private static function fallbackInterviewOpeningIntro($session): string
@@ -7139,6 +6969,16 @@ PROMPT;
  return trim($plain);
  }
 
+ public static function feedbackAnswerEligibility(array $answer): array
+ {
+ $isSkipped = self::isSkippedAnswer($answer);
+
+ return [
+ 'is_skipped' => $isSkipped,
+ 'is_too_short' => ! $isSkipped && self::isTooShortAnswer(self::candidateAnswerText($answer)),
+ ];
+ }
+
  private static function normalizeQuestionFeedback(array $feedback, array $answer, array $sessionData, bool $requireAiGenerated = false,?string $feedbackSource = null): array
  {
  $id = (int) ($answer['id']?? ($feedback['id']?? 0));
@@ -8012,10 +7852,11 @@ PROMPT;
  array $answer = []
  ): array {
  $wordCount = self::wordCount($answerText);
- $hasPersonalAction = (bool) preg_match('/\bI\s+(?:personally\s+)?(?:(?:would|will|can|could|plan to|try to)\s+)?'.self::ACTION_VERB_PATTERN.'\b/i', $answerText);
- $hasTeamAction = (bool) preg_match('/\bwe\s+(?:(?:would|will|can|could|plan to|try to)\s+)?'.self::ACTION_VERB_PATTERN.'\b/i', $answerText);
- $hasMetric = (bool) preg_match('/\b\d+(?:\.\d+)?%?|\bpercent\b|\bhours?\b|\bdays?\b|\bminutes?\b|\bseconds?\b|\bpesos?\b|\bPHP\b/i', $answerText);
- $hasResult = $hasMetric || (bool) preg_match('/\b'.self::RESULT_SIGNAL_PATTERN.'\b/i', $answerText);
+ $signals = AnswerEvidenceSignals::analyze($answerText, $starApplicable);
+ $hasPersonalAction = $signals['has_personal_action'];
+ $hasTeamAction = $signals['has_team_action'];
+ $hasMetric = $signals['has_metric'];
+ $hasResult = $signals['has_result'];
  $questionContext = self::feedbackQuestionContext($answer!== []? $answer: ['question' => $questionText]);
  $relevanceOverlap = self::keywordOverlapScore($answerText, $questionContext);
  $questionKeywords = self::meaningfulKeywords($questionContext);
@@ -8471,30 +8312,7 @@ PROMPT;
 
  private static function feedbackHasUnsupportedNumbers(string $feedback, string $answerText): bool
  {
- preg_match_all('/\b\d+(?:\.\d+)?%?|\bpercent\b|\bPHP\b|\bpesos?\b/i', $feedback, $feedbackMatches);
- if (($feedbackMatches[0]?? []) === []) {
- return false;
- }
-
- $answerNumbers = array_map(
- fn ($value) => strtolower((string) $value),
- self::numberTokens($answerText)
- );
-
- foreach (self::numberTokens($feedback) as $token) {
- if (! in_array(strtolower($token), $answerNumbers, true)) {
- return true;
- }
- }
-
- return false;
- }
-
- private static function numberTokens(string $text): array
- {
- preg_match_all('/\b\d+(?:\.\d+)?%?|\bpercent\b|\bPHP\b|\bpesos?\b/i', $text, $matches);
-
- return array_values(array_unique($matches[0]?? []));
+ return FeedbackNumericEvidence::hasUnsupportedQuantity($feedback, $answerText);
  }
 
  private static function evidenceGroundedFeedback(string $answerText, string $questionText, array $profile, bool $hadProviderScores): string
@@ -8795,8 +8613,9 @@ PROMPT;
  }
 
  $sentenceCount = max(1, preg_match_all('/[.!?]+/', $answerText)?: 1);
- $actionSignals = preg_match_all('/\b(I|we)\s+(?:(?:would|will|can|could|plan to|try to)\s+)?'.self::ACTION_VERB_PATTERN.'\b/i', $answerText)?: 0;
- $resultSignal = preg_match('/\b(?:'.self::RESULT_SIGNAL_PATTERN.'|\d+(?:\.\d+)?%?|percent)\b/i', $answerText)? 1: 0;
+ $signals = AnswerEvidenceSignals::analyze($answerText, $starApplicable);
+ $actionSignals = $signals['action_count'];
+ $resultSignal = $signals['has_result'] ? 1 : 0;
  $relevanceOverlap = (int) ($profile['relevance_overlap']?? self::keywordOverlapScore($answerText, $questionText));
  $intentAlignment = (int) ($profile['intent_alignment']?? 0);
  $requiresPersonalAction = (bool) ($profile['requires_personal_action']?? $starApplicable);
@@ -8849,11 +8668,12 @@ PROMPT;
 
  private static function localStarScore(string $answerText): int
  {
+ $evidence = AnswerEvidenceSignals::analyze($answerText, true);
  $signals = 0;
  $signals += preg_match('/\b(situation|context|background|when|while|during|at my|in my)\b/i', $answerText)? 1: 0;
  $signals += preg_match('/\b(task|responsibility|goal|needed|objective|role|assigned|expected)\b/i', $answerText)? 1: 0;
- $signals += preg_match('/\b(?:action|'.self::ACTION_VERB_PATTERN.')\b/i', $answerText)? 1: 0;
- $signals += preg_match('/\b(?:'.self::RESULT_SIGNAL_PATTERN.'|\d+(?:\.\d+)?%?|percent)\b/i', $answerText)? 1: 0;
+ $signals += $evidence['has_personal_action'] ? 1 : 0;
+ $signals += $evidence['has_result'] ? 1 : 0;
 
  return $signals * 25;
  }

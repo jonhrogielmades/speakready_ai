@@ -49,7 +49,12 @@ final class FeedbackEvidencePresenter
         if (in_array($status, ['skipped', 'insufficient_evidence', 'not_evaluated'], true)) {
             $confidence = null;
         }
-        $evidenceQuotes = self::feedbackTextList(data_get($alignment, 'evidence_quotes', data_get($evidenceMap, 'supporting_excerpts', [])), $question, 3, 240);
+        // Older reports may contain a paraphrase or a quote from another answer.
+        // Recheck what we display against this saved answer, for every source.
+        $evidenceQuotes = self::verifiedEvidenceQuotes(
+            data_get($alignment, 'evidence_quotes', data_get($evidenceMap, 'supporting_excerpts', [])),
+            $answerText
+        );
 
         $missingPoints = self::feedbackTextList(data_get($alignment, 'missing_points', data_get($evidenceMap, 'missing_evidence', [])), $question, 3, 180);
         $nextSteps = self::feedbackTextList(data_get($alignment, 'next_attempt_steps', []), $question, 4, 190);
@@ -396,7 +401,7 @@ final class FeedbackEvidencePresenter
             return $prefix.' '.$lowCount.' '.Str::plural('answer', $lowCount).' need more evidence or clearer scoring.';
         }
 
-        return $prefix.' All displayed answer notes have linked evidence and completed safeguards.';
+        return $prefix.' These percentages describe internal checks, not measured feedback accuracy.';
     }
 
     private static function reviewContextLabel(array $context): string
@@ -444,7 +449,7 @@ final class FeedbackEvidencePresenter
             $parts[] = $completeness.'% safeguards checked';
         }
         if ($reliability !== null) {
-            $parts[] = $reliability.'% evidence reliability';
+            $parts[] = $reliability.'% internal evidence checks';
         }
 
         return implode(' - ', $parts);
@@ -593,6 +598,33 @@ final class FeedbackEvidencePresenter
         }
 
         return $results;
+    }
+
+    private static function verifiedEvidenceQuotes(mixed $items, string $answerText): array
+    {
+        if (! is_array($items) || $answerText === '') {
+            return [];
+        }
+
+        $quotes = [];
+        foreach ($items as $item) {
+            if (! is_string($item)) {
+                continue;
+            }
+            $quote = self::cleanText($item);
+            if ($quote === '' || ! str_contains($answerText, $quote)) {
+                continue;
+            }
+            $quote = self::limitText($quote, 240);
+            if (! in_array($quote, $quotes, true)) {
+                $quotes[] = $quote;
+            }
+            if (count($quotes) === 3) {
+                break;
+            }
+        }
+
+        return $quotes;
     }
 
     private static function cleanFeedback(mixed $text, mixed $questionSource = null): string

@@ -587,13 +587,13 @@ class ReliabilityHardeningTest extends TestCase
 
  $nextQuestion = (string) $response->json('next_question_text');
  $this->assertStringNotContainsStringIgnoringCase('favorite color', $nextQuestion);
- $this->assertStringContainsString('Developer', $nextQuestion);
+ $this->assertStringContainsString('production release', $nextQuestion);
  $this->assertSame(1, substr_count($nextQuestion, '?'));
  $this->assertMatchesRegularExpression('/\b(?:result|impact|tradeoff|example|release|deployment|decision|specific)\b/i', $nextQuestion);
  $this->assertDatabaseHas('questions', [
  'interview_session_id' => $session->id,
  'question_text' => $nextQuestion,
- 'source_type' => 'ai_adapted_source_backed',
+ 'source_type' => 'local_question_fallback',
  ]);
  }
 
@@ -620,10 +620,9 @@ class ReliabilityHardeningTest extends TestCase
  ])
  ->assertOk()
  ->assertJsonPath('success', true)
- ->assertJsonPath('source_type', 'ai_adapted_source_backed');
+ ->assertJsonPath('source_type', 'local_question_fallback');
  $this->assertTrue(str_contains($response->json('next_question_text'), 'owned a small release')
- && str_contains($response->json('next_question_text'), 'final question')
- && str_contains($response->json('next_question_text'), 'Developer'));
+ && str_contains($response->json('next_question_text'), 'final question'));
 
  $this->assertDatabaseHas('interview_answers', [
  'interview_session_id' => $session->id,
@@ -787,14 +786,14 @@ class ReliabilityHardeningTest extends TestCase
  ->assertJsonPath('success', true)
  ->assertJsonMissing(['next_question_id' => $secondQuestion->id])
  ->assertJsonMissing(['next_question_text' => $secondQuestion->question_text])
- ->assertJsonPath('source_type', 'ai_adapted_source_backed');
+ ->assertJsonPath('source_type', 'local_question_fallback');
 
  Http::assertNothingSent();
  $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
  $this->assertDatabaseMissing('questions', ['id' => $secondQuestion->id]);
  $this->assertDatabaseHas('questions', [
  'interview_session_id' => $session->id,
- 'source_type' => 'ai_adapted_source_backed',
+ 'source_type' => 'local_question_fallback',
  ]);
  $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
  }
@@ -1883,7 +1882,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertNotNull($presentedReview);
  $this->assertGreaterThanOrEqual(95, (int) $presentedReview->reliability->score);
  $this->assertSame('High safeguard coverage', $presentedReview->reliability->label);
- $this->assertStringContainsString('evidence reliability', $presentedReview->reliability->quality_label);
+ $this->assertStringContainsString('internal evidence checks', $presentedReview->reliability->quality_label);
  $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider(
  $session->fresh(['answers.question', 'score', 'feedback'])
  ));

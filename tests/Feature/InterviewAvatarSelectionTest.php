@@ -222,8 +222,8 @@ class InterviewAvatarSelectionTest extends TestCase
             $session->interviewer_avatar = $avatar;
             $reply = AIService::fallbackInterviewReply($session, [], $answer);
             $this->assertSame(1, substr_count($reply, '?'));
-            $this->assertStringContainsString('Developer', $reply);
-            $questions[] = substr($reply, strpos($reply, 'What '));
+            $this->assertStringContainsString('approval queue', $reply);
+            $questions[] = preg_replace('/^.*[”]\.\s*/u', '', $reply);
             $replies[] = $reply;
         }
 
@@ -242,11 +242,13 @@ class InterviewAvatarSelectionTest extends TestCase
         $answer = 'I coordinated the handoff with my team, improved approval speed, and delivered a clear result for the customer.';
 
         $beginnerReply = AIService::fallbackInterviewReply($session, [], $answer);
-        $this->assertStringContainsString("You're doing the right thing by giving context", $beginnerReply);
+        $this->assertStringContainsString('What was your main reason for that choice?', $beginnerReply);
 
         $session->ai_assistance_level = 'challenge';
         $challengeReply = AIService::fallbackInterviewReply($session, [], $answer);
-        $this->assertStringContainsString('Strong answers can handle pressure', $challengeReply);
+        $this->assertStringContainsString('What evidence did you use to rule out another approach?', $challengeReply);
+        $this->assertSame(1, substr_count($beginnerReply, '?'));
+        $this->assertSame(1, substr_count($challengeReply, '?'));
     }
 
     public function test_provider_prompts_apply_selected_style_without_changing_difficulty_or_question_type(): void

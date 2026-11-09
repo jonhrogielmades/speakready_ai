@@ -152,6 +152,36 @@ class InterviewChatReplyFlowTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/\b(?:cloud|software|deployment|debug)\b/i', $next->question_text);
     }
 
+    public function test_local_conversation_carries_the_previous_result_forward_into_the_next_probe(): void
+    {
+        Setting::setVal('int_follow_up', false, 'interview', 'boolean');
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+        $session->forceFill(['num_questions' => 4])->save();
+
+        $first = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I redesigned the approval queue and reduced the waiting time by 30 percent.',
+            ])->assertOk()->assertJsonPath('success', true);
+        $this->assertStringContainsString('Why did you choose that approach?', $first->json('next_question_text'));
+
+        $second = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $first->json('next_question_id'),
+                'answer_text' => 'I chose that approach because it removed the duplicate approval step.',
+            ])->assertOk()->assertJsonPath('success', true);
+
+        $this->assertStringContainsString('duplicate approval step', $second->json('next_question_text'));
+        $this->assertStringContainsString('How did you check whether your approach made a difference?', $second->json('next_question_text'));
+        $this->assertNotSame($first->json('next_question_id'), $second->json('next_question_id'));
+        $this->assertSame(3, Question::where('interview_session_id', $session->id)->count());
+    }
+
     private function category(): Category
     {
         return Category::create([

@@ -16,6 +16,7 @@ class InterviewModuleFunctionalityTest extends TestCase
 
     public function test_chapter_time_is_server_enforced_and_shared_between_layouts(): void
     {
+        $this->freezeTime();
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $module = $this->module('Timed interview lesson', ['ai_module_spec:intro_role_fit']);
         $this->chapter($module, 'First lesson', 1);

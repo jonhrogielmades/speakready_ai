@@ -873,7 +873,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  'status_label' => 'Partially answered',
  'scoring_confidence' => 96,
  'evaluation_source' => 'local_evidence',
- 'evidence_quotes' => ['I improved the customer process and explained the action clearly.'],
+ 'evidence_quotes' => ['I improved improved improved the customer process and explained the action clearly.'],
  'missing_points' => ['The saved answer does not state the customer result.'],
  'what_worked' => 'The saved answer explains the customer process action clearly with enough context about what the user personally did, why the customer needed support, and how the process moved forward for the service team.',
  'improvement_focus' => 'Add the final customer result or lesson so the review can show the outcome, the value of the action, and why this example proves the user can help similar customers again.',
@@ -945,7 +945,8 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('data-coach-url="'.route('user.coach').'"', false)
  ->assertSee('speakready.aiCoach.reviewPrompt', false)
  ->assertSee('Please act as my SpeakReady interview coach')
- ->assertSee('In a customer situation')
+ ->assertDontSee('In a customer situation')
+ ->assertDontSee('My responsibility was')
  ->assertSee('I improved improved improved the customer process and explained the action clearly')
  ->assertDontSee('Situation:')
  ->assertDontSee('Task:')
@@ -960,7 +961,7 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('Evidence safeguard: 96%')
  ->assertSee('High safeguard coverage')
  ->assertSee('Evidence from your answer')
- ->assertSee('I improved the customer process and explained the action clearly.')
+ ->assertSee('I improved improved improved the customer process and explained the action clearly.')
  ->assertSee('What worked')
  ->assertSee('Improvement focus')
  ->assertSee('The saved answer does not state the customer result.')

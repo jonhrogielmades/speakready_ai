@@ -59,6 +59,12 @@ class RefreshDetailedFeedbackReview implements ShouldBeUnique, ShouldQueue
             $providerRefreshed = $reviewService->refreshWithProvidersIfNeeded($session);
 
             if (! $providerRefreshed) {
+                // A provider response may have been rejected because its saved
+                // inputs changed while waiting. Repair only the current report.
+                $session->refresh();
+                if ($session->status !== 'completed' || (bool) data_get($session->action_plan ?? [], 'ended_early', false)) {
+                    return;
+                }
                 $coachingRepair->repairSession($session);
             }
         } catch (\Throwable $exception) {

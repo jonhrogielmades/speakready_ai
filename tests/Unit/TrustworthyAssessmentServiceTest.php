@@ -169,6 +169,34 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $this->assertNotContains('Your own action', $map['missing_evidence']);
     }
 
+    public function test_behavioral_review_does_not_turn_context_numbers_or_plans_into_completed_evidence(): void
+    {
+        $service = new TrustworthyAssessmentService;
+        $question = ['question_text' => 'Tell me about a time you handled a difficult customer.'];
+        $answer = 'I have worked in support for 3 years. I would review the account and try to resolve the concern.';
+        $evidence = $service->answerEvidence($answer, null, $question);
+
+        $this->assertFalse($evidence['has_result']);
+        $this->assertFalse($evidence['has_personal_action']);
+        $this->assertContains('A clear result, effect, or lesson', $evidence['missing_evidence']);
+        $this->assertContains('Your own action', $evidence['missing_evidence']);
+    }
+
+    public function test_revision_does_not_invent_a_situation_or_responsibility_from_the_question(): void
+    {
+        $service = new TrustworthyAssessmentService;
+        $answer = 'I have no customer service experience, but I have reviewed documentation in school.';
+        $evidence = $service->answerEvidence($answer, null, [
+            'question_text' => 'Tell me about a time you handled an upset customer.',
+        ]);
+        $revision = $service->groundedRevisionTemplate($answer, $evidence);
+
+        $this->assertStringContainsString($answer, $revision);
+        $this->assertStringNotContainsString('In a customer situation, I needed', $revision);
+        $this->assertStringNotContainsString('My task was', $revision);
+        $this->assertStringContainsString('using only details I can confirm', $revision);
+    }
+
     public function test_session_confidence_respects_answer_scoring_confidence(): void
     {
         $service = new TrustworthyAssessmentService;

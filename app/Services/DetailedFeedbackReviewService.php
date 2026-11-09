@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
 
 class DetailedFeedbackReviewService
 {
- private const REVIEW_VALIDATION_SCHEMA = 'detailed_review_validation_v1';
+ private const REVIEW_VALIDATION_SCHEMA = 'detailed_review_validation_v2';
 
  private const MINIMUM_RELIABILITY_PERCENT = 95;
 
@@ -30,6 +30,11 @@ class DetailedFeedbackReviewService
 
  public function refreshWithProvidersIfNeeded(InterviewSession $session,?string $preferredProvider = null): bool
  {
+ // Start from persisted inputs, including database defaults and the latest
+ // transcript, rather than relationships cached by an earlier request.
+ if ($session->exists) {
+ $session->refresh();
+ }
  if (! $this->shouldRefreshWithProvider($session)) {
  return false;
  }
@@ -155,6 +160,16 @@ class DetailedFeedbackReviewService
  return true;
  }
 
+ $savedInputFingerprint = (string) data_get(
+ $session->feedback->coaching_summary?? [],
+ 'review_context.detailed_review_validation.input_fingerprint',
+ ''
+ );
+ if ($savedInputFingerprint === ''
+ || ! hash_equals($savedInputFingerprint, $this->reviewInputFingerprint($session, $this->originalAnswers($session)))) {
+ return true;
+ }
+
  // A verified report can still reflect an older scoring policy. Refresh it
  // when the review rules change, even if its response schema is unchanged.
  $storedPolicyVersion = (int) data_get(
@@ -193,7 +208,22 @@ class DetailedFeedbackReviewService
 
  private function persistProviderFeedback(InterviewSession $session, Collection $answers, array $feedback, string $providerKey, array $validation): void
  {
- DB::transaction(function () use ($session, $answers, $feedback, $providerKey, $validation): void {
+ $inputFingerprint = $this->reviewInputFingerprint($session, $answers);
+ DB::transaction(function () use ($session, $feedback, $providerKey, $validation, $inputFingerprint): void {
+ // The provider request can take seconds. Never attach its findings to an
+ // answer, transcript, question, or session context that changed meanwhile.
+ $currentSession = InterviewSession::whereKey($session->id)->lockForUpdate()->firstOrFail();
+ $currentAnswers = $this->originalAnswersQuery($session)
+ ->orderBy('id')
+ ->lockForUpdate()
+ ->get();
+ if ($currentSession->status !== 'completed'
+ || ! hash_equals($inputFingerprint, $this->reviewInputFingerprint($currentSession, $currentAnswers))) {
+ throw new \RuntimeException('Detailed review inputs changed while provider feedback was being generated.');
+ }
+ $session = $currentSession;
+ $answers = $currentAnswers;
+ $validation['input_fingerprint'] = $inputFingerprint;
  $feedbackById = collect($feedback['per_question_feedback']?? [])
  ->filter(fn ($item): bool => is_array($item) && isset($item['id']))
  ->keyBy(fn (array $item): string => (string) $item['id']);
@@ -209,10 +239,6 @@ class DetailedFeedbackReviewService
  ];
 
  foreach ($answers as $answer) {
- if (! $answer instanceof InterviewAnswer) {
- continue;
- }
-
  $item = $feedbackById->get((string) $answer->id);
  if (! is_array($item)) {
  throw new \RuntimeException("Validated feedback item {$answer->id} disappeared before persistence.");
@@ -426,8 +452,10 @@ class DetailedFeedbackReviewService
 
  $quality = is_array($item['feedback_quality']?? null)? $item['feedback_quality']: [];
  $qualityChecks = is_array($quality['checks']?? null)? $quality['checks']: [];
- $isSkipped = (bool) ($item['is_skipped']?? false);
- $isTooShort = (bool) ($item['is_too_short']?? false);
+ $answerData = $this->answerData($answer);
+ $eligibility = AIService::feedbackAnswerEligibility($answerData);
+ $isSkipped = $eligibility['is_skipped'];
+ $isTooShort = $eligibility['is_too_short'];
  $isScoreable = ! $isSkipped && ! $isTooShort;
  $reliability = is_numeric($quality['reliability_percent']?? null)
  ? $this->scoreValue($quality['reliability_percent'])
@@ -440,23 +468,43 @@ class DetailedFeedbackReviewService
  && (int) ($quality['completeness_percent']?? 0) === 100
  && (int) ($quality['checks_total']?? 0) > 0
  && (int) ($quality['checks_passed']?? -1) === (int) ($quality['checks_total']?? 0)
- && $qualityChecks !== []
+ && (int) ($quality['checks_total']?? 0) === count($qualityChecks)
  && collect($qualityChecks)->every(fn ($passed): bool => $passed === true);
  $scoreHandlingIsSafe = $isScoreable
  ? $reliability !== null && $reliability >= $requiredReliability
  : (bool) ($item['insufficient_data']?? false)
  && $this->scoreValue($item['scoring_confidence']?? 100) <= ($isSkipped? 0: 25)
  && $this->scoreValue($item['score']?? 100) <= ($isSkipped? 0: 10);
- $visibleFeedbackIsUsable = $isScoreable
- ? AIService::visibleReviewFeedbackIsProviderUsable((string) ($item['ai_feedback']?? ''), $this->answerData($answer))
- : trim((string) ($item['ai_feedback']?? '')) !== '';
- $possibleAnswerIsUsable = ! $isScoreable
- || AIService::visibleReviewPossibleAnswerIsProviderUsable((string) ($item['better_sample_answer']?? ''), $this->answerData($answer));
+ $visibleFeedbackIsUsable = AIService::visibleReviewFeedbackIsProviderUsable((string) ($item['ai_feedback']?? ''), $answerData);
+ $possibleAnswerIsUsable = AIService::visibleReviewPossibleAnswerIsProviderUsable((string) ($item['better_sample_answer']?? ''), $answerData);
+ $quotes = $item['evidence_quotes']?? null;
+ $normalizedAnswerText = trim((string) preg_replace('/\s+/u', ' ', $this->answerContent($answer)));
+ $evidenceIsVerbatim = is_array($quotes) && array_is_list($quotes)
+ && ($isSkipped? $quotes === []: $quotes !== [] && collect($quotes)->every(
+ fn ($quote): bool => is_string($quote) && trim($quote) !== ''
+ && str_contains($normalizedAnswerText, trim((string) preg_replace('/\s+/u', ' ', $quote)))
+ ));
+ $numericScoresAreSafe = collect([
+ 'score', 'clarity_score', 'relevance_score', 'grammar_score',
+ 'professionalism_score', 'star_method_score', 'scoring_confidence',
+ ])->every(function (string $field) use ($item, $isSkipped, $isTooShort): bool {
+ $value = $item[$field]?? null;
+ if (! is_numeric($value) || ! is_finite((float) $value) || (float) $value < 0 || (float) $value > 100) {
+ return false;
+ }
+ // An unscored answer must not silently contribute high dimension scores.
+ return ! $isSkipped && ! $isTooShort
+ || (float) $value <= ($isSkipped? 0: ($field === 'scoring_confidence'? 25: 10));
+ });
 
  $answerChecks[$id] = [
  'complete' => true,
  'provider_evidence_validated' => ($item['evaluation_source']?? null) === 'ai_evidence_validated',
  'all_safeguards_passed' => $qualityVerified,
+ 'eligibility_matches_saved_answer' => ($item['is_skipped']?? null) === $isSkipped
+ && ($item['is_too_short']?? null) === $isTooShort,
+ 'evidence_quotes_verbatim' => $evidenceIsVerbatim,
+ 'numeric_scores_safe' => $numericScoresAreSafe,
  'score_handling_safe' => $scoreHandlingIsSafe,
  'visible_feedback_usable' => $visibleFeedbackIsUsable,
  'possible_answer_usable' => $possibleAnswerIsUsable,
@@ -536,7 +584,7 @@ class DetailedFeedbackReviewService
  : null,
  'minimum_scoreable_reliability_percent' => $minimumScoreableReliability,
  'answers_expected' => count($expectedIds),
- 'answers_validated' => count(array_filter($answerChecks, fn (array $item): bool => ($item['complete']?? false) === true)),
+ 'answers_validated' => count(array_filter($answerChecks, fn (array $item): bool => $item['complete'] === true)),
  'scoreable_answers' => count($scoreableReliabilities),
  'insufficient_answers' => count($expectedIds) - count($scoreableReliabilities),
  'checks' => $checks,
@@ -568,6 +616,7 @@ class DetailedFeedbackReviewService
  'insufficient_answers' => max(0, (int) ($validation['insufficient_answers']?? 0)),
  'checks' => is_array($validation['checks']?? null)? $validation['checks']: [],
  'validated_at' => trim((string) ($validation['validated_at']?? '')),
+ 'input_fingerprint' => trim((string) ($validation['input_fingerprint']?? '')),
  'limitation' => 'This confirms required evidence and scoring safeguards passed. It does not guarantee perfect accuracy or replace human review.',
  ];
  }
@@ -828,10 +877,40 @@ class DetailedFeedbackReviewService
  ->values();
  }
 
+ return $this->originalAnswersQuery($session)->get();
+ }
+
+ /** @return \Illuminate\Database\Eloquent\Builder<InterviewAnswer> */
+ private function originalAnswersQuery(InterviewSession $session): \Illuminate\Database\Eloquent\Builder
+ {
  return InterviewAnswer::with('question')
  ->where('interview_session_id', $session->id)
- ->whereNull('retry_of_answer_id')
- ->get();
+ ->whereNull('retry_of_answer_id');
+ }
+
+ private function reviewInputFingerprint(InterviewSession $session, Collection $answers): string
+ {
+ $inputs = [
+ 'session' => $session->only([
+ 'id', 'user_id', 'status', 'game_level_id', 'target_position', 'difficulty',
+ 'interview_focus', 'ai_assistance_level', 'assessment_mode', 'accommodation_profile',
+ ]),
+ 'answers' => $answers->sortBy('id')->map(fn (InterviewAnswer $answer): array => [
+ 'content' => $this->answerData($answer),
+ 'observations' => array_merge($answer->only([
+ 'question_id', 'delivery_transcript', 'observation_data', 'pronunciation_analysis',
+ 'pronunciation_score', 'voice_recording_path',
+ ]), [
+ 'wpm' => (int) ($answer->wpm?? 0),
+ 'filler_words_count' => (int) ($answer->filler_words_count?? 0),
+ 'pause_count' => (int) ($answer->pause_count?? 0),
+ 'timed_out' => (bool) ($answer->timed_out?? false),
+ 'elapsed_seconds' => (int) ($answer->elapsed_seconds?? 0),
+ ]),
+ ])->values()->all(),
+ ];
+
+ return hash('sha256', json_encode($inputs, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
  }
 
  private function coachingMetricsFromAnswer(InterviewAnswer $answer, array $feedback): array

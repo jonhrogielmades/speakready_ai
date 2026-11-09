@@ -283,6 +283,12 @@ class InterviewQuestionAlignmentService
             'prepared', 'process', 'proof', 'prove', 'remember', 'report', 'resolve',
             'responsibility', 'safety', 'show', 'step', 'steps', 'strongest',
             'support', 'tell', 'tradeoff', 'verify', 'want', 'weigh',
+            'choose', 'consider', 'difference', 'difficult', 'first', 'most', 'next', 'other', 'part', 'whether',
+            'method', 'investigate', 'problem', 'test', 'task', 'similar', 'situation', 'came', 'work', 'respond',
+            'strength', 'background', 'help', 'helped', 'interests', 'kind', 'skill', 'develop', 'related',
+            'school', 'training', 'everyday', 'life', 'draw', 'taking', 'responsibility', 'started', 'prepare',
+            'approaches', 'compare', 'choosing', 'prioritize', 'decide', 'against', 'main', 'reason', 'rule',
+            'another', 'failed', 'troubleshooting', 'guide', 'adapt', 'procedure', 'larger', 'someone', 'disagreed',
         ];
 
         return count(array_diff($tokens, $this->contentTokens(implode(' ', $generic), ''))) === 0;
@@ -293,7 +299,7 @@ class InterviewQuestionAlignmentService
         preg_match_all('/\b[a-z][a-z0-9]{3,}\b/u', $this->normalize($text), $matches);
         $positionTokens = preg_split('/[^a-z0-9]+/u', $this->normalize($position)) ?: [];
 
-        $tokens = array_diff($matches[0] ?? [], self::ANSWER_STOP_WORDS, $positionTokens);
+        $tokens = array_diff($matches[0], self::ANSWER_STOP_WORDS, $positionTokens);
 
         return array_values(array_unique(array_map(function (string $token): string {
             $token = preg_replace('/(?:ing|ed|es|s)$/u', '', $token) ?? $token;

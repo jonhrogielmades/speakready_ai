@@ -11,10 +11,6 @@ class TrustworthyAssessmentService
 {
  public const SCORE_VERSION = 5;
 
- private const ACTION_VERB_PATTERN = '(?:lead|led|own|owned|build|built|create|created|resolve|resolved|solve|solved|fix|fixed|improve|improved|reduce|reduced|increase|increased|deliver|delivered|design|designed|implement|implemented|organize|organized|manage|managed|test|tested|analyze|analyzed|coordinate|coordinated|decide|decided|handle|handled|support|supported|communicate|communicated|verify|verified|check|checked|plan|planned|inspect|inspected|diagnose|diagnosed|review|reviewed|prioritize|prioritized|explain|explained|validate|validated|measure|measured|compare|compared|document|documented|escalate|escalated|write|wrote|prepare|prepared|train|trained|assist|assisted|propose|proposed|research|researched|configure|configured|deploy|deployed|investigate|investigated|monitor|monitored|report|reported|present|presented|negotiate|negotiated|mentor|mentored|facilitate|facilitated|maintain|maintained|migrate|migrated|automate|automated|optimize|optimized|launch|launched|process|processed|schedule|scheduled|delegate|delegated|select|selected|evaluate|evaluated|gather|gathered|contact|contacted|collaborate|collaborated|update|updated|identify|identified|recommend|recommended)';
-
- private const RESULT_SIGNAL_PATTERN = '(?:as a result|this led to|which led to|result(?:ed)?|outcome|impact|achiev(?:e|ed|ement)|improv(?:e|ed|ement)|reduc(?:e|ed|tion)|increas(?:e|ed)|deliver(?:ed)?|receiv(?:e|ed)|thank(?:ed)?|sav(?:e|ed)|faster|slower|resolv(?:e|ed)|complet(?:e|ed)|finish(?:ed)?|pass(?:ed)?|learn(?:ed)?|lesson|success(?:ful|fully)?|met the|exceeded)';
-
  public function overallScore(array $metrics, bool $starApplicable, bool $languageScoringEnabled = true): int
  {
  $weights = [
@@ -39,19 +35,15 @@ class TrustworthyAssessmentService
 
  public function answerEvidence(string $answer,?string $feedback = null, Question|array|null $question = null): array
  {
- $sentences = preg_split('/(?<=[.!?])\s+/', trim($answer), -1, PREG_SPLIT_NO_EMPTY)?: [];
- $evidence = collect($sentences)->filter(function (string $sentence) {
- return preg_match('/\b(I|we|my|our)\b/i', $sentence)
- && preg_match('/\b'.self::ACTION_VERB_PATTERN.'\b/i', $sentence);
- })->take(3)->values()->all();
-
  $starApplicable = QuestionIntentService::starApplicable($question);
+ $signals = AnswerEvidenceSignals::analyze($answer, $starApplicable);
+ $evidence = $signals['supporting_excerpts'];
  $questionIntent = QuestionIntentService::classify($question);
  $questionText = QuestionIntentService::text($question);
  $resultRequired = $question === null || QuestionIntentService::requiresResult($question);
  $personalActionRequired = $question === null || QuestionIntentService::requiresPersonalAction($question);
- $hasResult = preg_match('/\b(?:'.self::RESULT_SIGNAL_PATTERN.'|\d+(?:\.\d+)?%?|percent|hours?|days?|minutes?|seconds?)\b/i', $answer) === 1;
- $hasPersonalAction = preg_match('/\bI\s+(?:personally\s+)?(?:(?:would|will|can|could|plan to|try to)\s+)?'.self::ACTION_VERB_PATTERN.'\b/i', $answer) === 1;
+ $hasResult = $signals['has_result'];
+ $hasPersonalAction = $signals['has_personal_action'];
 
  $missing = [];
  if ($resultRequired &&! $hasResult) {
@@ -149,8 +141,10 @@ class TrustworthyAssessmentService
 
  private function starParagraphRevision(string $answerSentence, string $questionText, string $resultSentence = '', array $evidence = []): string
  {
- $context = $this->starContextSentence($questionText);
- $task = $this->starTaskSentence($questionText);
+ // The question describes what was asked, not what the candidate experienced.
+ // Never manufacture a situation or responsibility from that prompt.
+ $context = 'I would make the real situation clear using only details I can confirm.';
+ $task = 'I would explain my actual responsibility and keep it separate from the team\'s work.';
  $action = preg_match('/\b(?:I|we|my|our)\b/iu', $answerSentence) === 1
  ? $answerSentence
  : 'I would explain it this way: '.$answerSentence;
@@ -161,34 +155,7 @@ class TrustworthyAssessmentService
  $result = '';
  }
 
- return trim($context.' '.$task.' '.$action.' '.$result);
- }
-
- private function starTaskSentence(string $questionText): string
- {
- $question = mb_strtolower($questionText, 'UTF-8');
-
- return match (true) {
- preg_match('/\b(?:customer|client|complaint|concern|upset|angry|irate)\b/u', $question) === 1 => 'My task was to understand the concern, take responsibility for my part, and give a clear next step.',
- preg_match('/\b(?:team|collaborat|coworker|colleague)\b/u', $question) === 1 => 'My task was to work with the team, keep the goal clear, and help move the work forward.',
- preg_match('/\b(?:project|assignment|task|deadline)\b/u', $question) === 1 => 'My task was to organize the work, choose the next useful step, and keep the outcome clear.',
- preg_match('/\b(?:conflict|difficult|challenge|problem)\b/u', $question) === 1 => 'My task was to understand the problem, stay calm, and respond with a clear action.',
- default => 'My task was to understand the situation, take responsibility for my part, and respond clearly.',
- };
- }
-
- private function starContextSentence(string $questionText): string
- {
- $question = mb_strtolower($questionText, 'UTF-8');
-
- return match (true) {
- preg_match('/\b(?:customer|client|complaint|concern|upset|angry|irate)\b/u', $question) === 1 => 'In a customer situation, I needed to understand the concern before responding.',
- preg_match('/\b(?:team|collaborat|coworker|colleague)\b/u', $question) === 1 => 'In a team situation, I needed to work with others and keep the goal clear.',
- preg_match('/\b(?:project|assignment|task)\b/u', $question) === 1 => 'During a project or task, I needed to stay organized and focus on the expected outcome.',
- preg_match('/\b(?:pressure|deadline|urgent|stress)\b/u', $question) === 1 => 'During a time-sensitive situation, I needed to stay calm and choose the next useful step.',
- preg_match('/\b(?:conflict|difficult|challenge|problem)\b/u', $question) === 1 => 'In a challenging situation, I needed to understand the problem and respond carefully.',
- default => 'In that situation, I needed to understand what was happening and respond in a clear way.',
- };
+ return trim($action.' '.$result.' '.$context.' '.$task);
  }
 
  private function starResultSentence(string $questionText, bool $resultRequired = true): string
@@ -204,14 +171,7 @@ class TrustworthyAssessmentService
  };
  }
 
- return match (true) {
- preg_match('/\b(?:customer|client|complaint|concern|upset|angry|irate)\b/u', $question) === 1 => 'This helped me give a clearer next step and handle the concern in an organized way.',
- preg_match('/\b(?:team|collaborat|coworker|colleague)\b/u', $question) === 1 => 'This helped the team move forward with clearer direction.',
- preg_match('/\b(?:project|assignment|task)\b/u', $question) === 1 => 'This helped me move the work forward in a more organized way.',
- preg_match('/\b(?:pressure|deadline|urgent|stress)\b/u', $question) === 1 => 'This helped me stay focused and continue working through the pressure.',
- preg_match('/\b(?:conflict|difficult|challenge|problem)\b/u', $question) === 1 => 'This helped me handle the challenge with a clearer process and a better lesson for next time.',
- default => 'This helped me turn the situation into a clearer lesson about how I work.',
- };
+ return 'I would keep the answer tied to what actually happened without adding an outcome I cannot confirm.';
  }
 
  /**
@@ -230,7 +190,7 @@ class TrustworthyAssessmentService
  private function resultSentenceFrom(array $sentences): string
  {
  foreach (array_reverse($sentences) as $sentence) {
- if (preg_match('/\b(?:'.self::RESULT_SIGNAL_PATTERN.'|\d+(?:\.\d+)?%?|percent|hours?|days?|minutes?|seconds?)\b/i', $sentence) === 1) {
+ if (AnswerEvidenceSignals::analyze($sentence)['has_result']) {
  return $this->sentenceText($sentence);
  }
  }

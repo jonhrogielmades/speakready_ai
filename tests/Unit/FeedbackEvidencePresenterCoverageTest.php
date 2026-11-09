@@ -117,6 +117,29 @@ class FeedbackEvidencePresenterCoverageTest extends TestCase
         $this->assertSame('Coverage pending', $presentation->reliability->label);
     }
 
+    public function test_displayed_evidence_excludes_fabricated_quotes_and_preserves_the_candidates_words(): void
+    {
+        $method = new ReflectionMethod(FeedbackEvidencePresenter::class, 'verifiedEvidenceQuotes');
+        $answer = 'I mapped the handoff, coordinated the update, and confirmed the result.';
+
+        $quotes = $method->invoke(null, [
+            'I increased revenue by 35%.',
+            'I mapped the handoff and coordinated the update.',
+            'I mapped the handoff, coordinated the update, and confirmed the result.',
+        ], $answer);
+
+        $this->assertSame([$answer], $quotes);
+    }
+
+    public function test_quality_labels_describe_internal_checks_without_claiming_measured_accuracy(): void
+    {
+        $presentation = $this->presentationFor('cross_checked_clean', true);
+
+        $this->assertStringContainsString('95% internal evidence checks', $presentation->answers->first()->quality_label);
+        $this->assertStringNotContainsString('evidence reliability', $presentation->answers->first()->quality_label);
+        $this->assertStringContainsString('not measured feedback accuracy', $presentation->reliability->description);
+    }
+
     private function presentationFor(string $calibrationStatus, bool $calibrationChecked): object
     {
         $session = new InterviewSession;
