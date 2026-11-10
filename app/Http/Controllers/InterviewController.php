@@ -778,50 +778,43 @@ class InterviewController extends Controller
  $provider = $usedProvider?? $provider;
  session(['active_interview_provider' => $provider]);
  } catch (InterviewFollowUpProviderFailureException $error) {
- Log::warning('AI interview follow-up provider failed; using a local question fallback.', [
+ Log::warning('AI interview follow-up provider failed; no local question fallback used.', [
  'session_id' => $session->id,
  'question_id' => $question->id,
  'provider' => $provider,
  'error_type' => $error::class,
  ]);
- $provider = 'local';
- $followUpText = $this->localInterviewFollowUpText(
- $session,
- $history,
- $interviewerInputText,
- $isFinal,
- $requiredQuestionType,
- $spokenQuestionTexts
- );
- } catch (\Throwable $error) {
- Log::warning('Interview follow-up generation failed; using a local question fallback.', [
- 'session_id' => $session->id,
- 'question_id' => $question->id,
- 'provider' => $provider,
- 'error_type' => $error::class,
- ]);
- $provider = 'local';
- $followUpText = $this->localInterviewFollowUpText(
- $session,
- $history,
- $interviewerInputText,
- $isFinal,
- $requiredQuestionType,
- $spokenQuestionTexts
- );
- }
-
- $followUpText = trim((string) $followUpText);
- if ($followUpText === '') {
  return response()->json([
  'success' => false,
  'answer_saved' => true,
- 'error' => 'Your answer was saved, but no reliable next question could be prepared. Please try again.',
+ 'error' => 'Your answer was saved, but the AI provider could not prepare the next question. Please try again.',
+ ], 503);
+ } catch (\Throwable $error) {
+ Log::warning('Interview follow-up generation failed; no local question fallback used.', [
+ 'session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'provider' => $provider,
+ 'error_type' => $error::class,
+ ]);
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => true,
+ 'error' => 'Your answer was saved, but the AI provider could not prepare the next question. Please try again.',
+ ], 503);
+ }
+
+ $followUpText = trim((string) $followUpText);
+ $provider = AIService::normalizeProviderKey($provider);
+ if ($followUpText === '' || $provider === '' || $provider === 'local' || ! AIService::providerIsConfigured($provider)) {
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => true,
+ 'error' => 'Your answer was saved, but no configured AI provider returned a reliable next question. Please try again.',
  ], 503);
  }
 
  try {
- return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $requiredQuestionType, $interviewerInputText, $history, $isFinal) {
+ return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $requiredQuestionType) {
  $lockedSession = InterviewSession::with('category')
  ->where('user_id', Auth::id())
  ->where('status', 'in_progress')
@@ -851,38 +844,21 @@ class InterviewController extends Controller
  }
 
  // 4. Save the next question. Unanswered future drafts are replaced below;
- // spoken questions must stay unique even when local recovery is used.
+ // spoken questions must stay unique across provider retries.
  $existingQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))->all();
  $safeFollowUpText = $followUpText;
  if (in_array($this->normalizedQuestionText($safeFollowUpText), $existingQuestionTexts, true)) {
- if ($provider !== 'local') {
- return response()->json(['error' => 'The AI interviewer repeated an earlier question. Please try again.'], 503);
- }
-
- $safeFollowUpText = $this->localInterviewFollowUpText(
- $lockedSession,
- $history,
- $interviewerInputText,
- $isFinal,
- $requiredQuestionType,
- $existingQuestionTexts
- );
- if ($safeFollowUpText === null) {
- return response()->json(['error' => 'No reliable next question could be prepared. Please try again.'], 503);
- }
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => true,
+ 'error' => 'The AI interviewer repeated an earlier question. Please try again.',
+ ], 503);
  }
  $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
  $this->deleteUnansweredFutureQuestions($lockedSession, $question);
 
- $questionMetadata = $provider === 'local'
- ? [
- 'source_name' => 'SpeakReady local question fallback',
- 'source_url' => null,
- 'source_type' => 'local_question_fallback',
- 'ai_provider' => 'local',
- ]
- : $this->aiGeneratedQuestionSourceMetadata($provider);
+ $questionMetadata = $this->aiGeneratedQuestionSourceMetadata($provider);
  if ($requiredQuestionType !== null) {
  $questionMetadata['question_type'] = $requiredQuestionType;
  }
@@ -894,7 +870,7 @@ class InterviewController extends Controller
  $this->decodeQuestionTypes($lockedSession->question_types),
  $nextQuestionIndex,
  $questionMetadata,
- $provider!== 'local'
+ true
  );
 
  if (! $newQuestion) {
