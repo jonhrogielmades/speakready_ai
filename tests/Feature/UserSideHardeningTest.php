@@ -1411,7 +1411,7 @@ class UserSideHardeningTest extends TestCase
  'target_position' => 'Developer',
  'status' => 'in_progress',
  ]);
- $this->assertGreaterThanOrEqual(2, Question::where('interview_session_id', $session->id)->count());
+ $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
 
  $this->actingAs($user)
  ->withSession(['active_interview_id' => $session->id])
@@ -1546,8 +1546,6 @@ class UserSideHardeningTest extends TestCase
 
  public function test_interview_start_stores_complete_interview_structure_settings(): void
  {
- Http::fake();
-
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
 
@@ -1572,8 +1570,6 @@ class UserSideHardeningTest extends TestCase
 
  public function test_interview_start_stores_complete_scenario_settings(): void
  {
- Http::fake();
-
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
 
@@ -1888,7 +1884,7 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('min-height: 390px !important;', $mobileSessionCss);
  }
 
- public function test_interview_start_uses_category_source_dataset(): void
+ public function test_interview_start_waits_for_provider_questions_after_the_opening(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Job Interview']);
@@ -1907,14 +1903,11 @@ class UserSideHardeningTest extends TestCase
  ->where('source_type', '!=', 'real_interview_opening')
  ->pluck('source_type');
 
- $this->assertNotContains('competency_source', $sourceTypes->all());
- $this->assertTrue($sourceTypes->contains(fn ($type) => in_array($type, [
- 'career_question_bank',
- 'speakready_reliable_question_bank',
- ], true)));
+ $this->assertSame([], $sourceTypes->all());
+ $this->assertSame('openai', Question::where('interview_session_id', $session->id)->sole()->ai_provider);
  }
 
- public function test_interview_start_creates_questions_when_bank_is_empty(): void
+ public function test_interview_start_creates_only_provider_opening_when_bank_is_empty(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category();
@@ -1928,7 +1921,7 @@ class UserSideHardeningTest extends TestCase
 
  $session = InterviewSession::where('user_id', $user->id)->firstOrFail();
 
- $this->assertDatabaseCount('questions', 2);
+ $this->assertDatabaseCount('questions', 1);
  $this->assertDatabaseHas('questions', [
  'interview_session_id' => $session->id,
  'category_id' => $category->id,
@@ -1937,13 +1930,7 @@ class UserSideHardeningTest extends TestCase
  'status' => 'active',
  'source_type' => 'real_interview_opening',
  ]);
- $this->assertDatabaseHas('questions', [
- 'interview_session_id' => $session->id,
- 'category_id' => $category->id,
- 'difficulty' => 'medium',
- 'type' => 'Technical',
- 'status' => 'active',
- ]);
+ $this->assertSame(0, Question::where('interview_session_id', $session->id)->where('type', 'Technical')->count());
  $this->assertTrue(
  Question::where('interview_session_id', $session->id)
  ->where('source_type', 'real_interview_opening')
@@ -5195,6 +5182,25 @@ class UserSideHardeningTest extends TestCase
 
  private function interviewPayload(Category $category): array
  {
+ if (! AiProvider::where('name', 'OpenAI')->exists()) {
+  AiProvider::create([
+   'name' => 'OpenAI',
+   'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+   'api_key' => Crypt::encryptString('test-openai-key'),
+   'status' => 'active',
+   'is_primary' => true,
+  ]);
+  Http::fake(['api.openai.com/*' => function ($request) {
+   $prompt = (string) data_get($request->data(), 'messages.1.content', '');
+   preg_match("/The target position is '([^']+)'/", $prompt, $match);
+   $position = $match[1] ?? 'Developer';
+
+   return Http::response(['choices' => [['message' => [
+    'content' => "Hi, nice to meet you. I will be your AI interviewer for the {$position} interview. No need to be perfect; answer naturally. Tell me about yourself.",
+   ]]]]);
+  }]);
+ }
+
  return [
  'category_id' => $category->id,
  'difficulty' => 'medium',
@@ -5203,7 +5209,7 @@ class UserSideHardeningTest extends TestCase
  'response_mode' => 'text',
  'interviewer_avatar' => 'friendly_recruiter',
  'time_limit' => 0,
- 'ai_provider' => 'local',
+ 'ai_provider' => 'openai',
  ];
  }
 

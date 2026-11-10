@@ -665,7 +665,7 @@ class AIService
  Cache::forget(self::questionRerankProviderCooldownKey($provider));
  }
 
- public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false, $targetLanguage = null, array $conversationContext = [], $datasetContext = null,?string $requiredQuestionType = null)
+ public static function generateChatReply($session, $history, $latestAnswer, $provider = 'openai', $isFinal = false, $targetLanguage = null, array $conversationContext = [], $datasetContext = null,?string $requiredQuestionType = null,?callable $acceptQuestion = null,?string &$usedProvider = null)
  {
  $targetPosition = trim((string) ($session->target_position?? 'General'))?: 'General';
  $liveFeedbackMode = self::normalizedLiveFeedbackMode($session->live_feedback_mode?? 'coaching');
@@ -688,7 +688,7 @@ class AIService
  $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. ';
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
- $prompt.= 'The next interviewer turn must be based on the candidate answer immediately before it and the supplied source dataset, not on a generic local question list. The exact wording does not need to appear in the dataset: create new wording through the AI provider when needed, while preserving a dataset topic, competency, or representative question pattern. ';
+ $prompt.= 'Base the next interviewer turn on the candidate answer, the target role, and the earlier conversation. Generate a fresh question even when no matching example exists in the dataset. Dataset examples are optional inspiration, never a limit on what you may ask. ';
  $prompt.= 'Do not use the phrases "You mentioned", "You said", "You shared", or "Thinking about what you shared". Do not repeat or quote the candidate answer. Use a short natural transition only when necessary, then ask the one focused question. ';
  $prompt.= 'Read the earlier turns before choosing what to ask: do not ask again for an action, result, reason, or constraint already explained. Ask one narrow unanswered detail about the same example, or explicitly bridge from that detail when the required question type changes. Preserve negation and uncertainty; a plan is not a past achievement. Do not presume success, a problem, a tool, or a tradeoff the candidate never mentioned. ';
  $prompt.= $liveFeedbackMode === 'real_interview'
@@ -733,8 +733,8 @@ class AIService
  if (! empty($datasetContext)) {
  $contextText = is_array($datasetContext)? QuestionDatasetProvider::promptContext($datasetContext): (string) $datasetContext;
 
- $prompt.= "\nUse this reliable source context when choosing follow-up question wording, local relevance, and skills coverage:\n{$contextText}\n";
- $prompt.= 'The supplied source dataset is mandatory grounding for the next question. Adapt its source-backed patterns to the live conversation without copying generic wording. Do not fabricate source claims, leaked questions, or protected exam items. ';
+ $prompt.= "\nOptional interview dataset context for relevant topics and skills:\n{$contextText}\n";
+ $prompt.= 'You may ask a provider-generated question outside these examples when it better fits the candidate answer and role. Do not fabricate source claims, leaked questions, or protected exam items. ';
  }
 
  $conversation = array_map(static function (array $interaction): array {
@@ -781,25 +781,33 @@ class AIService
  }
  $prompt.= ' Keep the reply natural for speech, under 75 words, with exactly one interviewer question. '.self::liveFeedbackReplyBoundary($liveFeedbackMode);
 
- $maxRetries = max(1, min(2, (int) config('services.interview_follow_up.max_retries', 1)));
+ $maxRetries = max(1, min(3, (int) config('services.interview_follow_up.max_retries', 3)));
+ $providers = array_values(array_filter(self::providerPriorityList($provider), fn (string $key): bool => self::providerIsConfigured($key)));
+ if ($providers === []) {
+ throw new InterviewFollowUpProviderFailureException('No configured AI provider is available to prepare the next interview question.');
+ }
+ $maxProviders = max(1, min(count($providers), (int) config('services.interview_follow_up.max_providers', 1)));
+ $providers = array_slice($providers, 0, $maxProviders);
  $chatRequestOptions = [
  'timeout_seconds' => max(2, min(20, (int) config('services.interview_follow_up.timeout', 6))),
  'attempts' => max(1, min(2, (int) config('services.interview_follow_up.http_attempts', 1))),
- 'max_providers' => max(1, min(count(self::activeProviderKeys()), (int) config('services.interview_follow_up.max_providers', 1))),
+ 'max_providers' => 1,
  ];
  $attempt = 0;
 
  while ($attempt < $maxRetries) {
  try {
- $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation and supplied source dataset the way a live interviewer would. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. Never say "You mentioned", "You said", "You shared", or restate the candidate answer. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $currentProvider = $providers[$attempt % count($providers)]?? $provider;
+ $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation and target role; dataset examples are optional context. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. Never say "You mentioned", "You said", "You shared", or restate the candidate answer. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
 
- // Rely on chatMessage for robust failover
- $response = self::chatMessage($prompt, [], $provider, $systemPrompt, $chatRequestOptions);
+ $response = self::chatMessage($prompt, [], $currentProvider, $systemPrompt, $chatRequestOptions);
  $response = self::sanitizeInterviewerReply($response);
 
  if (! empty($response) && $response!== self::AI_FAILURE_MESSAGE
  && preg_match('/\b(?:you\s+(?:mentioned|said|shared)|thinking\s+about\s+what\s+you\s+shared)\b/iu', $response) !== 1
- && app(InterviewConversationService::class)->isCoherentFollowUp($response, (string) $latestAnswer, $history)) {
+ && app(InterviewConversationService::class)->isCoherentFollowUp($response, (string) $latestAnswer, $history)
+ && ($acceptQuestion === null || $acceptQuestion($response))) {
+ $usedProvider = $currentProvider;
  return $response;
  }
  } catch (\Exception $e) {
@@ -808,7 +816,7 @@ class AIService
 
  $attempt++;
  if ($attempt < $maxRetries) {
- sleep(1);
+ $prompt.= "\nThe previous response could not be used. Write a DIFFERENT, single role-relevant question of the required type. Use the candidate answer for context, but you may introduce a new topic that fits the role even if the dataset has no example. Avoid repeating an earlier question.\n";
  }
  }
 
@@ -930,11 +938,7 @@ class AIService
  {
  $requestedProvider = self::normalizeProviderName($provider);
  if (in_array($requestedProvider, ['local', 'localmodel'], true)) {
- return [
- 'text' => self::fallbackInterviewOpeningIntro($session),
- 'provider' => 'local',
- 'source' => 'local_fallback',
- ];
+ throw new InterviewFollowUpProviderFailureException('No configured AI provider is available to prepare the interview opening.');
  }
 
  $targetPosition = trim((string) ($session->target_position?? ''))?: 'this role';
@@ -1009,11 +1013,7 @@ class AIService
  }
  }
 
- return [
- 'text' => self::fallbackInterviewOpeningIntro($session),
- 'provider' => 'local',
- 'source' => 'local_fallback',
- ];
+ throw new InterviewFollowUpProviderFailureException('The AI interviewer could not prepare the interview opening. Please try again.');
  }
 
 public static function generateInterviewClosing($session, array $answersData, $provider = 'openai', $targetLanguage = null): array

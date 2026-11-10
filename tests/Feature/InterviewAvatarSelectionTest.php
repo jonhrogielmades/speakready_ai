@@ -146,20 +146,27 @@ class InterviewAvatarSelectionTest extends TestCase
             ->assertSee('<option value="role_specialist" selected>Role Specialist</option>', false);
     }
 
-    public function test_each_interviewer_selection_is_persisted_and_used_for_the_local_opening(): void
+    public function test_each_interviewer_selection_is_sent_to_the_provider_for_the_opening(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
-        $openingCues = [
-            'friendly_recruiter' => 'No need to be perfect',
-            'structured_hr' => 'begin with your background',
-            'hiring_manager' => 'work you would bring',
-            'role_specialist' => 'experience behind your approach',
-            'senior_leader' => 'shaped your judgment',
-            'panel_interviewer' => 'support your answers',
-        ];
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        $prompts = [];
+        Http::fake(['api.openai.com/*' => function ($request) use (&$prompts) {
+            $prompts[] = (string) data_get($request->data(), 'messages.1.content', '');
 
-        foreach ($openingCues as $avatar => $openingCue) {
+            return Http::response(['choices' => [['message' => [
+                'content' => 'Hi, nice to meet you. I will be your AI interviewer for the Developer interview. Tell me about yourself.',
+            ]]]]);
+        }]);
+
+        foreach (InterviewerAvatar::keys() as $avatar) {
             $this->actingAs($user)
                 ->post(route('interview.start'), $this->payload($category, ['interviewer_avatar' => $avatar]))
                 ->assertRedirect(route('interview.session'));
@@ -170,8 +177,9 @@ class InterviewAvatarSelectionTest extends TestCase
                 ->firstOrFail();
 
             $this->assertSame($avatar, $session->interviewer_avatar);
-            $this->assertStringContainsString($openingCue, $opening->question_text);
+            $this->assertStringContainsString(InterviewerAvatar::label($avatar), $prompts[array_key_last($prompts)]);
             $this->assertStringContainsString('Tell me about yourself', $opening->question_text);
+            $this->assertSame('openai', $opening->ai_provider);
         }
     }
 

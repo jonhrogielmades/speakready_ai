@@ -16,30 +16,9 @@
  ->find(session('active_interview_id'));
  if ($sessionRecord) {
  $num = $sessionRecord->num_questions?? 5;
- $selectedQuestionTypes = json_decode($sessionRecord->question_types?? '[]', true);
- $selectedQuestionTypes = is_array($selectedQuestionTypes)? array_values(array_filter($selectedQuestionTypes)): [];
- // Try to find questions specifically generated for this session first
  $questions = \App\Models\Question::where('interview_session_id', $sessionRecord->id)
  ->orderBy('id')
  ->get();
- 
- // Fallback to local category questions if none were specifically generated
- if ($questions->isEmpty()) {
- // Try to match exact difficulty and active status first
- $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)
- ->where('status', 'active')
- ->where('difficulty', $sessionRecord->difficulty)
- ->when(!empty($selectedQuestionTypes), fn($query) => $query->whereIn('type', $selectedQuestionTypes))
- ->inRandomOrder()->limit($num)->get();
- 
- // If no questions match the difficulty, fallback to any active questions in category
- if ($questions->isEmpty()) {
- $questions = \App\Models\Question::where('category_id', $sessionRecord->category_id)
- ->where('status', 'active')
- ->when(!empty($selectedQuestionTypes), fn($query) => $query->whereIn('type', $selectedQuestionTypes))
- ->inRandomOrder()->limit($num)->get();
- }
- }
  $scenarioLabel = 'Job Interviews';
  } else {
  $questions = collect([]);

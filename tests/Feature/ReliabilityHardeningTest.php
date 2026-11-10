@@ -546,7 +546,7 @@ class ReliabilityHardeningTest extends TestCase
  'interview_session_id' => null,
  'category_id' => $category->id,
  'question_text' => $followUpText,
- 'source_type' => 'ai_adapted_source_backed',
+ 'source_type' => 'ai_generated',
  'ai_provider' => 'openai',
  ]);
  }
@@ -584,7 +584,7 @@ class ReliabilityHardeningTest extends TestCase
  ])
  ->assertStatus(503)
  ->assertJsonPath('success', false)
- ->assertJsonPath('error_code', 'ai_interview_provider_response_rejected');
+ ->assertJsonPath('error_code', 'ai_interview_provider_failed');
 
  $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
  }

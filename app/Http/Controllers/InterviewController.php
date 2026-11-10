@@ -286,9 +286,7 @@ class InterviewController extends Controller
   Cache::forget($recentStartKey);
  }
 
- $this->discardActiveInterviewSessions(Auth::id());
-
- $session = InterviewSession::create([
+ $sessionAttributes = [
  'user_id' => Auth::id(),
  'category_id' => $category->id,
  'difficulty' => $validated['difficulty'],
@@ -310,18 +308,36 @@ class InterviewController extends Controller
  'accommodation_profile' => $accommodationProfile,
  'score_eligible' => $assessmentMode === 'assessment',
  'status' => 'in_progress',
- ]);
+ ];
 
  $requestedProvider = AIService::normalizeProviderKey($validated['ai_provider']?? null);
  $openingProvider = AIService::defaultProviderKey($requestedProvider);
- $openingIntro = AIService::generateInterviewOpeningIntro(
- $session,
- $openingProvider,
- $this->currentLanguageConfig(),
- $this->datasetForSession($session)
- );
+ if ($openingProvider === 'local') {
+  $openingProvider = AIService::defaultProviderKey();
+ }
+ if (! AIService::providerIsConfigured($openingProvider)) {
+  return back()->withErrors(['ai_provider' => 'A configured AI provider is required to start an interview.'])->withInput();
+ }
+ $openingSession = new InterviewSession($sessionAttributes);
+ $openingSession->setRelation('category', $category);
+ try {
+  $openingIntro = AIService::generateInterviewOpeningIntro(
+   $openingSession,
+   $openingProvider,
+   $this->currentLanguageConfig(),
+   $this->datasetForSession($openingSession)
+  );
+ } catch (InterviewFollowUpProviderFailureException $error) {
+  return back()->withErrors(['ai_provider' => $error->getMessage()])->withInput();
+ }
  $openingIntroProvider = AIService::normalizeProviderKey($openingIntro['provider']?? null);
  $openingIntroText = trim((string) ($openingIntro['text']?? ''));
+ if ($openingIntroText === '' || ! AIService::providerIsConfigured($openingIntroProvider)) {
+  return back()->withErrors(['ai_provider' => 'The AI interviewer could not prepare the interview opening. Please try again.'])->withInput();
+ }
+
+ $this->discardActiveInterviewSessions(Auth::id());
+ $session = InterviewSession::create($sessionAttributes);
 
  $this->createInterviewQuestion(
  $session,
@@ -334,17 +350,11 @@ class InterviewController extends Controller
  'question_type' => 'Personal',
  'expected_guide' => 'Give a concise overview of who you are, your relevant background or experience, and how it connects to the role or opportunity. Share only interview-appropriate personal details.',
  'mapped_skills' => ['self_introduction', 'communication_clarity', 'professional_presence'],
- 'source_name' => $openingIntroProvider === 'local'? 'SpeakReady interview opening fallback': 'AI-generated interview opening',
+ 'source_name' => 'AI-generated interview opening',
  'source_url' => null,
  'source_type' => 'real_interview_opening',
  'ai_provider' => $openingIntroProvider,
  ]
- );
-
- $this->preloadInitialInterviewQuestion(
- $session,
- $category,
- $requestedProvider
  );
 
  session()->forget([
@@ -749,17 +759,20 @@ class InterviewController extends Controller
  $requiredQuestionType = $this->selectedQuestionTypeForIndex($session, $currentQuestionIndex + 1);
 
  $dataset = $this->datasetForSession($session);
- if (! is_array($dataset) || empty($dataset['questions'])) {
- return response()->json([
- 'success' => false,
- 'answer_saved' => true,
- 'error_code' => 'ai_interview_dataset_unavailable',
- 'error' => 'The interview question dataset is unavailable. Please try again later.',
- ], 503);
- }
+ $spokenQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')
+ ->map(fn ($text) => $this->normalizedQuestionText((string) $text))->all();
  try {
  // Persisted questions and answers are the authoritative conversation.
- $followUpText = AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType);
+ $usedProvider = null;
+ $followUpText = AIService::generateChatReply(
+ $session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType,
+ fn (string $reply): bool => $this->isReliableInterviewFollowUpText($reply, $session, $interviewerInputText, $history)
+ && ($requiredQuestionType === null || $this->questionMatchesSelectedType($reply, $requiredQuestionType))
+ && ! in_array($this->normalizedQuestionText($reply), $spokenQuestionTexts, true),
+ $usedProvider
+ );
+ $provider = $usedProvider?? $provider;
+ session(['active_interview_provider' => $provider]);
  } catch (InterviewFollowUpProviderFailureException $error) {
  Log::warning('AI interview follow-up provider failed; no local fallback will be used.', [
  'session_id' => $session->id,
@@ -793,22 +806,8 @@ class InterviewController extends Controller
 
  $followUpText = trim($followUpText);
 
- // Treat provider output as a draft, never as an unchecked interviewer turn.
- // A rejected provider response stops the turn; it is never replaced locally.
- $followUpSourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
- if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText, $history)
- || ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($followUpText, $requiredQuestionType))) {
- return response()->json([
- 'success' => false,
- 'answer_saved' => true,
- 'error_code' => 'ai_interview_provider_response_rejected',
- 'error' => 'The AI provider returned a question that did not pass the interview and dataset checks. Please try again.',
- 'retry_after_ms' => 1500,
- ], 503);
- }
-
  try {
- return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $followUpSourceMetadata, $requiredQuestionType, $interviewerInputText) {
+ return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $requiredQuestionType) {
  $lockedSession = InterviewSession::with('category')
  ->where('user_id', Auth::id())
  ->where('status', 'in_progress')
@@ -838,22 +837,23 @@ class InterviewController extends Controller
  }
 
  // 4. Save new AI Question
- $sourceMetadata = $followUpSourceMetadata;
- // Unanswered future drafts are replaced below; only spoken questions
- // should prevent a valid answer-based follow-up from being used.
- $existingQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')->all();
- $safeFollowUpText = $this->uniqueQuestionTextForSession($lockedSession, $followUpText, $existingQuestionTexts, $requiredQuestionType, $interviewerInputText);
+ // Unanswered future drafts are replaced below; spoken questions must stay unique.
+ $existingQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')
+ ->map(fn ($text) => $this->normalizedQuestionText((string) $text))->all();
+ if (in_array($this->normalizedQuestionText($followUpText), $existingQuestionTexts, true)) {
+ return response()->json(['error' => 'The AI interviewer repeated an earlier question. Please try again.'], 503);
+ }
  $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
  $this->deleteUnansweredFutureQuestions($lockedSession, $question);
 
- $questionMetadata = $this->aiGeneratedQuestionSourceMetadata($sourceMetadata, $provider);
+ $questionMetadata = $this->aiGeneratedQuestionSourceMetadata($provider);
  if ($requiredQuestionType !== null) {
  $questionMetadata['question_type'] = $requiredQuestionType;
  }
  $newQuestion = $this->createInterviewQuestion(
  $lockedSession,
  $lockedSession->category,
- $safeFollowUpText,
+ $followUpText,
  $lockedSession->difficulty,
  $this->decodeQuestionTypes($lockedSession->question_types),
  $nextQuestionIndex,
@@ -4416,6 +4416,7 @@ return response()->json([
  'next_question_id' => $question->id,
  'next_question_text' => $question->question_text,
  'source_type' => $question->source_type,
+ 'ai_provider' => $question->ai_provider,
  ]);
  }
 
@@ -4938,7 +4939,12 @@ return response()->json([
  return $hasEvidenceProbe && ($mentionsPosition || ($overlap > 0 && str_contains($questionText, '“')));
  }
 
- return $hasEvidenceProbe && $overlap > 0;
+ // A role title does not justify assuming the candidate performed a new task.
+ if ($overlap === 0 && preg_match('/\b(?:did you|you did|you made|you handled|your (?:decision|action|result|tradeoff) in)\b/i', $questionText)) {
+ return false;
+ }
+
+ return $hasEvidenceProbe && ($overlap > 0 || $mentionsPosition);
  }
 
  private function unavailableInterviewAnswerText(string $answerText): bool
@@ -5121,23 +5127,12 @@ return response()->json([
  }
  }
 
- private function aiGeneratedQuestionSourceMetadata(array $sourceMetadata, string $provider): array
+ private function aiGeneratedQuestionSourceMetadata(string $provider): array
  {
- if (($sourceMetadata['source_type']?? null) === 'local_question_fallback') {
  return [
- 'source_name' => 'SpeakReady role-specific fallback',
+ 'source_name' => 'AI-generated interview question',
  'source_url' => null,
- 'source_type' => 'local_question_fallback',
- 'ai_provider' => 'local',
- ];
- }
-
- $sourceName = trim((string) ($sourceMetadata['source_name']?? ''));
-
- return [
- 'source_name' => mb_substr($sourceName!== ''? $sourceName: 'Curated interview source', 0, 255),
- 'source_url' => $sourceMetadata['source_url']?? null,
- 'source_type' => 'ai_adapted_source_backed',
+ 'source_type' => 'ai_generated',
  'ai_provider' => $this->evidenceProviderKey($provider),
  ];
  }
@@ -5284,12 +5279,13 @@ return response()->json([
  || (preg_match('/\b(?:process|workflow|method|steps?)\b/i', $question) === 1
  && preg_match('/\b(?:solve|check|measure|implement|investigate|improve)\b/i', $question) === 1);
  $situational = preg_match('/\b(?:if|suppose|imagine|scenario|would you|might you|how would|what would|how do you (?:handle|respond|approach|prioritize|adapt|confirm)|what do you do when)\b/i', $question) === 1;
+ $technicalMethod = preg_match('/\b(?:diagnos\w*|debug\w*|troubleshoot\w*|design|code|test\w*|verif\w*|implement\w*|configur\w*|architect\w*)\b/i', $question) === 1;
 
  return match ($requiredType) {
  'Personal' => $personal,
  'Behavioral' => ! $personal && $behavioral,
  'Technical' => ! $personal && ! $behavioral && $technical,
- 'Situational' => ! $personal && ! $behavioral && ! $technical && $situational,
+ 'Situational' => ! $personal && ! $behavioral && $situational && ! $technicalMethod,
  default => false,
  };
  }

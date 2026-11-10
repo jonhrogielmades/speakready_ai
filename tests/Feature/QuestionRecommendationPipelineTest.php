@@ -3,12 +3,15 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\AiProvider;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\User;
 use App\Services\QuestionRecommendationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -265,6 +268,18 @@ class QuestionRecommendationPipelineTest extends TestCase
  'description' => 'Job interview practice.',
  'status' => 'active',
  ]);
+ AiProvider::create([
+  'name' => 'OpenAI',
+  'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+  'api_key' => Crypt::encryptString('test-openai-key'),
+  'status' => 'active',
+  'is_primary' => true,
+ ]);
+ Http::fake(['api.openai.com/*' => Http::response([
+  'choices' => [['message' => [
+   'content' => 'Hi, nice to meet you. I will be your AI interviewer for the HR Specialist interview. Tell me about yourself.',
+  ]]],
+ ])]);
 
  $this->actingAs($user)
  ->post(route('interview.start'), [

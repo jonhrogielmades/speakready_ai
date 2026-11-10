@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\InterviewController;
+use App\Models\AiProvider;
 use App\Models\Category;
 use App\Models\InterviewSession;
 use App\Models\Question;
@@ -11,6 +12,8 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Http;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -46,6 +49,12 @@ class InterviewQuestionTypeSelectionTest extends TestCase
             );
             $this->assertSame($type, $created->fresh()->type);
         }
+
+        $this->assertTrue($this->invoke(
+            'questionMatchesSelectedType',
+            'If an API failed during a Developer release, what would you check first?',
+            'Situational'
+        ));
 
         $this->assertSame('Behavioral', $this->invoke('selectedQuestionTypeForIndex', $session, 5));
     }
@@ -168,7 +177,7 @@ class InterviewQuestionTypeSelectionTest extends TestCase
 
     public function test_chat_reply_saves_each_single_selected_type_across_response_modes(): void
     {
-        Setting::setVal('int_follow_up', false, 'interview', 'boolean');
+        $this->fakeProviderTypeQuestions();
         Storage::fake('local');
         config([
             'services.ai_transcription.provider_priority' => '',
@@ -213,7 +222,7 @@ class InterviewQuestionTypeSelectionTest extends TestCase
 
     public function test_mixed_session_follows_selected_type_order_after_each_answer(): void
     {
-        Setting::setVal('int_follow_up', false, 'interview', 'boolean');
+        $this->fakeProviderTypeQuestions();
         $types = ['Behavioral', 'Situational', 'Technical', 'Personal'];
         [$session, $category, $user] = $this->makeSession($types);
         $currentQuestion = $this->question($session, $category, 'Please introduce yourself.', 'Personal', 'real_interview_opening');
@@ -248,6 +257,32 @@ class InterviewQuestionTypeSelectionTest extends TestCase
         $reflection->setAccessible(true);
 
         return $reflection->invoke(app(InterviewController::class), ...$args);
+    }
+
+    private function fakeProviderTypeQuestions(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        $questions = [
+            'Behavioral' => 'Can you describe a time you improved an approval queue as a Developer?',
+            'Situational' => 'If the approval queue stalled in the Developer role, what would you do first?',
+            'Technical' => 'What tools would you use to diagnose a slow approval queue for the Developer role?',
+            'Personal' => 'Which strength helps you improve approval workflows in the Developer role?',
+        ];
+        Http::fake(['api.openai.com/*' => function ($request) use ($questions) {
+            $prompt = (string) data_get($request->data(), 'messages.1.content', '');
+            preg_match('/The NEXT question must be (Behavioral|Situational|Technical|Personal)/', $prompt, $match);
+
+            return Http::response(['choices' => [['finish_reason' => 'stop', 'message' => [
+                'content' => $questions[$match[1] ?? 'Behavioral'],
+            ]]]]);
+        }]);
     }
 
     private function makeSession(array $types, string $mode = 'text'): array

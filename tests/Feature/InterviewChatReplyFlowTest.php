@@ -9,6 +9,7 @@ use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\QuestionDatasetProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -73,7 +74,7 @@ class InterviewChatReplyFlowTest extends TestCase
 
             $this->assertSame($first->json('next_question_id'), $second->json('next_question_id'));
             $this->assertSame($first->json('next_question_text'), $second->json('next_question_text'));
-            $this->assertSame('ai_adapted_source_backed', $first->json('source_type'));
+            $this->assertSame('ai_generated', $first->json('source_type'));
             $this->assertStringNotContainsStringIgnoringCase('you mentioned', $first->json('next_question_text'));
             $this->assertStringContainsString('approval queue', strtolower($first->json('next_question_text')));
             $this->assertStringNotContainsString('space rocket', strtolower($first->json('next_question_text')));
@@ -83,8 +84,8 @@ class InterviewChatReplyFlowTest extends TestCase
 
         $this->assertNotEmpty($capturedPrompts);
         $this->assertStringContainsString('Source dataset: Job Interview Questions', $capturedPrompts[0]);
-        $this->assertStringContainsString('mandatory grounding for the next question', $capturedPrompts[0]);
-        $this->assertStringContainsString('exact wording does not need to appear in the dataset', $capturedPrompts[0]);
+        $this->assertStringContainsString('Dataset examples are optional inspiration', $capturedPrompts[0]);
+        $this->assertStringContainsString('outside these examples', $capturedPrompts[0]);
     }
 
     public function test_disabled_ai_follow_up_does_not_use_a_local_question_fallback(): void
@@ -131,6 +132,196 @@ class InterviewChatReplyFlowTest extends TestCase
             ->assertJsonPath('error_code', 'ai_interview_follow_up_disabled');
 
         $this->assertSame(0, InterviewAnswer::where('interview_session_id', $skippedSession->id)->count());
+    }
+
+    public function test_provider_question_outside_dataset_examples_is_saved(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        $generated = 'What interests you about improving reliability as a Developer?';
+        Http::fake(['api.openai.com/*' => Http::response([
+            'choices' => [['finish_reason' => 'stop', 'message' => ['content' => $generated]]],
+        ])]);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $datasetQuestions = collect(QuestionDatasetProvider::forCategory($category)['questions'] ?? [])
+            ->pluck('question_text')->all();
+        $this->assertNotContains($generated, $datasetQuestions);
+        [$session, $question] = $this->interview($user, $category, 'text');
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I build small web services and want to make them more reliable.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('next_question_text', $generated)
+            ->assertJsonPath('source_type', 'ai_generated');
+
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'question_text' => $generated,
+            'ai_provider' => 'openai',
+        ]);
+        Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
+    }
+
+    public function test_start_without_a_working_provider_does_not_create_local_questions(): void
+    {
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+
+        $this->actingAs($user)
+            ->from(route('interview.setup'))
+            ->post(route('interview.start'), [
+                'category_id' => $category->id,
+                'difficulty' => 'medium',
+                'target_position' => 'Developer',
+                'num_questions' => 3,
+                'response_mode' => 'text',
+                'interviewer_avatar' => 'friendly_recruiter',
+                'ai_provider' => 'local',
+            ])
+            ->assertRedirect(route('interview.setup'))
+            ->assertSessionHasErrors('ai_provider');
+
+        $this->assertDatabaseCount('interview_sessions', 0);
+        $this->assertDatabaseCount('questions', 0);
+    }
+
+    public function test_rejected_provider_question_is_retried_with_provider_instead_of_local_fallback(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        config(['services.interview_follow_up.max_retries' => 3]);
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        $generated = 'What interests you about improving reliability as a Developer?';
+        $replies = ['What is your favorite color?', $generated];
+        Http::fake(['api.openai.com/*' => function () use (&$replies) {
+            return Http::response([
+                'choices' => [['finish_reason' => 'stop', 'message' => ['content' => array_shift($replies)]]],
+            ]);
+        }]);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I build small web services and want to make them more reliable.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('next_question_text', $generated);
+
+        Http::assertSentCount(2);
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_repeated_provider_question_is_retried_instead_of_replaced_with_local_text(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        config(['services.interview_follow_up.max_retries' => 3]);
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        $repeated = 'What interests you about improving reliability as a Developer?';
+        $generated = 'Which strength would help you improve reliability in the Developer role?';
+        $replies = [$repeated, $generated];
+        Http::fake(['api.openai.com/*' => function () use (&$replies) {
+            return Http::response([
+                'choices' => [['finish_reason' => 'stop', 'message' => ['content' => array_shift($replies)]]],
+            ]);
+        }]);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+        $question->forceFill(['question_text' => $repeated])->save();
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I build small web services and want to make them more reliable.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('next_question_text', $generated);
+
+        Http::assertSentCount(2);
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'question_text' => $generated,
+            'ai_provider' => 'openai',
+        ]);
+    }
+
+    public function test_second_ai_provider_can_generate_question_and_is_recorded_as_source(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        config([
+            'services.interview_follow_up.max_retries' => 3,
+            'services.interview_follow_up.max_providers' => 2,
+        ]);
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        AiProvider::create([
+            'name' => 'Gemini',
+            'api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta',
+            'api_key' => Crypt::encryptString('test-gemini-key'),
+            'status' => 'active',
+        ]);
+        $generated = 'What interests you about improving reliability as a Developer?';
+        Http::fake([
+            'api.openai.com/*' => Http::response(['error' => 'unavailable'], 503),
+            'generativelanguage.googleapis.com/*' => Http::response([
+                'candidates' => [['finishReason' => 'STOP', 'content' => ['parts' => [['text' => $generated]]]]],
+            ]),
+        ]);
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I build small web services and want to make them more reliable.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('next_question_text', $generated)
+            ->assertJsonPath('ai_provider', 'gemini');
+
+        Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
+        Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'generativelanguage.googleapis.com'));
+        $this->assertDatabaseHas('questions', [
+            'interview_session_id' => $session->id,
+            'question_text' => $generated,
+            'ai_provider' => 'gemini',
+        ]);
     }
 
     public function test_seaman_session_rejects_an_ai_software_follow_up_without_using_local_fallback(): void
