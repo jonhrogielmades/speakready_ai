@@ -134,7 +134,7 @@ class InterviewController extends Controller
  Rule::exists('categories', 'id')->where('status', 'active')->where('type', 'core'),
  ],
  'difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
- 'target_position' => 'required|string|max:255',
+ 'target_position' => 'nullable|string|max:255',
  'job_category' => 'nullable|string|max:100',
  'custom_position' => 'nullable|string|max:255',
  'resume_text' => 'nullable|string|max:20000',
@@ -183,7 +183,16 @@ class InterviewController extends Controller
  ->withInput();
  }
 
- $position = trim((string) $validated['target_position']);
+ $position = trim((string) ($validated['target_position'] ?? ''));
+ if ($position === '') {
+  $position = trim((string) (Auth::user()?->target_position ?? ''));
+ }
+ if ($position === '') {
+  return back()
+   ->withErrors(['target_position' => 'Enter the target position before continuing.'])
+   ->withInput();
+ }
+ $validated['target_position'] = $position;
  if (strcasecmp($position, 'Other') === 0) {
   $position = trim((string) ($validated['custom_position']?? ''));
   if ($position === '') {
