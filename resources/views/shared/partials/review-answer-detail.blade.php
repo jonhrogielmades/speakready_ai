@@ -13,7 +13,16 @@
  : ($hasVoiceRecording ? 'Transcript unavailable for the saved voice answer.' : 'No answer text was saved.'));
 
  $feedbackText = review_feedback_without_question_text(
- (string) ($answer->ai_feedback ?: 'Feedback is not available for this answer yet.'),
+ \App\Services\AIService::groundedReviewFeedbackText(($reviewInputsStale ?? false) ? null : $answer->ai_feedback, [
+ 'id' => $answer->id,
+ 'answer' => review_answer_text($answer),
+ 'question' => review_question_text($questionSource),
+ 'question_type' => $questionSource->type ?? $questionSource->question_type ?? null,
+ 'expected_guide' => $questionSource->expected_guide ?? '',
+ 'is_skipped' => (bool) ($answer->is_skipped ?? false),
+ 'response_mode' => $answer->response_mode ?? 'text',
+ 'delivery_transcript' => $answer->delivery_transcript ?? '',
+ ]),
  $questionSource
  );
  if ($feedbackText === '') {
@@ -25,6 +34,7 @@
  data_get($answer->coaching_feedback ?? [], 'content_alignment.possible_answer_provider', $answer->ai_provider)
  );
  $possibleAnswerIsApiBacked = $possibleAnswerSource === 'ai_provider'
+ && ! ($reviewInputsStale ?? false)
  && \App\Services\AIService::providerIsSupported($possibleAnswerProvider)
  && ! in_array($possibleAnswerProvider, ['local', 'localmodel'], true);
  $possibleAnswer = $possibleAnswerIsApiBacked

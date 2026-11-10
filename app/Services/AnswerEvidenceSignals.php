@@ -7,7 +7,7 @@ final class AnswerEvidenceSignals
 {
     private const ACTION = '(?:lead|led|own|owned|build|built|create|created|resolve|resolved|solve|solved|fix|fixed|improve|improved|reduce|reduced|increase|increased|deliver|delivered|design|designed|implement|implemented|organize|organized|manage|managed|test|tested|analyze|analyzed|coordinate|coordinated|decide|decided|handle|handled|support|supported|communicate|communicated|verify|verified|check|checked|plan|planned|inspect|inspected|diagnose|diagnosed|review|reviewed|prioritize|prioritized|explain|explained|validate|validated|measure|measured|compare|compared|document|documented|escalate|escalated|write|wrote|prepare|prepared|train|trained|assist|assisted|propose|proposed|research|researched|configure|configured|deploy|deployed|investigate|investigated|monitor|monitored|report|reported|present|presented|negotiate|negotiated|mentor|mentored|facilitate|facilitated|maintain|maintained|migrate|migrated|automate|automated|optimize|optimized|launch|launched|process|processed|schedule|scheduled|delegate|delegated|select|selected|evaluate|evaluated|gather|gathered|contact|contacted|collaborate|collaborated|update|updated|identify|identified|recommend|recommended|listen|listened|ask|asked|share|shared)';
 
-    private const RESULT = '(?:achieved|improved|reduced|increased|delivered|received|thanked|saved|resolved|completed|finished|passed|learned|learnt|met|exceeded|dropped|rose|fell|grew|recovered|restored|prevented|avoided|failed|missed|remained|stayed|became)';
+    private const RESULT = '(?:achieved|improved|reduced|increased|delivered|thanked|saved|resolved|completed|finished|passed|learned|learnt|met|exceeded|dropped|rose|fell|grew|recovered|restored|prevented|avoided|failed|missed|remained|stayed|became)';
 
     public static function analyze(string $answer, bool $pastEvent = false): array
     {
@@ -57,12 +57,17 @@ final class AnswerEvidenceSignals
     private static function actionCount(string $text, string $subject, bool $pastEvent): int
     {
         $modal = $pastEvent ? '' : '(?:(?:would|will|can|could|plan to|try to)\s+)?';
-        $pattern = '/\b'.$subject.'\s+(?:(?:personally|also|then|first|carefully|directly)\s+)?(?:have\s+|had\s+)?'.$modal.self::ACTION.'\b/iu';
-        if (! preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE)) {
+        $pattern = '/\b'.$subject.'\s+(?:(?:personally|also|then|first|carefully|directly)\s+)?(?:have\s+|had\s+)?'.$modal.'(?<action>'.self::ACTION.')\b/iu';
+        if (! preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER)) {
             return 0;
         }
         $count = 0;
-        foreach ($matches[0] as [$match, $offset]) {
+        foreach ($matches as $matched) {
+            [$match, $offset] = $matched[0];
+            // A present-tense capability is not evidence of a past example.
+            if ($pastEvent && ! preg_match('/(?:ed|led|built|wrote)$/iu', $matched['action'][0])) {
+                continue;
+            }
             $prefix = substr($text, 0, $offset);
             // Do not count a conditional example as work the candidate performed.
             if ($pastEvent && preg_match('/\b(?:if|suppose|imagine)\b[^.!?;]*$/iu', $prefix)) {
@@ -83,8 +88,12 @@ final class AnswerEvidenceSignals
         if (preg_match('/\b(?:do not|don\x27t|did not|didn\x27t|have not|haven\x27t|cannot|can\x27t)\s+(?:yet\s+)?(?:know|remember|recall|measure|measured|verify|verified)\b|\b(?:results?|outcomes?|impact)\s+(?:is|are|was|were|has been|have been|remains?|remained)\s+(?:(?:still|currently|yet)\s+)?(?:unknown|unclear|unavailable|pending|not\s+(?:yet\s+)?(?:known|clear|available|measured|verified|determined)|to be determined)\b/iu', $clause)) {
             return false;
         }
+        if (preg_match('/\b(?:unsure|uncertain|not sure)\s+(?:whether|if|that|how much)\b|\b(?:cannot|can\x27t|could not|couldn\x27t|have not|haven\x27t)\s+(?:yet\s+)?(?:confirm|tell|say|establish)\b|\b(?:whether|was it|did it)\b[^.!?]*\?/iu', $clause)) {
+            return false;
+        }
 
         return preg_match('/\b'.self::RESULT.'\b/iu', $clause) === 1
+            || preg_match('/\breceived\s+(?:(?:a|an|the|some)\s+)?(?:positive|negative|good|poor|excellent)\s+(?:feedback|review|rating)|\breceived\s+(?:(?:a|an|the)\s+)?(?:award|recognition|promotion|approval|confirmation|compliment)\b/iu', $clause) === 1
             || preg_match('/\b(?:as a result|this led to|which led to)\b[,\s]+\S+(?:\s+\S+){2,}/iu', $clause) === 1
             || preg_match('/\b(?:result|outcome|impact|lesson)\s+(?:was|is|has been)\s+(?!unknown\b|unclear\b|pending\b)\S+/iu', $clause) === 1
             || preg_match('/\b(?:did not|didn\x27t)\s+(?:improve|reduce|increase|resolve|finish|complete|recover|meet|work)\b/iu', $clause) === 1

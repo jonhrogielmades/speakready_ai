@@ -25,7 +25,7 @@
  $fallbackSummary = is_scalar($overview['summary'] ?? null)
  ? review_feedback_without_question_text((string) $overview['summary'])
  : 'Feedback is ready. Review one focus area and practice again.';
- $score = $sessionRecord->score;
+ $score = ($report['is_stale'] ?? false) ? null : $sessionRecord->score;
  $overallScore = is_numeric($score?->overall_readiness_score ?? null)
  ? max(0, min(100, (int) round($score->overall_readiness_score)))
  : null;

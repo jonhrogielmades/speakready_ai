@@ -31,6 +31,9 @@ class AnswerEvidenceSignalsTest extends TestCase
             ['I hoped the changes would reduce response times by 20 percent.'],
             ['I planned to improve the process and wanted to finish the rollout.'],
             ['If I reduced errors, the team would finish sooner.'],
+            ['I am not sure whether performance improved after the change.'],
+            ['We cannot confirm that the change reduced delays.'],
+            ['I received a complaint and investigated the issue.'],
         ];
     }
 
@@ -55,6 +58,8 @@ class AnswerEvidenceSignalsTest extends TestCase
             ['We met our goal of completing the rollout by Friday.'],
             ['We missed the target by 2 days.'],
             ['The team completed the goal within the agreed timeline.'],
+            ['I received positive feedback from the customer.'],
+            ['We received approval after addressing the missing requirements.'],
         ];
     }
 
@@ -92,5 +97,13 @@ class AnswerEvidenceSignalsTest extends TestCase
         $this->assertSame(1, AnswerEvidenceSignals::analyze($answer, true)['action_count']);
         $this->assertSame(0, AnswerEvidenceSignals::analyze('I would inspect the logs.', true)['action_count']);
         $this->assertSame(1, AnswerEvidenceSignals::analyze('I would inspect the logs.', false)['action_count']);
+    }
+
+    public function test_habitual_skills_do_not_substitute_for_actions_in_a_past_example(): void
+    {
+        $answer = 'I manage escalations and I communicate with customers.';
+        $this->assertSame(0, AnswerEvidenceSignals::analyze($answer, true)['action_count']);
+        $this->assertSame(2, AnswerEvidenceSignals::analyze($answer, false)['action_count']);
+        $this->assertSame(3, AnswerEvidenceSignals::analyze('I led the call. I built the checklist. I wrote the report.', true)['action_count']);
     }
 }

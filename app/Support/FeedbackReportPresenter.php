@@ -4,12 +4,19 @@ namespace App\Support;
 
 use App\Models\InterviewSession;
 use App\Services\AIService;
+use App\Services\DetailedFeedbackReviewService;
+use App\Services\EvidenceBasedCoachingService;
 use Illuminate\Support\Collection;
 
 class FeedbackReportPresenter
 {
  public static function forSession(InterviewSession $session): array
  {
+ $hasSavedFingerprint = trim((string) data_get($session->feedback?->coaching_summary?? [], 'review_context.detailed_review_validation.input_fingerprint', '')) !== '';
+ $isStale = $hasSavedFingerprint && ! app(DetailedFeedbackReviewService::class)->reviewInputsMatchSavedValidation($session);
+ if ($isStale) {
+ $session = self::currentInputReview($session);
+ }
  $feedback = $session->feedback;
  $strengths = self::reviewText($feedback->strengths?? '');
  $weaknesses = self::reviewText($feedback->weaknesses?? '');
@@ -20,12 +27,13 @@ class FeedbackReportPresenter
  $categoryBreakdown = self::categoryBreakdown($session);
  $answers = self::answers($session);
  $providerSessionFeedbackTrusted = self::hasTrustedProviderSessionFeedback($feedback)
+ && ! $isStale
  && self::providerSessionFeedbackIsUsable($feedback, $answers);
  $providerStrengthItems = self::nonEmptyItems(self::bulletItems($strengths, '', 4, null));
  $answerStrengthItems = self::generalizedAnswerReviewItems(self::answerReviewStrengthItems($answers));
  $strengthItems = $providerSessionFeedbackTrusted && $providerStrengthItems!== []
  ? $providerStrengthItems
- : ($answerStrengthItems!== []? $answerStrengthItems: $providerStrengthItems);
+ : $answerStrengthItems;
  if ($strengthItems === []) {
  $strengthItems = ['No answer-level strength is reliable yet. Add a complete answer so the review can identify what worked.'];
  }
@@ -36,28 +44,57 @@ class FeedbackReportPresenter
  $answerWeaknessItems = self::generalizedAnswerReviewItems(self::answerReviewWeaknessItems($answers));
  $weaknessItems = $providerSessionFeedbackTrusted && $providerWeaknessItems!== []
  ? $providerWeaknessItems
- : ($answerWeaknessItems!== []? $answerWeaknessItems: $providerWeaknessItems);
+ : $answerWeaknessItems;
  if ($weaknessItems === []) {
  $weaknessItems = ['Add one direct answer, one specific detail, and one true result or lesson.'];
  }
- $suggestionItems = self::bulletItems($suggestions, 'Practice one answer again with a clearer structure.', 3, 130);
+ $safeSuggestions = $providerSessionFeedbackTrusted? $suggestions: implode('. ', $answerWeaknessItems);
+ $suggestionItems = self::bulletItems($safeSuggestions, 'Practice one answer again with a clearer structure.', 3, 130);
 
  return [
- 'strengths' => $strengths,
- 'weaknesses' => $weaknesses,
- 'suggestions' => $suggestions,
+ 'is_stale' => $isStale,
+ 'strengths' => implode('. ', $strengthItems),
+ 'weaknesses' => implode('. ', $weaknessItems),
+ 'suggestions' => $safeSuggestions,
  'category_breakdown' => $categoryBreakdown,
  'strength_items' => $strengthItems,
  'weakness_items' => $weaknessItems,
  'suggestion_items' => $suggestionItems,
  'overview' => [
- 'summary' => self::overallSummary($session, $overall, $categoryBreakdown, $strengthItems, $weaknessItems, $suggestions, $focus, $providerSessionFeedbackTrusted),
+ 'summary' => self::overallSummary($session, $overall, $categoryBreakdown, $strengthItems, $weaknessItems, $safeSuggestions, $focus, $providerSessionFeedbackTrusted),
  'focus_label' => $focus['label'],
  'focus_score' => $focus['score'],
  'focus_advice' => $focus['advice'],
  ],
  'conciseness' => self::concisenessStats(self::answerTexts($session)),
  ];
+ }
+
+ private static function currentInputReview(InterviewSession $session): InterviewSession
+ {
+ // Prepare only a display snapshot. Saved evaluations and scores remain intact
+ // until a background review successfully validates the current inputs.
+ $current = clone $session;
+ $coachingService = new EvidenceBasedCoachingService();
+ $answers = self::answers($session)->map(function ($answer) use ($coachingService) {
+ $copy = clone $answer;
+ $input = self::providerAnswerData(collect([$answer]))[0];
+ $local = AIService::localReviewQuestionFeedback($input);
+ $coaching = $coachingService->forAnswer(self::answerContent($answer), $answer->question, $local);
+ $copy->setRawAttributes(array_merge($answer->getAttributes(), [
+ 'coaching_feedback' => json_encode($coaching, JSON_THROW_ON_ERROR),
+ 'evidence_map' => null,
+ 'score' => null,
+ ]), true);
+
+ return $copy;
+ });
+ $current->setRelation('answers', $answers);
+ $current->setRelation('score', null);
+ // Session priorities and prose may also describe the previous answer snapshot.
+ $current->setRelation('feedback', null);
+
+ return $current;
  }
 
  public static function categoryBreakdown(InterviewSession $session): array
@@ -157,6 +194,10 @@ class FeedbackReportPresenter
  }
 
  $summary = is_array($feedback->coaching_summary?? null)? $feedback->coaching_summary: [];
+ $validationStatus = data_get($summary, 'review_context.detailed_review_validation.status');
+ if ($validationStatus !== null && $validationStatus !== 'verified') {
+ return false;
+ }
  $source = trim((string) data_get($summary, 'overall_summary_source', ''));
  $repairedFields = (array) data_get($summary, 'review_context.session_feedback_repaired_fields', []);
  $sourceTrusted = $source === 'ai_provider_validated'
@@ -184,6 +225,10 @@ class FeedbackReportPresenter
  }
 
  $summary = is_array($feedback->coaching_summary?? null)? $feedback->coaching_summary: [];
+ $expectedAnswers = data_get($summary, 'review_context.detailed_review_validation.answers_expected');
+ if ($expectedAnswers !== null && (! is_numeric($expectedAnswers) || (int) $expectedAnswers !== $answers->count())) {
+ return false;
+ }
 
  return AIService::visibleSessionFeedbackIsProviderUsable([
  'overall_summary' => data_get($summary, 'overall_summary', ''),
@@ -224,7 +269,7 @@ class FeedbackReportPresenter
  {
  $items = [];
  foreach ($answers->values() as $index => $answer) {
- if ((bool) ($answer->is_skipped?? false)) {
+ if ((bool) ($answer->is_skipped?? false) || self::answerContent($answer) === '') {
  continue;
  }
 
@@ -236,7 +281,7 @@ class FeedbackReportPresenter
  $added = false;
 
  foreach ([data_get($alignment, 'what_worked'), data_get($alignment, 'keep')] as $candidate) {
- $text = self::reviewText($candidate, $questionSource);
+ $text = self::groundedAnswerReviewText($candidate, $answer);
  if ($text !== '') {
  $items[] = $label.': '.$text;
  $added = true;
@@ -246,7 +291,7 @@ class FeedbackReportPresenter
 
  if (! $added) {
  $excerpt = self::reviewText(data_get($alignment, 'evidence_quotes.0', data_get($evidenceMap, 'supporting_excerpts.0', '')), $questionSource);
- if ($excerpt !== '') {
+ if ($excerpt !== '' && str_contains(self::cleanText(self::answerContent($answer)), $excerpt)) {
  $items[] = $label.': includes usable answer evidence, "'.$excerpt.'".';
  $added = true;
  }
@@ -286,7 +331,7 @@ class FeedbackReportPresenter
  (array) data_get($alignment, 'next_attempt_steps', [])
  );
  foreach ($candidates as $candidate) {
- $text = self::reviewText($candidate, $questionSource);
+ $text = self::groundedAnswerReviewText($candidate, $answer);
  if ($text !== '') {
  $items[] = $label.': '.$text;
  break;
@@ -299,6 +344,19 @@ class FeedbackReportPresenter
  }
 
  return self::mergedItems($items);
+ }
+
+ private static function groundedAnswerReviewText(mixed $candidate, mixed $answer): string
+ {
+ $text = self::reviewText($candidate, $answer->question?? $answer);
+ if ($text === '') {
+ return '';
+ }
+ $input = self::providerAnswerData(collect([$answer]))[0];
+
+ // A replaced note failed the shared grounding checks. Do not relabel the
+ // replacement's general feedback as a saved strength or missing point.
+ return AIService::groundedReviewFeedbackText($text, $input) === $text? $text: '';
  }
 
  private static function reviewText(mixed $text, mixed $questionSource = null, ?int $limit = null): string
@@ -452,7 +510,7 @@ class FeedbackReportPresenter
  }
 
  $sentences = [self::sentence($answerScope)];
- $contentSentence = self::contentOverviewSentence((array) data_get($summary, 'content_overview', []));
+ $contentSentence = self::contentOverviewSentence(self::contentOverview($answers));
  if ($contentSentence!== '') {
  $sentences[] = $contentSentence;
  }
@@ -487,6 +545,30 @@ class FeedbackReportPresenter
  }
 
  return implode(' ', array_slice(array_values(array_filter($sentences)), 0, 6));
+ }
+
+ private static function contentOverview(Collection $answers): array
+ {
+ $overview = [];
+ foreach ($answers as $answer) {
+ $status = trim((string) data_get($answer->coaching_feedback?? [], 'content_alignment.status', ''));
+ if ((bool) ($answer->is_skipped?? false)) {
+ $status = 'skipped';
+ } elseif (self::answerContent($answer) === '') {
+ $status = 'not_evaluated';
+ }
+ $status = match ($status) {
+ 'directly_answered', 'directly_addressed' => 'directly_answered',
+ 'partially_answered', 'partially_addressed' => 'partially_answered',
+ 'low_relevance', 'not_addressed' => 'low_relevance',
+ 'insufficient_evidence' => 'insufficient_evidence',
+ 'skipped' => 'skipped',
+ default => 'not_evaluated',
+ };
+ $overview[$status] = ($overview[$status]?? 0) + 1;
+ }
+
+ return $overview;
  }
 
  private static function contentOverviewSentence(array $overview): string
@@ -759,14 +841,18 @@ class FeedbackReportPresenter
  'is_skipped' => (bool) ($answer->is_skipped?? false),
  'expected_guide' => $answer->question->expected_guide?? null,
  'mapped_skills' => $answer->question->mapped_skills?? [],
+ 'response_mode' => $answer->response_mode?? 'text',
+ 'delivery_transcript' => $answer->delivery_transcript?? '',
  ])->all();
  }
 
  private static function answers(InterviewSession $session): Collection
  {
- $answers = $session->relationLoaded('answers')? $session->answers: $session->answers()->whereNull('retry_of_answer_id')->get();
+ $answers = $session->relationLoaded('answers')? $session->answers: $session->answers()->whereNull('retry_of_answer_id')->with('question')->orderBy('id')->get();
 
- return $answers instanceof Collection? $answers: collect($answers);
+ return collect($answers)
+ ->filter(fn ($answer): bool => ($answer->retry_of_answer_id?? null) === null)
+ ->values();
  }
 
  private static function hasRecordedConfidence(mixed $score): bool

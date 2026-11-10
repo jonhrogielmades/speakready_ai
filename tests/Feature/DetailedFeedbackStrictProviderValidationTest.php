@@ -238,10 +238,21 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
 
         $saved = $session->fresh(['answers.question', 'feedback', 'score']);
         $this->assertNotEmpty(data_get($saved->feedback->coaching_summary, 'review_context.detailed_review_validation.input_fingerprint'));
+        $this->assertTrue($service->reviewInputsMatchSavedValidation($saved));
         $this->assertFalse($service->shouldRefreshWithProvider($saved));
 
         $answer->question->update(['expected_guide' => 'Explain a disagreement and how you resolved it.']);
+        $this->assertFalse($service->reviewInputsMatchSavedValidation($session->fresh(['answers.question', 'feedback', 'score'])));
         $this->assertTrue($service->shouldRefreshWithProvider($session->fresh(['answers.question', 'feedback', 'score'])));
+    }
+
+    public function test_final_gate_rejects_unsupported_achievement_embedded_in_advice(): void
+    {
+        $answer = $this->answer();
+        $feedback = $this->validProviderFeedback($answer);
+        $feedback['per_question_feedback'][0]['ai_feedback'] .= ' Keep the handoff detail because you earned a promotion.';
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+        $this->assertSame('rejected', $validation['status']);
     }
 
     public function test_queued_local_repair_reloads_answers_after_a_provider_refresh_is_rejected(): void
@@ -295,6 +306,63 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->assertSame('mixed_provider_and_local_evidence', data_get($summary, 'review_context.session_feedback_source'));
         $this->assertSame(['overall_summary'], data_get($summary, 'review_context.session_feedback_repaired_fields'));
         $this->assertFalse($service->shouldRefreshWithProvider($session));
+    }
+
+    public function test_desktop_and_mobile_replace_unsafe_saved_feedback_while_refresh_is_queued(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        \Illuminate\Support\Facades\Http::preventStrayRequests();
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $user = User::findOrFail($session->user_id);
+        $user->forceFill(['is_admin' => false])->save();
+        $answer->update([
+            'ai_feedback' => 'Keep your support handoff detail because you earned an international award.',
+            'ai_provider' => 'openai',
+            'better_sample_answer' => 'I coordinated the checklist update. I earned an international award. I increased revenue by 90%.',
+            'coaching_feedback' => ['content_alignment' => [
+                'possible_answer_source' => 'ai_provider',
+                'possible_answer_provider' => 'openai',
+            ]],
+        ]);
+
+        foreach (['Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148'] as $agent) {
+            $this->actingAs($user)->withHeader('User-Agent', $agent)
+                ->get(route('user.review', $session))
+                ->assertOk()
+                ->assertSee('Overall Review')
+                ->assertSee('Possible Answer')
+                ->assertSee('documented missed approvals')
+                ->assertDontSee('international award')
+                ->assertDontSee('90%');
+        }
+        \Illuminate\Support\Facades\Http::assertNothingSent();
+        $this->assertStringContainsString('international award', $answer->fresh()->ai_feedback);
+    }
+
+    public function test_changed_answers_show_current_local_review_and_pending_score_until_refresh(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $user = User::findOrFail($session->user_id);
+        $user->forceFill(['is_admin' => false])->save();
+        $feedback = $this->validProviderFeedback($answer);
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+        (new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback'))->invoke(
+            $this->app->make(DetailedFeedbackReviewService::class), $session, collect([$answer]), $feedback, 'openai', $validation
+        );
+        $answer->update(['answer_text' => 'I have not handled a support handoff. I only observed the team and do not know the result.']);
+
+        foreach (['desktop', 'mobile'] as $layout) {
+            $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout)
+                ->assertOk()
+                ->assertSee('<strong>Pending</strong>', false)
+                ->assertSee('I only observed the team')
+                ->assertDontSee('I mapped the support handoff issue')
+                ->assertDontSee('<strong>84%</strong>', false);
+        }
+        $this->assertStringContainsString('I mapped the support handoff issue', $answer->fresh()->ai_feedback);
     }
 
     private function validateProviderFeedback(InterviewAnswer $answer, array $feedback): array

@@ -232,7 +232,9 @@ class WeightedReadinessScoringTest extends TestCase
         $starAnswer = ['answer_text' => 'I listened to the customer, checked the account, and explained the next step clearly.'];
         $starDraft = "Situation: A customer raised a concern.\nTask: I needed to respond to the concern.\nAction: I listened to the customer, checked the account, and explained the next step clearly.\nResult: This gave the customer a clear next step.";
         $shownStarDraft = review_better_answer_text($starDraft, $starAnswer, $starQuestion);
-        $this->assertSame('A customer raised a concern. I needed to respond to the concern. I listened to the customer, checked the account, and explained the next step clearly. This gave the customer a clear next step.', $shownStarDraft);
+        $this->assertStringContainsString($starAnswer['answer_text'], $shownStarDraft);
+        $this->assertStringNotContainsString('A customer raised a concern.', $shownStarDraft);
+        $this->assertStringNotContainsString('This gave the customer a clear next step.', $shownStarDraft);
 
         $unstructuredStarDraft = review_better_answer_text('I listened to the customer and explained the next step.', $starAnswer, $starQuestion);
         $this->assertStringContainsString($starAnswer['answer_text'], $unstructuredStarDraft);

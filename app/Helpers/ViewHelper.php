@@ -576,12 +576,7 @@ if (! function_exists('review_better_answer_sentence_count')) {
             return 0;
         }
 
-        preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
-
-        return count(array_filter(array_map(
-            fn (string $sentence): string => trim($sentence),
-            $matches[0] ?? []
-        )));
+        return count(preg_split('/(?<=[.!?])\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: []);
     }
 }
 
@@ -602,11 +597,11 @@ if (! function_exists('review_better_answer_limit_sentences')) {
             return '';
         }
 
-        preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
-        $sentences = array_slice(array_values(array_filter(array_map(
-            fn (string $sentence): string => trim($sentence),
-            $matches[0] ?? []
-        ))), 0, max(1, $maxSentences));
+        $sentences = array_slice(
+            preg_split('/(?<=[.!?])\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [],
+            0,
+            max(1, $maxSentences)
+        );
 
         return trim(implode(' ', array_map('review_sentence_text', $sentences)));
     }
@@ -774,6 +769,12 @@ if (! function_exists('review_better_answer_text')) {
             && ! review_better_answer_uses_star_labels($clean)
             && review_text_word_count($clean) < 12;
         $hasRequiredSentenceCount = review_better_answer_has_required_sentence_count($clean);
+        $groundingContext = [
+            'answer' => review_answer_text($answerSource),
+            'question' => review_question_text($questionSource),
+            'question_type' => data_get($questionSource, 'type', data_get($questionSource, 'question_type')),
+            'is_skipped' => (bool) data_get($answerSource, 'is_skipped', false),
+        ];
 
         if ($clean !== ''
             && review_text_word_count($clean) >= 5
@@ -783,6 +784,7 @@ if (! function_exists('review_better_answer_text')) {
             && $hasRequiredSentenceCount
             && ! review_text_looks_like_question($clean, $questionSource)
             && ! $looksLikeAdvice
+            && \App\Services\AIService::visibleReviewPossibleAnswerIsProviderUsable($clean, $groundingContext)
         ) {
             return $clean;
         }

@@ -416,8 +416,8 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertSame(['okay'], $alignment['evidence_quotes']);
         $this->assertStringContainsString('Only limited answer detail', $alignment['what_worked']);
         $this->assertStringNotContainsString('The response started with', $alignment['what_worked']);
-        $this->assertContains('The answer did not explain the specific steps you took.', $alignment['missing_points']);
-        $this->assertContains('The answer did not name the tools, supplies, equipment, or cleaning agents used.', $alignment['missing_points']);
+        $this->assertContains('Describe the specific steps you took clearly enough to assess.', $alignment['missing_points']);
+        $this->assertContains('Clarify which tools, supplies, equipment, or cleaning agents you used and how.', $alignment['missing_points']);
         $this->assertStringContainsString('cleanup situation', $alignment['action']);
         $this->assertStringContainsString('cleaning agents used', $alignment['action']);
         $this->assertStringNotContainsString('Expand your response to "', $alignment['action']);
@@ -436,7 +436,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
 
         $this->assertSame($alignment['action'], data_get($summary, 'question_improvements.0.next_attempt'));
         $this->assertStringNotContainsString('Expand your response to "', data_get($summary, 'question_improvements.0.next_attempt'));
-        $this->assertContains('The answer did not name the tools, supplies, equipment, or cleaning agents used.', data_get($summary, 'question_improvements.0.missing_points'));
+        $this->assertContains('Clarify which tools, supplies, equipment, or cleaning agents you used and how.', data_get($summary, 'question_improvements.0.missing_points'));
     }
 
     public function test_janitor_intro_question_does_not_receive_cleanup_specific_short_answer_guidance(): void

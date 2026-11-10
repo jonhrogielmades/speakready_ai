@@ -17,7 +17,7 @@
  default => $label!== ''? $label: 'Skill',
  };
  };
- $actionPlan = is_array($sessionRecord->action_plan?? null)? $sessionRecord->action_plan: [];
+ $actionPlan = ! ($report['is_stale'] ?? false) && is_array($sessionRecord->action_plan?? null)? $sessionRecord->action_plan: [];
  $actionPlanHeadline = is_scalar($actionPlan['headline']?? null)? trim((string) $actionPlan['headline']): '';
  if (str_starts_with(strtolower($actionPlanHeadline), 'next focus:')) {
  $actionPlanHeadline = 'Next focus: '.$feedbackReportSkillLabel(substr($actionPlanHeadline, strlen('next focus:')));
@@ -206,6 +206,7 @@
  'answer' => $answer,
  'sessionRecord' => $sessionRecord,
  'sessionEndedEarly' => $sessionEndedEarly,
+ 'reviewInputsStale' => (bool) ($report['is_stale'] ?? false),
  ])
 
 

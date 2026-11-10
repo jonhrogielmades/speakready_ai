@@ -77,8 +77,9 @@ class TrustworthyAssessmentService
  $evidence??= $this->answerEvidence($clean);
  $sentences = $this->answerSentences($clean);
  $resultSentence = $this->resultSentenceFrom($sentences);
- $actionSentence = $this->actionSentenceFrom($sentences, $resultSentence);
- $answerSentence = $this->sentenceText($actionSentence !== ''? $actionSentence: mb_substr($clean, 0, 700), ($evidence['star_applicable']?? false)? 2: 4);
+ // Keep the full response in its original order: a later qualification or
+ // correction can change the meaning of an earlier action or result.
+ $answerSentence = $this->sentenceText($clean, PHP_INT_MAX);
  $questionText = trim((string) ($evidence['question_text']?? ''));
 
  if ($evidence['star_applicable']?? false) {
@@ -151,7 +152,7 @@ class TrustworthyAssessmentService
  $result = $resultSentence !== ''
  ? $this->sentenceText($resultSentence)
  : $this->starResultSentence($questionText, (bool) ($evidence['result_required']?? true));
- if ($result !== '' && mb_strtolower($action, 'UTF-8') === mb_strtolower($result, 'UTF-8')) {
+ if ($result !== '' && str_contains(mb_strtolower($action, 'UTF-8'), mb_strtolower($result, 'UTF-8'))) {
  $result = '';
  }
 
@@ -179,12 +180,8 @@ class TrustworthyAssessmentService
   */
  private function answerSentences(string $text): array
  {
- preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', trim($text), $matches);
-
- return array_values(array_filter(array_map(
- fn (string $sentence): string => trim($sentence),
- $matches[0]?? []
- )));
+ // Decimal numbers and URLs contain periods, not sentence boundaries.
+ return preg_split('/(?<=[.!?])\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: [];
  }
 
  private function resultSentenceFrom(array $sentences): string
@@ -198,30 +195,6 @@ class TrustworthyAssessmentService
  return '';
  }
 
- private function actionSentenceFrom(array $sentences, string $resultSentence = ''): string
- {
- $resultKey = mb_strtolower(trim($resultSentence), 'UTF-8');
- $actionSentences = [];
-
- foreach ($sentences as $sentence) {
- $clean = $this->sentenceText($sentence);
- if ($clean === '' || ($resultKey !== '' && mb_strtolower($clean, 'UTF-8') === $resultKey)) {
- continue;
- }
-
- $actionSentences[] = $clean;
- if (count($actionSentences) >= 2) {
- break;
- }
- }
-
- if ($actionSentences === [] && $sentences !== []) {
- $actionSentences[] = $this->sentenceText($sentences[0]);
- }
-
- return trim(implode(' ', $actionSentences));
- }
-
  private function sentenceText(string $text, int $maxSentences = 1): string
  {
  $text = trim(preg_replace('/\s+/', ' ', $text)?? $text);
@@ -229,11 +202,7 @@ class TrustworthyAssessmentService
  return '';
  }
 
- preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
- $sentences = array_slice(array_values(array_filter(array_map(
- fn (string $sentence): string => trim($sentence),
- $matches[0]?? []
- ))), 0, max(1, $maxSentences));
+ $sentences = array_slice($this->answerSentences($text), 0, max(1, $maxSentences));
 
  $text = trim(implode(' ', $sentences));
  $text = preg_replace('/\bi\b/u', 'I', $text)?? $text;

@@ -8,7 +8,7 @@ use Illuminate\Support\Collection;
 
 final class EvidenceBasedCoachingService
 {
- public const VERSION = 9;
+ public const VERSION = 10;
 
  private const VOICE_MODES = ['voice', 'hybrid', 'voice_and_text'];
  private const CAMERA_STRICT_PROTOCOL = 2;
@@ -114,8 +114,11 @@ final class EvidenceBasedCoachingService
  $priorityActions,
  is_array($metrics['feedback_quality']?? null)? $metrics['feedback_quality']: []
  );
- $contentWordCount = TranscriptService::wordCount($answerText);
- $contentStatus = $contentWordCount === 0? 'unscored': ($contentWordCount < 10? 'limited_evidence': (((int) ($metrics['scoring_confidence']?? 0)) > 0? 'scored': 'limited_evidence'));
+ $contentStatus = match ($contentAlignment['status']) {
+ 'skipped' => 'unscored',
+ 'directly_answered', 'partially_answered', 'low_relevance' => 'scored',
+ default => 'limited_evidence',
+ };
 
  return [
  'version' => self::VERSION,
@@ -1095,7 +1098,7 @@ final class EvidenceBasedCoachingService
 
  $status = match (true) {
  $isSkipped => 'skipped',
- $isTooShort => 'insufficient_evidence',! $hasScore => 'not_evaluated',
+ $isTooShort || $evaluatedAlignment === 'insufficient_evidence' => 'insufficient_evidence',! $hasScore => 'not_evaluated',
  $evaluatedAlignment === 'directly_addressed' => 'directly_answered',
  $evaluatedAlignment === 'partially_addressed' => 'partially_answered',
  $evaluatedAlignment === 'not_addressed' => 'low_relevance',
@@ -1156,7 +1159,7 @@ final class EvidenceBasedCoachingService
  $evidenceLabel = $evidenceQuotes!== []? ' Answer detail used: "'.$evidenceQuotes[0].'".': '';
  $observation = match ($status) {
  'skipped' => "No answer was sent for {$questionLabel}, so the answer match could not be checked.",
- 'insufficient_evidence' => "The answer to {$questionLabel} was too short to check well.".$evidenceLabel,
+ 'insufficient_evidence' => "The answer to {$questionLabel} did not provide enough usable detail for a dependable assessment.".$evidenceLabel,
  'not_evaluated' => "The answer is saved for {$questionLabel}, but a full question check is not available yet.".$evidenceLabel,
  'directly_answered' => "For {$questionLabel}, the answer directly covered the main focus.".$evidenceLabel,
  'partially_answered' => "For {$questionLabel}, the answer answered only part of the main focus.".$evidenceLabel,
@@ -1229,12 +1232,16 @@ final class EvidenceBasedCoachingService
  : 'The direct answer helps the interviewer understand your point quickly, so the next gain comes from adding the strongest true result or limit.',
  'partially_answered' => 'Answering only part of '.$questionLabel.' can lower the answer-match score because the interviewer still has to guess the missing point.',
  'low_relevance' => 'The answer has useful text, but the weak link to '.$questionLabel.' makes it harder for the interviewer to judge the skill being asked.',
- 'insufficient_evidence' => 'The answer is too short to trust the score well, so the next attempt needs enough detail to show what you mean.',
+ 'insufficient_evidence' => 'The available answer detail does not support a dependable score, so the next attempt needs specific information that answers the question.',
  'skipped' => 'Without an answer, the interviewer cannot check this skill, example, or fit for '.$questionLabel.'.',
  default => 'A clearer answer link will make the review easier to understand and the next practice step easier to follow.',
  };
 
- $providerCoaching = $this->providerCoaching($metrics['provider_coaching']?? []);
+ // Only the validated provider path can replace the evidence-derived coaching.
+ // Raw model output or stale provider fields can accompany a local fallback.
+ $providerCoaching = $usesApiProviderEvaluation
+ ? $this->providerCoaching($metrics['provider_coaching']?? [])
+ : [];
  $missingPointsSource = $hasProviderMissingPoints? 'ai_provider': 'local_evidence';
  $improvementFocusSource = 'local_evidence';
  if ($providerCoaching!== []) {
@@ -1576,28 +1583,28 @@ final class EvidenceBasedCoachingService
  $successParts = [];
 
  if ($mentionsCleanup) {
- $missingPoints[] = 'The answer did not name the cleanup situation or difficult mess.';
+ $missingPoints[] = 'Clarify the cleanup situation or difficult mess.';
  $nextSteps[] = 'Briefly name the cleanup situation and your responsibility.';
  $actionParts[] = 'describe the cleanup situation';
  $successParts[] = 'cleanup context';
  }
 
  if ($asksForSteps || $mentionsCleanup || $framework === 'star') {
- $missingPoints[] = 'The answer did not explain the specific steps you took.';
+ $missingPoints[] = 'Describe the specific steps you took clearly enough to assess.';
  $nextSteps[] = $mentionsCleanup? 'List the cleanup steps you personally took in order.': 'Describe the specific steps you took.';
  $actionParts[] = 'list the steps you took';
  $successParts[] = 'specific actions';
  }
 
  if ($asksForTools) {
- $missingPoints[] = 'The answer did not name the tools, supplies, equipment, or cleaning agents used.';
+ $missingPoints[] = 'Clarify which tools, supplies, equipment, or cleaning agents you used and how.';
  $nextSteps[] = $mentionsCleanup? 'Name the cleaning tools, supplies, PPE, or agents used.': 'Name the tools, supplies, equipment, or materials involved.';
  $actionParts[] = 'name the tools, supplies, or cleaning agents used';
  $successParts[] = 'tools or supplies used';
  }
 
  if ($asksForResult || $mentionsCleanup || $framework === 'star') {
- $missingPoints[] = 'The answer did not state the finished result, safety check, impact, or lesson.';
+ $missingPoints[] = 'Explain the finished result, safety check, impact, or lesson clearly enough to assess.';
  $nextSteps[] = $mentionsCleanup? 'Close with the finished result, safety check, or lesson learned.': 'Close with the true result, impact, or lesson.';
  $actionParts[] = $mentionsCleanup? 'state the finished result or safety check': 'state the true result or lesson';
  $successParts[] = $mentionsCleanup? 'result or safety check': 'result or lesson';

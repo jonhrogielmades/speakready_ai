@@ -888,6 +888,15 @@ class DetailedFeedbackReviewService
  ->whereNull('retry_of_answer_id');
  }
 
+ public function reviewInputsMatchSavedValidation(InterviewSession $session): bool
+ {
+ $session->loadMissing(['feedback', 'answers.question']);
+ $saved = (string) data_get($session->feedback?->coaching_summary ?? [],
+ 'review_context.detailed_review_validation.input_fingerprint', '');
+
+ return $saved === '' || hash_equals($saved, $this->reviewInputFingerprint($session, $this->originalAnswers($session)));
+ }
+
  private function reviewInputFingerprint(InterviewSession $session, Collection $answers): string
  {
  $inputs = [

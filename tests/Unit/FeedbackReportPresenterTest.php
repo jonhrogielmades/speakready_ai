@@ -7,7 +7,9 @@ use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Score;
+use App\Services\DetailedFeedbackReviewService;
 use App\Support\FeedbackReportPresenter;
+use Illuminate\Container\Container;
 use PHPUnit\Framework\TestCase;
 
 class FeedbackReportPresenterTest extends TestCase
@@ -265,5 +267,163 @@ class FeedbackReportPresenterTest extends TestCase
             ['Fluency & Clarity', 'Answer Match', 'Grammar', 'Professional Tone'],
             array_column(FeedbackReportPresenter::categoryBreakdown($session), 'name')
         );
+    }
+
+    public function test_overall_counts_use_original_saved_answers_instead_of_stale_session_totals(): void
+    {
+        $session = $this->sessionWithAnswers([
+            ['answer_text' => 'I explained the handoff checklist.', 'coaching_feedback' => json_encode(['content_alignment' => ['status' => 'directly_answered']])],
+            ['answer_text' => 'I documented the customer request.', 'coaching_feedback' => json_encode(['content_alignment' => ['status' => 'partially_answered']])],
+            ['answer_text' => '', 'is_skipped' => true, 'coaching_feedback' => json_encode(['content_alignment' => ['status' => 'directly_answered']])],
+            ['answer_text' => '', 'coaching_feedback' => json_encode(['content_alignment' => ['status' => 'directly_answered']])],
+            ['answer_text' => 'A practice retry with unrelated content.', 'retry_of_answer_id' => 1, 'coaching_feedback' => json_encode(['content_alignment' => ['status' => 'directly_answered', 'what_worked' => 'Retry text must not enter the original summary.']])],
+        ], ['coaching_summary' => json_encode(['content_overview' => ['directly_answered' => 99]])]);
+
+        $report = FeedbackReportPresenter::forSession($session);
+
+        $this->assertStringContainsString('all 4 answer reviews', $report['overview']['summary']);
+        $this->assertStringContainsString('1 directly answered, 1 answered partly, 1 skipped, and 1 not checked', $report['overview']['summary']);
+        $this->assertStringNotContainsString('99 directly answered', $report['overview']['summary']);
+        $this->assertStringNotContainsString('Retry text', json_encode($report));
+        $this->assertSame(2, $report['conciseness']['answer_count']);
+    }
+
+    public function test_rejected_session_claims_do_not_reappear_when_answer_notes_are_absent(): void
+    {
+        $session = $this->sessionWithAnswers([
+            ['answer_text' => 'I documented a customer support handoff and shared the checklist.'],
+        ], [
+            'strengths' => 'You increased company revenue by 90% at Microsoft.',
+            'weaknesses' => 'You missed 80 sales targets at Microsoft.',
+            'improvement_suggestions' => 'Repeat your 90% revenue increase at Microsoft.',
+            'coaching_summary' => json_encode([
+                'overall_summary_source' => 'ai_provider_validated',
+                'overall_summary' => 'Your Microsoft revenue increased by 90%.',
+                'review_context' => ['provider_key' => 'openai', 'provider_source' => 'ai_provider'],
+            ]),
+        ]);
+
+        $report = FeedbackReportPresenter::forSession($session);
+        $this->assertStringNotContainsString('Microsoft', json_encode($report));
+        $this->assertStringNotContainsString('90%', json_encode($report));
+        $this->assertStringContainsString('No answer-level strength', $report['strength_items'][0]);
+    }
+
+    public function test_empty_answers_and_fabricated_quotes_do_not_become_strengths(): void
+    {
+        $session = $this->sessionWithAnswers([
+            ['answer_text' => '', 'score' => 90, 'coaching_feedback' => json_encode(['content_alignment' => ['what_worked' => 'A nonexistent leadership accomplishment.']])],
+            ['answer_text' => 'I documented the checklist.', 'coaching_feedback' => json_encode(['content_alignment' => ['evidence_quotes' => ['I managed fifty employees.']]])],
+        ]);
+
+        $report = FeedbackReportPresenter::forSession($session);
+        $this->assertStringNotContainsString('nonexistent leadership', json_encode($report));
+        $this->assertStringNotContainsString('fifty employees', json_encode($report));
+        $this->assertStringContainsString('No answer-level strength', $report['strength_items'][0]);
+    }
+
+    public function test_explicitly_rejected_provider_validation_cannot_be_overridden_by_source_label(): void
+    {
+        $summary = 'For the customer process answer, you explained the process and coordinated the next action. Add the true customer result in the next attempt.';
+        foreach ([['status' => 'rejected'], ['status' => 'verified', 'answers_expected' => 7]] as $validation) {
+            $session = $this->sessionWithAnswers([
+                ['answer_text' => 'I explained the customer process and coordinated the next action.'],
+            ], [
+                'strengths' => 'The customer process answer describes coordinating the next action.',
+                'weaknesses' => 'The customer process answer could add the true customer result.',
+                'improvement_suggestions' => 'Keep the coordinated next action and add the true customer result.',
+                'coaching_summary' => json_encode([
+                    'overall_summary' => $summary,
+                    'overall_summary_source' => 'ai_provider_validated',
+                    'review_context' => ['provider_key' => 'openai', 'provider_source' => 'ai_provider', 'detailed_review_validation' => $validation],
+                ]),
+            ]);
+
+            $this->assertNotSame($summary, FeedbackReportPresenter::forSession($session)['overview']['summary']);
+        }
+    }
+
+    public function test_stale_snapshot_gets_current_local_notes_without_reusing_scores_or_mutating_saved_data(): void
+    {
+        $session = $this->sessionWithAnswers([
+            ['answer_text' => 'Public speaking.', 'score' => 96, 'coaching_feedback' => json_encode([
+                'content_alignment' => ['status' => 'directly_answered', 'what_worked' => 'The saved answer increased revenue at Microsoft.', 'improvement_focus' => 'Repeat the successful Microsoft sales project.'],
+            ])],
+        ], ['coaching_summary' => json_encode([
+            'overall_summary_source' => 'ai_provider_validated',
+            'overall_summary' => 'The Microsoft project was successful.',
+            'review_context' => ['provider_key' => 'openai', 'detailed_review_validation' => ['status' => 'verified', 'input_fingerprint' => 'old-inputs']],
+            'priority_actions' => [['area' => 'Microsoft sales', 'observation' => 'The previous project needs more revenue.']],
+        ])]);
+        $question = $session->answers->first()->question;
+        $question->setRawAttributes(['question_text' => 'What is one weakness you are improving?'], true);
+        $score = new Score();
+        $score->setRawAttributes(['clarity_score' => 96, 'relevance_score' => 96, 'overall_readiness_score' => 96], true);
+        $session->setRelation('score', $score);
+        $savedAnswer = $session->answers->first()->getAttributes();
+        $savedFeedback = $session->feedback->getAttributes();
+        $savedScore = $score->getAttributes();
+        $previousContainer = Container::getInstance();
+        $container = new Container();
+        $review = $this->createMock(DetailedFeedbackReviewService::class);
+        $review->expects($this->once())->method('reviewInputsMatchSavedValidation')->with($session)->willReturn(false);
+        $container->instance(DetailedFeedbackReviewService::class, $review);
+        Container::setInstance($container);
+
+        try {
+            $report = FeedbackReportPresenter::forSession($session);
+        } finally {
+            Container::setInstance($previousContainer);
+        }
+
+        $this->assertTrue($report['is_stale']);
+        $this->assertSame([], $report['category_breakdown']);
+        $this->assertNull($report['overview']['focus_score']);
+        $this->assertStringNotContainsString('Microsoft', json_encode($report));
+        $this->assertStringNotContainsString('96%', json_encode($report));
+        $this->assertStringNotContainsString('directly answered', $report['overview']['summary']);
+        $this->assertStringContainsString('1 needed more detail', $report['overview']['summary']);
+        $this->assertStringContainsString('Public speaking', implode(' ', $report['strength_items']));
+        $this->assertSame($savedAnswer, $session->answers->first()->getAttributes());
+        $this->assertSame($savedFeedback, $session->feedback->getAttributes());
+        $this->assertSame($savedScore, $session->score->getAttributes());
+    }
+
+    public function test_untrusted_answer_notes_with_unsupported_claims_do_not_enter_overall_review(): void
+    {
+        $session = $this->sessionWithAnswers([
+            ['answer_text' => 'I documented a customer support handoff and shared the checklist.', 'coaching_feedback' => json_encode([
+                'content_alignment' => [
+                    'what_worked' => 'You increased company revenue by 90% at Microsoft.',
+                    'improvement_focus' => 'Repeat your 90% revenue increase at Microsoft.',
+                ],
+            ])],
+        ]);
+
+        $report = FeedbackReportPresenter::forSession($session);
+
+        $this->assertFalse($report['is_stale']);
+        $this->assertStringNotContainsString('Microsoft', json_encode($report));
+        $this->assertStringNotContainsString('90%', json_encode($report));
+    }
+
+    private function sessionWithAnswers(array $answers, array $feedbackAttributes = []): InterviewSession
+    {
+        $session = new InterviewSession();
+        $question = new Question();
+        $question->setRawAttributes(['question_text' => 'Explain a time you helped a customer.'], true);
+        $feedback = new Feedback();
+        $feedback->setRawAttributes($feedbackAttributes, true);
+        $session->setRelation('feedback', $feedback);
+        $session->setRelation('score', new Score());
+        $session->setRelation('answers', collect($answers)->map(function (array $attributes) use ($question): InterviewAnswer {
+            $answer = new InterviewAnswer();
+            $answer->setRawAttributes($attributes, true);
+            $answer->setRelation('question', $question);
+
+            return $answer;
+        }));
+
+        return $session;
     }
 }

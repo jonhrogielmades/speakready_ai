@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Log;
 
 class AIService
 {
- public const REVIEW_POLICY_VERSION = 3;
+ public const REVIEW_POLICY_VERSION = 4;
 
  private const AI_FAILURE_MESSAGE = 'Sorry, I am having trouble connecting to my brain right now.';
 
@@ -5729,10 +5729,15 @@ PROMPT;
  $hypotheticalQuestion = str_contains($sentence, '?')
  && preg_match('/\b(?:would|will|could|might|can|if)\b/iu', $sentence) === 1
  && preg_match('/\b(?:you|they|we)\s+(?:did|had|were|have|achieved|encountered|received|earned|completed|delivered|improved|reduced|increased)\b/iu', $sentence)!== 1;
+ // Advice and factual claims can share a sentence. An imperative such as
+ // "keep" must not exempt a later "you earned ..." assertion from grounding.
  $prospectiveInstruction = preg_match(
  '/\b(?:you|the candidate)\s+(?:will|would|can|could)\s+(?:perform|check|inspect|measure|test|verify|describe|explain|list|name|plan)\b/iu',
  $sentence
  ) === 1;
+ if (self::personalFactualClausesHaveUnsupportedGrounding($personalClaimText, $answerText, $providedContext)) {
+ return true;
+ }
  $statesMissingEvidence = preg_match(
  '/\b(?:add|could|did not|does not|do not|explain|include|keep|lack(?:ed|s)?|mention|missing|needs?|omitted|only if|practice|should|try|without)\b/iu',
  $sentence
@@ -5821,7 +5826,60 @@ PROMPT;
  return self::betterSampleAnswerHasUnsupportedEmployer($text, $answerText)
  || self::betterSampleAnswerHasUnsupportedTool($text, $answerText)
  || self::betterSampleAnswerHasUnsupportedOutcome($text, $answerText)
+ || self::personalClaimsReverseEvidence($text, $answerText)
  || self::textHasUnsupportedPersonalClaims($text, $answerText);
+ }
+
+ private static function personalClaimsReverseEvidence(string $text, string $answerText): bool
+ {
+ $claims = static function (string $value): array {
+ $value = str_replace(['’', '‘'], "'", $value);
+ $value = preg_replace('/\b(I|we|you)\'ve\b/iu', '$1 have', $value) ?? $value;
+ $value = preg_replace('/\b(I|we|you)\'d\b/iu', '$1 would', $value) ?? $value;
+ preg_match_all(
+ '/\b(?:I|we|you)\s+(?:(?:personally|also|actually)\s+)*(?:(did|do|does|have|has|had|would|could|should|might|will|can|cannot|couldn\'t|didn\'t|don\'t|haven\'t|hadn\'t|can\'t)\s+)?(?:(not|never)\s+)?([\pL]+)\b(?<object>.*?)(?=[.!?;\n]|,?\s+(?:and|but)\s+(?:I|we|you)\b|$)/iu',
+ $value, $matches, PREG_SET_ORDER
+ );
+ $result = [];
+ foreach ($matches as $match) {
+ $auxiliary = mb_strtolower($match[1] ?? '');
+ $verb = mb_strtolower($match[3]);
+ $root = self::personalClaimGroundingRoots($verb)[0] ?? $verb;
+ $negative = ($match[2] ?? '') !== '' || str_contains($auxiliary, "n't") || $auxiliary === 'cannot';
+ $polarity = in_array($auxiliary, ['would', 'could', 'should', 'might', 'will', 'can'], true)
+ ? 'prospective' : ($negative ? 'negative' : 'affirmed');
+ $result[$root][] = ['polarity' => $polarity, 'object' => self::personalClaimGroundingRoots($match['object'] ?? '')];
+ }
+
+ return $result;
+ };
+ $source = $claims($answerText);
+ foreach ($claims($text) as $verb => $assertions) {
+ foreach ($assertions as $assertion) {
+ if ($assertion['polarity'] === 'prospective' || ! isset($source[$verb])) {
+ continue;
+ }
+ // Match the object too: managing a budget does not contradict a denial
+ // about managing a team, even though both clauses use the same verb.
+ $bestOverlap = -1;
+ $supportedPolarities = [];
+ foreach ($source[$verb] as $evidence) {
+ $overlap = count(array_intersect($assertion['object'], $evidence['object']));
+ if ($overlap > $bestOverlap) {
+ $bestOverlap = $overlap;
+ $supportedPolarities = [];
+ }
+ if ($overlap === $bestOverlap) {
+ $supportedPolarities[] = $evidence['polarity'];
+ }
+ }
+ if (! in_array($assertion['polarity'], $supportedPolarities, true)) {
+ return true;
+ }
+ }
+ }
+
+ return false;
  }
 
  private static function textHasUnsupportedPersonalClaims(string $text, string $answerText, string $contextText = ''): bool
@@ -5987,7 +6045,8 @@ PROMPT;
  if (preg_match('/\b(?:if|whether|how|what|when|where|why|suppose|supposing|imagine|imagining)\b[^.!?;]{0,35}$/iu', $prefix) === 1
  || preg_match('/\b(?:did not|does not|do not|has not|have not|had not|never|missing|omitted|without)\b[^.!?;]{0,50}$/iu', $prefix) === 1
  || preg_match('/\b(?:allow(?:s|ed)?|ask(?:s|ed)?|encourage(?:s|d)?|for|give(?:s|n)?|gave|help(?:s|ed)?|let(?:s)?|tell(?:s|ing)?|told|to)\s*$/iu', $prefix) === 1
- || preg_match('/^(?:(?:also|already|clearly|directly|personally|really|simply)\s+)*(?:would|could|should|might|may|can|must|need(?:s|ed)?\s+to)\b/iu', $tail) === 1
+ || preg_match('/\b(?:can|could|would|will|should)\s*$/iu', $prefix) === 1
+ || preg_match('/^(?:(?:also|already|clearly|directly|personally|really|simply)\s+)*(?:would|could|should|might|may|can|will|must|need(?:s|ed)?\s+to)\b/iu', $tail) === 1
  || preg_match('/^(?:(?:also|already|clearly|directly|personally|really|simply)\s+)*(?:(?:did|does|do|has|have|had|is|are|was|were)\s+not|never)\b/iu', $tail) === 1
  || preg_match('/^(?:(?:also|already|clearly|directly|personally|really|simply)\s+)*(?:answered|mentioned|said|stated|wrote)\b/iu', $tail) === 1) {
  continue;
@@ -6166,12 +6225,7 @@ PROMPT;
  return 0;
  }
 
- preg_match_all('/[^.!?]+[.!?]+|[^.!?]+$/u', $text, $matches);
-
- return count(array_filter(array_map(
- fn (string $sentence): string => trim($sentence),
- $matches[0]?? []
- )));
+ return count(preg_split('/(?<=[.!?])\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: []);
  }
 
  private static function betterSampleAnswerHasPlaceholders(string $text): bool
@@ -7125,7 +7179,7 @@ PROMPT;
  // a validated provider assessment in another supported language.
  $evidenceProfile['missing'] = [];
  }
- $evidenceProfile = self::withRelevanceGap($evidenceProfile, $scores['relevance_score']);
+ $evidenceProfile = self::withRelevanceGap($evidenceProfile, $scores['relevance_score'], $hasProviderScores);
  $missingEvidence = array_values($evidenceProfile['missing']?? []);
  if ($hasProviderScores && $providerMissingCriteria!== []) {
  $missingEvidence = array_values(array_unique(array_merge(
@@ -7260,6 +7314,37 @@ PROMPT;
  : 'ai_evidence_validated';
  }
 
+ public static function groundedReviewFeedbackText(?string $feedback, array $answer): string
+ {
+ $text = trim((string) $feedback);
+ $answerText = self::candidateAnswerText($answer);
+ if ($text !== ''
+ && ! self::feedbackInfersForbiddenTrait($text)
+ && ! self::feedbackClaimsPerfectCertainty($text)
+ && ! self::feedbackHasUnsupportedNumbers($text, $answerText)
+ && ! self::providerVisibleTextHasUnsupportedSpecificClaims($text, $answer)) {
+ return $text;
+ }
+
+ // Old reports can predate the current provider checks. Regenerate the
+ // visible note from saved inputs without making a network call or changing
+ // stored scores while a queued provider refresh is pending.
+ $local = self::localReviewQuestionFeedback($answer);
+
+ return (string) $local['ai_feedback'];
+ }
+
+ public static function localReviewQuestionFeedback(array $answer): array
+ {
+ if (! array_key_exists('uses_asr_transcript', $answer)) {
+ $mode = strtolower(trim((string) ($answer['response_mode'] ?? 'text')));
+ $transcript = trim((string) ($answer['delivery_transcript'] ?? ''));
+ $answer['uses_asr_transcript'] = $mode === 'voice'
+ || (in_array($mode, ['hybrid', 'voice_and_text'], true) && $transcript !== '' && self::candidateAnswerText($answer) === $transcript);
+ }
+ return self::normalizeQuestionFeedback([], $answer, [], false, 'local');
+ }
+
  public static function visibleReviewFeedbackIsProviderUsable(?string $feedback, array $answer): bool
  {
  $text = trim((string) $feedback);
@@ -7301,10 +7386,6 @@ PROMPT;
  {
  if (self::isSkippedAnswer($answer)) {
  return trim((string) $possibleAnswer) === '';
- }
-
- if (self::isTooShortAnswer(self::candidateAnswerText($answer))) {
- return true;
  }
 
  return self::providerBetterSampleAnswerIsValid((string) $possibleAnswer, $answer);
@@ -7906,7 +7987,7 @@ PROMPT;
  return filter_var($answer['uses_asr_transcript'], FILTER_VALIDATE_BOOLEAN);
  }
 
- private static function withRelevanceGap(array $profile, int $relevanceScore): array
+ private static function withRelevanceGap(array $profile, int $relevanceScore, bool $providerAssessed = false): array
  {
  $missing = array_values(array_filter(
  (array) ($profile['missing']?? []),
@@ -7914,7 +7995,9 @@ PROMPT;
  &&! str_contains(mb_strtolower((string) $item), 'connected to part of the question')
  ));
 
- if ($relevanceScore < 50) {
+ if (! $providerAssessed && $relevanceScore < 75) {
+ $missing[] = 'The local check could not confirm full coverage of the prompt. Make the connection explicit and add any requested detail that is still missing.';
+ } elseif ($relevanceScore < 50) {
  $missing[] = 'The answer did not clearly connect its main point to the question asked.';
  } elseif ($relevanceScore < 75) {
  $missing[] = 'The answer connected to part of the question but did not fully address its main focus.';

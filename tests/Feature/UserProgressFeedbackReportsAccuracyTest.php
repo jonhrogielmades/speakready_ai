@@ -1055,9 +1055,10 @@ class UserProgressFeedbackReportsAccuracyTest extends TestCase
  ->assertSee('Answer Review')
  ->assertSee('Question 1')
  ->assertSee('Please introduce yourself.')
- ->assertSee('weak link in this answer')
- ->assertSee('The answer was too short')
- ->assertSee('The answer did not give enough clear detail')
+ ->assertDontSee('weak link in this answer')
+ ->assertDontSee('The answer was too short')
+ ->assertSee('This report uses only what you wrote in the answer.')
+ ->assertSee("I'm Jonh Rogiel Tumanda from Pinut-an San Ricardo Southern Leyte.")
  ->assertDontSee('For the answer')
  ->assertDontSee('The answer text was')
  ->assertDontSee($leakedPrompt);
