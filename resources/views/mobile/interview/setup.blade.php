@@ -4,114 +4,6 @@
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup.css?v=25') }}" data-page-style="interview-setup">
 <link rel="stylesheet" href="{{ asset('css/mobile/interview/setup-2.css?v=30') }}" data-page-style="interview-setup-2">
 <link rel="stylesheet" href="{{ asset('css/shared/interview-setup-clear.css?v=2') }}" data-page-style="interview-setup-clear">
-<style>
-    #panel-basic .setup-auto-role-context {
-        display: grid;
-        gap: 14px;
-        padding: 16px;
-        border: 1px solid rgba(59, 130, 246, .24);
-        border-radius: 18px;
-        background: linear-gradient(135deg, rgba(239, 246, 255, .82), rgba(236, 254, 255, .72));
-    }
-
-    #panel-basic .setup-auto-role-context-head {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-    }
-
-    #panel-basic .setup-auto-role-context-icon {
-        display: inline-flex;
-        flex: 0 0 36px;
-        width: 36px;
-        height: 36px;
-        align-items: center;
-        justify-content: center;
-        border-radius: 12px;
-        color: #1d4ed8;
-        background: rgba(191, 219, 254, .72);
-    }
-
-    #panel-basic .setup-auto-role-context-title,
-    #panel-basic .setup-auto-role-context-copy,
-    #panel-basic .setup-auto-role-context-value,
-    #panel-basic .setup-auto-role-context-label {
-        margin: 0;
-    }
-
-    #panel-basic .setup-auto-role-context-title {
-        color: var(--tx, #172554);
-        font-size: .96rem;
-        font-weight: 800;
-    }
-
-    #panel-basic .setup-auto-role-context-copy {
-        margin-top: 3px;
-        color: var(--tx2, #475569);
-        font-size: .8rem;
-        line-height: 1.45;
-    }
-
-    #panel-basic .setup-auto-role-context-values {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-    }
-
-    #panel-basic .setup-auto-role-context-value {
-        min-width: 0;
-        padding: 11px 12px;
-        border: 1px solid rgba(148, 163, 184, .22);
-        border-radius: 12px;
-        background: rgba(255, 255, 255, .62);
-    }
-
-    #panel-basic .setup-auto-role-context-label {
-        display: block;
-        color: var(--tx3, #64748b);
-        font-size: .68rem;
-        font-weight: 800;
-        letter-spacing: .04em;
-        text-transform: uppercase;
-    }
-
-    #panel-basic .setup-auto-role-context-value strong {
-        display: block;
-        margin-top: 3px;
-        overflow: hidden;
-        color: var(--tx, #172554);
-        font-size: .86rem;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    #panel-basic .setup-auto-role-context-link {
-        width: fit-content;
-        color: #1d4ed8;
-        font-size: .78rem;
-        font-weight: 800;
-        text-decoration: none;
-    }
-
-    #panel-basic .setup-auto-role-context-link:hover,
-    #panel-basic .setup-auto-role-context-link:focus-visible {
-        text-decoration: underline;
-    }
-
-    :root:not(.lm) #panel-basic .setup-auto-role-context {
-        background: linear-gradient(135deg, rgba(30, 64, 175, .18), rgba(8, 145, 178, .14));
-    }
-
-    :root:not(.lm) #panel-basic .setup-auto-role-context-value {
-        background: rgba(15, 23, 42, .28);
-    }
-
-    @media (max-width: 575.98px) {
-        #panel-basic .setup-auto-role-context-values {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
 @endpush
 
 @section('content')
@@ -171,10 +63,10 @@
  ],
  ];
  $targetFieldCopy = $targetFieldCopies[$targetFieldMode];
- $targetPositionDefault = trim((string) old('target_position', ''));
- if ($targetPositionDefault === '') {
-     $targetPositionDefault = trim((string) (Auth::user()?->target_position ?? ''));
- }
+ $targetPositionDefault = old(
+ 'target_position',
+ Auth::user()?->target_position ?? ''
+ );
  if (strcasecmp(trim((string) $targetPositionDefault), 'Other') === 0) {
  $targetPositionDefault = trim((string) old('custom_position', ''));
  }
@@ -184,11 +76,8 @@
  ))
  ->keys()
  ->first();
- $selectedJobCategory = $matchedJobCategory ?? '';
- $autoRolePositionLabel = trim((string) $targetPositionDefault) !== '' ? $targetPositionDefault : 'Not configured yet';
- $autoRoleCategoryLabel = trim((string) $selectedJobCategory) !== ''
-     ? $selectedJobCategory
-     : (trim((string) $targetPositionDefault) !== '' ? 'Auto-selected from position' : 'Not configured yet');
+ $requestedJobCategory = trim((string) old('job_category', ''));
+ $selectedJobCategory = $matchedJobCategory ?? ($jobPositionOptionGroups->has($requestedJobCategory) ? $requestedJobCategory : '');
  $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
  $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 20);
  $maxQuestionSetting = $questionOptions->contains($maxQuestionSetting) ? $maxQuestionSetting : 20;
@@ -325,28 +214,7 @@
  @endunless
  </div>
 
- <div class="setup-auto-role-context" id="autoRoleContext" role="status" aria-live="polite">
- <div class="setup-auto-role-context-head">
- <span class="setup-auto-role-context-icon" aria-hidden="true"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
- <div>
- <p class="setup-auto-role-context-title">Category and position configured automatically</p>
- <p class="setup-auto-role-context-copy">Your saved target position sets the job category for this interview on mobile and desktop.</p>
- </div>
- </div>
- <div class="setup-auto-role-context-values">
- <div class="setup-auto-role-context-value">
- <span class="setup-auto-role-context-label">Job Category</span>
- <strong id="autoJobCategoryLabel">{{ $autoRoleCategoryLabel }}</strong>
- </div>
- <div class="setup-auto-role-context-value">
- <span class="setup-auto-role-context-label">Target Position</span>
- <strong id="autoTargetPositionLabel">{{ $autoRolePositionLabel }}</strong>
- </div>
- </div>
- <a class="setup-auto-role-context-link" href="{{ route('user.account') }}">Manage role in Account</a>
- </div>
-
- <div class="setup-card-field setup-auto-configured-control" hidden aria-hidden="true" style="display:none!important">
+ <div class="setup-card-field">
  <label class="setup-card-label" for="jobCategoryFilter">
  <span class="setup-card-label-icon" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span>
  Job Category
@@ -361,7 +229,7 @@
  </div>
  </div>
 
- <div class="setup-card-field setup-target-position-field" hidden aria-hidden="true" data-auto-configured-control="true" style="display:none!important">
+ <div class="setup-card-field setup-target-position-field">
  <label class="setup-card-label" for="targetPositionDropdownButton">
  <span class="setup-card-label-icon" aria-hidden="true"><i class="fa-solid fa-bullseye-arrow"></i></span>
  <span id="targetPositionLabelText">{{ $targetFieldCopy['label'] }}</span>
@@ -405,7 +273,7 @@
  <div class="setup-inline-error" id="targetPositionError" role="alert" hidden>{{ $targetFieldCopy['required_message'] }}</div>
  </div>
 
- <div class="setup-role-discovery-launch setup-auto-configured-control" hidden aria-hidden="true" style="display:none!important">
+ <div class="setup-role-discovery-launch">
  <button type="button" class="setup-role-discovery-open" id="roleFinderOpenButton" data-bs-toggle="modal" data-bs-target="#roleFinderModal" aria-haspopup="dialog" aria-controls="roleFinderModal"><i class="fa-solid fa-compass" aria-hidden="true"></i> Help me find a role</button>
  </div>
 
@@ -1115,30 +983,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  }
  }
 
- function syncAutoRoleContextLabels() {
- const position = setupTargetFieldValue(document.getElementById('valPosition'));
- const category = String(document.getElementById('jobCategoryFilter')?.value || '').trim();
- const categoryLabel = document.getElementById('autoJobCategoryLabel');
- const positionLabel = document.getElementById('autoTargetPositionLabel');
-
- if (categoryLabel) categoryLabel.textContent = category || (position ? 'Auto-selected from position' : 'Not configured yet');
- if (positionLabel) positionLabel.textContent = position || 'Not configured yet';
- }
-
- function restoreAutoRoleContext(options = {}) {
- const positionField = document.getElementById('valPosition');
- const categoryField = document.getElementById('jobCategoryFilter');
- const autoPosition = @json($targetPositionDefault);
- const autoCategory = @json($selectedJobCategory);
- const force = options.force === true;
-
- if (positionField && (force || !setupTargetFieldValue(positionField))) setSetupTargetInputValue(positionField, autoPosition, 'job');
- if (categoryField && (force || !String(categoryField.value || '').trim())) categoryField.value = autoCategory;
- syncAutoRoleContextLabels();
- }
-
- window.__speakReadyInterviewAutoRoleContext = restoreAutoRoleContext;
-
  function isSetupCompactMobile() {
  return window.matchMedia('(max-width: 991.98px)').matches;
  }
@@ -1269,7 +1113,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  choice.setAttribute('aria-pressed', isSelected? 'true': 'false');
  });
  filterSetupTargetChoices();
- syncAutoRoleContextLabels();
  }
 
  function syncSetupTargetFieldCopy() {
@@ -1912,7 +1755,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const setupDraftApi = window.SpeakReadyInterviewSetupDraft;
  const setupDraftFormElement = document.getElementById('setupForm');
  const restoredSetupDraft = @json(!$errors->any())? setupDraftApi?.restore(setupDraftFormElement): null;
- window.__speakReadyInterviewAutoRoleContext?.({ force: Boolean(restoredSetupDraft) });
  if (Array.isArray(restoredSetupDraft?.visited_step_ids)) {
  restoredSetupDraft.visited_step_ids.forEach(stepId => visitedSetupStepIds.add(stepId));
  }
@@ -1923,7 +1765,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const panelId = button.dataset.clearSetupStep;
  if (!window.SpeakReadyInterviewSetupClear?.clearPanel(setupDraftFormElement, panelId)) return;
  if (panelId === 'panel-basic' || panelId === 'panel-summary') {
- window.__speakReadyInterviewAutoRoleContext?.();
  cancelRoleSuggestionRequest();
  setSetupTargetDropdownOpen(false);
  syncSetupTargetFieldCopy();
@@ -2591,7 +2432,9 @@ startInterviewButton.innerHTML = startInterviewButton.dataset.loadingLabel || 'P
  const setupTourSteps = [
  { element: '#setupStepper', popover: { title: 'Interview Setup Steps', description: 'Work through Details, Structure, Camera, Scenario, Response, and Summary before starting.', side: 'bottom', align: 'center' }},
  { element: '#valScenario', popover: { title: 'Practice Scenario', description: 'Choose the interview scenario that matches the kind of practice you want.', side: 'bottom', align: 'start' }},
- { element: '#autoRoleContext', popover: { title: 'Auto-configured Role Context', description: 'Your saved target position automatically determines the job category used for this interview.', side: 'bottom', align: 'start' }},
+ { element: '#jobCategoryFilter', popover: { title: 'Job Category', description: 'Filter the target role list by category, or keep All job categories to search everything.', side: 'bottom', align: 'start' }},
+ { element: '#targetPositionDropdownButton', popover: { title: 'Target Role', description: 'Search and select a role, or enter your own position if it is not listed. Your questions will use this target.', side: 'bottom', align: 'start' }},
+ { element: '#roleFinderOpenButton', popover: { title: 'Find a Role', description: 'Share skills, interests, qualifications, and experience to get role ideas for interview practice.', side: 'bottom', align: 'start' }},
  { element: '#panel-structure', popover: { title: 'Interview Structure', description: 'Choose difficulty, question count, and a per-question time limit. You can also select No Limit.', side: 'top', align: 'center' }},
  { element: '#panel-inclusive', popover: { title: 'Camera Detection', description: 'Camera On enables body-language observations such as framing and posture. Camera Off leaves detection off.', side: 'top', align: 'center' }},
  { element: '#valFeedbackMode', popover: { title: 'Live Feedback', description: 'Choose Coaching On for help during the session, or Real Interview Mode for a quieter practice run.', side: 'bottom', align: 'start' }},
