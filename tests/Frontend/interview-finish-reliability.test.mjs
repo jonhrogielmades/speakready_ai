@@ -33,6 +33,14 @@ for (const relativePath of sessionViews) {
         assert.match(source, /function completeFinishReviewChecklist\(\)[\s\S]*?updateFinishReviewChecklistDetails\(true\)[\s\S]*?classList\.add\('is-complete'\)/);
     });
 
+    test(`${relativePath} makes long processing visibly indeterminate instead of freezing at 88%`, () => {
+        assert.match(source, /Math\.min\(90, finishReviewProgressValue \+ step\)/);
+        assert.match(source, /finishReviewProgressValue >= 90 && finishReviewProgressValue < 100/);
+        assert.match(source, /percent\.textContent = waiting \? 'Finalizing…'/);
+        assert.match(source, /classList\.toggle\('is-waiting', waiting\)/);
+        assert.match(source, /Finalizing your report securely\. This can take a moment\./);
+    });
+
     test(`${relativePath} focuses retry after a report failure`, () => {
         assert.match(source, /requestAnimationFrame\(\(\) => retryButton\?\.focus\(\)\)/);
         assert.match(source, /error\?\.name === 'AbortError'/);

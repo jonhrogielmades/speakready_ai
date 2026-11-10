@@ -1,7 +1,7 @@
 @extends('mobile.layouts.app')
 @section('title', 'Interview Workspace')
 @push('styles')
-<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=80') }}" data-page-style="interview-session">
+<link rel="stylesheet" href="{{ asset('css/mobile/interview/session.css?v=81') }}" data-page-style="interview-session">
 @endpush
 
 @section('content')
@@ -6368,11 +6368,13 @@ finishReviewProgressValue = Math.max(0, Math.min(100, Math.round(Number(value) |
 const bar = document.getElementById('finishReviewProgressBar');
 const percent = document.getElementById('finishReviewProgressPercent');
 const track = document.querySelector('#finishTransitionOverlay .finish-review-progress-track');
+const waiting = finishReviewProgressValue >= 90 && finishReviewProgressValue < 100;
 if (bar) bar.style.width = `${finishReviewProgressValue}%`;
-if (percent) percent.textContent = `${finishReviewProgressValue}%`;
+if (percent) percent.textContent = waiting ? 'Finalizing…' : `${finishReviewProgressValue}%`;
 if (track) {
 track.setAttribute('aria-valuenow', String(finishReviewProgressValue));
-track.setAttribute('aria-valuetext', finishReviewProgressValue >= 100? 'Report ready': 'Preparing report');
+track.setAttribute('aria-valuetext', finishReviewProgressValue >= 100 ? 'Report ready' : (waiting ? 'Finalizing report' : 'Preparing report'));
+track.classList.toggle('is-waiting', waiting);
 }
 }
 
@@ -6407,9 +6409,11 @@ function startFinishReviewProgress() {
 resetFinishReviewLoading();
 setFinishReviewProgress(8);
 finishReviewProgressTimer = window.setInterval(() => {
-const step = finishReviewProgressValue < 44? 4: (finishReviewProgressValue < 72? 2: 1);
-setFinishReviewProgress(Math.min(88, finishReviewProgressValue + step));
-if (finishReviewProgressValue >= 88) {
+const step = finishReviewProgressValue < 44 ? 4 : (finishReviewProgressValue < 72 ? 2 : 1);
+setFinishReviewProgress(Math.min(90, finishReviewProgressValue + step));
+if (finishReviewProgressValue >= 90) {
+ const message = document.getElementById('finishTransitionMessage');
+ if (message) message.textContent = 'Finalizing your report securely. This can take a moment.';
 clearFinishReviewProgressTimer();
 }
 }, 1000);
