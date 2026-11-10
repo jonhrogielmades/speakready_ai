@@ -6,6 +6,7 @@
         if (!panel || panel.dataset.reviewStatusBound === 'true') return;
         panel.dataset.reviewStatusBound = 'true';
         var localFallback = panel.dataset.localFallback === 'true';
+        var hideStatusPanel = panel.dataset.reviewStatusHidden === 'true';
 
         var title = panel.querySelector('[data-review-status-title]');
         var message = panel.querySelector('[data-review-status-message]');
@@ -29,6 +30,10 @@
         }
 
         function showPanel() {
+            if (hideStatusPanel) {
+                hidePanel();
+                return;
+            }
             panel.hidden = false;
             panel.setAttribute('aria-hidden', 'false');
         }
@@ -63,7 +68,7 @@
                 heading || (localFallback ? 'Local answer feedback is ready.' : 'Your AI answer reviews need another attempt.'),
                 detail || (localFallback ? 'Your saved-answer report is available now. You can retry later for provider-written detail.' : 'Some questions are still waiting for a validated AI review.')
             );
-            if (retry) retry.hidden = false;
+            if (retry) retry.hidden = hideStatusPanel;
             if (reload) reload.hidden = true;
         }
 
@@ -123,7 +128,7 @@
             if (seen || !persisted) {
                 showPanel();
                 setText('Your AI reviews are ready.', 'Reload this page to display the latest saved report.');
-                if (reload) reload.hidden = false;
+                if (reload) reload.hidden = hideStatusPanel;
                 return;
             }
             hidePanel();

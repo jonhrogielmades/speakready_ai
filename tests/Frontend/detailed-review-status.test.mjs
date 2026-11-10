@@ -41,6 +41,7 @@ function harness(options = {}) {
         hidden: false,
         dataset: {
             reviewStatus: options.status || 'processing',
+            reviewStatusHidden: options.hidePanel ? 'true' : 'false',
             reviewStatusUrl: options.url || '/session/42/review/status',
         },
         setAttribute() {},
@@ -117,6 +118,7 @@ test('desktop and mobile use the shared pending-only poller and preserve the man
     const view = readFileSync(join(root, 'resources/views/shared/user/review-content.blade.php'), 'utf8');
     assert.match(view, /@if\(!\$sessionEndedEarly && \(\$providerReviewPending \?\? false\)\)/);
     assert.match(view, /route\('user\.review\.status', \$sessionRecord\)/);
+    assert.match(view, /data-review-status-hidden="true" hidden aria-hidden="true"/);
     assert.match(view, /method="POST" action="{{ route\('user\.review\.refresh', \$sessionRecord\) }}" data-review-retry @if\(\$providerReviewCanContinue\) hidden @endif/);
     assert.match(view, /role="status" aria-live="polite" aria-atomic="true"/);
     assert.match(view, /detailed-review-status\.js\?v=2/);
@@ -130,6 +132,16 @@ test('does nothing when there are no pending provider reviews', async () => {
     const ui = harness({ noPanel: true });
     await ui.advance(180000);
     assert.equal(ui.requests.length, 0);
+});
+
+test('keeps the Detailed Review status and retry card hidden while polling', async () => {
+    const ui = harness({ hidePanel: true, responses: [{ status: 'processing' }, { status: 'unavailable' }] });
+    await ui.advance(0);
+    assert.equal(ui.panel.hidden, true);
+    assert.equal(ui.retry.hidden, true);
+    await ui.advance(5000);
+    assert.equal(ui.panel.hidden, true);
+    assert.equal(ui.retry.hidden, true);
 });
 
 test('reads status without mutations and refreshes automatically after processing and waiting', async () => {
