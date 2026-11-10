@@ -944,8 +944,39 @@ class UserController extends Controller
 
  $comparisonRows = $this->comparisonRowsFor($sessionRecord);
  $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);
+ $inputsStale = ! $reviewService->reviewInputsMatchSavedValidation($sessionRecord);
+ $providerReviewPending = ! $sessionEndedEarly && $sessionRecord->answers->contains(function ($answer) use ($reviewService, $inputsStale): bool {
+ $state = $reviewService->answerReviewProviderState($answer, $inputsStale);
+ return ! $state['skipped'] && (! $state['feedback_ready'] || (! $state['insufficient'] && ! $state['possible_answer_ready']));
+ });
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'feedbackRefreshQueued'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'feedbackRefreshQueued', 'providerReviewPending'));
+ }
+
+ public function refreshReview($id, DetailedFeedbackReviewService $reviewService)
+ {
+ $session = InterviewSession::where('user_id', Auth::id())->whereKey($id)->firstOrFail();
+ abort_unless($session->status === 'completed' && ! (bool) data_get($session->action_plan ?? [], 'ended_early', false), 409);
+ if (! $reviewService->hasConfiguredProvider()) {
+ return redirect()->route('user.review', $session)->with('error', 'AI review is currently unavailable. Please try again when an AI provider is connected.');
+ }
+ abort_unless(Cache::add('feedback-review-manual-retry:'.$session->id, true, now()->addSeconds(60)), 429, 'Please wait a minute before retrying your AI review.');
+ $plan = is_array($session->action_plan) ? $session->action_plan : [];
+ unset($plan['_provider_refresh']['blocked_until']);
+ $session->forceFill(['action_plan' => $plan])->save();
+ Cache::put('feedback-review-refresh:'.$session->id, true, now()->addMinutes(15));
+ try {
+ if (config('queue.default') === 'sync' && ! app()->environment('testing')) {
+ RefreshDetailedFeedbackReview::dispatchAfterResponse((int) $session->id, (int) Auth::id());
+ } else {
+ RefreshDetailedFeedbackReview::dispatch((int) $session->id, (int) Auth::id());
+ }
+ } catch (\Throwable $error) {
+ Cache::forget('feedback-review-refresh:'.$session->id);
+ Log::warning('Manual AI review refresh could not be queued.', ['session_id' => $session->id, 'error_type' => $error::class]);
+ return redirect()->route('user.review', $session)->with('error', 'The AI review could not be started. Please try again shortly.');
+ }
+ return redirect()->route('user.review', $session)->with('success', 'AI review requested. Reload the review shortly to check the result.');
  }
 
  public function exportSession(InterviewSession $session)

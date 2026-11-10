@@ -128,7 +128,7 @@ class DetailedFeedbackReviewService
 
  public function shouldRefreshWithProvider(InterviewSession $session): bool
  {
- if ($session->status !== 'completed' || (int) ($session->game_level_id?? 0) > 0) {
+ if ($session->status !== 'completed' || (bool) data_get($session->action_plan ?? [], 'ended_early', false)) {
  return false;
  }
 
@@ -144,9 +144,7 @@ class DetailedFeedbackReviewService
 
  $summarySource = trim((string) data_get($session->feedback->coaching_summary?? [], 'overall_summary_source', ''));
  $repairedSummaryFields = (array) data_get($session->feedback->coaching_summary?? [], 'review_context.session_feedback_repaired_fields', []);
- $summarySourceVerified = $summarySource === 'ai_provider_validated'
- || ($summarySource === 'local_evidence_validated'
- && in_array('overall_summary', $repairedSummaryFields, true));
+ $summarySourceVerified = $summarySource === 'ai_provider_validated' && $repairedSummaryFields === [];
  if (! $summarySourceVerified) {
  return true;
  }
@@ -188,6 +186,11 @@ class DetailedFeedbackReviewService
  foreach ($this->originalAnswers($session) as $answer) {
  if (! $answer instanceof InterviewAnswer) {
  continue;
+ }
+
+ $state = $this->answerReviewProviderState($answer);
+ if (! $state['skipped'] && (! $state['feedback_ready'] || (! $state['insufficient'] && ! $state['possible_answer_ready']))) {
+ return true;
  }
 
  $answerProvider = AIService::normalizeProviderKey($answer->ai_provider);
@@ -275,15 +278,30 @@ class DetailedFeedbackReviewService
  is_scalar($item['better_sample_answer_source']?? null)? (string) $item['better_sample_answer_source']: null,
  is_scalar($item['better_sample_answer_provider']?? null)? (string) $item['better_sample_answer_provider']: null
  );
+ $coachingFeedback['provider_narrative'] = [
+ 'verified' => true,
+ 'input_fingerprint' => $this->answerInputFingerprint($answer),
+ 'feedback_hash' => hash('sha256', trim((string) ($item['ai_feedback'] ?? ''))),
+ 'possible_answer_hash' => hash('sha256', trim((string) ($item['better_sample_answer'] ?? ''))),
+ ];
  if (data_get($coachingFeedback, 'feedback_quality.status') !== 'verified'
  || (int) data_get($coachingFeedback, 'feedback_quality.completeness_percent', 0) !== 100) {
  throw new \RuntimeException("Detailed review coaching checks failed for answer {$answer->id}.");
  }
 
- $answer->forceFill([
+ $narrativeFields = [
  'ai_feedback' => trim((string) ($item['ai_feedback']?? '')),
  'better_sample_answer' => trim((string) ($item['better_sample_answer']?? '')),
  'follow_up_question' => trim((string) ($item['follow_up_question']?? '')),
+ 'coaching_feedback' => $coachingFeedback,
+ 'ai_provider' => $providerKey,
+ ];
+ if ((int) ($session->game_level_id ?? 0) > 0) {
+ // Game results use their own rubric. A review refresh updates prose only.
+ $answer->forceFill($narrativeFields)->save();
+ continue;
+ }
+ $answer->forceFill(array_merge($narrativeFields, [
  'clarity_score' => $clarity,
  'relevance_score' => $relevance,
  'grammar_score' => $grammar,
@@ -293,9 +311,7 @@ class DetailedFeedbackReviewService
  'rubric_level' => $rubric['level'],
  'recommendation_text' => $rubric['next_level'],
  'improved_answer_source' => 'candidate_facts',
- 'coaching_feedback' => $coachingFeedback,
- 'ai_provider' => $providerKey,
- ])->save();
+ ]))->save();
  }
 
  $count = max(1, $answers->count());
@@ -308,6 +324,15 @@ class DetailedFeedbackReviewService
 
  $evaluatedAnswers = $this->originalAnswers($session->fresh(['answers.question']) ?? $session);
  $sessionFeedback = is_array($feedback['session_feedback']?? null)? $feedback['session_feedback']: [];
+ if ((int) ($session->game_level_id ?? 0) > 0) {
+ Feedback::updateOrCreate(['interview_session_id' => $session->id], [
+ 'strengths' => trim((string) ($sessionFeedback['strengths'] ?? '')),
+ 'weaknesses' => trim((string) ($sessionFeedback['weaknesses'] ?? '')),
+ 'improvement_suggestions' => trim((string) ($sessionFeedback['improvement_suggestions'] ?? '')),
+ 'coaching_summary' => $this->sessionCoachingSummary($evaluatedAnswers, $sessionFeedback, (array) ($feedback['review_context'] ?? []), $validation),
+ ]);
+ return;
+ }
  $starScore = $totals['star_applicable_count'] > 0
  ? $this->scoreValue($totals['star_method_score'] / $totals['star_applicable_count'])
  : 0;
@@ -476,7 +501,8 @@ class DetailedFeedbackReviewService
  && $this->scoreValue($item['scoring_confidence']?? 100) <= ($isSkipped? 0: 25)
  && $this->scoreValue($item['score']?? 100) <= ($isSkipped? 0: 10);
  $visibleFeedbackIsUsable = AIService::visibleReviewFeedbackIsProviderUsable((string) ($item['ai_feedback']?? ''), $answerData);
- $possibleAnswerIsUsable = AIService::visibleReviewPossibleAnswerIsProviderUsable((string) ($item['better_sample_answer']?? ''), $answerData);
+ $possibleAnswerIsUsable = ($isTooShort && trim((string) ($item['better_sample_answer'] ?? '')) === '')
+ || AIService::visibleReviewPossibleAnswerIsProviderUsable((string) ($item['better_sample_answer']?? ''), $answerData);
  $quotes = $item['evidence_quotes']?? null;
  $normalizedAnswerText = trim((string) preg_replace('/\s+/u', ' ', $this->answerContent($answer)));
  $evidenceIsVerbatim = is_array($quotes) && array_is_list($quotes)
@@ -500,6 +526,8 @@ class DetailedFeedbackReviewService
  $answerChecks[$id] = [
  'complete' => true,
  'provider_evidence_validated' => ($item['evaluation_source']?? null) === 'ai_evidence_validated',
+ 'provider_narrative_source' => ($item['answer_review_source'] ?? null) === 'ai_provider'
+ && ($isSkipped || trim((string) ($item['better_sample_answer'] ?? '')) === '' || ($item['better_sample_answer_source'] ?? null) === 'ai_provider'),
  'all_safeguards_passed' => $qualityVerified,
  'eligibility_matches_saved_answer' => ($item['is_skipped']?? null) === $isSkipped
  && ($item['is_too_short']?? null) === $isTooShort,
@@ -512,43 +540,12 @@ class DetailedFeedbackReviewService
  }
 
  $minimumScoreableReliability = $scoreableReliabilities !== []? min($scoreableReliabilities): null;
- $coachingRepairedIds = $feedback['_coaching_repaired_answer_ids']?? null;
- $coachingRepairIdsValid = is_array($coachingRepairedIds)
- && $coachingRepairedIds !== []
- && array_is_list($coachingRepairedIds)
- && count($coachingRepairedIds) === count(array_unique($coachingRepairedIds))
- && array_diff($coachingRepairedIds, $expectedIds) === [];
- $sessionFields = ['overall_summary', 'strengths', 'weaknesses', 'improvement_suggestions'];
- $sessionRepairedFields = $feedback['_session_feedback_repaired_fields']?? null;
- $sessionRepairFieldsValid = is_array($sessionRepairedFields)
- && $sessionRepairedFields !== []
- && array_is_list($sessionRepairedFields)
- && count($sessionRepairedFields) === count(array_unique($sessionRepairedFields))
- && array_diff($sessionRepairedFields, $sessionFields) === [];
- $repairScope = (string) ($feedback['_repair_scope']?? '');
- $repairStrategy = (string) ($feedback['_repair_strategy']?? '');
- $repairMetadataMatchesContext = ($reviewContext['repair_scope']?? null) === $repairScope
- && ($reviewContext['repair_strategy']?? null) === $repairStrategy
- && ($reviewContext['coaching_repaired_answer_ids']?? null) === ($coachingRepairedIds?? [])
- && ($reviewContext['session_feedback_repaired_fields']?? null) === ($sessionRepairedFields?? [])
- && ($reviewContext['session_feedback_source']?? null) === ($sessionRepairFieldsValid
- ? (count($sessionRepairedFields) === 4? 'local_evidence_repair': 'mixed_provider_and_local_evidence')
- : 'ai_provider');
- $safeRepair = match ($repairScope) {
- 'coaching_only' => $repairStrategy === 'provider_coaching_safety_repair'
- && $coachingRepairIdsValid && ($sessionRepairedFields?? []) === [],
- 'session_feedback_only' => $repairStrategy === 'provider_session_summary_safety_repair'
- && $sessionRepairFieldsValid && ($coachingRepairedIds?? []) === [],
- 'coaching_and_session_feedback' => $repairStrategy === 'provider_coaching_and_session_summary_safety_repair'
- && $coachingRepairIdsValid && $sessionRepairFieldsValid,
- default => false,
- };
  $checks = [
  'api_provider_supported' => $this->isApiProviderKey($providerKey),
  'provider_metadata_matches' => AIService::normalizeProviderKey($feedback['_provider_key']?? null) === $providerKey,
  'strict_provider_validation_passed' => ($feedback['_strict_validation_passed']?? null) === true,
- 'provider_repair_safe' => ($feedback['_repair_applied']?? null) === false
- || (($feedback['_repair_applied']?? null) === true && $safeRepair && $repairMetadataMatchesContext),
+ 'provider_narratives_verified' => ($feedback['_provider_narratives_verified'] ?? null) === true,
+ 'provider_repair_safe' => ($feedback['_repair_applied']?? null) === false,
  'exact_answer_count' => count($items) === count($expectedIds),
  'unique_answer_ids' => count($suppliedIds) === count(array_unique($suppliedIds)) && ! in_array('', $suppliedIds, true),
  'exact_answer_coverage' => $sortedExpectedIds === $sortedSuppliedIds,
@@ -654,6 +651,7 @@ class DetailedFeedbackReviewService
  private function reviewRefreshRuntimeOptions(): array
  {
  return [
+ 'require_provider_narratives' => true,
  'timeout_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.timeout_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 30),
  'deadline_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.deadline_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 120),
  'max_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_review.max_attempts', 'AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', 2),
@@ -674,6 +672,49 @@ class DetailedFeedbackReviewService
  } catch (\Throwable) {
  return false;
  }
+ }
+
+ public function hasConfiguredProvider(): bool
+ {
+ return $this->configuredProvider(null) !== null;
+ }
+
+ public function answerReviewProviderState(InterviewAnswer $answer, bool $inputsStale = false): array
+ {
+ $input = $this->answerData($answer);
+ $eligibility = AIService::feedbackAnswerEligibility($input);
+ $coaching = is_array($answer->coaching_feedback) ? $answer->coaching_feedback : [];
+ $provenance = (array) ($coaching['provider_narrative'] ?? []);
+ $provider = AIService::normalizeProviderKey($answer->ai_provider);
+ $verified = ! $inputsStale && $this->isApiProviderKey($provider)
+ && ($provenance['verified'] ?? false) === true
+ && hash_equals((string) ($provenance['input_fingerprint'] ?? ''), $this->answerInputFingerprint($answer));
+ $feedback = trim((string) $answer->ai_feedback);
+ $possible = trim((string) $answer->better_sample_answer);
+ $feedbackReady = $verified
+ && data_get($coaching, 'content_alignment.answer_review_source') === 'ai_provider'
+ && AIService::normalizeProviderKey(data_get($coaching, 'content_alignment.answer_review_provider')) === $provider
+ && hash_equals((string) ($provenance['feedback_hash'] ?? ''), hash('sha256', $feedback))
+ && AIService::visibleReviewFeedbackIsProviderUsable($feedback, $input);
+ $possibleReady = $verified && $possible !== ''
+ && data_get($coaching, 'content_alignment.possible_answer_source') === 'ai_provider'
+ && AIService::normalizeProviderKey(data_get($coaching, 'content_alignment.possible_answer_provider')) === $provider
+ && hash_equals((string) ($provenance['possible_answer_hash'] ?? ''), hash('sha256', $possible))
+ && AIService::visibleReviewPossibleAnswerIsProviderUsable($possible, $input);
+
+ return [
+ 'feedback_ready' => $feedbackReady,
+ 'possible_answer_ready' => $possibleReady,
+ 'feedback' => $feedbackReady ? $feedback : '',
+ 'possible_answer' => $possibleReady ? $possible : '',
+ 'skipped' => $eligibility['is_skipped'],
+ 'insufficient' => $eligibility['is_too_short'],
+ ];
+ }
+
+ private function answerInputFingerprint(InterviewAnswer $answer): string
+ {
+ return hash('sha256', json_encode($this->answerData($answer), JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
  }
 
  private function answerNeedsApiProviderVisibleFeedback(InterviewAnswer $answer): bool

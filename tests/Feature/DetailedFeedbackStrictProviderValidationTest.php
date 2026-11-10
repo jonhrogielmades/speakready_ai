@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\GameLevel;
+use App\Models\Score;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\Question;
@@ -10,7 +12,6 @@ use App\Models\User;
 use App\Jobs\RefreshDetailedFeedbackReview;
 use App\Services\AIService;
 use App\Services\DetailedFeedbackReviewService;
-use App\Support\FeedbackCoachingRepair;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use ReflectionMethod;
 use Tests\TestCase;
@@ -19,7 +20,7 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_final_provider_gate_requires_strict_feedback_or_safe_coaching_repair(): void
+    public function test_final_provider_gate_requires_provider_narratives_without_local_repairs(): void
     {
         $answer = $this->answer();
         $feedback = $this->validProviderFeedback($answer);
@@ -29,6 +30,18 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->assertSame('verified', $verified['status'], json_encode($verified['reasons']));
         $this->assertTrue($verified['checks']['strict_provider_validation_passed']);
         $this->assertTrue($verified['checks']['provider_repair_safe']);
+
+        $missingNarrativeProvenance = $feedback;
+        unset($missingNarrativeProvenance['_provider_narratives_verified']);
+        $missingNarrativeValidation = $this->validateProviderFeedback($answer, $missingNarrativeProvenance);
+        $this->assertSame('rejected', $missingNarrativeValidation['status']);
+        $this->assertFalse($missingNarrativeValidation['checks']['provider_narratives_verified']);
+
+        $localAnswerNarrative = $feedback;
+        $localAnswerNarrative['per_question_feedback'][0]['answer_review_source'] = 'local_evidence';
+        $localNarrativeValidation = $this->validateProviderFeedback($answer, $localAnswerNarrative);
+        $this->assertSame('rejected', $localNarrativeValidation['status']);
+        $this->assertFalse($localNarrativeValidation['answer_checks'][(string) $answer->id]['provider_narrative_source']);
 
         $missingStrictMetadata = $feedback;
         unset($missingStrictMetadata['_strict_validation_passed']);
@@ -64,8 +77,8 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $safeCoachingRepair['review_context']['session_feedback_source'] = 'ai_provider';
 
         $safeRepairValidation = $this->validateProviderFeedback($answer, $safeCoachingRepair);
-        $this->assertSame('verified', $safeRepairValidation['status']);
-        $this->assertTrue($safeRepairValidation['checks']['provider_repair_safe']);
+        $this->assertSame('rejected', $safeRepairValidation['status']);
+        $this->assertFalse($safeRepairValidation['checks']['provider_repair_safe']);
 
         $unmatchedRepair = $safeCoachingRepair;
         $unmatchedRepair['_coaching_repaired_answer_ids'] = ['999999'];
@@ -85,8 +98,8 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $safeSummaryRepair['review_context']['session_feedback_repaired_fields'] = ['overall_summary'];
         $safeSummaryRepair['review_context']['session_feedback_source'] = 'mixed_provider_and_local_evidence';
         $summaryRepairValidation = $this->validateProviderFeedback($answer, $safeSummaryRepair);
-        $this->assertSame('verified', $summaryRepairValidation['status']);
-        $this->assertTrue($summaryRepairValidation['checks']['provider_repair_safe']);
+        $this->assertSame('rejected', $summaryRepairValidation['status']);
+        $this->assertFalse($summaryRepairValidation['checks']['provider_repair_safe']);
 
         $safeCombinedRepair = $safeSummaryRepair;
         $safeCombinedRepair['_repair_strategy'] = 'provider_coaching_and_session_summary_safety_repair';
@@ -96,8 +109,8 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $safeCombinedRepair['review_context']['repair_scope'] = $safeCombinedRepair['_repair_scope'];
         $safeCombinedRepair['review_context']['coaching_repaired_answer_ids'] = [(string) $answer->id];
         $combinedValidation = $this->validateProviderFeedback($answer, $safeCombinedRepair);
-        $this->assertSame('verified', $combinedValidation['status']);
-        $this->assertTrue($combinedValidation['checks']['provider_repair_safe']);
+        $this->assertSame('rejected', $combinedValidation['status']);
+        $this->assertFalse($combinedValidation['checks']['provider_repair_safe']);
 
         $scoreDisagreement = $feedback;
         data_set($scoreDisagreement, 'per_question_feedback.0.scoring_confidence', 80);
@@ -255,7 +268,7 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->assertSame('rejected', $validation['status']);
     }
 
-    public function test_queued_local_repair_reloads_answers_after_a_provider_refresh_is_rejected(): void
+    public function test_queued_provider_failure_retries_current_inputs_without_local_repair(): void
     {
         $answer = $this->answer();
         $session = InterviewSession::findOrFail($answer->interview_session_id);
@@ -269,15 +282,17 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
                 return false;
             }
         );
-        $repair = \Mockery::mock(FeedbackCoachingRepair::class);
-        $repair->shouldReceive('repairSession')->once()->withArgs(
+        $service->shouldReceive('hasConfiguredProvider')->once()->andReturn(true);
+        $service->shouldReceive('shouldRefreshWithProvider')->once()->withArgs(
             fn (InterviewSession $candidate): bool => $candidate->answers->first()->answer_text === $replacement
         )->andReturn(true);
 
-        (new RefreshDetailedFeedbackReview((int) $session->id, (int) $session->user_id))->handle($service, $repair);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('AI detailed review is still pending');
+        (new RefreshDetailedFeedbackReview((int) $session->id, (int) $session->user_id))->handle($service);
     }
 
-    public function test_verified_mixed_summary_persists_its_source_and_does_not_refresh_again(): void
+    public function test_mixed_local_summary_is_rejected_before_persistence(): void
     {
         $answer = $this->answer();
         $session = InterviewSession::findOrFail($answer->interview_session_id);
@@ -293,22 +308,13 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $feedback['review_context']['session_feedback_repaired_fields'] = ['overall_summary'];
         $feedback['review_context']['session_feedback_source'] = 'mixed_provider_and_local_evidence';
         $validation = $this->validateProviderFeedback($answer, $feedback);
-        $this->assertSame('verified', $validation['status']);
-
-        $service = $this->app->make(DetailedFeedbackReviewService::class);
-        $persist = new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback');
-        $persist->setAccessible(true);
-        $persist->invoke($service, $session, collect([$answer]), $feedback, 'openai', $validation);
-
-        $session = $session->fresh(['answers.question', 'feedback', 'score']);
-        $summary = $session->feedback->coaching_summary;
-        $this->assertSame('local_evidence_validated', data_get($summary, 'overall_summary_source'));
-        $this->assertSame('mixed_provider_and_local_evidence', data_get($summary, 'review_context.session_feedback_source'));
-        $this->assertSame(['overall_summary'], data_get($summary, 'review_context.session_feedback_repaired_fields'));
-        $this->assertFalse($service->shouldRefreshWithProvider($session));
+        $this->assertSame('rejected', $validation['status']);
+        $this->assertFalse($validation['checks']['provider_repair_safe']);
+        $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
     }
 
-    public function test_desktop_and_mobile_replace_unsafe_saved_feedback_while_refresh_is_queued(): void
+    public function test_desktop_and_mobile_show_pending_provider_review_instead_of_local_replacement(): void
     {
         \Illuminate\Support\Facades\Queue::fake();
         \Illuminate\Support\Facades\Http::preventStrayRequests();
@@ -332,6 +338,8 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
                 ->assertOk()
                 ->assertSee('Overall Review')
                 ->assertSee('Possible Answer')
+                ->assertSee('AI feedback is not ready for this question yet.')
+                ->assertSee('An AI-generated possible answer is not available for this question yet.')
                 ->assertSee('documented missed approvals')
                 ->assertDontSee('international award')
                 ->assertDontSee('90%');
@@ -340,7 +348,7 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->assertStringContainsString('international award', $answer->fresh()->ai_feedback);
     }
 
-    public function test_changed_answers_show_current_local_review_and_pending_score_until_refresh(): void
+    public function test_changed_answers_show_pending_provider_review_and_score_until_refresh(): void
     {
         \Illuminate\Support\Facades\Queue::fake();
         $answer = $this->answer();
@@ -359,10 +367,55 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
                 ->assertOk()
                 ->assertSee('<strong>Pending</strong>', false)
                 ->assertSee('I only observed the team')
+                ->assertSee('AI feedback is not ready for this question yet.')
                 ->assertDontSee('I mapped the support handoff issue')
                 ->assertDontSee('<strong>84%</strong>', false);
         }
         $this->assertStringContainsString('I mapped the support handoff issue', $answer->fresh()->ai_feedback);
+    }
+
+    public function test_game_provider_refresh_updates_narrative_without_overwriting_game_scores(): void
+    {
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $level = GameLevel::create([
+            'category_id' => $session->category_id,
+            'level_number' => 1,
+            'title' => 'Support Handoff',
+            'description' => 'Practice describing a support handoff.',
+            'mission_text' => 'Describe how you improved a support handoff.',
+            'difficulty' => 'intermediate',
+            'required_score' => 80,
+            'xp_reward' => 500,
+            'energy_cost' => 1,
+        ]);
+        $session->update(['game_level_id' => $level->id, 'action_plan' => ['headline' => 'Original game plan']]);
+        $answer->update(['score' => 42, 'clarity_score' => 48, 'relevance_score' => 39, 'grammar_score' => 52]);
+        $score = Score::create([
+            'interview_session_id' => $session->id,
+            'clarity_score' => 48,
+            'relevance_score' => 39,
+            'grammar_score' => 52,
+            'professionalism_score' => 61,
+            'overall_readiness_score' => 42,
+        ]);
+        $savedScore = $score->fresh()->getAttributes();
+        $feedback = $this->validProviderFeedback($answer);
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+        $this->assertSame('verified', $validation['status']);
+
+        (new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback'))->invoke(
+            $this->app->make(DetailedFeedbackReviewService::class), $session, collect([$answer]), $feedback, 'openai', $validation
+        );
+
+        $this->assertSame($savedScore, $score->fresh()->getAttributes());
+        $this->assertSame(42, (int) $answer->fresh()->score);
+        $this->assertSame(48, (int) $answer->fresh()->clarity_score);
+        $this->assertSame('Original game plan', data_get($session->fresh()->action_plan, 'headline'));
+        $this->assertSame($feedback['per_question_feedback'][0]['ai_feedback'], $answer->fresh()->ai_feedback);
+        $state = $this->app->make(DetailedFeedbackReviewService::class)->answerReviewProviderState($answer->fresh('question'));
+        $this->assertTrue($state['feedback_ready']);
+        $this->assertTrue($state['possible_answer_ready']);
     }
 
     private function validateProviderFeedback(InterviewAnswer $answer, array $feedback): array
@@ -437,6 +490,7 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
             '_provider_key' => 'openai',
             '_providers_attempted' => ['openai'],
             '_strict_validation_passed' => true,
+            '_provider_narratives_verified' => true,
             '_repair_applied' => false,
             'per_question_feedback' => [[
                 'id' => $answer->id,
@@ -450,7 +504,9 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
                 'scoring_confidence' => 92,
                 'insufficient_data' => false,
                 'ai_feedback' => 'You said "'.$quote.'" This directly answers the support handoff question with your action and final check. It helps the interviewer judge your handoff approach. Next, add the true effect on the team or customer.',
+                'answer_review_source' => 'ai_provider',
                 'better_sample_answer' => 'I mapped the support handoff issue. I documented missed approvals and coordinated the checklist update. I confirmed the final handoff result with my supervisor.',
+                'better_sample_answer_source' => 'ai_provider',
                 'follow_up_question' => 'What true effect did the checklist update have on the support handoff?',
                 'evidence_quotes' => [$quote],
                 'question_focus' => $question,

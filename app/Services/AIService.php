@@ -1845,6 +1845,7 @@ return $topic!== ''? self::excerpt($topic, 90): '';
 
  public static function generateFeedback($sessionData, $answersData, $provider, bool $providerOnly = false, bool $allowLocalRepair = true, array $runtimeOptions = [])
  {
+ $requireProviderNarratives = (bool) ($runtimeOptions['require_provider_narratives'] ?? false);
  if ($answersData === []) {
  throw new \RuntimeException('No saved answers were available for AI feedback.');
  }
@@ -2266,6 +2267,9 @@ EOT;
 
  $prompt.= "\nREQUIRED ANSWER IDS: ".implode(', ', array_column($answersData, 'id'))."\n";
  $prompt.= "You must return one per_question_feedback item for every required answer id and no extra ids.\n";
+ if ($requireProviderNarratives) {
+ $prompt.= "PROVIDER-ONLY REVIEW: Every visible review note must be written in this response. The application will reject unsafe or incomplete prose, not rewrite it locally. For an answer with fewer than 10 words, give an evidence-grounded ai_feedback note that states its limits; return an empty better_sample_answer if a truthful spoken rewrite cannot be supported by the saved facts. Never invent facts just to reach a sentence count.\n";
+ }
 
  $runtimeInt = static function (string $optionKey, string $configKey, string $envKey, int $default, int $min, int $max) use ($runtimeOptions): int {
  $value = array_key_exists($optionKey, $runtimeOptions)
@@ -2374,10 +2378,11 @@ EOT;
  $currentRequestOptions['response_validator'] = static function ($candidate) use (
  &$candidateResponse,
  &$validationErrors,
- $answersData
+ $answersData,
+ $requireProviderNarratives
  ): bool {
  $candidateResponse = is_array($candidate)? $candidate: null;
- $validationErrors = self::feedbackResponseValidationErrors($candidate, $answersData);
+ $validationErrors = self::feedbackResponseValidationErrors($candidate, $answersData, true, $requireProviderNarratives);
 
  return $validationErrors === [];
  };
@@ -2393,7 +2398,7 @@ EOT;
  throw new \RuntimeException("Feedback provider {$currentProvider} returned an empty response.");
  }
 
- $normalized = self::normalizeFeedbackResponse($response, $answersData, $sessionData, true, $currentProvider);
+ $normalized = self::normalizeFeedbackResponse($response, $answersData, $sessionData, true, $currentProvider, $requireProviderNarratives);
  $normalized['_strict_validation_passed'] = true;
  $normalized['_repair_applied'] = false;
 
@@ -2443,7 +2448,7 @@ EOT;
  // Preserve valid provider scores and narrative when only the session notes
  // or coaching fields failed. Exact candidate evidence anchors replacements;
  // all fields must pass the complete strict validator after the cascade.
- if (is_array($visibleRepairableResponse) && is_string($visibleRepairableProvider)) {
+ if (! $requireProviderNarratives && is_array($visibleRepairableResponse) && is_string($visibleRepairableProvider)) {
  $safeResponse = $visibleRepairableResponse;
  $repairedAnswerIds = [];
  $repairedSessionFields = [];
@@ -2527,18 +2532,19 @@ EOT;
  $sessionData,
  $answersData,
  $repairableRequestOptions,
- $deadlineAt
+ $deadlineAt,
+ $requireProviderNarratives
  );
  if ($perAnswerResponse === null) {
  throw new \RuntimeException('Provider per-answer completion did not cover every answer.');
  }
 
- $completionErrors = self::feedbackResponseValidationErrors($perAnswerResponse, $answersData);
+ $completionErrors = self::feedbackResponseValidationErrors($perAnswerResponse, $answersData, true, $requireProviderNarratives);
  if ($completionErrors !== []) {
  throw new \RuntimeException('Provider per-answer completion failed final semantic validation: '.implode(' ', array_slice($completionErrors, 0, 3)));
  }
 
- $completed = self::normalizeFeedbackResponse($perAnswerResponse, $answersData, $sessionData, true, $repairableProvider);
+ $completed = self::normalizeFeedbackResponse($perAnswerResponse, $answersData, $sessionData, true, $repairableProvider, $requireProviderNarratives);
  $completed['_strict_validation_passed'] = true;
  $completed['_repair_applied'] = true;
  $completed['_repair_strategy'] = 'provider_per_answer_completion';
@@ -2556,7 +2562,9 @@ EOT;
  $attemptedProviders
  );
  } catch (\Throwable $repairError) {
- Log::warning('Provider per-answer completion failed; falling back to the local report path.', [
+ Log::warning($requireProviderNarratives
+ ? 'Provider per-answer completion failed; provider-only review remains unavailable.'
+ : 'Provider per-answer completion failed; falling back to the local report path.', [
  'provider' => $repairableProvider,
  'error_type' => $repairError::class,
  'message' => self::safeProviderErrorMessage($repairError),
@@ -2564,7 +2572,9 @@ EOT;
  }
  }
 
- Log::warning('AI feedback providers were unavailable or incomplete; handing off to local feedback fallback.', [
+ Log::warning($requireProviderNarratives
+ ? 'AI feedback providers were unavailable or incomplete; provider-only review remains unavailable.'
+ : 'AI feedback providers were unavailable or incomplete; handing off to local feedback fallback.', [
  'providers_attempted' => $providers,
  'providers_reached' => $attemptedProviders,
  ]);
@@ -2578,7 +2588,8 @@ EOT;
  array $sessionData,
  array $answersData,
  array $requestOptions,
- float $deadlineAt
+ float $deadlineAt,
+ bool $requireProviderNarratives = false
  ):?array {
  $validItems = self::validFeedbackSubset($response, $answersData);
  $itemsById = [];
@@ -2607,6 +2618,7 @@ EOT;
  'max_attempts' => 1,
  'http_attempts' => max(1, min(2, (int) ($requestOptions['attempts']?? 1))),
  'retry_delay_ms' => 0,
+ 'require_provider_narratives' => $requireProviderNarratives,
  ]);
 
  $singleItem = $singleFeedback['per_question_feedback'][0]?? null;
@@ -5401,7 +5413,7 @@ PROMPT;
  return $valid;
  }
 
- private static function feedbackResponseValidationErrors($response, array $answersData, bool $requireSessionFeedback = true): array
+ private static function feedbackResponseValidationErrors($response, array $answersData, bool $requireSessionFeedback = true, bool $requireProviderNarratives = false): array
  {
  if (! is_array($response) ||! isset($response['per_question_feedback']) ||! is_array($response['per_question_feedback'])) {
  return ['per_question_feedback must be an array.'];
@@ -5548,7 +5560,9 @@ PROMPT;
  )) {
  $errors[] = "Feedback ID {$id} contains unsupported commentary.";
  }
- if (! self::providerBetterSampleAnswerIsValid((string) ($item['better_sample_answer']?? ''), $answer)) {
+ $emptyLimitedDraft = $requireProviderNarratives && $isTooShort
+ && array_key_exists('better_sample_answer', $item) && $item['better_sample_answer'] === '';
+ if (! $emptyLimitedDraft && ! self::providerBetterSampleAnswerIsValid((string) ($item['better_sample_answer']?? ''), $answer)) {
  $errors[] = "Feedback ID {$id} has an invalid better_sample_answer.";
  }
  if (! self::providerFollowUpQuestionIsValid((string) ($item['follow_up_question']?? ''), $answer)) {
@@ -6639,8 +6653,15 @@ PROMPT;
  return self::normalizeEvidenceText(implode(' ', $parts));
  }
 
- private static function normalizeFeedbackResponse(array $response, array $answersData, array $sessionData, bool $requireAiGenerated = false,?string $feedbackSource = null): array
+ private static function normalizeFeedbackResponse(array $response, array $answersData, array $sessionData, bool $requireAiGenerated = false,?string $feedbackSource = null, bool $requireProviderNarratives = false): array
  {
+ if ($requireProviderNarratives) {
+ $providerKey = self::normalizeProviderKey($feedbackSource);
+ if (! $requireAiGenerated || ! self::providerIsSupported($providerKey) || in_array($providerKey, ['', 'local', 'localmodel'], true)
+ || self::feedbackResponseValidationErrors($response, $answersData, true, true) !== []) {
+ throw new \RuntimeException('Provider-only review requires a complete validated API response.');
+ }
+ }
  $feedbackById = [];
  $duplicatedTemplateIds = self::duplicatedFeedbackTemplateIds(
  is_array($response['per_question_feedback']?? null)? $response['per_question_feedback']: [],
@@ -6660,7 +6681,8 @@ PROMPT;
  $answer,
  $sessionData,
  $requireAiGenerated,
- $feedbackSource
+ $feedbackSource,
+ $requireProviderNarratives
  );
  }
 
@@ -6675,22 +6697,24 @@ PROMPT;
  $feedbackQuality = self::aggregateFeedbackQuality($normalizedItems);
 
  return [
+ '_provider_narratives_verified' => $requireProviderNarratives,
  'per_question_feedback' => $normalizedItems,
  'session_feedback' => self::normalizeSessionFeedback(
  $response['session_feedback']?? [],
  $normalizedItems,
  $requireAiGenerated,
  $answersData,
- $sessionData
+ $sessionData,
+ $requireProviderNarratives
  ),
- 'review_context' => self::normalizeReviewContext(
+ 'review_context' => array_merge(self::normalizeReviewContext(
  $response['review_context']?? [],
  $normalizedItems,
  $answersData,
  $sessionData,
  $feedbackQuality,
  $feedbackSource
- ),
+ ), ['provider_narratives_verified' => $requireProviderNarratives]),
  'feedback_quality' => $feedbackQuality,
  ];
  }
@@ -7033,7 +7057,7 @@ PROMPT;
  ];
  }
 
- private static function normalizeQuestionFeedback(array $feedback, array $answer, array $sessionData, bool $requireAiGenerated = false,?string $feedbackSource = null): array
+ private static function normalizeQuestionFeedback(array $feedback, array $answer, array $sessionData, bool $requireAiGenerated = false,?string $feedbackSource = null, bool $requireProviderNarratives = false): array
  {
  $id = (int) ($answer['id']?? ($feedback['id']?? 0));
  $answerText = self::candidateAnswerText($answer);
@@ -7205,6 +7229,7 @@ PROMPT;
  }
 
  $aiFeedback = $providerFeedback;
+ if (! $requireProviderNarratives) {
  if ($isSkipped) {
  $aiFeedback = 'No answer was submitted, so there is no response to check. Skipping makes it hard for the interviewer to judge the skill or experience. Next attempt: give a direct answer, then add one true detail.';
  } elseif ($isTooShort) {
@@ -7228,29 +7253,36 @@ PROMPT;
  $aiFeedback.= ' Next step: '.$nextStep;
  }
  }
+ }
 
- $betterAnswer = $providerBetterAnswerIsValid? self::plainUserFeedbackText($providerBetterAnswer, [$questionText, $answerText]): self::fallbackBetterAnswer($answerText, $questionText, $starApplicable);
+ $betterAnswer = $requireProviderNarratives? $providerBetterAnswer: ($providerBetterAnswerIsValid? self::plainUserFeedbackText($providerBetterAnswer, [$questionText, $answerText]): self::fallbackBetterAnswer($answerText, $questionText, $starApplicable));
  $betterAnswerProvider = self::normalizeProviderKey($feedbackSource);
  $betterAnswerSource = match (true) {
- $isSkipped => 'none',
+ $isSkipped || ($requireProviderNarratives && $providerBetterAnswer === '') => 'none',
  $providerBetterAnswerIsValid && $betterAnswerProvider === 'localmodel' => 'local_trained_model',
  $providerBetterAnswerIsValid && $betterAnswerProvider!== '' && $betterAnswerProvider!== 'local' => 'ai_provider',
  default => 'local_evidence',
  };
- $followUpQuestion = $providerFollowUpQuestionIsValid? self::plainUserFeedbackText($providerFollowUpQuestion, [$questionText, $answerText]): self::fallbackFeedbackFollowUp(
+ $followUpQuestion = $requireProviderNarratives? $providerFollowUpQuestion: ($providerFollowUpQuestionIsValid? self::plainUserFeedbackText($providerFollowUpQuestion, [$questionText, $answerText]): self::fallbackFeedbackFollowUp(
  $evidenceProfile,
  $starApplicable,
  $questionText,
  $hasProviderScores? $providerMissingCriteria: []
- );
+ ));
  if (! $isSkipped && $evidenceQuotes === []) {
  $fallbackQuote = trim((string) ($evidenceProfile['supporting_excerpt']?? ''));
  $evidenceQuotes = $fallbackQuote!== ''? [$fallbackQuote]: [];
  }
+ if (! $requireProviderNarratives) {
  $aiFeedback = self::plainUserFeedbackText(
  $aiFeedback,
  array_merge([$questionText, $answerText], $evidenceQuotes)
  );
+ } else {
+ // This branch is entered only after the complete API payload passes the
+ // strict validator. Keep provider wording without local additions or rewrites.
+ $providerCoaching = $feedback['coaching'];
+ }
  $scoringConfidence = self::questionScoringConfidence(
  $hasProviderScores,
  $isSkipped,
@@ -7271,6 +7303,8 @@ PROMPT;
  'confidence_level' => self::feedbackConfidenceLevel($scoringConfidence),
  'insufficient_data' => $isSkipped || $isTooShort || ($answerText!== '' && $evidenceQuotes === []),
  'ai_feedback' => $aiFeedback,
+ 'answer_review_source' => $requireProviderNarratives? 'ai_provider': null,
+ 'provider_narratives_verified' => $requireProviderNarratives,
  'better_sample_answer' => $betterAnswer,
  'better_sample_answer_source' => $betterAnswerSource,
  'better_sample_answer_provider' => $betterAnswerProvider,
@@ -8817,7 +8851,7 @@ PROMPT;
  return array_values(array_unique($keywords));
  }
 
- private static function normalizeSessionFeedback(array $sessionFeedback, array $questionFeedback, bool $requireAiGenerated = false, array $answersData = [], array $sessionData = []): array
+ private static function normalizeSessionFeedback(array $sessionFeedback, array $questionFeedback, bool $requireAiGenerated = false, array $answersData = [], array $sessionData = [], bool $requireProviderNarratives = false): array
  {
  $clarityScore = self::averageQuestionMetric($questionFeedback, 'clarity_score');
  $relevanceScore = self::averageQuestionMetric($questionFeedback, 'relevance_score');
@@ -8859,6 +8893,12 @@ PROMPT;
  if ($requireAiGenerated && in_array(null, $providerFields, true)) {
  $missingFields = array_keys(array_filter($providerFields, static fn ($value): bool => $value === null));
  throw new \RuntimeException('AI session feedback was incomplete after validation. Invalid fields: '.implode(', ', $missingFields).'.');
+ }
+ if ($requireProviderNarratives) {
+ $providerOverallSummary = trim($sessionFeedback['overall_summary']);
+ $providerStrengths = trim($sessionFeedback['strengths']);
+ $providerWeaknesses = trim($sessionFeedback['weaknesses']);
+ $providerSuggestions = trim($sessionFeedback['improvement_suggestions']);
  }
 
  return [

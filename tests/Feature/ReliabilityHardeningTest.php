@@ -2312,7 +2312,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);
  }
 
- public function test_user_review_repairs_missing_coaching_report_data_without_ai_refresh(): void
+ public function test_user_review_keeps_missing_provider_coaching_pending_without_local_repair(): void
  {
  Http::preventStrayRequests();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -2358,14 +2358,15 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Your Answer')
  ->assertSee('Possible Answer')
  ->assertDontSee('What To Improve')
- ->assertSee($question->question_text);
+ ->assertSee($question->question_text)
+ ->assertSee('AI feedback is not ready for this question yet.')
+ ->assertSee('An AI-generated possible answer is not available for this question yet.')
+ ->assertDontSee('The answer included relevant ownership and handoff evidence.');
 
- $this->assertSame(
- EvidenceBasedCoachingService::VERSION,
+ $this->assertNull(
  data_get($answer->fresh()->coaching_feedback, 'version')
  );
- $this->assertSame(
- EvidenceBasedCoachingService::VERSION,
+ $this->assertNull(
  data_get(Feedback::where('interview_session_id', $session->id)->firstOrFail()->coaching_summary, 'version')
  );
  }

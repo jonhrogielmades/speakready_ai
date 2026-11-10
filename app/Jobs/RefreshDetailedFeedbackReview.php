@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Models\InterviewSession;
 use App\Services\DetailedFeedbackReviewService;
-use App\Support\FeedbackCoachingRepair;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -42,8 +41,7 @@ class RefreshDetailedFeedbackReview implements ShouldBeUnique, ShouldQueue
     }
 
     public function handle(
-        DetailedFeedbackReviewService $reviewService,
-        FeedbackCoachingRepair $coachingRepair
+        DetailedFeedbackReviewService $reviewService
     ): void {
         $session = InterviewSession::query()
             ->whereKey($this->sessionId)
@@ -59,13 +57,15 @@ class RefreshDetailedFeedbackReview implements ShouldBeUnique, ShouldQueue
             $providerRefreshed = $reviewService->refreshWithProvidersIfNeeded($session);
 
             if (! $providerRefreshed) {
-                // A provider response may have been rejected because its saved
-                // inputs changed while waiting. Repair only the current report.
+                // A rejected provider response must never be replaced with
+                // locally written answer feedback in Detailed Review.
                 $session->refresh();
                 if ($session->status !== 'completed' || (bool) data_get($session->action_plan ?? [], 'ended_early', false)) {
                     return;
                 }
-                $coachingRepair->repairSession($session);
+                if ($reviewService->hasConfiguredProvider() && $reviewService->shouldRefreshWithProvider($session)) {
+                    throw new \RuntimeException('AI detailed review is still pending after the provider attempt.');
+                }
             }
         } catch (\Throwable $exception) {
             Log::warning('Queued detailed feedback refresh failed.', [

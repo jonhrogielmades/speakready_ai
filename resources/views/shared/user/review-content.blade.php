@@ -94,7 +94,16 @@
  </div>
  @endif
 
- @if(!$sessionEndedEarly && ($feedbackRefreshQueued?? false))
+ @if(!$sessionEndedEarly && ($providerReviewPending ?? false))
+ <div class="alert mb-4" role="status" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;">
+ <strong class="d-block mb-1">AI review is pending for one or more questions.</strong>
+ <p class="mb-3">Each answer review will appear after an AI provider returns a validated response. You can request another attempt and reload this page shortly.</p>
+ <form method="POST" action="{{ route('user.review.refresh', $sessionRecord) }}">
+ @csrf
+ <button type="submit" class="btn btn-primary">Retry AI review</button>
+ </form>
+ </div>
+ @elseif(!$sessionEndedEarly && ($feedbackRefreshQueued?? false))
  <div class="alert mb-4 d-flex align-items-start gap-3" role="status" aria-live="polite" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;">
  <i class="fa-solid fa-arrows-rotate text-info mt-1" aria-hidden="true"></i>
  <div>

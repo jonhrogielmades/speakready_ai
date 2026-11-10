@@ -12,40 +12,18 @@
  ? 'Voice answer saved. Feedback is based on the saved voice session.'
  : ($hasVoiceRecording ? 'Transcript unavailable for the saved voice answer.' : 'No answer text was saved.'));
 
- $feedbackText = review_feedback_without_question_text(
- \App\Services\AIService::groundedReviewFeedbackText(($reviewInputsStale ?? false) ? null : $answer->ai_feedback, [
- 'id' => $answer->id,
- 'answer' => review_answer_text($answer),
- 'question' => review_question_text($questionSource),
- 'question_type' => $questionSource->type ?? $questionSource->question_type ?? null,
- 'expected_guide' => $questionSource->expected_guide ?? '',
- 'is_skipped' => (bool) ($answer->is_skipped ?? false),
- 'response_mode' => $answer->response_mode ?? 'text',
- 'delivery_transcript' => $answer->delivery_transcript ?? '',
- ]),
- $questionSource
- );
- if ($feedbackText === '') {
- $feedbackText = 'Feedback is not available for this answer yet.';
- }
-
- $possibleAnswerSource = trim((string) data_get($answer->coaching_feedback ?? [], 'content_alignment.possible_answer_source', ''));
- $possibleAnswerProvider = \App\Services\AIService::normalizeProviderKey(
- data_get($answer->coaching_feedback ?? [], 'content_alignment.possible_answer_provider', $answer->ai_provider)
- );
- $possibleAnswerIsApiBacked = $possibleAnswerSource === 'ai_provider'
- && ! ($reviewInputsStale ?? false)
- && \App\Services\AIService::providerIsSupported($possibleAnswerProvider)
- && ! in_array($possibleAnswerProvider, ['local', 'localmodel'], true);
- $possibleAnswer = $possibleAnswerIsApiBacked
- ? review_better_answer_text((string) ($answer->better_sample_answer ?? ''), $answer, $questionSource, false)
- : '';
- if (trim($possibleAnswer) === '') {
- $possibleAnswer = review_better_answer_fallback($answer, $questionSource);
- }
- if (trim($possibleAnswer) === '') {
- $possibleAnswer = 'No evidence-grounded possible answer is available for this response yet.';
- }
+ $reviewEndedEarly = (bool) ($sessionEndedEarly ?? false);
+ $providerReview = $reviewEndedEarly ? [] : app(\App\Services\DetailedFeedbackReviewService::class)
+ ->answerReviewProviderState($answer, (bool) ($reviewInputsStale ?? false));
+ $feedbackReady = (bool) ($providerReview['feedback_ready'] ?? false);
+ $possibleAnswerReady = (bool) ($providerReview['possible_answer_ready'] ?? false);
+ $answerWasSkipped = (bool) ($providerReview['skipped'] ?? false);
+ $feedbackText = $feedbackReady ? $providerReview['feedback'] : ($answerWasSkipped
+ ? 'No answer content is available to review for this question.'
+ : 'AI feedback is not ready for this question yet.');
+ $possibleAnswer = $possibleAnswerReady ? $providerReview['possible_answer'] : ($answerWasSkipped
+ ? 'No possible answer is generated for an unanswered question.'
+ : 'An AI-generated possible answer is not available for this question yet.');
  $coachQuestion = review_question_text($questionSource);
  if ($coachQuestion === '') {
  $coachQuestion = 'Question text unavailable.';
@@ -54,7 +32,6 @@
  if ($coachAnswer === '') {
  $coachAnswer = $answerDisplay;
  }
- $reviewEndedEarly = (bool) ($sessionEndedEarly?? false);
  $coachPrompt = trim(implode("\n\n", [
  'Please act as my SpeakReady interview coach. Review my saved interview answer and give concise, actionable advice. Use only the exact question and my saved answer as evidence. Keep every suggestion truthful and do not invent details for me.',
  'Interview question: '.$coachQuestion,
@@ -83,7 +60,7 @@
  <div class="review-answer-example-grid review-answer-feedback-grid">
  <section class="review-answer-section-wide">
  <span>Feedback</span>
- <p>{{ $feedbackText }}</p>
+ <p @if(!$feedbackReady) role="status" @endif>{{ $feedbackText }}</p>
  </section>
  <section>
  <span>Your Answer</span>
@@ -95,7 +72,7 @@
  </section>
  <section class="review-answer-possible-section">
  <span>Possible Answer</span>
- <p>{{ $possibleAnswer }}</p>
+ <p @if(!$possibleAnswerReady) role="status" @endif>{{ $possibleAnswer }}</p>
  <div class="review-ai-coach-action" data-ai-coach-prompt-wrapper>
  <textarea class="review-ai-coach-prompt" data-ai-coach-prompt hidden readonly>{{ $coachPrompt }}</textarea>
  <button type="button" class="review-ai-coach-button" data-coach-url="{{ route('user.coach') }}" data-review-answer-id="{{ (int) ($answer->id?? 0) }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach about this answer">
