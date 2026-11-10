@@ -15,7 +15,8 @@ class InterviewConversationServiceTest extends TestCase
         $answer = 'I inspected the lifeboat before departure and reported the expired flares to the captain.';
         $reply = $this->service()->fallbackReply($this->interviewSession('Seaman'), [], $answer);
 
-        $this->assertStringContainsString('lifeboat', $reply);
+        $this->assertStringContainsString('Thanks for sharing that.', $reply);
+        $this->assertStringNotContainsString('You mentioned', $reply);
         $this->assertStringContainsString('What result did you see after that?', $reply);
         $this->assertSame(1, substr_count($reply, '?'));
         $this->assertTrue($this->reliable($reply, $answer, 'Seaman'));
@@ -26,7 +27,8 @@ class InterviewConversationServiceTest extends TestCase
         $answer = 'I redesigned the approval queue and reduced the waiting time by 30 percent.';
         $reply = $this->service()->fallbackReply($this->interviewSession(), [], $answer);
 
-        $this->assertStringContainsString('approval queue', $reply);
+        $this->assertStringContainsString('Thanks for sharing that.', $reply);
+        $this->assertStringNotContainsString('You mentioned', $reply);
         $this->assertStringContainsString('Why did you choose that approach?', $reply);
         $this->assertTrue($this->reliable($reply, $answer));
         $this->assertFalse($this->service()->isCoherentFollowUp(
@@ -59,7 +61,8 @@ class InterviewConversationServiceTest extends TestCase
         $answer = 'I tested invoices.';
         $reply = $this->service()->fallbackReply($this->interviewSession(), [], $answer);
 
-        $this->assertStringContainsString('I tested invoices', $reply);
+        $this->assertStringContainsString('Thanks for sharing that.', $reply);
+        $this->assertStringNotContainsString('You mentioned', $reply);
         $this->assertTrue($this->reliable($reply, $answer));
     }
 
@@ -68,7 +71,8 @@ class InterviewConversationServiceTest extends TestCase
         $answer = 'I have never led a team and I do not have professional experience yet.';
         $reply = $this->service()->fallbackReply($this->interviewSession(), [], $answer);
 
-        $this->assertStringContainsString('I have never led a team', $reply);
+        $this->assertStringContainsString('Thanks for sharing that.', $reply);
+        $this->assertStringNotContainsString('You mentioned', $reply);
         $this->assertStringContainsString('school, training, or everyday life', $reply);
         $this->assertStringNotContainsString('What result', $reply);
     }
@@ -91,7 +95,8 @@ class InterviewConversationServiceTest extends TestCase
         $typeMethod = new ReflectionMethod(InterviewController::class, 'questionMatchesSelectedType');
         foreach (['Behavioral', 'Technical', 'Situational', 'Personal'] as $type) {
             $reply = $this->service()->fallbackReply($this->interviewSession(), [], $answer, false, $type);
-            $this->assertStringContainsString('approval queue', $reply);
+            $this->assertStringContainsString('Thanks for sharing that.', $reply);
+            $this->assertStringNotContainsString('You mentioned', $reply);
             $this->assertTrue($typeMethod->invoke(app(InterviewController::class), $reply, $type), $type.': '.$reply);
             $this->assertTrue($this->reliable($reply, $answer), $type.': '.$reply);
         }
@@ -185,7 +190,7 @@ class InterviewConversationServiceTest extends TestCase
     {
         $method = new ReflectionMethod(InterviewController::class, 'isReliableInterviewFollowUpText');
 
-        return $method->invoke(app(InterviewController::class), $reply, $this->interviewSession($position), $answer);
+        return $method->invoke(app(InterviewController::class), $reply, $this->interviewSession($position), $answer, [], true);
     }
 }
 

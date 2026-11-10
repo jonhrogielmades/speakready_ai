@@ -36,7 +36,9 @@ class InterviewConversationService
         if ($anchor === '') {
             return $lead.$this->withoutEvidenceQuestion($position, $requiredType);
         }
-        $acknowledgement = $rapport.'You mentioned “'.$anchor.'”. ';
+        // Keep the fallback natural without repeating or quoting the candidate's answer.
+        // Provider-generated replies follow the same rule.
+        $acknowledgement = $rapport !== '' ? $rapport : 'Thanks for sharing that. ';
         $context = $this->connectedAnswerContext($answer, $history);
         if ($rapport !== '' && ! AnswerEvidenceSignals::analyze($answer)['has_personal_action']) {
             return $acknowledgement.$lead.$this->withoutEvidenceQuestion($position, $requiredType);

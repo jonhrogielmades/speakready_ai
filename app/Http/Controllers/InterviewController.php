@@ -1847,7 +1847,7 @@ return response()->json([
  $request->ip(),
  true,
  [
-  'title' => $localFeedbackFallback? 'Local Feedback Ready': 'AI Feedback Ready',
+  'title' => 'AI Feedback Ready',
   'message' => $localFeedbackFallback
   ? "Your saved-answer feedback is ready while AI providers recover. Overall score: {$overall}%."
   : "Your AI interview feedback is ready. Overall score: {$overall}%.",
@@ -4955,7 +4955,13 @@ return response()->json([
  return $questions;
  }
 
- private function isReliableInterviewFollowUpText(string $questionText, InterviewSession $session, string $latestAnswer, array $history = []): bool
+ private function isReliableInterviewFollowUpText(
+ string $questionText,
+ InterviewSession $session,
+ string $latestAnswer,
+ array $history = [],
+ bool $allowNeutralAcknowledgement = false
+ ): bool
  {
  $questionText = trim(preg_replace('/\s+/u', ' ', strip_tags($questionText))?? '');
 
@@ -4976,8 +4982,11 @@ return response()->json([
  return false;
  }
 
+ $hasNeutralAcknowledgement = $allowNeutralAcknowledgement
+ && preg_match('/^(?:thanks|thank you) for sharing that[.!]?\s+/i', $questionText) === 1;
  $alignment = app(InterviewQuestionAlignmentService::class);
- if (! $alignment->isRoleRelevant($questionText, $position, (string) ($session->job_description?? ''))
+ if ((! $alignment->isRoleRelevant($questionText, $position, (string) ($session->job_description?? ''))
+ && ! $hasNeutralAcknowledgement)
  || ! $alignment->isAnswerGrounded($questionText, $latestAnswer, $position)) {
  return false;
  }
@@ -4996,15 +5005,18 @@ return response()->json([
  }
 
  if (count($answerTokens) < 4) {
- return $hasEvidenceProbe && ($mentionsPosition || ($overlap > 0 && str_contains($questionText, '“')));
+ return $hasEvidenceProbe && ($mentionsPosition || ($overlap > 0 && str_contains($questionText, '“')) || $hasNeutralAcknowledgement);
  }
 
  // A role title does not justify assuming the candidate performed a new task.
- if ($overlap === 0 && preg_match('/\b(?:did you|you did|you made|you handled|your (?:decision|action|result|tradeoff) in)\b/i', $questionText)) {
+ if (! $hasNeutralAcknowledgement
+ && $overlap === 0
+ && preg_match('/\b(?:did you|you did|you made|you handled|your (?:decision|action|result|tradeoff) in)\b/i', $questionText)) {
  return false;
  }
 
- return $hasEvidenceProbe && ($overlap > 0 || $mentionsPosition);
+ return ($hasNeutralAcknowledgement && $allowNeutralAcknowledgement)
+ || ($hasEvidenceProbe && ($overlap > 0 || $mentionsPosition));
  }
 
  private function unavailableInterviewAnswerText(string $answerText): bool
@@ -5362,7 +5374,7 @@ return response()->json([
  $candidate = trim($candidate);
 
  return $candidate !== ''
- && $this->isReliableInterviewFollowUpText($candidate, $session, $latestAnswer, $history)
+ && $this->isReliableInterviewFollowUpText($candidate, $session, $latestAnswer, $history, true)
  && ($requiredQuestionType === null || $this->questionMatchesSelectedType($candidate, $requiredQuestionType))
  && ! in_array($this->normalizedQuestionText($candidate), $spokenQuestionTexts, true);
  };
@@ -5436,7 +5448,7 @@ return response()->json([
  $hasAnswer = trim($latestAnswer) !== ''
  && ! preg_match('/^\((?:Skipped or no answer|No answer before the time limit)\)/i', trim($latestAnswer))
  && ! str_starts_with(trim($latestAnswer), '[Voice answer saved for playback.');
- $lead = $isFinal? 'For my final question, ': ($hasAnswer? 'Thinking about what you shared, ': '');
+ $lead = $isFinal? 'For my final question, ': ($hasAnswer? 'Thanks for sharing that. ': '');
 
  $question = match ($requiredType) {
  'Behavioral' => "can you describe a specific time you handled a work challenge relevant to the {$position} role and what you personally did?",
