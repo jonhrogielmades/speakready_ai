@@ -70,14 +70,8 @@
  if (strcasecmp(trim((string) $targetPositionDefault), 'Other') === 0) {
  $targetPositionDefault = trim((string) old('custom_position', ''));
  }
- $matchedJobCategory = $jobPositionOptionGroups
- ->filter(fn (array $positions): bool => collect($positions)->contains(
-     fn ($position): bool => strcasecmp(trim((string) $targetPositionDefault), trim((string) $position)) === 0
- ))
- ->keys()
- ->first();
  $requestedJobCategory = trim((string) old('job_category', ''));
- $selectedJobCategory = $matchedJobCategory ?? ($jobPositionOptionGroups->has($requestedJobCategory) ? $requestedJobCategory : '');
+ $selectedJobCategory = $jobPositionOptionGroups->has($requestedJobCategory) ? $requestedJobCategory : '';
  $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
  $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 20);
  $maxQuestionSetting = $questionOptions->contains($maxQuestionSetting) ? $maxQuestionSetting : 20;
@@ -221,7 +215,7 @@
  </label>
  <div class="setup-select-wrap">
  <select class="oinp" id="jobCategoryFilter" name="job_category">
- <option value="">All job categories</option>
+ <option value="" @selected($selectedJobCategory === '')>All job categories</option>
  @foreach($jobPositionOptionGroups as $jobCategory => $targetChoices)
  <option value="{{ $jobCategory }}" @selected($selectedJobCategory === $jobCategory)>{{ $jobCategory }}</option>
  @endforeach
@@ -1080,11 +1074,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
 
  const selectedValue = setupTargetFieldValue(positionField);
  const catalogValue = availableValues.find((value) => value.toLocaleLowerCase() === selectedValue.toLocaleLowerCase());
- const selectedChoice = Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]'))
- .find((choice) => (choice.dataset.targetDropdownChoiceValue || '').toLocaleLowerCase() === selectedValue.toLocaleLowerCase());
- const selectedCategory = selectedChoice?.dataset.jobCategory || '';
- const categoryField = document.getElementById('jobCategoryFilter');
- if (categoryField && selectedCategory && categoryField.value !== selectedCategory) categoryField.value = selectedCategory;
  const customInput = document.getElementById('customTargetPositionInput');
  const isCustom = Boolean(selectedValue && !catalogValue) || positionField.dataset.customTarget === 'true';
  if (customInput) customInput.value = isCustom? selectedValue: '';
@@ -1405,7 +1394,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const customTargetPositionError = document.getElementById('customTargetPositionError');
  const saveCustomTargetPositionButton = document.getElementById('saveCustomTargetPositionButton');
 
- function setSetupTargetPosition(value, category = '') {
+ function setSetupTargetPosition(value) {
  const positionField = document.getElementById('valPosition');
  if (!positionField) return;
  const catalogChoice = Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]'))
@@ -1414,10 +1403,6 @@ Begin Interview <i class="fa-solid fa-play"></i>
  positionField.dataset.customTarget = isCustom? 'true': 'false';
  setSetupTargetInputValue(positionField, value, 'job');
  if (customTargetPositionInput) customTargetPositionInput.value = isCustom? String(value || ''): '';
- const selectedCategory = catalogChoice?.dataset.jobCategory || category;
- if (selectedCategory && Array.from(jobCategoryFilter?.options || []).some((option) => option.value === selectedCategory)) {
- jobCategoryFilter.value = selectedCategory;
- }
  syncSetupTargetDropdown(positionField, 'job', currentSetupTargetFieldCopy());
  positionField.dispatchEvent(new Event('change', { bubbles: true }));
  }
@@ -1436,7 +1421,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  const selectedChoice = Array.from(document.querySelectorAll('[data-target-dropdown-choice-value]'))
  .find((choice) => (choice.dataset.targetDropdownChoiceValue || '').toLocaleLowerCase() === selected.toLocaleLowerCase());
  const selectedCategory = selectedChoice?.dataset.jobCategory || '';
- if (selectedChoice && selectedCategory !== jobCategoryFilter.value) {
+ if (selectedChoice && jobCategoryFilter.value && selectedCategory !== jobCategoryFilter.value) {
  setSetupTargetPosition('');
  }
  if (targetPositionSearch) targetPositionSearch.value = '';
@@ -1561,7 +1546,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  reason.textContent = String(role?.reason || 'Explore this role in your interview practice.');
  button.append(heading, category, reason);
  button.addEventListener('click', () => {
- setSetupTargetPosition(title, String(role?.category || ''));
+ setSetupTargetPosition(title);
  setRoleSuggestionStatus(`${title} selected as your target position.`);
  roleFinderSelected = true;
  window.bootstrap?.Modal?.getOrCreateInstance(roleFinderModal)?.hide();

@@ -1021,7 +1021,7 @@ class UserSideHardeningTest extends TestCase
  $categoryOptions[] = $option->getAttribute('value');
  }
  $selectedJobCategory = $xpath->query('//*[@id="jobCategoryFilter"]/option[@selected]')->item(0);
- $this->assertSame('Maritime and Seafaring', $selectedJobCategory?->getAttribute('value'), "{$layout}: the saved Seaman position should select its category");
+ $this->assertSame('', $selectedJobCategory?->getAttribute('value'), "{$layout}: All job categories should be the default filter");
 
  $renderedGroups = [];
  $renderedRoleCategories = [];
