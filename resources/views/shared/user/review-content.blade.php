@@ -2,56 +2,8 @@
 <div class="db-section active animate-fade-up{{ ($isMobile ?? false) ? ' review-shell' : '' }}">
  @php
  $sessionEndedEarly = isset($sessionEndedEarly)? (bool) $sessionEndedEarly: ($sessionRecord->status === 'ended' || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false));
- $feedback = $sessionRecord->feedback;
  $report = \App\Support\FeedbackReportPresenter::forSession($sessionRecord);
- $strengthItems = $report['strength_items'];
- $weaknessItems = $report['weakness_items'];
  $comparisonRows = $comparisonRows?? [];
- $feedbackReportSkillLabel = static function ($skill): string {
- $label = is_scalar($skill)? trim((string) $skill): '';
-
- return match (strtolower($label)) {
- 'clarity' => 'Fluency & Clarity',
- 'relevance' => 'Answer Match',
- 'professionalism', 'tone' => 'Professional Tone',
- default => $label!== ''? $label: 'Skill',
- };
- };
- $actionPlan = ! ($report['is_stale'] ?? false) && is_array($sessionRecord->action_plan?? null)? $sessionRecord->action_plan: [];
- $actionPlanHeadline = is_scalar($actionPlan['headline']?? null)? trim((string) $actionPlan['headline']): '';
- if (str_starts_with(strtolower($actionPlanHeadline), 'next focus:')) {
- $actionPlanHeadline = 'Next focus: '.$feedbackReportSkillLabel(substr($actionPlanHeadline, strlen('next focus:')));
- }
- $actionPlanTargetScore = is_numeric($actionPlan['target_score']?? null)? max(0, min(100, (int) round($actionPlan['target_score']))): null;
- $actionPlanNextSession = is_array($actionPlan['next_session']?? null)? $actionPlan['next_session']: [];
- $actionPriorities = collect($actionPlan['priorities']?? [])
- ->filter(fn ($item) => is_array($item))
- ->take(3)
- ->values()
- ->all();
- $recommendedPaths = collect($actionPlan['recommended_paths']?? [])
- ->filter(fn ($item) => is_array($item))
- ->take(3)
- ->values()
- ->all();
- $actionPlanSummary = is_scalar($actionPlan['summary']?? null)? trim((string) $actionPlan['summary']): '';
- $actionPlanQuestionTypes = collect($actionPlanNextSession['question_types']?? [])
- ->filter(fn ($item) => is_scalar($item) && trim((string) $item)!== '')
- ->map(fn ($item) => trim((string) $item))
- ->take(3)
- ->values()
- ->all();
- $actionPlanNextDifficulty = is_scalar($actionPlanNextSession['difficulty']?? null) && trim((string) $actionPlanNextSession['difficulty'])!== ''
- ? ucfirst(trim((string) $actionPlanNextSession['difficulty'])).' difficulty'
- : '';
- $actionPlanNextAssistance = is_scalar($actionPlanNextSession['assistance_level']?? null) && trim((string) $actionPlanNextSession['assistance_level'])!== ''
- ? ucfirst(trim((string) $actionPlanNextSession['assistance_level'])).' support'
- : '';
- $actionPlanNextDetails = array_values(array_filter([
- $actionPlanNextDifficulty,
- $actionPlanNextAssistance,
- !empty($actionPlanQuestionTypes)? implode(', ', $actionPlanQuestionTypes).' questions': '',
- ]));
  @endphp
  <!-- Feature 2 & 15: Header, Report Info, Export -->
  <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -94,7 +46,7 @@
  </div>
  @endif
 
- @if(!$sessionEndedEarly && ($providerReviewPending ?? false))
+ @if(!$sessionEndedEarly && ($providerReviewPending ?? false) && !($localFeedbackAvailable ?? false))
  @php
  $initialProviderReviewStatus = in_array($providerReviewStatus ?? null, ['processing', 'waiting', 'ready', 'unavailable', 'failed'], true) ? $providerReviewStatus : 'processing';
  $providerReviewCanContinue = ! in_array($initialProviderReviewStatus, ['unavailable', 'failed'], true);
@@ -125,7 +77,7 @@
  <script src="{{ asset('js/detailed-review-status.js?v=1') }}" defer></script>
  @endpush
  @endonce
- @elseif(!$sessionEndedEarly && ($feedbackRefreshQueued?? false))
+ @elseif(!$sessionEndedEarly && ($feedbackRefreshQueued?? false) && !($localFeedbackAvailable ?? false))
  <div class="alert mb-4 d-flex align-items-start gap-3" role="status" aria-live="polite" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;">
  <i class="fa-solid fa-arrows-rotate text-info mt-1" aria-hidden="true"></i>
  <div>
@@ -146,70 +98,7 @@
  @include('shared.partials.review-quick-summary', [
  'report' => $report,
  'sessionRecord' => $sessionRecord,
- 'actionPriorities' => $actionPriorities,
- 'recommendedPaths' => $recommendedPaths,
- 'feedbackReportSkillLabel' => $feedbackReportSkillLabel,
  ])
-
- @if(!empty($actionPlan))
- <section class="premium-panel animate-fade-up mb-4" aria-labelledby="review-action-plan-title" style="animation-delay:.15s;padding:24px;border:1px solid rgba(16,185,129,.22)!important;background:rgba(16,185,129,.04)!important;">
- <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
- <div>
- <div class="review-kicker">Practice plan</div>
- <h5 id="review-action-plan-title" style="color:var(--tx);font-weight:800;margin-bottom:6px;"><i class="fa-solid fa-route me-2" style="color:#10b981" aria-hidden="true"></i>Your Practice Plan</h5>
- <p style="color:var(--tx2);margin:0;font-size:.92rem;line-height:1.55;">{{ $actionPlanHeadline!== ''? $actionPlanHeadline: 'Use the evidence below to plan your next attempt.' }}</p>
- @if($actionPlanSummary!== '')
- <p style="color:var(--tx3);margin:6px 0 0;font-size:.86rem;line-height:1.5;">{{ $actionPlanSummary }}</p>
- @endif
- </div>
- <div class="text-md-end action-plan-target">
- <div style="font-size:.72rem;color:var(--tx3);font-weight:800;text-transform:uppercase;">Next practice target</div>
- <div style="font-size:1.8rem;font-weight:800;color:#10b981;line-height:1.1;">{{ $actionPlanTargetScore === null? 'Pending': $actionPlanTargetScore.'%' }}</div>
- <small style="color:var(--tx3);">{{ $actionPlanTargetScore === null? 'No numeric target was stored': 'Goal, not a prediction' }}</small>
- </div>
- </div>
-
- <div class="action-plan-grid mb-3">
- @forelse($actionPriorities as $priority)
- <article class="action-plan-item">
- <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
- <strong style="color:var(--tx);">{{ $feedbackReportSkillLabel($priority['skill']?? null) }}</strong>
- <span style="color:#b45309;font-weight:800;white-space:nowrap;">{{ is_numeric($priority['score']?? null)? max(0, min(100, (int) round($priority['score']))).'% current': 'Score pending' }}</span>
- </div>
- <p style="color:var(--tx2);font-size:.9rem;line-height:1.55;margin:0;">{{ is_scalar($priority['task']?? null) && trim((string) $priority['task'])!== ''? trim((string) $priority['task']): 'Practice this area with a more specific, evidence-supported answer.' }}</p>
- </article>
- @empty
- <article class="action-plan-item">
- <strong style="color:var(--tx);">Priority details pending</strong>
- <p style="color:var(--tx2);font-size:.9rem;line-height:1.55;margin:6px 0 0;">Use the next action above while SpeakReady prepares ranked skill priorities.</p>
- </article>
- @endforelse
-
- <article class="action-plan-item">
- <strong style="color:var(--tx);">Suggested next session</strong>
- <p style="color:var(--tx2);font-size:.9rem;line-height:1.55;margin:6px 0 0;">{{ !empty($actionPlanNextDetails)? implode(' · ', $actionPlanNextDetails): 'Next-session settings were not stored for this report.' }}</p>
- </article>
- </div>
-
- <nav class="action-plan-links" aria-label="Recommended practice paths">
- <span style="color:var(--tx3);font-size:.8rem;font-weight:800;">Recommended paths:</span>
- @forelse($recommendedPaths as $path)
- @php
- $pathLabel = is_scalar($path['label']?? null) && trim((string) $path['label'])!== ''? trim((string) $path['label']): 'Practice';
- $pathUrlCandidate = is_scalar($path['url']?? null) && trim((string) $path['url'])!== ''? trim((string) $path['url']): '';
- $pathUrl = preg_match('/^(?:https?:\/\/|\/)/i', $pathUrlCandidate) === 1? $pathUrlCandidate: route('interview.setup');
- @endphp
- <a class="btn btn-sm btn-outline-primary" style="border-radius:999px;font-weight:700;" href="{{ $pathUrl }}">
- <i class="fa-solid fa-arrow-up-right-from-square me-1" aria-hidden="true"></i>{{ $pathLabel }}
- </a>
- @empty
- <a class="btn btn-sm btn-outline-primary" style="border-radius:999px;font-weight:700;" href="{{ route('interview.setup') }}">
- <i class="fa-solid fa-microphone-lines me-1" aria-hidden="true"></i>Mock Interview
- </a>
- @endforelse
- </nav>
- </section>
- @endif
 
  @endif
 

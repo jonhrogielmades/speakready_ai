@@ -733,16 +733,14 @@
             if (routeMatches(routeName, ['interview.review', 'user.review'])) {
                 return withDefaults({
                     heroTitle: 'Detailed session review',
-                    heroDescription: 'Check the saved interview context, answer feedback, and the next practice plan. An interview ended early shows responses without a score.',
+                    heroDescription: 'Check the saved interview context and answer feedback. An interview ended early shows responses without a score.',
                     workspaceTitle: 'Answer review',
                     workspaceDescription: 'Open each question to compare your response with the available feedback.',
-                    metricsTitle: 'Practice plan',
-                    metricsDescription: 'Use the practice plan to focus on what to work on next.',
                     actionsTitle: 'Review actions',
                     actionsDescription: 'Export a PDF or return to the Feedback Center after reading your report.',
                     heroSelectors: ['.feedback-report-meta', '.review-back-button-wrap'],
                     workspaceSelectors: ['#answersAccordion', '.answer-review-card'],
-                    metricsSelectors: ['#review-action-plan-title'],
+                    metricsSelectors: [],
                     actionSelectors: ['.feedback-report-actions', '.review-back-button'],
                 });
             }
