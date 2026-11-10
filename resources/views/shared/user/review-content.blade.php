@@ -95,14 +95,35 @@
  @endif
 
  @if(!$sessionEndedEarly && ($providerReviewPending ?? false))
- <div class="alert mb-4" role="status" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;">
- <strong class="d-block mb-1">AI review is pending for one or more questions.</strong>
- <p class="mb-3">Each answer review will appear after an AI provider returns a validated response. You can request another attempt and reload this page shortly.</p>
+ @php
+ $initialProviderReviewStatus = in_array($providerReviewStatus ?? null, ['processing', 'waiting', 'ready', 'unavailable', 'failed'], true) ? $providerReviewStatus : 'processing';
+ $providerReviewCanContinue = ! in_array($initialProviderReviewStatus, ['unavailable', 'failed'], true);
+ @endphp
+ <div class="alert mb-4" data-detailed-review-status data-review-status-url="{{ route('user.review.status', $sessionRecord) }}" data-review-status="{{ $initialProviderReviewStatus }}" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;overflow-wrap:anywhere;">
+ <div role="status" aria-live="polite" aria-atomic="true">
+ <strong class="d-block mb-1" data-review-status-title>{{ $providerReviewCanContinue ? 'Your AI answer reviews are being prepared.' : 'Your AI answer reviews need another attempt.' }}</strong>
+ <p class="mb-2" data-review-status-message>{{ $providerReviewCanContinue ? 'This page updates automatically when the reviews are ready. You can keep reading your saved responses below.' : 'Some questions are still waiting for a validated AI review. Your saved responses are available below.' }}</p>
+ </div>
+ <form method="POST" action="{{ route('user.review.refresh', $sessionRecord) }}" data-review-retry @if($providerReviewCanContinue) hidden @endif>
+ @csrf
+ <button type="submit" class="btn btn-primary">Retry AI review</button>
+ </form>
+ <button type="button" class="btn btn-primary" data-review-reload hidden>Show completed review</button>
+ @if($providerReviewCanContinue)
+ <noscript>
+ <p>Reload this page shortly to check your AI reviews, or request another attempt.</p>
  <form method="POST" action="{{ route('user.review.refresh', $sessionRecord) }}">
  @csrf
  <button type="submit" class="btn btn-primary">Retry AI review</button>
  </form>
+ </noscript>
+ @endif
  </div>
+ @once
+ @push('scripts')
+ <script src="{{ asset('js/detailed-review-status.js?v=1') }}" defer></script>
+ @endpush
+ @endonce
  @elseif(!$sessionEndedEarly && ($feedbackRefreshQueued?? false))
  <div class="alert mb-4 d-flex align-items-start gap-3" role="status" aria-live="polite" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;">
  <i class="fa-solid fa-arrows-rotate text-info mt-1" aria-hidden="true"></i>

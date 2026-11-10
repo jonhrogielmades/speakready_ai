@@ -6,6 +6,7 @@ use App\Exceptions\AiFeedbackProviderFailureException;
 use App\Services\AIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ProviderOnlyReviewGenerationTest extends TestCase
@@ -24,6 +25,12 @@ class ProviderOnlyReviewGenerationTest extends TestCase
             'GEMINI_API_KEY' => 'gemini_test_token',
             'GEMINI_API_URL' => 'https://generativelanguage.googleapis.com/v1beta',
             'GEMINI_MODEL' => 'gemini-test',
+            'GROQ_API_KEY' => '',
+            'GROQ_API_URL' => 'https://api.groq.com/openai/v1',
+            'GROQ_MODEL' => 'groq-test',
+            'COHERE_API_KEY' => '',
+            'COHERE_API_URL' => 'https://api.cohere.com/v2/chat',
+            'COHERE_MODEL' => 'cohere-test',
             'AI_FEEDBACK_PROVIDER_PRIORITY' => 'openai,gemini',
             'AI_FEEDBACK_MAX_PROVIDERS' => '2',
         ] as $key => $value) {
@@ -134,17 +141,194 @@ class ProviderOnlyReviewGenerationTest extends TestCase
         $this->assertSame('', $item['better_sample_answer']);
         $this->assertSame('none', $item['better_sample_answer_source']);
         $this->assertSame('ai_provider', $item['answer_review_source']);
+        $this->assertTrue($item['feedback_quality']['checks']['next_attempt_actionable']);
+        $this->assertSame('verified', $item['feedback_quality']['status']);
     }
 
-    private function generate(array $answer, bool $providerOnly = true): array
+    public function test_strict_review_starts_with_openai_despite_preference_and_reordered_priority(): void
     {
-        return AIService::generateFeedback(['target_position' => 'Database Developer'], [$answer], 'openai', $providerOnly, false, [
+        $this->setEnvironment('AI_FEEDBACK_PROVIDER_PRIORITY', 'gemini,openai');
+        $this->setEnvironment('AI_FEEDBACK_MAX_PROVIDERS', '1');
+        $answer = $this->answer();
+        Http::fake(Http::response($this->openAiResponse($this->payload($answer))));
+
+        $review = $this->generate($answer, false, 'gemini');
+
+        $this->assertSame('openai', $review['_provider_key']);
+        $this->assertSame(['openai'], $review['_providers_attempted']);
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'api.openai.com'));
+        Http::assertSentCount(1);
+    }
+
+    public function test_strict_review_tries_all_configured_providers_in_order_despite_general_provider_cap(): void
+    {
+        $this->setEnvironment('AI_FEEDBACK_PROVIDER_PRIORITY', 'cohere,groq,gemini,openai');
+        $this->setEnvironment('AI_FEEDBACK_MAX_PROVIDERS', '1');
+        $this->setEnvironment('GROQ_API_KEY', 'groq_test_token');
+        $this->setEnvironment('COHERE_API_KEY', 'cohere_test_token');
+        $answer = $this->answer();
+        $payload = $this->payload($answer);
+        $hosts = [];
+        Http::fake(function ($request) use ($payload, &$hosts) {
+            $hosts[] = parse_url($request->url(), PHP_URL_HOST);
+            if (str_contains($request->url(), 'api.cohere.com')) {
+                return Http::response([
+                    'finish_reason' => 'COMPLETE',
+                    'message' => ['content' => [['type' => 'text', 'text' => json_encode($payload)]]],
+                ]);
+            }
+
+            return Http::response(['error' => ['message' => 'Temporarily unavailable']], 503);
+        });
+
+        $review = $this->generate($answer, false, 'cohere');
+
+        $this->assertSame(['api.openai.com', 'generativelanguage.googleapis.com', 'api.groq.com', 'api.cohere.com'], $hosts);
+        $this->assertSame(['openai', 'gemini', 'groq', 'cohere'], $review['_providers_attempted']);
+        $this->assertSame('cohere', $review['_provider_key']);
+        $this->assertTrue($review['_provider_narratives_verified']);
+        Http::assertSentCount(4);
+    }
+
+    public function test_strict_review_skips_providers_without_credentials(): void
+    {
+        $this->setEnvironment('OPENAI_API_KEY', '');
+        $answer = $this->answer();
+        Http::fake(Http::response($this->geminiResponse($this->payload($answer))));
+
+        $this->assertSame(['gemini'], AIService::detailedReviewProviderPriority());
+        $review = $this->generate($answer, false);
+
+        $this->assertSame('gemini', $review['_provider_key']);
+        $this->assertSame(['gemini'], $review['_providers_attempted']);
+        Http::assertSentCount(1);
+    }
+
+    public function test_explicit_provider_only_review_still_targets_the_named_provider(): void
+    {
+        $answer = $this->answer();
+        Http::fake(Http::response($this->geminiResponse($this->payload($answer))));
+
+        $review = $this->generate($answer, true, 'gemini');
+
+        $this->assertSame('gemini', $review['_provider_key']);
+        $this->assertSame(['gemini'], $review['_providers_attempted']);
+        Http::assertSentCount(1);
+    }
+
+    public function test_strict_review_fails_without_sending_empty_credentials_when_no_api_is_configured(): void
+    {
+        $this->setEnvironment('OPENAI_API_KEY', '');
+        $this->setEnvironment('GEMINI_API_KEY', '');
+        Http::fake();
+        $this->assertSame([], AIService::detailedReviewProviderPriority());
+
+        $this->expectException(AiFeedbackProviderFailureException::class);
+        try {
+            $this->generate($this->answer(), false);
+        } finally {
+            Http::assertNothingSent();
+        }
+    }
+
+    public function test_strict_review_automatically_requests_corrected_provider_prose_after_validation_failure(): void
+    {
+        $answer = $this->answer();
+        $valid = $this->payload($answer);
+        $invalid = $valid;
+        $invalid['per_question_feedback'][0]['coaching']['impact'] = 'You earned a promotion and increased revenue by 50%.';
+        $prompts = [];
+        Http::fake(function ($request) use ($valid, $invalid, &$prompts) {
+            $prompts[] = data_get($request->data(), 'messages.1.content');
+
+            return Http::response($this->openAiResponse(count($prompts) === 1 ? $invalid : $valid));
+        });
+
+        $review = $this->generate($answer, false, 'openai', ['max_attempts' => 2]);
+
+        $this->assertSame('openai', $review['_provider_key']);
+        $this->assertSame(['openai'], $review['_providers_attempted']);
+        $this->assertStringContainsString('YOUR PREVIOUS REVIEW FAILED VALIDATION', $prompts[1]);
+        $this->assertSame($valid['per_question_feedback'][0]['coaching'], $review['per_question_feedback'][0]['provider_coaching']);
+        $this->assertTrue($review['_provider_narratives_verified']);
+        $this->assertFalse($review['_repair_applied']);
+        Http::assertSentCount(2);
+    }
+
+    public function test_final_saved_answer_validation_failure_continues_to_gemini_in_the_same_review_call(): void
+    {
+        $answer = $this->answer();
+        $payload = $this->payload($answer);
+        Http::fake(fn ($request) => Http::response(str_contains($request->url(), 'api.openai.com')
+            ? $this->openAiResponse($payload)
+            : $this->geminiResponse($payload)));
+        $validatedProviders = [];
+
+        $review = $this->generate($answer, false, 'openai', [
+            'response_validator' => function (array $normalized, string $provider) use (&$validatedProviders): bool {
+                $this->assertSame($provider, $normalized['_provider_key']);
+                $this->assertTrue($normalized['_provider_narratives_verified']);
+                $validatedProviders[] = $provider;
+
+                return $provider === 'gemini';
+            },
+        ]);
+
+        $this->assertSame(['openai', 'gemini'], $validatedProviders);
+        $this->assertSame(['openai', 'gemini'], $review['_providers_attempted']);
+        $this->assertSame('gemini', $review['_provider_key']);
+        $this->assertFalse($review['_repair_applied']);
+        Http::assertSentCount(2);
+    }
+
+    public function test_other_feedback_still_honors_the_requested_provider(): void
+    {
+        $answer = $this->answer();
+        Http::fake(Http::response($this->geminiResponse($this->payload($answer))));
+
+        $review = $this->generate($answer, false, 'gemini', ['require_provider_narratives' => false]);
+
+        $this->assertSame('gemini', $review['_provider_key']);
+        $this->assertSame(['gemini'], $review['_providers_attempted']);
+        Http::assertSentCount(1);
+    }
+
+    #[DataProvider('terminalHttpStatuses')]
+    public function test_strict_review_moves_to_gemini_after_terminal_http_failure_without_repeating_the_prompt(int $status): void
+    {
+        $answer = $this->answer();
+        $payload = $this->payload($answer);
+        $hosts = [];
+        Http::fake(function ($request) use ($payload, $status, &$hosts) {
+            $hosts[] = parse_url($request->url(), PHP_URL_HOST);
+            if (str_contains($request->url(), 'api.openai.com')) {
+                return Http::response(['error' => ['message' => 'Request unavailable']], $status, ['Retry-After' => '60']);
+            }
+
+            return Http::response($this->geminiResponse($payload));
+        });
+
+        $review = $this->generate($answer, false, 'openai', ['max_attempts' => 2]);
+
+        $this->assertSame(['api.openai.com', 'generativelanguage.googleapis.com'], $hosts);
+        $this->assertSame('gemini', $review['_provider_key']);
+        Http::assertSentCount(2);
+    }
+
+    public static function terminalHttpStatuses(): array
+    {
+        return ['bad request' => [400], 'invalid key' => [401], 'forbidden' => [403], 'missing model' => [404], 'rate limited' => [429]];
+    }
+
+    private function generate(array $answer, bool $providerOnly = true, string $provider = 'openai', array $runtimeOptions = []): array
+    {
+        return AIService::generateFeedback(['target_position' => 'Database Developer'], [$answer], $provider, $providerOnly, false, array_replace([
             'require_provider_narratives' => true,
             'deadline_seconds' => 20,
             'max_attempts' => 1,
             'http_attempts' => 1,
             'retry_delay_ms' => 0,
-        ]);
+        ], $runtimeOptions));
     }
 
     public function test_skipped_response_keeps_the_provider_note_without_inventing_a_draft(): void
@@ -182,6 +366,20 @@ class ProviderOnlyReviewGenerationTest extends TestCase
     private function openAiResponse(array $payload): array
     {
         return ['choices' => [['finish_reason' => 'stop', 'message' => ['content' => json_encode($payload)]]]];
+    }
+
+    private function geminiResponse(array $payload): array
+    {
+        return ['candidates' => [['finishReason' => 'STOP', 'content' => ['parts' => [['text' => json_encode($payload)]]]]]];
+    }
+
+    private function setEnvironment(string $key, string $value): void
+    {
+        if (! array_key_exists($key, $this->originalEnv)) {
+            $this->originalEnv[$key] = getenv($key);
+        }
+        putenv("{$key}={$value}");
+        $_ENV[$key] = $_SERVER[$key] = $value;
     }
 
     private function payload(array $answer): array

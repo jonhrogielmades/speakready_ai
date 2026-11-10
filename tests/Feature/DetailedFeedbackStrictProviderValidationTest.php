@@ -112,17 +112,87 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->assertSame('rejected', $combinedValidation['status']);
         $this->assertFalse($combinedValidation['checks']['provider_repair_safe']);
 
-        $scoreDisagreement = $feedback;
-        data_set($scoreDisagreement, 'per_question_feedback.0.scoring_confidence', 80);
-        data_set($scoreDisagreement, 'per_question_feedback.0.feedback_quality.reliability_percent', 94);
-        data_set($scoreDisagreement, 'feedback_quality.reliability_percent', 94);
-        data_set($scoreDisagreement, 'review_context.feedback_quality.reliability_percent', 94);
+    }
 
-        $scoreDisagreementValidation = $this->validateProviderFeedback($answer, $scoreDisagreement);
+    public function test_calibrated_provider_review_with_limited_confidence_is_saved_without_an_endless_refresh(): void
+    {
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $service = $this->app->make(DetailedFeedbackReviewService::class);
+        $normalizeQuality = new ReflectionMethod(AIService::class, 'normalizedFeedbackQuality');
 
-        $this->assertSame('rejected', $scoreDisagreementValidation['status']);
-        $this->assertFalse($scoreDisagreementValidation['checks']['scoreable_reliability_threshold_met']);
-        $this->assertContains('scoreable_reliability_threshold_met', $scoreDisagreementValidation['reasons']);
+        foreach ([
+            ['checked' => true, 'coverage_flags' => ['limited_question_coverage']],
+            ['checked' => true, 'adjustment_applied' => true],
+            ['checked' => false],
+        ] as $calibration) {
+            $feedback = $this->validProviderFeedback($answer);
+            $item = $feedback['per_question_feedback'][0];
+            $item['score_calibration'] = array_replace(['source' => 'deterministic_evidence_cross_check'], $calibration);
+            $quality = $normalizeQuality->invoke(null, $item, $answer->answer_text, $answer->question->question_text);
+            $this->assertSame('verified', $quality['status']);
+            $this->assertLessThan(95, $quality['reliability_percent']);
+            $item['feedback_quality'] = $quality;
+            $feedback['per_question_feedback'][0] = $item;
+            $feedback['feedback_quality'] = $quality;
+            $feedback['review_context']['feedback_quality'] = $quality;
+
+            $validation = $this->validateProviderFeedback($answer, $feedback);
+
+            $this->assertSame('verified', $validation['status'], json_encode($validation['reasons']));
+            $this->assertFalse($validation['scoreable_reliability_threshold_met']);
+            $this->assertSame([], $validation['reasons']);
+            $this->assertSame($quality['reliability_percent'], $validation['minimum_scoreable_reliability_percent']);
+            $this->assertTrue($validation['answer_checks'][(string) $answer->id]['all_safeguards_passed']);
+        }
+
+        (new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback'))->invoke(
+            $service, $session, collect([$answer]), $feedback, 'openai', $validation
+        );
+        $savedSession = $session->fresh(['answers.question', 'feedback', 'score']);
+        $savedAnswer = $answer->fresh('question');
+        $this->assertSame($item['ai_feedback'], $savedAnswer->ai_feedback);
+        $this->assertSame($item['better_sample_answer'], $savedAnswer->better_sample_answer);
+        $this->assertSame($quality['reliability_percent'], data_get($savedSession->feedback->coaching_summary,
+            'review_context.detailed_review_validation.minimum_scoreable_reliability_percent'));
+        $this->assertFalse(data_get($savedSession->feedback->coaching_summary,
+            'review_context.detailed_review_validation.scoreable_reliability_threshold_met'));
+        $this->assertFalse($service->shouldRefreshWithProvider($savedSession));
+        $this->assertTrue($service->answerReviewProviderState($savedAnswer)['feedback_ready']);
+        $this->assertTrue($service->answerReviewProviderState($savedAnswer)['possible_answer_ready']);
+    }
+
+    public function test_final_gate_still_rejects_invalid_reliability_metadata_and_failed_safeguards(): void
+    {
+        $answer = $this->answer();
+        foreach ([null, 'unknown', -1, 101, INF, NAN] as $invalidReliability) {
+            $feedback = $this->validProviderFeedback($answer);
+            data_set($feedback, 'per_question_feedback.0.feedback_quality.reliability_percent', $invalidReliability);
+            data_set($feedback, 'feedback_quality.reliability_percent', $invalidReliability);
+            data_set($feedback, 'review_context.feedback_quality.reliability_percent', $invalidReliability);
+
+            $validation = $this->validateProviderFeedback($answer, $feedback);
+
+            $this->assertSame('rejected', $validation['status']);
+            $this->assertFalse($validation['answer_checks'][(string) $answer->id]['score_handling_safe']);
+
+            $invalidAggregate = $this->validProviderFeedback($answer);
+            data_set($invalidAggregate, 'feedback_quality.reliability_percent', $invalidReliability);
+            data_set($invalidAggregate, 'review_context.feedback_quality.reliability_percent', $invalidReliability);
+            $validation = $this->validateProviderFeedback($answer, $invalidAggregate);
+            $this->assertSame('rejected', $validation['status']);
+            $this->assertFalse($validation['checks']['aggregate_safeguards_passed']);
+            $this->assertFalse($validation['checks']['review_context_quality_matches']);
+        }
+
+        $feedback = $this->validProviderFeedback($answer);
+        data_set($feedback, 'per_question_feedback.0.feedback_quality.reliability_percent', 89);
+        data_set($feedback, 'feedback_quality.reliability_percent', 89);
+        data_set($feedback, 'review_context.feedback_quality.reliability_percent', 89);
+        data_set($feedback, 'per_question_feedback.0.feedback_quality.checks.answer_evidence_linked', false);
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+        $this->assertSame('rejected', $validation['status']);
+        $this->assertFalse($validation['answer_checks'][(string) $answer->id]['all_safeguards_passed']);
     }
 
     public function test_review_refresh_preserves_voice_and_unedited_hybrid_asr_formatting_provenance(): void
@@ -270,6 +340,7 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
 
     public function test_queued_provider_failure_retries_current_inputs_without_local_repair(): void
     {
+        config()->set('queue.default', 'database');
         $answer = $this->answer();
         $session = InterviewSession::findOrFail($answer->interview_session_id);
         $replacement = 'I checked the current handoff log and escalated the unresolved approval.';

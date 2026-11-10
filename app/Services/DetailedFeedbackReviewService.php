@@ -11,7 +11,6 @@ use App\Models\Score;
 use App\Models\Setting;
 use App\Support\RuntimeConfiguration;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -28,7 +27,7 @@ class DetailedFeedbackReviewService
  ) {
  }
 
- public function refreshWithProvidersIfNeeded(InterviewSession $session,?string $preferredProvider = null): bool
+ public function refreshWithProvidersIfNeeded(InterviewSession $session,?string $preferredProvider = null, ?int $deadlineSeconds = null): bool
  {
  // Start from persisted inputs, including database defaults and the latest
  // transcript, rather than relationships cached by an earlier request.
@@ -51,6 +50,11 @@ class DetailedFeedbackReviewService
 
  $sessionData = $this->sessionData($session);
  $answersData = $this->answersData($answers);
+ $runtimeOptions = $this->reviewRefreshRuntimeOptions($deadlineSeconds);
+ // Keep the final evidence gate inside the provider cascade so a rejected
+ // OpenAI review can be corrected or replaced by the next configured API.
+ $runtimeOptions['response_validator'] = fn (array $candidate, string $candidateProvider): bool =>
+ ($this->providerFeedbackValidation($answers, $candidate, $candidateProvider)['status'] ?? null) === 'verified';
 
  try {
  $feedback = AIService::generateFeedback(
@@ -59,7 +63,7 @@ class DetailedFeedbackReviewService
  $provider,
  false,
  false,
- $this->reviewRefreshRuntimeOptions()
+ $runtimeOptions
  );
  } catch (AiFeedbackProviderFailureException $error) {
  Log::warning('Detailed review API provider refresh failed; keeping saved feedback.', [
@@ -133,10 +137,6 @@ class DetailedFeedbackReviewService
  }
 
  $session->loadMissing(['answers.question', 'feedback', 'score']);
-
- if ($this->apiProviderRefreshBlocked($session)) {
- return false;
- }
 
  if (! $session->feedback instanceof Feedback || ! $session->score instanceof Score) {
  return true;
@@ -495,8 +495,14 @@ class DetailedFeedbackReviewService
  && (int) ($quality['checks_passed']?? -1) === (int) ($quality['checks_total']?? 0)
  && (int) ($quality['checks_total']?? 0) === count($qualityChecks)
  && collect($qualityChecks)->every(fn ($passed): bool => $passed === true);
+ // Reliability is a confidence/coverage signal, not a correctness rate.
+ // A calibrated score can legitimately have limited coverage while its
+ // provider narrative passes every evidence, provenance, and safety check.
  $scoreHandlingIsSafe = $isScoreable
- ? $reliability !== null && $reliability >= $requiredReliability
+ ? is_numeric($quality['reliability_percent']?? null)
+ && is_finite((float) $quality['reliability_percent'])
+ && (float) $quality['reliability_percent'] >= 0
+ && (float) $quality['reliability_percent'] <= 100
  : (bool) ($item['insufficient_data']?? false)
  && $this->scoreValue($item['scoring_confidence']?? 100) <= ($isSkipped? 0: 25)
  && $this->scoreValue($item['score']?? 100) <= ($isSkipped? 0: 10);
@@ -555,9 +561,10 @@ class DetailedFeedbackReviewService
  && (int) ($aggregateQuality['completeness_percent']?? 0) === 100
  && (int) ($aggregateQuality['checks_total']?? 0) > 0
  && (int) ($aggregateQuality['checks_passed']?? -1) === (int) ($aggregateQuality['checks_total']?? 0)
- && is_numeric($aggregateQuality['reliability_percent']?? null),
- 'scoreable_reliability_threshold_met' => $scoreableReliabilities === []
- || $minimumScoreableReliability >= $requiredReliability,
+ && is_numeric($aggregateQuality['reliability_percent']?? null)
+ && is_finite((float) $aggregateQuality['reliability_percent'])
+ && (float) $aggregateQuality['reliability_percent'] >= 0
+ && (float) $aggregateQuality['reliability_percent'] <= 100,
  'review_context_matches_provider' => ($reviewContext['schema_version']?? null) === 'interview_feedback_v9'
  && ($reviewContext['review_policy_version']?? null) === AIService::REVIEW_POLICY_VERSION
  && ($reviewContext['provider_source']?? null) === 'ai_provider'
@@ -565,6 +572,9 @@ class DetailedFeedbackReviewService
  'review_context_quality_matches' => ($contextQuality['status']?? null) === ($aggregateQuality['status']?? null)
  && (int) ($contextQuality['completeness_percent']?? -1) === (int) ($aggregateQuality['completeness_percent']?? -2)
  && is_numeric($contextQuality['reliability_percent']?? null)
+ && is_finite((float) $contextQuality['reliability_percent'])
+ && (float) $contextQuality['reliability_percent'] >= 0
+ && (float) $contextQuality['reliability_percent'] <= 100
  && $this->scoreValue($contextQuality['reliability_percent']) === $this->scoreValue($aggregateQuality['reliability_percent']?? -1),
  'review_context_coverage_complete' => (int) data_get($reviewContext, 'coverage.answer_count', -1) === count($expectedIds)
  && (int) data_get($reviewContext, 'coverage.provider_validated_count', -1) === count($expectedIds),
@@ -580,6 +590,9 @@ class DetailedFeedbackReviewService
  ? $this->scoreValue($aggregateQuality['reliability_percent'])
  : null,
  'minimum_scoreable_reliability_percent' => $minimumScoreableReliability,
+ 'scoreable_reliability_threshold_met' => $scoreableReliabilities === []
+ || $minimumScoreableReliability >= $requiredReliability,
+ 'acceptance_basis' => 'provider_provenance_and_required_evidence_safeguards',
  'answers_expected' => count($expectedIds),
  'answers_validated' => count(array_filter($answerChecks, fn (array $item): bool => $item['complete'] === true)),
  'scoreable_answers' => count($scoreableReliabilities),
@@ -607,6 +620,8 @@ class DetailedFeedbackReviewService
  'minimum_scoreable_reliability_percent' => is_numeric($validation['minimum_scoreable_reliability_percent']?? null)
  ? $this->scoreValue($validation['minimum_scoreable_reliability_percent'])
  : null,
+ 'scoreable_reliability_threshold_met' => (bool) ($validation['scoreable_reliability_threshold_met']?? false),
+ 'acceptance_basis' => (string) ($validation['acceptance_basis']?? 'provider_provenance_and_required_evidence_safeguards'),
  'answers_expected' => max(0, (int) ($validation['answers_expected']?? 0)),
  'answers_validated' => max(0, (int) ($validation['answers_validated']?? 0)),
  'scoreable_answers' => max(0, (int) ($validation['scoreable_answers']?? 0)),
@@ -628,50 +643,19 @@ class DetailedFeedbackReviewService
 
  private function configuredProvider(?string $preferredProvider):?string
  {
- $preferred = AIService::normalizeProviderKey($preferredProvider);
- if ($this->canCallApiProvider($preferred)) {
- return $preferred;
+ return AIService::detailedReviewProviderPriority()[0] ?? null;
  }
 
- $default = AIService::defaultProviderKey();
- if ($this->canCallApiProvider($default)) {
- return $default;
- }
-
- foreach (AIService::supportedProviderOptions() as $option) {
- $key = AIService::normalizeProviderKey($option['key']?? null);
- if (($option['enabled']?? false) && $this->canCallApiProvider($key)) {
- return $key;
- }
- }
-
- return null;
- }
-
- private function reviewRefreshRuntimeOptions(): array
+ private function reviewRefreshRuntimeOptions(?int $deadlineSeconds = null): array
  {
  return [
  'require_provider_narratives' => true,
  'timeout_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.timeout_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 30),
- 'deadline_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.deadline_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 120),
+ 'deadline_seconds' => max(3, min($deadlineSeconds ?? 120, (int) RuntimeConfiguration::get('services.ai_feedback_review.deadline_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 120))),
  'max_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_review.max_attempts', 'AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', 2),
  'http_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_review.http_attempts', 'AI_FEEDBACK_REVIEW_REFRESH_HTTP_ATTEMPTS', 2),
  'retry_delay_ms' => (int) RuntimeConfiguration::get('services.ai_feedback_review.retry_delay_ms', 'AI_FEEDBACK_REVIEW_REFRESH_RETRY_DELAY_MS', 250),
  ];
- }
-
- private function apiProviderRefreshBlocked(InterviewSession $session): bool
- {
- $blockedUntil = trim((string) data_get($session->action_plan?? [], '_provider_refresh.blocked_until', ''));
- if ($blockedUntil === '') {
- return false;
- }
-
- try {
- return now()->lt(Carbon::parse($blockedUntil));
- } catch (\Throwable) {
- return false;
- }
  }
 
  public function hasConfiguredProvider(): bool
@@ -756,10 +740,17 @@ class DetailedFeedbackReviewService
  $feedbackQuality = is_array($coachingFeedback['feedback_quality']?? null)
  ? $coachingFeedback['feedback_quality']
  : [];
+ $qualityChecks = is_array($feedbackQuality['checks']?? null)? $feedbackQuality['checks']: [];
  $qualityVerified = ($feedbackQuality['status']?? null) === 'verified'
  && (int) ($feedbackQuality['completeness_percent']?? 0) === 100
+ && (int) ($feedbackQuality['checks_total']?? 0) > 0
+ && (int) ($feedbackQuality['checks_passed']?? -1) === (int) ($feedbackQuality['checks_total']?? 0)
+ && (int) ($feedbackQuality['checks_total']?? 0) === count($qualityChecks)
+ && collect($qualityChecks)->every(fn ($passed): bool => $passed === true)
  && is_numeric($feedbackQuality['reliability_percent']?? null)
- && $this->scoreValue($feedbackQuality['reliability_percent']) >= $this->minimumReliabilityPercent();
+ && is_finite((float) $feedbackQuality['reliability_percent'])
+ && (float) $feedbackQuality['reliability_percent'] >= 0
+ && (float) $feedbackQuality['reliability_percent'] <= 100;
 
  return $source !== 'ai_provider'
  || ! $this->isApiProviderKey($provider)
@@ -840,15 +831,6 @@ class DetailedFeedbackReviewService
  }
 
  return $coachingFeedback;
- }
-
- private function canCallApiProvider(?string $provider): bool
- {
- $provider = AIService::normalizeProviderKey($provider);
-
- return $provider !== ''
- && ! in_array($provider, ['local', 'localmodel'], true)
- && AIService::providerIsConfigured($provider);
  }
 
  private function sessionData(InterviewSession $session): array

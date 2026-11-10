@@ -4,12 +4,14 @@ namespace App\Jobs;
 
 use App\Models\InterviewSession;
 use App\Services\DetailedFeedbackReviewService;
+use App\Support\DetailedReviewProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class RefreshDetailedFeedbackReview implements ShouldBeUnique, ShouldQueue
@@ -53,21 +55,46 @@ class RefreshDetailedFeedbackReview implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        try {
-            $providerRefreshed = $reviewService->refreshWithProvidersIfNeeded($session);
+        // dispatchAfterResponse uses SyncQueue, which does not honor worker
+        // attempts/backoff. Give it a bounded recovery pass inside this job.
+        $sync = $this->job instanceof \Illuminate\Queue\Jobs\SyncJob
+            || ($this->job === null && config('queue.default') === 'sync');
+        $deadline = microtime(true) + 130;
+        // Outlive the 130-second work budget, but expire before a timed-out
+        // worker's next attempt so an abandoned lock cannot swallow its retry.
+        $lock = Cache::lock('feedback-review-running:'.$this->sessionId, $this->timeout - 5);
+        if (! $lock->get()) {
+            return;
+        }
 
-            if (! $providerRefreshed) {
-                // A rejected provider response must never be replaced with
-                // locally written answer feedback in Detailed Review.
-                $session->refresh();
-                if ($session->status !== 'completed' || (bool) data_get($session->action_plan ?? [], 'ended_early', false)) {
+        try {
+            DetailedReviewProgress::mark($this->sessionId, 'processing');
+            $passes = $sync ? 2 : 1;
+            for ($pass = 0; $pass < $passes; $pass++) {
+                $remaining = (int) floor($deadline - microtime(true));
+                if ($remaining < 5) {
+                    break;
+                }
+                $providerRefreshed = $reviewService->refreshWithProvidersIfNeeded($session, null, $remaining);
+                if ($providerRefreshed) {
+                    DetailedReviewProgress::mark($this->sessionId, 'ready');
                     return;
                 }
-                if ($reviewService->hasConfiguredProvider() && $reviewService->shouldRefreshWithProvider($session)) {
-                    throw new \RuntimeException('AI detailed review is still pending after the provider attempt.');
+
+                // Never replace rejected API prose with a local substitute.
+                $session->refresh();
+                if (! $reviewService->hasConfiguredProvider()) {
+                    DetailedReviewProgress::mark($this->sessionId, 'unavailable');
+                    return;
+                }
+                if (! $reviewService->shouldRefreshWithProvider($session)) {
+                    DetailedReviewProgress::mark($this->sessionId, 'ready');
+                    return;
                 }
             }
+            throw new \RuntimeException('AI detailed review is still pending after the provider attempt.');
         } catch (\Throwable $exception) {
+            DetailedReviewProgress::mark($this->sessionId, $sync || $this->attempts() >= $this->tries ? 'failed' : 'waiting');
             Log::warning('Queued detailed feedback refresh failed.', [
                 'session_id' => $this->sessionId,
                 'user_id' => $this->userId,
@@ -75,6 +102,13 @@ class RefreshDetailedFeedbackReview implements ShouldBeUnique, ShouldQueue
             ]);
 
             throw $exception;
+        } finally {
+            $lock->release();
         }
+    }
+
+    public function failed(?\Throwable $exception): void
+    {
+        DetailedReviewProgress::mark($this->sessionId, 'failed');
     }
 }

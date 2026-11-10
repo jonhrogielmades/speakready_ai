@@ -1846,6 +1846,9 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  public static function generateFeedback($sessionData, $answersData, $provider, bool $providerOnly = false, bool $allowLocalRepair = true, array $runtimeOptions = [])
  {
  $requireProviderNarratives = (bool) ($runtimeOptions['require_provider_narratives'] ?? false);
+ $completedReviewValidator = $requireProviderNarratives && is_callable($runtimeOptions['response_validator']?? null)
+ ? $runtimeOptions['response_validator']
+ : null;
  if ($answersData === []) {
  throw new \RuntimeException('No saved answers were available for AI feedback.');
  }
@@ -2285,7 +2288,9 @@ EOT;
  $providers = $providerOnly? array_values(array_filter(
  [self::normalizeProviderName($provider)],
  fn (string $providerName): bool => $providerName!== '' && self::feedbackProviderCanRun($providerName)
- )): self::feedbackProviderPriority($provider);
+ )): ($requireProviderNarratives
+ ? self::detailedReviewProviderPriority()
+ : self::feedbackProviderPriority($provider));
  if ($providers === []) {
  throw new AiFeedbackProviderFailureException([]);
  }
@@ -2402,11 +2407,17 @@ EOT;
  $normalized['_strict_validation_passed'] = true;
  $normalized['_repair_applied'] = false;
 
- return self::withFeedbackProviderMetadata(
+ $normalized = self::withFeedbackProviderMetadata(
  $normalized,
  $currentProvider,
  $attemptedProviders
  );
+ if ($completedReviewValidator && ! $completedReviewValidator($normalized, $currentProvider)) {
+ $validationErrors = ['The completed review did not pass the final saved-answer safeguards. Return a complete review grounded only in the saved answers.'];
+ throw new \RuntimeException("Feedback provider {$currentProvider} failed final saved-answer review validation.");
+ }
+
+ return $normalized;
  } catch (\Throwable $e) {
  if (is_array($candidateResponse) && $validationErrors !== []) {
  $providerValidationErrors = $validationErrors;
@@ -2432,6 +2443,14 @@ EOT;
  }
  } else {
  Log::warning("AI Feedback Generation Error ({$currentProvider}, attempt {$attempt}): ".self::safeProviderErrorMessage($e));
+ }
+
+ // The HTTP client already applies bounded transport retries. A rejected
+ // credential/request or an exhausted rate limit cannot be fixed by sending
+ // the same prompt again as a semantic-review retry; try the next API instead.
+ if ($requireProviderNarratives && $e instanceof RequestException
+ && ($e->response?->status() === 429 || ! self::providerRetryPolicy($e))) {
+ break;
  }
  }
 
@@ -2556,11 +2575,16 @@ EOT;
  'providers_reached' => $attemptedProviders,
  ]);
 
- return self::withFeedbackProviderMetadata(
+ $completed = self::withFeedbackProviderMetadata(
  $completed,
  $repairableProvider,
  $attemptedProviders
  );
+ if ($completedReviewValidator && ! $completedReviewValidator($completed, $repairableProvider)) {
+ throw new \RuntimeException('Provider per-answer completion failed final saved-answer review validation.');
+ }
+
+ return $completed;
  } catch (\Throwable $repairError) {
  Log::warning($requireProviderNarratives
  ? 'Provider per-answer completion failed; provider-only review remains unavailable.'
@@ -4845,6 +4869,21 @@ PROMPT;
  $target = $config['ai_label']?? $config['label']?? 'the selected language';
 
  return "Write {$contentScope} in {$target}. Keep names, company names, technical terms, acronyms, numbers, and JSON keys unchanged unless translating them would be natural and unambiguous. ";
+ }
+
+ /**
+ * Detailed reviews always try every configured API in the supported order.
+ * Interview preferences and the general feedback provider cap do not narrow
+ * this cascade; explicit provider-only calls still target their chosen API.
+ *
+ * @return array<int, string>
+ */
+ public static function detailedReviewProviderPriority(): array
+ {
+ return array_values(array_filter(
+ self::activeProviderKeys(),
+ fn (string $provider): bool => self::providerIsConfigured($provider)
+ ));
  }
 
  private static function feedbackProviderPriority($provider): array
@@ -7546,7 +7585,7 @@ PROMPT;
  'uncertainty_reported' => in_array((string) ($feedback['evaluation_source']?? ''), ['ai_evidence_validated', 'local_trained_model', 'local_evidence'], true),
  'next_attempt_actionable' => trim((string) ($feedback['ai_feedback']?? ''))!== ''
  && trim((string) ($feedback['follow_up_question']?? ''))!== ''
- && ($isSkipped || trim((string) ($feedback['better_sample_answer']?? ''))!== ''),
+ && ($isSkipped || (bool) ($feedback['is_too_short']?? false) || trim((string) ($feedback['better_sample_answer']?? ''))!== ''),
  'impact_explained_in_plain_words' => self::feedbackExplainsImpact(
  trim((string) ($feedback['ai_feedback']?? '').' '.(string) data_get($feedback, 'provider_coaching.impact', '')),
  $answerText,
@@ -9374,7 +9413,7 @@ PROMPT;
  || ($requestDeadlineAt - microtime(true)) > ($timeout + 0.05);
  };
 
- return Http::connectTimeout($connectTimeout)
+ $request = Http::connectTimeout($connectTimeout)
  ->timeout($timeout)
  ->retry(
  $requestAttempts,
@@ -9386,6 +9425,11 @@ PROMPT;
  $deadlineAwareRetryWhen,
  throw: $throw
  );
+
+ // Laravel's retry(..., throw: true) only throws final HTTP failures when
+ // more than one attempt is configured. Keep the response status available
+ // to the provider cascade even when a request is limited to one attempt.
+ return $throw ? $request->throw() : $request;
  }
 
  private static function providerTimeoutSeconds(?int $timeoutSeconds = null): int

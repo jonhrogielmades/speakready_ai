@@ -1903,7 +1903,7 @@ class ReliabilityHardeningTest extends TestCase
  Http::assertSentCount(2);
  }
 
- public function test_detailed_review_keeps_saved_feedback_when_provider_output_misses_required_reliability(): void
+ public function test_detailed_review_accepts_verified_provider_feedback_below_the_confidence_target(): void
  {
  $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
  $this->setEnvValue('AI_FEEDBACK_PROVIDER_PRIORITY', 'openai');
@@ -1939,11 +1939,21 @@ class ReliabilityHardeningTest extends TestCase
  ->make(DetailedFeedbackReviewService::class)
  ->refreshWithProvidersIfNeeded($session);
 
- $this->assertFalse($refreshed);
- $this->assertSame('localmodel', $answer->fresh()->ai_provider);
- $this->assertSame('Keep this previously saved review if the new response does not pass the gate.', $answer->fresh()->ai_feedback);
- $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
- $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+ $this->assertTrue($refreshed);
+ $savedAnswer = $answer->fresh();
+ $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
+ $validation = data_get($savedFeedback->coaching_summary, 'review_context.detailed_review_validation');
+ $this->assertSame('openai', $savedAnswer->ai_provider);
+ $this->assertNotSame('Keep this previously saved review if the new response does not pass the gate.', $savedAnswer->ai_feedback);
+ $this->assertSame('verified', $validation['status']);
+ $this->assertSame(100, $validation['required_reliability_percent']);
+ $this->assertLessThan(100, $validation['minimum_scoreable_reliability_percent']);
+ $this->assertFalse($validation['scoreable_reliability_threshold_met']);
+ $this->assertTrue(collect($validation['checks'])->every(fn ($passed): bool => $passed === true));
+ $this->assertDatabaseHas('scores', ['interview_session_id' => $session->id]);
+ $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider(
+ $session->fresh(['answers.question', 'score', 'feedback'])
+ ));
  Http::assertSentCount(1);
  }
 

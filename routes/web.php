@@ -282,6 +282,7 @@ Route::middleware(['auth', 'user', 'auth.session'])->group(function () {
     Route::get('/progress', [UserController::class, 'progress'])->name('user.progress');
     Route::get('/practice-activity-calendar', [UserController::class, 'practiceActivityCalendar'])->name('user.practice.calendar');
     Route::get('/session/{id}/review', [UserController::class, 'review'])->name('user.review');
+    Route::get('/session/{id}/review/status', [UserController::class, 'reviewStatus'])->middleware('throttle:60,1')->name('user.review.status');
     Route::post('/session/{id}/review/refresh', [UserController::class, 'refreshReview'])->middleware('throttle:ai-expensive')->name('user.review.refresh');
     Route::get('/session/{session}/export', [UserController::class, 'exportSession'])->name('user.sessions.export');
     Route::delete('/session/{id}', [UserController::class, 'destroySession'])->middleware('throttle:10,1')->name('user.sessions.destroy');
