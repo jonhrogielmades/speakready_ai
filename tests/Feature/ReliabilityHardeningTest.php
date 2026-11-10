@@ -551,7 +551,7 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  }
 
- public function test_unrelated_provider_follow_up_is_replaced_with_answer_grounded_question(): void
+ public function test_unrelated_provider_follow_up_is_rejected_without_local_fallback(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Software Engineering']);
@@ -582,22 +582,14 @@ class ReliabilityHardeningTest extends TestCase
  'response_mode' => 'text',
  'ai_provider' => 'openai',
  ])
- ->assertOk()
- ->assertJsonPath('success', true);
+ ->assertStatus(503)
+ ->assertJsonPath('success', false)
+ ->assertJsonPath('error_code', 'ai_interview_provider_response_rejected');
 
- $nextQuestion = (string) $response->json('next_question_text');
- $this->assertStringNotContainsStringIgnoringCase('favorite color', $nextQuestion);
- $this->assertStringContainsString('production release', $nextQuestion);
- $this->assertSame(1, substr_count($nextQuestion, '?'));
- $this->assertMatchesRegularExpression('/\b(?:result|impact|tradeoff|example|release|deployment|decision|specific)\b/i', $nextQuestion);
- $this->assertDatabaseHas('questions', [
- 'interview_session_id' => $session->id,
- 'question_text' => $nextQuestion,
- 'source_type' => 'local_question_fallback',
- ]);
+ $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
  }
 
- public function test_interview_advances_with_answer_based_local_followup_when_ai_followups_are_disabled(): void
+ public function test_interview_does_not_use_a_local_followup_when_ai_followups_are_disabled(): void
  {
  Setting::setVal('int_follow_up', false, 'interview', 'boolean');
 
@@ -618,17 +610,12 @@ class ReliabilityHardeningTest extends TestCase
  'answer_text' => 'I owned a small release, coordinated QA, and communicated the rollback plan with the deployment team before launch.',
  'response_mode' => 'text',
  ])
- ->assertOk()
- ->assertJsonPath('success', true)
- ->assertJsonPath('source_type', 'local_question_fallback');
- $this->assertTrue(str_contains($response->json('next_question_text'), 'owned a small release')
- && str_contains($response->json('next_question_text'), 'final question'));
+ ->assertStatus(503)
+ ->assertJsonPath('success', false)
+ ->assertJsonPath('error_code', 'ai_interview_follow_up_disabled');
+ $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
 
- $this->assertDatabaseHas('interview_answers', [
- 'interview_session_id' => $session->id,
- 'question_id' => $firstQuestion->id,
- ]);
- $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
+ $this->assertSame(0, InterviewAnswer::where('interview_session_id', $session->id)->count());
  }
 
  public function test_interview_answer_saves_when_optional_coaching_analysis_fails(): void
@@ -724,7 +711,7 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  }
 
- public function test_interview_answers_brief_candidate_question_then_continues_interview(): void
+ public function test_interview_answers_brief_candidate_question_without_local_followup(): void
  {
  Setting::setVal('int_follow_up', false, 'interview', 'boolean');
 
@@ -746,16 +733,14 @@ class ReliabilityHardeningTest extends TestCase
  'answer_text' => 'My name is John, and I am based in Manila. By the way, what is your name?',
  'response_mode' => 'text',
  ])
- ->assertOk()
- ->assertJsonPath('success', true);
+ ->assertStatus(503)
+ ->assertJsonPath('success', false)
+ ->assertJsonPath('error_code', 'ai_interview_follow_up_disabled');
 
- $nextQuestion = (string) $response->json('next_question_text');
- $this->assertStringContainsString('I am your AI interviewer, nice to meet you.', $nextQuestion);
- $this->assertSame(1, substr_count($nextQuestion, '?'));
- $this->assertStringContainsString('Developer', $nextQuestion);
+ $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
  }
 
- public function test_interview_replaces_unanswered_fixed_next_question_with_answer_based_followup(): void
+ public function test_interview_does_not_replace_a_fixed_question_with_a_local_followup(): void
  {
  Http::fake();
  Setting::setVal('int_follow_up', false, 'interview', 'boolean');
@@ -782,20 +767,14 @@ class ReliabilityHardeningTest extends TestCase
  'answer_text' => 'I owned a release, coordinated QA, and communicated the rollback plan.',
  'response_mode' => 'text',
  ])
- ->assertOk()
- ->assertJsonPath('success', true)
- ->assertJsonMissing(['next_question_id' => $secondQuestion->id])
- ->assertJsonMissing(['next_question_text' => $secondQuestion->question_text])
- ->assertJsonPath('source_type', 'local_question_fallback');
+ ->assertStatus(503)
+ ->assertJsonPath('success', false)
+ ->assertJsonPath('error_code', 'ai_interview_follow_up_disabled');
 
  Http::assertNothingSent();
  $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
- $this->assertDatabaseMissing('questions', ['id' => $secondQuestion->id]);
- $this->assertDatabaseHas('questions', [
- 'interview_session_id' => $session->id,
- 'source_type' => 'local_question_fallback',
- ]);
- $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
+ $this->assertDatabaseHas('questions', ['id' => $secondQuestion->id]);
+ $this->assertSame(0, InterviewAnswer::where('interview_session_id', $session->id)->count());
  }
 
  public function test_interview_chat_reply_cannot_generate_after_final_question(): void

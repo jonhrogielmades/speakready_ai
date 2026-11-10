@@ -22,7 +22,29 @@ class InterviewChatReplyFlowTest extends TestCase
 
     public function test_retried_text_and_hybrid_answers_reuse_the_same_follow_up(): void
     {
-        Setting::setVal('int_follow_up', false, 'interview', 'boolean');
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        $capturedPrompts = [];
+        Http::fake([
+            'api.openai.com/*' => function ($request) use (&$capturedPrompts) {
+                $capturedPrompts[] = (string) data_get($request->data(), 'messages.1.content', '');
+
+                return Http::response([
+                    'choices' => [[
+                        'finish_reason' => 'stop',
+                        'message' => [
+                            'content' => 'Thanks for sharing. How did you measure the reduction in the approval queue handoff time for the Developer role?',
+                        ],
+                    ]],
+                ], 200);
+            },
+        ]);
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
 
@@ -39,7 +61,7 @@ class InterviewChatReplyFlowTest extends TestCase
             ];
 
             $first = $this->actingAs($user)
-                ->withSession(['active_interview_id' => $session->id])
+                ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
                 ->postJson(route('interview.chatReply'), $payload)
                 ->assertOk()
                 ->assertJsonPath('success', true);
@@ -51,14 +73,21 @@ class InterviewChatReplyFlowTest extends TestCase
 
             $this->assertSame($first->json('next_question_id'), $second->json('next_question_id'));
             $this->assertSame($first->json('next_question_text'), $second->json('next_question_text'));
+            $this->assertSame('ai_adapted_source_backed', $first->json('source_type'));
+            $this->assertStringNotContainsStringIgnoringCase('you mentioned', $first->json('next_question_text'));
             $this->assertStringContainsString('approval queue', strtolower($first->json('next_question_text')));
             $this->assertStringNotContainsString('space rocket', strtolower($first->json('next_question_text')));
             $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
             $this->assertSame($mode, InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail()->response_mode);
         }
+
+        $this->assertNotEmpty($capturedPrompts);
+        $this->assertStringContainsString('Source dataset: Job Interview Questions', $capturedPrompts[0]);
+        $this->assertStringContainsString('mandatory grounding for the next question', $capturedPrompts[0]);
+        $this->assertStringContainsString('exact wording does not need to appear in the dataset', $capturedPrompts[0]);
     }
 
-    public function test_untranscribed_voice_and_skipped_answers_do_not_invent_candidate_evidence(): void
+    public function test_disabled_ai_follow_up_does_not_use_a_local_question_fallback(): void
     {
         Setting::setVal('int_follow_up', false, 'interview', 'boolean');
         Storage::fake('local');
@@ -82,13 +111,11 @@ class InterviewChatReplyFlowTest extends TestCase
                     ->createWithContent('answer.webm', str_repeat('sample-audio-', 200))
                     ->mimeType('audio/webm'),
             ])
-            ->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertStatus(503)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'ai_interview_follow_up_disabled');
 
-        $voiceAnswer = InterviewAnswer::where('interview_session_id', $voiceSession->id)->firstOrFail();
-        $this->assertSame('', (string) $voiceAnswer->answer_text);
-        $this->assertSame('', (string) $voiceAnswer->delivery_transcript);
-        $this->assertStringNotContainsString('space rocket', strtolower($voiceResponse->json('next_question_text')));
+        $this->assertSame(0, InterviewAnswer::where('interview_session_id', $voiceSession->id)->count());
 
         [$skippedSession, $skippedQuestion] = $this->interview($user, $category, 'text');
         $skippedResponse = $this->actingAs($user)
@@ -99,14 +126,14 @@ class InterviewChatReplyFlowTest extends TestCase
                 'response_mode' => 'text',
                 'is_skipped' => true,
             ])
-            ->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertStatus(503)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'ai_interview_follow_up_disabled');
 
-        $this->assertStringContainsString('Developer', $skippedResponse->json('next_question_text'));
-        $this->assertSame(1, substr_count($skippedResponse->json('next_question_text'), '?'));
+        $this->assertSame(0, InterviewAnswer::where('interview_session_id', $skippedSession->id)->count());
     }
 
-    public function test_seaman_session_discards_an_ai_software_follow_up_after_a_lifeboat_answer(): void
+    public function test_seaman_session_rejects_an_ai_software_follow_up_without_using_local_fallback(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
         AiProvider::create([
@@ -138,21 +165,19 @@ class InterviewChatReplyFlowTest extends TestCase
                 'response_mode' => 'text',
                 'answer_text' => 'I inspected the lifeboat before departure, found expired flares, and reported the safety issue to the captain.',
             ])
-            ->assertOk()
-            ->assertJsonPath('success', true);
+            ->assertStatus(503)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'ai_interview_provider_failed');
 
         Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
-        $next = Question::findOrFail($response->json('next_question_id'));
-        $this->assertSame($next->question_text, $response->json('next_question_text'));
-        $this->assertSame('local_question_fallback', $next->source_type);
-        $this->assertMatchesRegularExpression(
-            '/\b(?:vessel|ship|deck|watchkeeping|navigation|maritime|lifeboat|cargo|bridge|port|crew|safety|emergency)\b/i',
-            $next->question_text
-        );
-        $this->assertDoesNotMatchRegularExpression('/\b(?:cloud|software|deployment|debug)\b/i', $next->question_text);
+        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
+        $this->assertDatabaseHas('interview_answers', [
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+        ]);
     }
 
-    public function test_local_conversation_carries_the_previous_result_forward_into_the_next_probe(): void
+    public function test_disabled_ai_follow_up_does_not_use_local_conversation_questions(): void
     {
         Setting::setVal('int_follow_up', false, 'interview', 'boolean');
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -165,21 +190,11 @@ class InterviewChatReplyFlowTest extends TestCase
                 'session_id' => $session->id,
                 'question_id' => $question->id,
                 'answer_text' => 'I redesigned the approval queue and reduced the waiting time by 30 percent.',
-            ])->assertOk()->assertJsonPath('success', true);
-        $this->assertStringContainsString('Why did you choose that approach?', $first->json('next_question_text'));
+            ])->assertStatus(503)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('error_code', 'ai_interview_follow_up_disabled');
 
-        $second = $this->actingAs($user)
-            ->withSession(['active_interview_id' => $session->id])
-            ->postJson(route('interview.chatReply'), [
-                'session_id' => $session->id,
-                'question_id' => $first->json('next_question_id'),
-                'answer_text' => 'I chose that approach because it removed the duplicate approval step.',
-            ])->assertOk()->assertJsonPath('success', true);
-
-        $this->assertStringContainsString('duplicate approval step', $second->json('next_question_text'));
-        $this->assertStringContainsString('How did you check whether your approach made a difference?', $second->json('next_question_text'));
-        $this->assertNotSame($first->json('next_question_id'), $second->json('next_question_id'));
-        $this->assertSame(3, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
     }
 
     private function category(): Category

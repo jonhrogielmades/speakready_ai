@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\AiFeedbackProviderFailureException;
 use App\Exceptions\AiSpeechTranscriptionException;
+use App\Exceptions\InterviewFollowUpProviderFailureException;
 use App\Models\AiProvider;
 use App\Models\AiProviderLog;
 use App\Models\Setting;
@@ -687,11 +688,12 @@ class AIService
  $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. ';
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
- $prompt.= 'The next interviewer turn must be based on the candidate answer immediately before it, not on a generic question list. When natural, briefly reference one concrete detail the candidate just mentioned before asking the next question. ';
+ $prompt.= 'The next interviewer turn must be based on the candidate answer immediately before it and the supplied source dataset, not on a generic local question list. The exact wording does not need to appear in the dataset: create new wording through the AI provider when needed, while preserving a dataset topic, competency, or representative question pattern. ';
+ $prompt.= 'Do not use the phrases "You mentioned", "You said", "You shared", or "Thinking about what you shared". Do not repeat or quote the candidate answer. Use a short natural transition only when necessary, then ask the one focused question. ';
  $prompt.= 'Read the earlier turns before choosing what to ask: do not ask again for an action, result, reason, or constraint already explained. Ask one narrow unanswered detail about the same example, or explicitly bridge from that detail when the required question type changes. Preserve negation and uncertainty; a plan is not a past achievement. Do not presume success, a problem, a tool, or a tradeoff the candidate never mentioned. ';
  $prompt.= $liveFeedbackMode === 'real_interview'
  ? 'Acknowledge the answer briefly and neutrally before the question. Do not assess or coach the candidate mid-interview. '
- : 'Use a confidence-building acknowledgement that helps the candidate keep answering, such as thanking them for a specific detail or naming the useful starting point they gave. Keep encouragement specific to effort or shared evidence, not performance scoring. ';
+ : 'Use a short confidence-building acknowledgement without restating the candidate answer. Keep encouragement specific to effort or shared evidence, not performance scoring. ';
  $prompt.= 'If the latest answer says it was skipped, timed out, or saved as audio without a transcript, do not infer what the candidate said. Acknowledge the transition and ask one fresh role-relevant question. ';
  $prompt.= "If the candidate asks a brief human question such as your name, role, how you are doing, or what happens next, answer it naturally in one short clause as the AI interviewer, then smoothly continue with one interview question grounded in the candidate's latest answer. ";
  $prompt.= self::languageOutputInstruction($targetLanguage, 'the spoken interviewer reply');
@@ -732,7 +734,7 @@ class AIService
  $contextText = is_array($datasetContext)? QuestionDatasetProvider::promptContext($datasetContext): (string) $datasetContext;
 
  $prompt.= "\nUse this reliable source context when choosing follow-up question wording, local relevance, and skills coverage:\n{$contextText}\n";
- $prompt.= 'Adapt source-backed question patterns to the live conversation without copying generic wording. Do not fabricate source claims, leaked questions, or protected exam items. ';
+ $prompt.= 'The supplied source dataset is mandatory grounding for the next question. Adapt its source-backed patterns to the live conversation without copying generic wording. Do not fabricate source claims, leaked questions, or protected exam items. ';
  }
 
  $conversation = array_map(static function (array $interaction): array {
@@ -789,13 +791,14 @@ class AIService
 
  while ($attempt < $maxRetries) {
  try {
- $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation the way a live interviewer would. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation and supplied source dataset the way a live interviewer would. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. Never say "You mentioned", "You said", "You shared", or restate the candidate answer. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
 
  // Rely on chatMessage for robust failover
  $response = self::chatMessage($prompt, [], $provider, $systemPrompt, $chatRequestOptions);
  $response = self::sanitizeInterviewerReply($response);
 
  if (! empty($response) && $response!== self::AI_FAILURE_MESSAGE
+ && preg_match('/\b(?:you\s+(?:mentioned|said|shared)|thinking\s+about\s+what\s+you\s+shared)\b/iu', $response) !== 1
  && app(InterviewConversationService::class)->isCoherentFollowUp($response, (string) $latestAnswer, $history)) {
  return $response;
  }
@@ -809,7 +812,7 @@ class AIService
  }
  }
 
- return app(InterviewConversationService::class)->fallbackReply($session, $history, (string) $latestAnswer, $isFinal, $requiredQuestionType);
+ throw new InterviewFollowUpProviderFailureException;
  }
 
  public static function generateDashboardBubbleMessages(array $context = [],?string $provider = null): array

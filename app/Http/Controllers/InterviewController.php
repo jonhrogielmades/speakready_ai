@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\AiFeedbackProviderFailureException;
+use App\Exceptions\InterviewFollowUpProviderFailureException;
 use App\Exceptions\InterviewFeedbackLeaseLostException;
 use App\Helpers\ActivityLogger;
 use App\Models\Category;
@@ -606,6 +607,13 @@ class InterviewController extends Controller
  if (! $question) {
  return response()->json(['error' => 'Question does not belong to this interview session.'], 403);
  }
+ if (! $followUpEnabled) {
+ return response()->json([
+ 'success' => false,
+ 'error_code' => 'ai_interview_follow_up_disabled',
+ 'error' => 'AI follow-up questions are disabled. Enable AI interviewer follow-ups and try again.',
+ ], 503);
+ }
  $chatReplyLock = Cache::lock("interview:chat-reply:{$session->id}:{$question->id}", 180);
  try {
  $chatReplyLock->block(30);
@@ -657,11 +665,6 @@ class InterviewController extends Controller
  if ($interviewerInputText === '' && (bool) ($answer->timed_out?? false)) {
  $interviewerInputText = '(No answer before the time limit)';
  }
- if ($this->unavailableInterviewAnswerText($interviewerInputText)
- || TranscriptService::wordCount($interviewerInputText) < 8) {
- $followUpEnabled = false;
- }
-
  $questionSequence = $this->orderedQuestionsForSession($session);
  $currentQuestionIndex = $this->questionIndexInSequence($questionSequence, $question);
  $targetQuestionCount = $this->targetQuestionCountForSession($session);
@@ -734,78 +737,74 @@ class InterviewController extends Controller
  session('active_interview_provider', AIService::defaultProviderKey())
  );
  session(['active_interview_provider' => $provider]);
+ if (! AIService::providerIsConfigured($provider)) {
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => true,
+ 'error_code' => 'ai_interview_provider_unavailable',
+ 'error' => 'No configured AI provider is available to prepare the next interview question. Please try again later.',
+ ], 503);
+ }
  $isFinal = $currentQuestionIndex >= $targetQuestionCount - 2;
  $requiredQuestionType = $this->selectedQuestionTypeForIndex($session, $currentQuestionIndex + 1);
- if (! $followUpEnabled) {
- $provider = 'local';
- }
 
  $dataset = $this->datasetForSession($session);
- $conversation = app(InterviewConversationService::class);
+ if (! is_array($dataset) || empty($dataset['questions'])) {
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => true,
+ 'error_code' => 'ai_interview_dataset_unavailable',
+ 'error' => 'The interview question dataset is unavailable. Please try again later.',
+ ], 503);
+ }
  try {
  // Persisted questions and answers are the authoritative conversation.
- $followUpText = $followUpEnabled? AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType): $conversation->fallbackReply($session, $history, $interviewerInputText, $isFinal, $requiredQuestionType);
- } catch (\Throwable $error) {
- Log::warning('Interview follow-up generation failed; using local fallback.', [
+ $followUpText = AIService::generateChatReply($session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType);
+ } catch (InterviewFollowUpProviderFailureException $error) {
+ Log::warning('AI interview follow-up provider failed; no local fallback will be used.', [
  'session_id' => $session->id,
  'question_id' => $question->id,
  'provider' => $provider,
  'error_type' => $error::class,
  ]);
- $provider = 'local';
- $followUpText = $conversation->fallbackReply($session, $history, $interviewerInputText, $isFinal, $requiredQuestionType);
+
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => true,
+ 'error_code' => 'ai_interview_provider_failed',
+ 'error' => $error->getMessage(),
+ 'retry_after_ms' => 1500,
+ ], 503);
+ } catch (\Throwable $error) {
+ Log::warning('Interview follow-up generation failed; no local fallback will be used.', [
+ 'session_id' => $session->id,
+ 'question_id' => $question->id,
+ 'provider' => $provider,
+ 'error_type' => $error::class,
+ ]);
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => true,
+ 'error_code' => 'ai_interview_provider_failed',
+ 'error' => 'The AI interviewer could not prepare the next question. Please try again.',
+ 'retry_after_ms' => 1500,
+ ], 503);
  }
 
- if (! $followUpText) {
- $followUpText = "Thank you for sharing that. Could you tell me more about the experience that prepares you for the {$session->target_position} role?"; // fallback
- }
  $followUpText = trim($followUpText);
- if ($followUpText === $conversation->fallbackReply($session, $history, $interviewerInputText, $isFinal, $requiredQuestionType)) {
- $provider = 'local';
- }
- // A concrete reference to the candidate's answer already keeps a natural
- // follow-up on topic; repeating the full job title in every turn sounds stiff.
- if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText, $history)) {
- $followUpText = $this->roleAlignedQuestionText(
- $followUpText,
- (string) $session->target_position,
- $this->candidateAskedInterviewerNameQuestion($interviewerInputText)
- );
- }
 
  // Treat provider output as a draft, never as an unchecked interviewer turn.
- // The guard requires one clean question and a meaningful connection to the
- // candidate's latest answer and the questions already asked. A local
- // conversational probe preserves that thread when a provider misses the bar.
- $followUpSourceMetadata = $dataset? QuestionDatasetProvider::sourceMetadata($dataset): [];
+ // A rejected provider response stops the turn; it is never replaced locally.
+ $followUpSourceMetadata = QuestionDatasetProvider::sourceMetadata($dataset);
  if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText, $history)
  || ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($followUpText, $requiredQuestionType))) {
- $provider = 'local';
- $followUpText = $conversation->fallbackReply($session, $history, $interviewerInputText, $isFinal, $requiredQuestionType);
- }
-
- if (! $this->isReliableInterviewFollowUpText($followUpText, $session, $interviewerInputText, $history)
- || ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($followUpText, $requiredQuestionType))) {
- $provider = 'local';
- $followUpText = $requiredQuestionType !== null
- ? $this->fallbackQuestionForSelectedType($session, $requiredQuestionType, $interviewerInputText, $isFinal)
- : (app(InterviewQuestionAlignmentService::class)->fallbackQuestion(
- (string) $session->target_position,
- null,
- $interviewerInputText,
- $isFinal
- )?? ($isFinal
- ? "For the final question, what specific evidence best proves your fit for the {$session->target_position} role?"
- : "What specific example, decision, or result best shows how you would succeed in the {$session->target_position} role?"));
- if (app(InterviewQuestionAlignmentService::class)->roleGuidance((string) $session->target_position) !== '') {
- $followUpSourceMetadata = [
- 'source_name' => 'SpeakReady role-specific fallback',
- 'source_type' => 'local_question_fallback',
- ];
- }
- }
- if ($provider === 'local') {
- $followUpSourceMetadata = ['source_name' => 'SpeakReady conversation follow-up', 'source_type' => 'local_question_fallback'];
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => true,
+ 'error_code' => 'ai_interview_provider_response_rejected',
+ 'error' => 'The AI provider returned a question that did not pass the interview and dataset checks. Please try again.',
+ 'retry_after_ms' => 1500,
+ ], 503);
  }
 
  try {
