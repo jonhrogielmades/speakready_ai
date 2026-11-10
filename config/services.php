@@ -227,8 +227,8 @@ return [
  ],
 
  'ai_feedback_finalization' => [
- 'timeout_seconds' => env('AI_FEEDBACK_FINALIZATION_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', 30)),
- 'deadline_seconds' => env('AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 90)),
+ 'timeout_seconds' => env('AI_FEEDBACK_FINALIZATION_TIMEOUT', env('AI_FEEDBACK_TIMEOUT', env('AI_PROVIDER_TIMEOUT', 45))),
+ 'deadline_seconds' => env('AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', env('AI_FEEDBACK_DEADLINE_SECONDS', 180)),
  'max_attempts' => env('AI_FEEDBACK_FINALIZATION_ATTEMPTS', 2),
  'http_attempts' => env('AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS', env('AI_FEEDBACK_HTTP_ATTEMPTS', 2)),
  'retry_delay_ms' => env('AI_FEEDBACK_FINALIZATION_RETRY_DELAY_MS', env('AI_FEEDBACK_RETRY_DELAY_MS', 250)),

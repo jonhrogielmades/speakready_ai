@@ -449,6 +449,11 @@ AI_FEEDBACK_ATTEMPTS=2
 AI_FEEDBACK_HTTP_ATTEMPTS=2
 AI_FEEDBACK_RETRY_DELAY_MS=250
 AI_FEEDBACK_MAX_OUTPUT_TOKENS=32768
+AI_FEEDBACK_FINALIZATION_TIMEOUT=45
+AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS=180
+AI_FEEDBACK_FINALIZATION_ATTEMPTS=2
+AI_FEEDBACK_FINALIZATION_HTTP_ATTEMPTS=2
+AI_FEEDBACK_FINALIZATION_RETRY_DELAY_MS=250
 AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES=10
 AI_FEEDBACK_REVIEW_MIN_RELIABILITY_PERCENT=95
 OPENAI_JSON_MODE_FALLBACK=false
@@ -480,7 +485,7 @@ AI Coach chat uses a low temperature for more consistent guidance, bounded provi
 
 Interview follow-ups use the latest saved answer and recent connected turns. Both hosted replies and local fallbacks check for repeated questions and already-supplied outcomes. Local probes quote a real answer detail, preserve uncertainty, and continue the same example while respecting the selected question type and role.
 
-Interview feedback tries the selected or evaluated provider first, then follows `AI_FEEDBACK_PROVIDER_PRIORITY` for fallbacks. Each provider receives one protected share of the total deadline; retries may use only that provider's remaining share, so a slow primary cannot consume the time reserved for later providers. It accepts a hosted response only after strict structured-output, answer-coverage, score-plausibility, and exact-evidence checks pass. A semantically invalid response fails over to the next configured provider. Only a complete, strictly validated API response that did not need provider-recovery repair may replace a saved Detailed Review. Accepted responses are still normalized through deterministic evidence and score guards before persistence. If every provider fails, interview completion uses the validation-gated local model and then deterministic evidence-based feedback, while a later review refresh keeps the already-saved result.
+Interview feedback tries OpenAI first, then Gemini, Groq, and Cohere in that order when credentials are configured. Each provider receives one protected share of the total deadline; retries may use only that provider's remaining share, so a slow primary cannot consume the time reserved for later providers. It accepts a hosted response only after strict structured-output, answer-coverage, score-plausibility, and exact-evidence checks pass. A semantically invalid response fails over to the next configured provider. Only a complete, strictly validated API response that did not need provider-recovery repair may replace a saved Detailed Review. Accepted responses are still normalized through deterministic evidence and score guards before persistence. If every provider fails, the interview remains safely uncompleted with the answers saved and returns a categorized retry message; the local model is not silently presented as provider-verified Detailed Review. Configure the `AI_FEEDBACK_FINALIZATION_*` values explicitly in Dokploy so the first report has enough time to finish.
 
 Local and hosted scoring share action/result checks: dates and team sizes do not establish an outcome, and a hypothetical plan is not a completed behavioral example. Qualitative and unsuccessful outcomes still count as reported evidence. Provider numeric claims must preserve quantities and units from the answer. Detailed Review refreshes compare a locked input fingerprint before saving, so an in-flight API response cannot overwrite feedback after its answer or question changed. Displayed evidence excerpts are also checked against the saved answer.
 

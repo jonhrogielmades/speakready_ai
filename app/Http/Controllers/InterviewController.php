@@ -1853,6 +1853,8 @@ return response()->json([
  'message' => Str::limit($this->safeDatabaseErrorMessage($error), 300),
  'provider_count' => $providerFailure? $error->providerCount(): null,
  'providers_attempted' => $providerFailure? $error->attemptedProviders(): null,
+  'failure_code' => $providerFailure? $error->failureCode(): null,
+  'failure_reasons' => $providerFailure? $error->failureReasons(): null,
  ]);
 
  $message = $leaseLost
@@ -1862,6 +1864,8 @@ return response()->json([
  return $request->expectsJson()? response()->json(array_filter([
  'message' => $message,
  'error_code' => $leaseLost? 'feedback_processing_lease_lost': ($providerFailure? 'ai_feedback_providers_failed': null),
+  'failure_code' => $providerFailure? $error->failureCode(): null,
+  'failure_reasons' => $providerFailure? $error->failureReasons(): null,
  'provider_count' => $providerFailure? $error->providerCount(): null,
  'providers_attempted' => $providerFailure? $error->attemptedProviders(): null,
  'retry_after_ms' => 1500,
@@ -1874,7 +1878,7 @@ return response()->json([
  $configuredDeadline = (int) RuntimeConfiguration::get(
  'services.ai_feedback_finalization.deadline_seconds',
  'AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS',
- 90
+  180
  );
  $maximumFinalizationDeadline = max(3, $configuredDeadline);
 
@@ -5716,8 +5720,8 @@ return response()->json([
  }
 
  $answerCount = max(1, count($answersData));
- $defaultFinalizationTimeout = max(30, min(60, 10 + ($answerCount * 2)));
- $defaultFinalizationDeadline = max(90, min(180, 30 + ($answerCount * 6)));
+  $defaultFinalizationTimeout = max(45, min(60, 15 + ($answerCount * 2)));
+  $defaultFinalizationDeadline = 180;
 
  return AIService::generateFeedback(
  $sessionData,

@@ -132,6 +132,7 @@ class InitialProviderReviewReadinessTest extends TestCase
 
         $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
             ->assertStatus(503)->assertJsonPath('error_code', 'ai_feedback_providers_failed')
+            ->assertJsonPath('failure_code', 'provider_authentication')
             ->assertJsonMissingPath('redirect_url');
 
         $this->assertSame('in_progress', $session->fresh()->status);

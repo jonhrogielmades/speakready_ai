@@ -105,6 +105,24 @@ class ProviderOnlyReviewGenerationTest extends TestCase
         $this->assertSame($payload['per_question_feedback'][0]['ai_feedback'], $item['ai_feedback']);
     }
 
+    public function test_strict_review_canonicalizes_provider_alignment_before_rejecting_the_response(): void
+    {
+        $answer = $this->answer();
+        $payload = $this->payload($answer);
+        $payload['per_question_feedback'][0]['relevance_score'] = 86;
+        $payload['per_question_feedback'][0]['answer_alignment'] = 'not_addressed';
+        Http::fake(Http::response($this->openAiResponse($payload)));
+
+        $review = $this->generate($answer);
+        $item = $review['per_question_feedback'][0];
+
+        $this->assertTrue($review['_provider_narratives_verified']);
+        $this->assertSame('directly_addressed', $item['answer_alignment']);
+        $this->assertSame('directly_addressed', $item['provider_answer_alignment']);
+        $this->assertSame($payload['per_question_feedback'][0]['ai_feedback'], $item['ai_feedback']);
+        Http::assertSentCount(1);
+    }
+
     public function test_visible_provider_feedback_does_not_require_duplicate_impact_keywords(): void
     {
         $answer = [

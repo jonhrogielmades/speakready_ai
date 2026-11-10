@@ -6808,11 +6808,12 @@ setFinishViewReviewReady(false);
 
  function finishResponseErrorMessage(response, payload) {
  const data = payload?.data || {};
- if (data.error_code === 'ai_feedback_providers_failed') {
- return 'AI feedback providers are unavailable right now. Your answers are saved.';
- }
  const explicitMessage = data.error || data.message || validationErrorMessage(data.errors);
  if (explicitMessage) return String(explicitMessage);
+
+  if (data.error_code === 'ai_feedback_providers_failed') {
+  return 'AI feedback providers could not return a verified report. Your answers are saved; retry the report after checking the provider settings.';
+  }
 
  if (response.status === 419) {
  return 'Your secure session expired. Please refresh the page, then retry report generation.';

@@ -50,7 +50,7 @@ if [ "${APP_ENV:-}" = "production" ]; then
 fi
 
 if [ -z "${OPENAI_API_KEY:-}" ] && [ -z "${GEMINI_API_KEY:-}" ] && [ -z "${GROQ_API_KEY:-}" ] && [ -z "${COHERE_API_KEY:-}" ]; then
-    echo "No hosted AI provider key is configured; interview feedback will use the local evidence fallback." >&2
+    echo "No hosted AI provider key is configured; provider-only detailed interview reports will remain pending until at least one API key is added." >&2
 fi
 
 if [ -f /etc/nginx/sites-enabled/default ]; then

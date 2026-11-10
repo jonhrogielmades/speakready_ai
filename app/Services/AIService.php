@@ -2293,7 +2293,7 @@ EOT;
  ? self::detailedReviewProviderPriority()
  : self::feedbackProviderPriority($provider));
  if ($providers === []) {
- throw new AiFeedbackProviderFailureException([]);
+ throw new AiFeedbackProviderFailureException([], [], null, null, ['system' => ['not_configured']]);
  }
  $dynamicOutputTokens = max(4096, min(32768, 2048 + (count($answersData) * 1200)));
  $configuredOutputTokens = $runtimeInt(
@@ -2326,6 +2326,7 @@ EOT;
  $visibleRepairableResponse = null;
  $visibleRepairableProvider = null;
  $visibleRepairableErrors = [];
+ $providerFailureReasons = [];
 
  $providerCount = count($providers);
  foreach ($providers as $providerIndex => $currentProvider) {
@@ -2421,6 +2422,11 @@ EOT;
 
  return $normalized;
  } catch (\Throwable $e) {
+ $failureReason = self::feedbackProviderFailureReason($e, $validationErrors);
+ $providerFailureReasons[$currentProvider] = array_values(array_unique(array_merge(
+ (array) ($providerFailureReasons[$currentProvider]?? []),
+ [$failureReason]
+ )));
  if (is_array($candidateResponse) && $validationErrors !== []) {
  $providerValidationErrors = $validationErrors;
  Log::warning("AI Feedback Generation rejected an untrusted response from {$currentProvider} on attempt {$attempt}.", [
@@ -2597,6 +2603,10 @@ EOT;
 
  return $completed;
  } catch (\Throwable $repairError) {
+ $providerFailureReasons[$repairableProvider] = array_values(array_unique(array_merge(
+ (array) ($providerFailureReasons[$repairableProvider]?? []),
+ [self::feedbackProviderFailureReason($repairError)]
+ )));
  Log::warning($requireProviderNarratives
  ? 'Provider per-answer completion failed; provider-only review remains unavailable.'
  : 'Provider per-answer completion failed; falling back to the local report path.', [
@@ -2614,7 +2624,7 @@ EOT;
  'providers_reached' => $attemptedProviders,
  ]);
 
- throw new AiFeedbackProviderFailureException($providers, $attemptedProviders);
+ throw new AiFeedbackProviderFailureException($providers, $attemptedProviders, null, null, $providerFailureReasons);
  }
 
  private static function completeProviderFeedbackPerAnswer(
@@ -5342,6 +5352,62 @@ PROMPT;
  );
  }
 
+ /**
+  * Convert provider failures into a small, safe category that can be shown in
+  * deployment diagnostics. Never include provider response bodies, prompts, or
+  * credentials in this value.
+  */
+ private static function feedbackProviderFailureReason(\Throwable $error, array $validationErrors = []): string
+ {
+  if ($validationErrors !== []) {
+  return 'validation';
+  }
+
+  $message = strtolower(trim($error->getMessage()));
+  if (str_contains($message, 'temporarily paused') || str_contains($message, 'circuit')) {
+  return 'circuit_open';
+  }
+
+  if ($error instanceof ConnectionException) {
+  return preg_match('/timeout|timed out|time out/', $message) === 1 ? 'timeout' : 'network';
+  }
+
+  if ($error instanceof RequestException) {
+  $status = (int) ($error->response?->status() ?? 0);
+ $providerBody = strtolower((string) ($error->response?->body() ?? ''));
+
+  if (in_array($status, [400, 422], true)
+  && preg_match('/\b(?:model|deployment)\b.{0,80}\b(?:not found|does not exist|invalid|unavailable|unsupported)/', $providerBody) === 1) {
+  return 'model_not_found';
+  }
+
+  return match (true) {
+  in_array($status, [401, 403], true) => 'authentication',
+  $status === 404 => 'model_not_found',
+  $status === 429 => 'rate_limited',
+  in_array($status, [408, 425, 504], true) => 'timeout',
+  $status >= 500 => 'provider_server',
+  in_array($status, [400, 422], true) => 'request_rejected',
+  default => 'network',
+  };
+  }
+
+  if (preg_match('/not configured|empty credentials|api key|authentication|unauthori[sz]ed|forbidden/', $message) === 1) {
+  return 'authentication';
+  }
+  if (preg_match('/model|deployment|does not exist|not found/', $message) === 1) {
+  return 'model_not_found';
+  }
+  if (preg_match('/empty|invalid json|invalid response|failed semantic|did not finish|refused/', $message) === 1) {
+  return 'invalid_response';
+  }
+  if (preg_match('/timeout|timed out|time out/', $message) === 1) {
+  return 'timeout';
+  }
+
+  return 'unknown';
+ }
+
  private static function safeProviderErrorMessage(\Throwable $error): string
  {
  if ($error instanceof RequestException) {
@@ -5500,6 +5566,42 @@ PROMPT;
  return $valid;
  }
 
+ /**
+  * Keep the derived answer_alignment label aligned with the saved answer before
+  * semantic validation. Providers sometimes return a correct score and
+  * evidence but echo an outdated alignment label. This field is derived from
+  * the saved question/answer, so canonicalizing it here is safe and avoids
+  * rejecting an otherwise complete provider review before
+  * normalizeQuestionFeedback can apply the same cross-check. STAR applicability
+  * remains a strict provider check because a wrong STAR declaration changes the
+  * scoring rubric.
+  */
+ private static function canonicalizeProviderStructuralFields(array $item, array $answer): array
+ {
+  $validAlignments = [
+  'directly_addressed', 'partially_addressed', 'not_addressed',
+  'insufficient_evidence', 'skipped',
+  ];
+  $isSkipped = self::isSkippedAnswer($answer);
+  $isTooShort =! $isSkipped && self::isTooShortAnswer(self::candidateAnswerText($answer));
+  $relevanceScore = self::normalizeScore($item['relevance_score']?? 0);
+  $expectedAlignment = match (true) {
+  $isSkipped => 'skipped',
+  $isTooShort => 'insufficient_evidence',
+  $relevanceScore >= 75 => 'directly_addressed',
+  $relevanceScore >= 50 => 'partially_addressed',
+  default => 'not_addressed',
+  };
+
+  if (array_key_exists('answer_alignment', $item)
+  && is_string($item['answer_alignment'])
+  && in_array(trim($item['answer_alignment']), $validAlignments, true)) {
+  $item['answer_alignment'] = $expectedAlignment;
+  }
+
+  return $item;
+ }
+
  private static function feedbackResponseValidationErrors($response, array $answersData, bool $requireSessionFeedback = true, bool $requireProviderNarratives = false): array
  {
  if (! is_array($response) ||! isset($response['per_question_feedback']) ||! is_array($response['per_question_feedback'])) {
@@ -5554,7 +5656,7 @@ PROMPT;
  continue;
  }
 
- $item = $feedbackById[$id];
+ $item = self::canonicalizeProviderStructuralFields($feedbackById[$id], $answer);
  foreach (self::FEEDBACK_SCORE_FIELDS as $field) {
  if (! array_key_exists($field, $item) ||! self::isValidScoreValue($item[$field])) {
  $errors[] = "Feedback ID {$id} has an invalid {$field}.";
