@@ -551,7 +551,7 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  }
 
- public function test_unrelated_provider_follow_up_is_rejected_without_a_local_fallback(): void
+ public function test_unrelated_provider_follow_up_uses_a_safe_local_fallback(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Software Engineering']);
@@ -582,17 +582,18 @@ class ReliabilityHardeningTest extends TestCase
  'response_mode' => 'text',
  'ai_provider' => 'openai',
  ])
- ->assertStatus(503)
- ->assertJsonPath('success', false)
- ->assertJsonPath('answer_saved', true);
+ ->assertOk()
+ ->assertJsonPath('success', true)
+ ->assertJsonPath('source_type', 'local_question_fallback');
 
- $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
- $this->assertDatabaseHas('interview_answers', [
+ $nextQuestion = (string) $response->json('next_question_text');
+ $this->assertStringNotContainsStringIgnoringCase('favorite color', $nextQuestion);
+ $this->assertStringContainsString('production release', $nextQuestion);
+ $this->assertSame(1, substr_count($nextQuestion, '?'));
+ $this->assertMatchesRegularExpression('/\b(?:result|impact|tradeoff|example|release|deployment|decision|specific)\b/i', $nextQuestion);
+ $this->assertDatabaseHas('questions', [
  'interview_session_id' => $session->id,
- 'question_id' => $question->id,
- ]);
- $this->assertDatabaseMissing('questions', [
- 'interview_session_id' => $session->id,
+ 'question_text' => $nextQuestion,
  'source_type' => 'local_question_fallback',
  ]);
  }
