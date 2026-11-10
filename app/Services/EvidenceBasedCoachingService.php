@@ -8,10 +8,11 @@ use Illuminate\Support\Collection;
 
 final class EvidenceBasedCoachingService
 {
- public const VERSION = 8;
+ public const VERSION = 9;
 
  private const VOICE_MODES = ['voice', 'hybrid', 'voice_and_text'];
  private const CAMERA_STRICT_PROTOCOL = 2;
+ private const CAMERA_VALIDATED_PROTOCOL = 3;
  private const CAMERA_MIN_STRONG_SAMPLES = 6;
  private const CAMERA_MIN_STRONG_FACE_VISIBILITY = 85;
  private const CAMERA_MIN_STRONG_FACE_CONFIDENCE = 75;
@@ -68,7 +69,8 @@ final class EvidenceBasedCoachingService
  );
  }
 
- $camera = $this->normalizeCameraObservation($clientData, $cameraEnabled, $duration);
+ $cameraDuration = $duration > 0 ? $duration : $this->boundedInt($metrics['elapsed_seconds'] ?? 0, 0, 7200);
+ $camera = $this->normalizeCameraObservation($clientData, $cameraEnabled, $cameraDuration);
 
  return [
  'version' => self::VERSION,
@@ -190,8 +192,13 @@ final class EvidenceBasedCoachingService
  ];
  $deliveryWords = 0;
  $cameraSamples = 0;
+ $cameraFaceChecks = 0;
+ $cameraPoseChecks = 0;
  $cameraDetections = 0;
  $cameraFacing = 0;
+ $cameraFacingMeasured = 0;
+ $cameraSidewaysTurnChecks = 0;
+ $cameraNoSidewaysTurn = 0;
  $cameraPoseDetected = 0;
  $cameraShouldersMeasured = 0;
  $cameraShouldersLevel = 0;
@@ -330,9 +337,17 @@ final class EvidenceBasedCoachingService
 
  if (($camera['status']?? null) === 'measured') {
  $coverage['camera_measured']++;
- $cameraSamples += (int) ($camera['sample_count']?? 0);
+ $cameraSamples += (int) ($camera['usable_sample_count']?? $camera['sample_count']?? 0);
+ $cameraFaceChecks += (int) ($camera['face_visibility_measured_count']?? $camera['usable_sample_count']?? $camera['sample_count']?? 0);
+ $cameraPoseChecks += (int) ($camera['pose_detection_measured_count']?? $camera['usable_sample_count']?? $camera['sample_count']?? 0);
  $cameraDetections += (int) ($camera['detection_count']?? 0);
+ if ((int) ($camera['camera_detection_protocol']?? 0) >= self::CAMERA_VALIDATED_PROTOCOL) {
+ $cameraNoSidewaysTurn += (int) ($camera['camera_facing_count']?? 0);
+ $cameraSidewaysTurnChecks += (int) ($camera['camera_facing_measured_count']?? 0);
+ } else {
  $cameraFacing += (int) ($camera['camera_facing_count']?? 0);
+ $cameraFacingMeasured += (int) ($camera['camera_facing_measured_count']?? $camera['detection_count']?? 0);
+ }
  $cameraPoseDetected += (int) ($camera['pose_detected_count']?? 0);
  $cameraShouldersMeasured += (int) ($camera['shoulders_level_measured_count']?? 0);
  $cameraShouldersLevel += (int) ($camera['shoulders_level_count']?? 0);
@@ -379,14 +394,33 @@ final class EvidenceBasedCoachingService
  }
 
  if ($coverage['camera_measured'] > 0) {
- $visibility = (int) round(($cameraDetections / max(1, $cameraSamples)) * 100);
- $facing = (int) round(($cameraFacing / max(1, $cameraDetections)) * 100);
+ $visibility = (int) round(($cameraDetections / max(1, $cameraFaceChecks)) * 100);
+ $facing = (int) round(($cameraFacing / max(1, $cameraFacingMeasured)) * 100);
  $shoulders = (int) round(($cameraShouldersLevel / max(1, $cameraShouldersMeasured)) * 100);
  $upright = (int) round(($cameraUpright / max(1, $cameraUprightMeasured)) * 100);
  $highMovement = (int) round(($cameraHighMovement / max(1, $cameraMovementMeasured)) * 100);
- $observations[] = "Optional camera detection had enough checks for {$coverage['camera_measured']} answers: a face was seen in {$visibility}% of checks, the head looked camera-facing in {$facing}% of face checks, and body position was seen in ".((int) round(($cameraPoseDetected / max(1, $cameraSamples)) * 100)).'% of checks.';
+ $observations[] = "Optional camera detection had enough checks for {$coverage['camera_measured']} answers."
+ .($cameraFaceChecks > 0 ? " A face was seen in {$visibility}% of usable face-detector checks." : ' Face visibility was not measured.')
+ .($cameraPoseChecks > 0 ? ' Body position was seen in '.((int) round(($cameraPoseDetected / $cameraPoseChecks) * 100)).'% of usable body-detector checks.' : ' Body position was not measured.');
+ if ($cameraFacingMeasured > 0) {
+ $observations[] = "The head looked camera-facing in {$facing}% of checks where head orientation could be estimated.";
+ }
+ if ($cameraSidewaysTurnChecks > 0) {
+ $noSidewaysTurn = (int) round($cameraNoSidewaysTurn / $cameraSidewaysTurnChecks * 100);
+ $observations[] = "No sideways head turn was observed in {$noSidewaysTurn}% of measured head checks. This does not measure gaze or head tilt forward or backward.";
+ }
  if ($cameraShouldersMeasured > 0 || $cameraUprightMeasured > 0 || $cameraMovementMeasured > 0) {
- $observations[] = "Camera notes across checked parts: shoulders looked level in {$shoulders}% of body checks, upper body looked upright in {$upright}% of body checks, and higher movement appeared in {$highMovement}% of movement checks.";
+ $bodyParts = [];
+ if ($cameraShouldersMeasured > 0) {
+ $bodyParts[] = "shoulders looked level in {$shoulders}% of shoulder checks";
+ }
+ if ($cameraUprightMeasured > 0) {
+ $bodyParts[] = "upper body looked upright in {$upright}% of torso checks";
+ }
+ if ($cameraMovementMeasured > 0) {
+ $bodyParts[] = "higher movement appeared in {$highMovement}% of movement checks";
+ }
+ $observations[] = 'Camera notes across checked parts: '.implode(', ', $bodyParts).'.';
  }
  } elseif ($coverage['camera_insufficient'] > 0) {
  $observations[] = 'Optional camera sampling was tried, but there were not enough samples for a good note.';
@@ -689,8 +723,8 @@ final class EvidenceBasedCoachingService
  $status = 'insufficient_data';
  }
  if ($status === 'measured') {
- $visibility = (int) ($camera['face_visibility_percent']?? 0);
- $facing = (int) ($camera['camera_facing_percent']?? 0);
+ $visibility = is_numeric($camera['face_visibility_percent']?? null)? (int) round((float) $camera['face_visibility_percent']): null;
+ $facing = is_numeric($camera['camera_facing_percent']?? null)? (int) round((float) $camera['camera_facing_percent']): null;
  $centered = is_numeric($camera['centered_percent']?? null)? (int) round((float) $camera['centered_percent']): null;
  $framingQuality = is_numeric($camera['framing_quality_percent']?? null)? (int) round((float) $camera['framing_quality_percent']): null;
  $shouldersLevel = is_numeric($camera['shoulders_level_percent']?? null)? (int) round((float) $camera['shoulders_level_percent']): null;
@@ -722,12 +756,18 @@ final class EvidenceBasedCoachingService
  if ($sampleQuality!== null) {
  $bodyObservations[] = "Average camera sample quality was {$sampleQuality}/100.";
  }
- $observation = ($highConfidence? 'The camera signal passed the high-confidence reliability gate. ': '')."A face was seen in {$visibility}% of optional camera samples. In face samples, the head looked camera-facing {$facing}% of the time.".($bodyObservations!== []? ' '.implode(' ', $bodyObservations): '');
+ $headObservation = $facing === null ? ' Head orientation was not measured.'
+ : ((int) ($camera['camera_detection_protocol']?? 0) >= self::CAMERA_VALIDATED_PROTOCOL
+ ? " No sideways head turn was observed in {$facing}% of measured head checks. This does not measure gaze or head tilt forward or backward."
+ : " In samples with an orientation estimate, the head looked camera-facing {$facing}% of the time.");
+ $observation = ($highConfidence? 'The camera signal passed the high-confidence reliability gate. ': '')
+ .($visibility !== null ? "A face was seen in {$visibility}% of usable optional face-detector samples." : 'Face visibility was not measured.')
+ .$headObservation.($bodyObservations!== []? ' '.implode(' ', $bodyObservations): '');
  $tips = [];
  if (($sampleQuality!== null && $sampleQuality < 55) || ($lowQuality!== null && $lowQuality > 30)) {
  $tips[] = 'Use brighter front lighting, keep the webcam steady, and avoid sitting with a bright window behind you.';
  }
- if ($visibility < 80) {
+ if ($visibility !== null && $visibility < 80) {
  $tips[] = 'Keep your face within the preview, improve front lighting, and place the camera at a stable height.';
  }
  if ($centered!== null && $centered < 75) {
@@ -738,7 +778,7 @@ final class EvidenceBasedCoachingService
  } elseif ($tooCloseCount > 0) {
  $tips[] = 'Move a little farther back so your face and shoulders stay in frame.';
  }
- if ($facing < 70) {
+ if ($facing !== null && $facing < 70) {
  $tips[] = 'Place notes near the camera and practice returning your head toward it after checking a prompt.';
  }
  if ($shouldersLevel!== null && $shouldersLevel < 70) {
@@ -762,17 +802,24 @@ final class EvidenceBasedCoachingService
  'evidence' => [
  'source' => $camera['source']?? 'browser_reported_landmark_estimate',
  'sample_count' => (int) ($camera['sample_count']?? 0),
+ 'usable_sample_count' => (int) ($camera['usable_sample_count']?? $camera['sample_count']?? 0),
+ 'rejected_sample_count' => (int) ($camera['rejected_sample_count']?? 0),
+ 'rejected_sample_reasons' => (array) ($camera['rejected_sample_reasons']?? []),
  'face_detected_count' => (int) ($camera['detection_count']?? 0),
+ 'face_visibility_measured_count' => (int) ($camera['face_visibility_measured_count']?? $camera['sample_count']?? 0),
  'face_visibility_percent' => $visibility,
  'camera_facing_count' => (int) ($camera['camera_facing_count']?? 0),
+ 'camera_facing_measured_count' => (int) ($camera['camera_facing_measured_count']?? $camera['detection_count']?? 0),
  'camera_facing_percent' => $facing,
  'average_camera_facing_score' => is_numeric($camera['average_camera_facing_score']?? null)? (int) round((float) $camera['average_camera_facing_score']): null,
  'centered_count' => (int) ($camera['centered_count']?? 0),
+ 'centered_measured_count' => (int) ($camera['centered_measured_count']?? $camera['detection_count']?? 0),
  'centered_percent' => $centered,
  'framing_quality_count' => (int) ($camera['framing_quality_count']?? 0),
  'framing_quality_measured_count' => (int) ($camera['framing_quality_measured_count']?? 0),
  'framing_quality_percent' => $framingQuality,
  'pose_detected_count' => (int) ($camera['pose_detected_count']?? 0),
+ 'pose_detection_measured_count' => (int) ($camera['pose_detection_measured_count']?? $camera['sample_count']?? 0),
  'shoulders_visible_count' => (int) ($camera['shoulders_visible_count']?? 0),
  'shoulders_level_count' => (int) ($camera['shoulders_level_count']?? 0),
  'shoulders_level_measured_count' => (int) ($camera['shoulders_level_measured_count']?? 0),
@@ -797,6 +844,7 @@ final class EvidenceBasedCoachingService
  'reliability_band' => $camera['reliability_band']?? null,
  'high_confidence' => $highConfidence,
  'reliability_checks' => is_array($camera['reliability_checks']?? null)? $camera['reliability_checks']: [],
+ 'reliability_basis' => 'Camera signal checks only; this is not a measured accuracy percentage.',
  ],
  'limitation' => trim((string) ($camera['caveat']?? '').($highConfidence? ' The gate measures camera-signal quality; it is not a guarantee about a person or behavior.': '')),
  ];
@@ -811,7 +859,7 @@ final class EvidenceBasedCoachingService
  ];
  $unavailableReason = (string) ($camera['unavailable_reason']?? '');
  $reliabilityPercent = is_numeric($camera['reliability_percent']?? null)? (int) round((float) $camera['reliability_percent']): null;
- $reliabilityText = $reliabilityPercent !== null? " Signal reliability was {$reliabilityPercent}%, below the high-confidence gate, so no camera behavior conclusion was issued.": '';
+ $reliabilityText = $reliabilityPercent !== null? " The signal-check score was {$reliabilityPercent}/100. It is not an accuracy percentage.": '';
  $observation = $status === 'insufficient_data'? 'Optional browser camera samples did not pass the high-confidence quality gate, so no camera behavior conclusion was issued.'.$reliabilityText: (isset($reasonLabels[$unavailableReason])? 'Optional camera detection was not measured because '.$reasonLabels[$unavailableReason].'.': 'Optional camera detection was not measured for this answer.');
 
  return [
@@ -822,6 +870,9 @@ final class EvidenceBasedCoachingService
  'evidence' => $status === 'insufficient_data'? [
  'source' => $camera['source']?? 'browser_reported_landmark_estimate',
  'sample_count' => (int) ($camera['sample_count']?? 0),
+ 'usable_sample_count' => (int) ($camera['usable_sample_count']?? $camera['sample_count']?? 0),
+ 'rejected_sample_count' => (int) ($camera['rejected_sample_count']?? 0),
+ 'rejected_sample_reasons' => (array) ($camera['rejected_sample_reasons']?? []),
  'face_detected_count' => (int) ($camera['detection_count']?? 0),
  'pose_detected_count' => (int) ($camera['pose_detected_count']?? 0),
  'sampling_span_seconds' => (int) ($camera['sampling_span_seconds']?? 0),
@@ -829,6 +880,7 @@ final class EvidenceBasedCoachingService
  'reliability_band' => $camera['reliability_band']?? null,
  'high_confidence' => false,
  'reliability_checks' => is_array($camera['reliability_checks']?? null)? $camera['reliability_checks']: [],
+ 'reliability_basis' => 'Camera signal checks only; this is not a measured accuracy percentage.',
  ]: [],
  'limitation' => trim((string) ($camera['caveat']?? 'No usable optional camera samples were available.').' Camera feedback is withheld unless the saved samples pass the high-confidence reliability gate.'),
  ];
@@ -1607,19 +1659,28 @@ final class EvidenceBasedCoachingService
  $caveat = 'This browser estimate only describes what was seen in frame: face, head, shoulders, body position, and movement. Lighting, camera angle, clothes, glasses, and device speed can change the result. No image or video is stored. It does not guess confidence, honesty, personality, job fit, or intent, and it is not used in the readiness score.';
  $clientCamera = is_array($clientData['camera']?? null)? $clientData['camera']: [];
  $cameraProtocol = $enabled
- ? $this->boundedInt($clientData['camera_detection_protocol']?? ($clientCamera['protocol']?? 0), 0, 10)
+ ? $this->boundedInt($clientData['camera_detection_protocol']?? ($clientCamera['camera_detection_protocol']?? $clientCamera['protocol']?? 0), 0, 10)
  : 0;
  $strictProtocol = $cameraProtocol >= self::CAMERA_STRICT_PROTOCOL;
+ $validatedProtocol = $cameraProtocol >= self::CAMERA_VALIDATED_PROTOCOL;
  if (! $enabled) {
  return [
  'status' => 'not_measured',
  'sample_count' => 0,
+ 'received_sample_count' => 0,
+ 'usable_sample_count' => 0,
+ 'rejected_sample_count' => 0,
+ 'rejected_sample_reasons' => [],
  'detection_count' => 0,
+ 'face_visibility_measured_count' => 0,
  'camera_facing_count' => 0,
+ 'camera_facing_measured_count' => 0,
  'centered_count' => 0,
+ 'centered_measured_count' => 0,
  'framing_quality_count' => 0,
  'framing_quality_measured_count' => 0,
  'pose_detected_count' => 0,
+ 'pose_detection_measured_count' => 0,
  'shoulders_visible_count' => 0,
  'shoulders_level_count' => 0,
  'shoulders_level_measured_count' => 0,
@@ -1652,18 +1713,50 @@ final class EvidenceBasedCoachingService
  'reliability_percent' => null,
  'reliability_band' => null,
  'reliability_checks' => [],
+ 'reliability_basis' => 'Camera signal checks only; this is not a measured accuracy percentage.',
  'caveat' => $caveat,
  ];
  }
 
- $unavailableReason = $this->cameraUnavailableReason($clientData['camera_unavailable_reason']?? null);
+ $unavailableReason = $this->cameraUnavailableReason($clientData['camera_unavailable_reason']?? ($clientCamera['unavailable_reason']?? null));
  $samples = $clientData['camera_samples']?? ($clientCamera['samples']?? []);
  $samples = is_array($samples)? array_slice($samples, -300): [];
+ $renormalizingCamera = ! array_key_exists('camera_samples', $clientData) && array_key_exists('received_sample_count', $clientCamera);
+ $receivedSampleCount = max(count($samples), $renormalizingCamera ? $this->boundedInt($clientCamera['received_sample_count'], 0, 300) : 0);
+ $rejectedReasons = [];
+ $seenIdentifiers = [];
+ $lastFrameTimes = [];
  $normalized = [];
  $sampleOrder = 0;
  foreach ($samples as $sample) {
- if (! is_array($sample)) {
+ $rejection = $this->cameraSampleRejectionReason($sample, $duration, $validatedProtocol);
+ if ($rejection !== null) {
+ $rejectedReasons[$rejection] = ($rejectedReasons[$rejection] ?? 0) + 1;
  continue;
+ }
+ $identifiers = [];
+ $captureSession = $sample['capture_session_id'] ?? 'legacy';
+ foreach (['sample_index', 'captured_at_ms', 'frame_time_ms'] as $field) {
+ if (isset($sample[$field])) {
+ $identifiers[] = $captureSession.':'.$field.':'.(string) (float) $sample[$field];
+ }
+ }
+ if ($identifiers === []) {
+ $identifiers[] = $captureSession.':at_seconds:'.(string) (float) ($sample['at_seconds'] ?? 0);
+ }
+ if (array_intersect($identifiers, array_keys($seenIdentifiers)) !== []) {
+ $rejectedReasons['duplicate_frame'] = ($rejectedReasons['duplicate_frame'] ?? 0) + 1;
+ continue;
+ }
+ if ($validatedProtocol && isset($lastFrameTimes[$captureSession]) && (float) $sample['frame_time_ms'] <= $lastFrameTimes[$captureSession]) {
+ $rejectedReasons['out_of_order_frame'] = ($rejectedReasons['out_of_order_frame'] ?? 0) + 1;
+ continue;
+ }
+ foreach ($identifiers as $identifier) {
+ $seenIdentifiers[$identifier] = true;
+ }
+ if ($validatedProtocol) {
+ $lastFrameTimes[$captureSession] = (float) $sample['frame_time_ms'];
  }
 
  $sampleQuality = $this->nullableBoundedFloat($sample['sample_quality']?? null, 0, 100);
@@ -1673,7 +1766,7 @@ final class EvidenceBasedCoachingService
  if (! in_array($faceSizeStatus, ['too_far', 'too_close', 'good'], true)) {
  $faceSizeStatus = null;
  }
- if ($faceSizeStatus === null && $faceSizePercent!== null) {
+ if ($faceSizePercent!== null) {
  $faceSizeStatus = match (true) {
  $faceSizePercent < 3 => 'too_far',
  $faceSizePercent > 42 => 'too_close',
@@ -1681,36 +1774,76 @@ final class EvidenceBasedCoachingService
  };
  }
  $faceDetected = filter_var($sample['face_detected']?? false, FILTER_VALIDATE_BOOLEAN);
- if ($faceConfidence!== null && $faceConfidence < ($strictProtocol? 60: 45)) {
+ if ($faceConfidence!== null && $faceConfidence < ($validatedProtocol? 75: ($strictProtocol? 60: 45))) {
  $faceDetected = false;
  }
- $centered = $faceDetected
- && filter_var($sample['centered']?? false, FILTER_VALIDATE_BOOLEAN);
+ $poseConfidence = $this->nullableBoundedFloat($sample['pose_confidence'] ?? null, 0, 100);
+ $faceCount = isset($sample['face_count']) ? (int) $sample['face_count'] : null;
+ $poseCount = isset($sample['pose_count']) ? (int) $sample['pose_count'] : null;
+ $observationStatus = $validatedProtocol ? ($sample['observation_status'] ?? 'low_confidence') : null;
+ $frameUsable = ! $validatedProtocol || ($observationStatus === 'measured'
+ && (float) $sample['detection_age_ms'] <= 1500
+ && ($faceCount === null || $faceCount <= 1) && ($poseCount === null || $poseCount <= 1));
+ if ($validatedProtocol) {
+ $faceDetected = $frameUsable && $faceDetected && $faceCount === 1
+ && $faceConfidence !== null && $faceConfidence >= 75;
+ }
+ $centered = $faceDetected ? $this->nullableBoolean($sample['centered'] ?? null) : null;
  $cameraFacingScore = $faceDetected? $this->nullableBoundedFloat($sample['camera_facing_score']?? null, 0, 100): null;
- $cameraFacing = $faceDetected
- && filter_var($sample['camera_facing']?? false, FILTER_VALIDATE_BOOLEAN)
- && ($cameraFacingScore === null || $cameraFacingScore >= ($strictProtocol? 60: 0));
+ $cameraFacing = $faceDetected ? $this->nullableBoolean($sample['camera_facing'] ?? null) : null;
+ if ($cameraFacing === true && $cameraFacingScore !== null && $cameraFacingScore < ($strictProtocol ? 60 : 0)) {
+ $cameraFacing = false;
+ }
  $framingQuality = $faceDetected? $this->nullableBoolean($sample['framing_quality']?? null): null;
- if ($faceDetected && $framingQuality === null) {
+ if (! $validatedProtocol && $faceDetected && $framingQuality === null && $centered !== null) {
  $framingQuality = $centered && ($faceSizeStatus === null || $faceSizeStatus === 'good');
  }
  if ($faceDetected && $framingQuality === true && (! $centered || in_array($faceSizeStatus, ['too_far', 'too_close'], true))) {
  $framingQuality = false;
  }
  $poseDetected = filter_var($sample['pose_detected']?? false, FILTER_VALIDATE_BOOLEAN);
+ if ($validatedProtocol) {
+ $poseDetected = $frameUsable && $poseDetected && $poseCount === 1
+ && $poseConfidence !== null && $poseConfidence >= 65
+ && $this->nullableBoolean($sample['shoulders_visible'] ?? null) === true;
+ }
  $shouldersVisible = $poseDetected
  && filter_var($sample['shoulders_visible']?? false, FILTER_VALIDATE_BOOLEAN);
  $shouldersLevel = $shouldersVisible? $this->nullableBoolean($sample['shoulders_level']?? null): null;
- $uprightPosture = $poseDetected? $this->nullableBoolean($sample['upright_posture']?? null): null;
- $movementScore = $this->nullableBoundedInt($sample['movement_score']?? null, 0, 100);
- $highMovement = $movementScore!== null? ($this->nullableBoolean($sample['high_movement']?? null)?? $movementScore >= 45): null;
+ $torsoVisible = $poseDetected && $this->nullableBoolean($sample['torso_visible'] ?? null) === true;
+ $uprightPosture = $poseDetected && (! $validatedProtocol || $torsoVisible) ? $this->nullableBoolean($sample['upright_posture']?? null): null;
+ $movementScore = $poseDetected ? $this->nullableBoundedInt($sample['movement_score']?? null, 0, 100) : null;
+ $highMovement = $movementScore !== null ? $movementScore >= 45 : null;
+ if ($validatedProtocol && $sampleQuality !== null) {
+ $availableConfidence = array_filter([$faceDetected ? $faceConfidence : null, $poseDetected ? $poseConfidence : null], fn ($confidence): bool => $confidence !== null);
+ $sampleQuality = $availableConfidence !== [] ? min($sampleQuality, min($availableConfidence)) : 0;
+ }
+ $sampleUsable = $frameUsable && ($sampleQuality === null ? ! $strictProtocol : $sampleQuality >= ($validatedProtocol ? 65 : 35));
+ if ($validatedProtocol) {
+ $sampleUsable = $sampleUsable && ($faceDetected || $poseDetected);
+ }
+ if (! $sampleUsable) {
+ $reason = $validatedProtocol && ($faceCount > 1 || $poseCount > 1) ? 'multiple_people'
+ : ($validatedProtocol && (float) $sample['detection_age_ms'] > 1500 ? 'stale_detection'
+ : ($validatedProtocol && $observationStatus !== 'measured' ? $observationStatus : 'low_quality'));
+ $rejectedReasons[$reason] = ($rejectedReasons[$reason] ?? 0) + 1;
+ }
  $atSeconds = $this->boundedInt($sample['at_seconds']?? 0, 0, max(0, $duration));
  $normalized[] = [
  '_order' => $sampleOrder++,
  'sample_index' => $this->nullableBoundedInt($sample['sample_index']?? null, 0, 100000),
+ 'capture_session_id' => $sample['capture_session_id'] ?? null,
  'captured_at_ms' => $this->nullableBoundedInt($sample['captured_at_ms']?? null, 0, 86400000),
  'at_seconds' => $atSeconds,
  'sample_quality' => $sampleQuality,
+ 'measurement_usable' => $sampleUsable,
+ 'observation_status' => $observationStatus,
+ 'face_count' => $validatedProtocol ? $faceCount : null,
+ 'pose_count' => $validatedProtocol ? $poseCount : null,
+ 'pose_confidence' => $poseConfidence,
+ 'torso_visible' => $validatedProtocol ? $torsoVisible : null,
+ 'frame_time_ms' => $validatedProtocol ? (float) $sample['frame_time_ms'] : null,
+ 'detection_age_ms' => $validatedProtocol ? (float) $sample['detection_age_ms'] : null,
  'face_detected' => $faceDetected,
  'face_confidence' => $faceConfidence,
  'face_size_percent' => $faceSizePercent,
@@ -1746,42 +1879,58 @@ final class EvidenceBasedCoachingService
  $sampleCount = count($normalized);
  $usableSamples = array_values(array_filter(
  $normalized,
- fn (array $sample): bool => $sample['sample_quality'] === null || $sample['sample_quality'] >= 35
+ fn (array $sample): bool => $sample['measurement_usable']
  ));
- $detectionCount = count(array_filter($normalized, fn (array $sample): bool => $sample['face_detected']));
- $facingCount = count(array_filter($normalized, fn (array $sample): bool => $sample['camera_facing']));
- $centeredCount = count(array_filter($normalized, fn (array $sample): bool => $sample['centered']));
- $framingQualityMeasuredCount = count(array_filter($normalized, fn (array $sample): bool => $sample['framing_quality']!== null));
- $framingQualityCount = count(array_filter($normalized, fn (array $sample): bool => $sample['framing_quality'] === true));
- $poseDetectedCount = count(array_filter($normalized, fn (array $sample): bool => $sample['pose_detected']));
- $shouldersVisibleCount = count(array_filter($normalized, fn (array $sample): bool => $sample['shoulders_visible']));
+ $usableSampleCount = count($usableSamples);
+ if ($renormalizingCamera && is_array($clientCamera['rejected_sample_reasons'] ?? null)) {
+ $retainedReasons = $rejectedReasons;
+ foreach ($clientCamera['rejected_sample_reasons'] as $reason => $count) {
+ if (is_string($reason) && preg_match('/\A[a-z_]{1,64}\z/', $reason) && is_numeric($count) && is_finite((float) $count)) {
+ $retainedReasons[$reason] = max($retainedReasons[$reason] ?? 0, $this->boundedInt($count, 0, 300));
+ }
+ }
+ if (array_sum($retainedReasons) <= $receivedSampleCount - $usableSampleCount) {
+ $rejectedReasons = $retainedReasons;
+ }
+ }
+ $faceVisibilityMeasuredCount = $validatedProtocol ? count(array_filter($usableSamples, fn (array $sample): bool => $sample['face_count'] !== null)) : $usableSampleCount;
+ $poseDetectionMeasuredCount = $validatedProtocol ? count(array_filter($usableSamples, fn (array $sample): bool => $sample['pose_count'] !== null)) : $usableSampleCount;
+ $detectionCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['face_detected']));
+ $facingMeasuredCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['camera_facing'] !== null));
+ $facingCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['camera_facing'] === true));
+ $centeredMeasuredCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['centered'] !== null));
+ $centeredCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['centered'] === true));
+ $framingQualityMeasuredCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['framing_quality']!== null));
+ $framingQualityCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['framing_quality'] === true));
+ $poseDetectedCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['pose_detected']));
+ $shouldersVisibleCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['shoulders_visible']));
  $shouldersLevelMeasuredCount = count(array_filter(
- $normalized,
+ $usableSamples,
  fn (array $sample): bool => $sample['shoulders_level']!== null
  ));
- $shouldersLevelCount = count(array_filter($normalized, fn (array $sample): bool => $sample['shoulders_level'] === true));
+ $shouldersLevelCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['shoulders_level'] === true));
  $uprightPostureMeasuredCount = count(array_filter(
- $normalized,
+ $usableSamples,
  fn (array $sample): bool => $sample['upright_posture']!== null
  ));
- $uprightPostureCount = count(array_filter($normalized, fn (array $sample): bool => $sample['upright_posture'] === true));
+ $uprightPostureCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['upright_posture'] === true));
  $movementScores = array_values(array_filter(
- array_map(fn (array $sample) => $sample['movement_score'], $normalized),
+ array_map(fn (array $sample) => $sample['movement_score'], $usableSamples),
  fn ($score): bool => $score!== null
  ));
  $movementMeasuredCount = count($movementScores);
- $highMovementCount = count(array_filter($normalized, fn (array $sample): bool => $sample['high_movement'] === true));
+ $highMovementCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['high_movement'] === true));
  $qualityScores = array_values(array_filter(
  array_map(fn (array $sample) => $sample['sample_quality'], $normalized),
  fn ($score): bool => $score!== null
  ));
- $lowQualityCount = count(array_filter($normalized, fn (array $sample): bool => $sample['sample_quality']!== null && $sample['sample_quality'] < 35));
+ $lowQualityCount = count(array_filter($normalized, fn (array $sample): bool => $sample['sample_quality']!== null && $sample['sample_quality'] < ($validatedProtocol ? 65 : 35)));
  $faceConfidenceScores = array_values(array_filter(
- array_map(fn (array $sample) => $sample['face_detected']? $sample['face_confidence']: null, $normalized),
+ array_map(fn (array $sample) => $sample['face_detected']? $sample['face_confidence']: null, $usableSamples),
  fn ($score): bool => $score!== null
  ));
  $cameraFacingScores = array_values(array_filter(
- array_map(fn (array $sample) => $sample['camera_facing_score'], $normalized),
+ array_map(fn (array $sample) => $sample['camera_facing_score'], $usableSamples),
  fn ($score): bool => $score!== null
  ));
  $faceSizes = array_values(array_filter(
@@ -1793,6 +1942,11 @@ final class EvidenceBasedCoachingService
  $firstTimestamp = $sampleCount > 0? (int) $normalized[0]['at_seconds']: 0;
  $lastTimestamp = $sampleCount > 0? (int) $normalized[$sampleCount - 1]['at_seconds']: 0;
  $samplingSpan = max(0, $lastTimestamp - $firstTimestamp);
+ // Bound each interval so isolated endpoints cannot imply continuous observation.
+ $coveredSeconds = 0;
+ for ($index = 1; $index < $usableSampleCount; $index++) {
+ $coveredSeconds += min(4, max(0, $usableSamples[$index]['at_seconds'] - $usableSamples[$index - 1]['at_seconds']));
+ }
  $requiredSpan = $duration > 0? max(2, (int) ceil($duration *.2)): 0;
  $strongRequiredSpan = $duration > 0? max(5, min(20, (int) ceil($duration *.25))): 0;
  $usableSignalCount = max(
@@ -1801,7 +1955,7 @@ final class EvidenceBasedCoachingService
  );
  $uniqueSampleCount = count(array_unique(array_map(
  fn (array $sample): string => (string) $sample['at_seconds'],
- $normalized
+ $usableSamples
  )));
  $qualityDataPresent = $strictProtocol
  && $sampleCount > 0
@@ -1813,11 +1967,11 @@ final class EvidenceBasedCoachingService
  $facingScoreCoverage = $detectionCount > 0
  ? (int) round((count($cameraFacingScores) / $detectionCount) * 100)
  : 0;
- $goodFaceFrameCount = count(array_filter($normalized, fn (array $sample): bool => $sample['face_detected'] && $sample['face_size_status'] === 'good'));
+ $goodFaceFrameCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['face_detected'] && $sample['face_size_status'] === 'good'));
  $frameStabilityPercent = $detectionCount > 0
  ? (int) round(($goodFaceFrameCount / $detectionCount) * 100)
  : 0;
- $strongSignalCount = count(array_filter($normalized, fn (array $sample): bool => $sample['sample_quality'] !== null
+ $strongSignalCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['sample_quality'] !== null
  && $sample['sample_quality'] >= 70
  && $sample['face_detected']
  && $sample['face_confidence'] !== null
@@ -1838,8 +1992,8 @@ final class EvidenceBasedCoachingService
  && $duration > 0
  && (($samplingSpan / $duration) * 100) >= 25,
  'sample_quality' => $qualityDataPresent
- && ($qualityScores !== [] ? (int) round(array_sum($qualityScores) / count($qualityScores)) >= 75: false)
- && ($qualityScores !== [] ? (int) round(($lowQualityCount / count($qualityScores)) * 100) <= 10: false),
+ && (int) round(array_sum($qualityScores) / count($qualityScores)) >= 75
+ && (int) round(($lowQualityCount / count($qualityScores)) * 100) <= 10,
  'face_visibility' => $detectionCount >= 5 && $faceVisibilityPercent >= self::CAMERA_MIN_STRONG_FACE_VISIBILITY,
  'face_confidence' => $detectionCount >= 5
  && $faceConfidenceCoverage >= 90
@@ -1862,12 +2016,31 @@ final class EvidenceBasedCoachingService
  min(100, (int) round(($strongSignalCount / self::CAMERA_MIN_STRONG_SAMPLES) * 100)),
  ];
  $reliabilityPercent = (int) round(array_sum($reliabilityComponents) / count($reliabilityComponents));
+ if ($validatedProtocol) {
+ $strongSignalCount = count(array_filter($usableSamples, fn (array $sample): bool => $sample['sample_quality'] >= 75
+ && ($sample['face_detected'] || $sample['pose_detected'])));
+ $usableQualityScores = array_column($usableSamples, 'sample_quality');
+ $reliabilityChecks = [
+ 'enough_distinct_samples' => $usableSampleCount >= self::CAMERA_MIN_STRONG_SAMPLES && $uniqueSampleCount >= 5,
+ 'continuous_time_coverage' => $duration > 0 && $coveredSeconds >= max(5, (int) ceil($duration * .25)),
+ 'sample_quality' => $usableQualityScores !== [] && array_sum($usableQualityScores) / count($usableQualityScores) >= 75,
+ 'usable_frame_coverage' => $receivedSampleCount > 0 && $usableSampleCount / $receivedSampleCount >= .6,
+ 'single_person' => $usableSampleCount > 0 && count(array_filter($usableSamples, fn (array $sample): bool => ($sample['face_count'] === null || $sample['face_count'] <= 1) && ($sample['pose_count'] === null || $sample['pose_count'] <= 1))) === $usableSampleCount,
+ 'fresh_frames' => $usableSampleCount > 0 && count(array_filter($usableSamples, fn (array $sample): bool => $sample['detection_age_ms'] <= 1500)) === $usableSampleCount,
+ 'landmark_confidence' => $usableSampleCount > 0 && $usableSignalCount > 0,
+ 'consistent_high_quality_signal' => $strongSignalCount >= self::CAMERA_MIN_STRONG_SAMPLES,
+ ];
+ $reliabilityPercent = (int) round(count(array_filter($reliabilityChecks)) / count($reliabilityChecks) * 100);
+ }
+ if (in_array(false, $reliabilityChecks, true)) {
+ $reliabilityPercent = min(94, $reliabilityPercent);
+ }
  $reliabilityBand = $reliabilityPercent >= 95? 'High': ($reliabilityPercent >= 85? 'Medium': 'Limited');
  $highConfidence = ! in_array(false, $reliabilityChecks, true) && $reliabilityPercent >= 95;
  }
  $status = match (true) {
- $sampleCount === 0 || $duration <= 0 => 'not_measured',
- count($usableSamples) >= 3 && $usableSignalCount >= 2 && $samplingSpan >= $requiredSpan => 'measured',
+ $receivedSampleCount === 0 || $duration <= 0 => 'not_measured',
+ $usableSampleCount >= 3 && $usableSignalCount >= 2 && ($validatedProtocol ? $coveredSeconds : $samplingSpan) >= $requiredSpan => 'measured',
  default => 'insufficient_data',
  };
  if ($strictProtocol && $status === 'measured' && ! $highConfidence) {
@@ -1881,12 +2054,20 @@ final class EvidenceBasedCoachingService
  return [
  'status' => $status,
  'sample_count' => $sampleCount,
+ 'received_sample_count' => $receivedSampleCount,
+ 'usable_sample_count' => $usableSampleCount,
+ 'rejected_sample_count' => $receivedSampleCount - $usableSampleCount,
+ 'rejected_sample_reasons' => $rejectedReasons,
  'detection_count' => $detectionCount,
+ 'face_visibility_measured_count' => $faceVisibilityMeasuredCount,
  'camera_facing_count' => $facingCount,
+ 'camera_facing_measured_count' => $facingMeasuredCount,
  'centered_count' => $centeredCount,
+ 'centered_measured_count' => $centeredMeasuredCount,
  'framing_quality_count' => $framingQualityCount,
  'framing_quality_measured_count' => $framingQualityMeasuredCount,
  'pose_detected_count' => $poseDetectedCount,
+ 'pose_detection_measured_count' => $poseDetectionMeasuredCount,
  'shoulders_visible_count' => $shouldersVisibleCount,
  'shoulders_level_count' => $shouldersLevelCount,
  'shoulders_level_measured_count' => $shouldersLevelMeasuredCount,
@@ -1894,9 +2075,9 @@ final class EvidenceBasedCoachingService
  'upright_posture_measured_count' => $uprightPostureMeasuredCount,
  'movement_measured_count' => $movementMeasuredCount,
  'high_movement_count' => $highMovementCount,
- 'face_visibility_percent' => $sampleCount > 0? (int) round(($detectionCount / $sampleCount) * 100): null,
- 'camera_facing_percent' => $detectionCount > 0? (int) round(($facingCount / $detectionCount) * 100): null,
- 'centered_percent' => $detectionCount > 0? (int) round(($centeredCount / $detectionCount) * 100): null,
+ 'face_visibility_percent' => $faceVisibilityMeasuredCount > 0? (int) round(($detectionCount / $faceVisibilityMeasuredCount) * 100): null,
+ 'camera_facing_percent' => $facingMeasuredCount > 0? (int) round(($facingCount / $facingMeasuredCount) * 100): null,
+ 'centered_percent' => $centeredMeasuredCount > 0? (int) round(($centeredCount / $centeredMeasuredCount) * 100): null,
  'framing_quality_percent' => $framingQualityMeasuredCount > 0? (int) round(($framingQualityCount / $framingQualityMeasuredCount) * 100): null,
  'shoulders_level_percent' => $shouldersLevelMeasuredCount > 0? (int) round(($shouldersLevelCount / $shouldersLevelMeasuredCount) * 100): null,
  'upright_posture_percent' => $uprightPostureMeasuredCount > 0? (int) round(($uprightPostureCount / $uprightPostureMeasuredCount) * 100): null,
@@ -1911,7 +2092,9 @@ final class EvidenceBasedCoachingService
  'face_size_too_far_count' => $faceSizeTooFarCount,
  'face_size_too_close_count' => $faceSizeTooCloseCount,
  'sampling_span_seconds' => $samplingSpan,
- 'sampling_coverage_percent' => $duration > 0? min(100, (int) round(($samplingSpan / $duration) * 100)): null,
+ 'duration_seconds' => $duration,
+ 'covered_seconds' => $coveredSeconds,
+ 'sampling_coverage_percent' => $duration > 0? min(100, (int) round(($coveredSeconds / $duration) * 100)): null,
  'camera_detection_protocol' => $cameraProtocol,
  'quality_data_present' => $qualityDataPresent,
  'unique_sample_count' => $uniqueSampleCount,
@@ -1923,11 +2106,75 @@ final class EvidenceBasedCoachingService
  'reliability_percent' => $reliabilityPercent,
  'reliability_band' => $reliabilityBand,
  'reliability_checks' => $reliabilityChecks,
+ 'reliability_basis' => 'Camera signal checks only; this is not a measured accuracy percentage.',
  'samples' => $normalized,
  'source' => $hasBodySignals? 'browser_reported_pose_landmark_estimate': 'browser_reported_landmark_estimate',
  'unavailable_reason' => $unavailableReason,
  'caveat' => $caveat,
  ];
+ }
+
+ /** Reject malformed evidence rather than turning it into a plausible boundary value. */
+ private function cameraSampleRejectionReason(mixed $sample, int $duration, bool $validatedProtocol): ?string
+ {
+ if (! is_array($sample)) {
+ return 'malformed_sample';
+ }
+ $ranges = [
+ 'sample_index' => [0, 100000],
+ 'captured_at_ms' => [0, 86400000],
+ 'frame_time_ms' => [0, 86400000],
+ 'detection_age_ms' => [0, 86400000],
+ 'at_seconds' => [0, max(0, $duration) + 2],
+ 'face_count' => [0, 10],
+ 'pose_count' => [0, 10],
+ 'sample_quality' => [0, 100],
+ 'face_confidence' => [0, 100],
+ 'pose_confidence' => [0, 100],
+ 'face_size_percent' => [0, 100],
+ 'camera_facing_score' => [0, 100],
+ 'movement_score' => [0, 100],
+ ];
+ foreach ($ranges as $field => [$minimum, $maximum]) {
+ if (! array_key_exists($field, $sample) || $sample[$field] === null) {
+ continue;
+ }
+ $value = $sample[$field];
+ if (! is_numeric($value) || ! is_finite((float) $value) || (float) $value < $minimum || (float) $value > $maximum) {
+ return 'invalid_'.$field;
+ }
+ if (in_array($field, ['sample_index', 'face_count', 'pose_count'], true) && floor((float) $value) !== (float) $value) {
+ return 'invalid_'.$field;
+ }
+ }
+ foreach (['face_detected', 'pose_detected', 'camera_facing', 'centered', 'framing_quality', 'shoulders_visible', 'shoulders_level', 'torso_visible', 'upright_posture', 'high_movement'] as $field) {
+ if (isset($sample[$field]) && (! is_scalar($sample[$field]) || $this->nullableBoolean($sample[$field]) === null)) {
+ return 'invalid_'.$field;
+ }
+ }
+ if (isset($sample['face_size_status']) && (! is_string($sample['face_size_status']) || ! in_array($sample['face_size_status'], ['good', 'too_far', 'too_close'], true))) {
+ return 'invalid_face_size_status';
+ }
+ if (isset($sample['capture_session_id']) && (! is_string($sample['capture_session_id']) || ! preg_match('/\A[A-Za-z0-9_-]{1,64}\z/', $sample['capture_session_id']))) {
+ return 'invalid_capture_session_id';
+ }
+ if ($validatedProtocol) {
+ foreach (['sample_index', 'captured_at_ms', 'at_seconds', 'frame_time_ms', 'detection_age_ms', 'sample_quality'] as $field) {
+ if (! isset($sample[$field])) {
+ return 'missing_'.$field;
+ }
+ }
+ foreach (['face_count', 'pose_count'] as $field) {
+ if (! array_key_exists($field, $sample)) {
+ return 'missing_'.$field;
+ }
+ }
+ if (! in_array($sample['observation_status'] ?? null, ['measured', 'calibrating', 'multiple_people', 'low_confidence', 'not_visible', 'model_unavailable'], true)) {
+ return 'invalid_observation_status';
+ }
+ }
+
+ return null;
  }
 
  private function clientFillerEvents(array $clientData): array
@@ -2014,6 +2261,7 @@ final class EvidenceBasedCoachingService
 
  return [
  'response_mode' => $answer->response_mode?? 'text',
+ 'elapsed_seconds' => $answer->elapsed_seconds?? 0,
  'voice_duration' => $answer->voice_duration?? 0,
  'wpm' => $answer->wpm?? 0,
  'filler_words_count' => $answer->filler_words_count?? 0,

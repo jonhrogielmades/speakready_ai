@@ -2034,6 +2034,85 @@ class UserSideHardeningTest extends TestCase
  $this->assertNotEmpty($savedAnswer->coaching_feedback);
  }
 
+ public function test_interview_preserves_a_full_camera_sample_window_when_saving_and_submitting(): void
+ {
+ Storage::fake('local');
+ $this->mock(AudioDurationService::class, function ($mock): void {
+ $mock->shouldReceive('seconds')->once()->andReturn(180);
+ });
+ config(['services.ai_transcription.provider_priority' => 'openai', 'services.local_speech.enabled' => false]);
+ Http::fake(['https://api.openai.com/v1/audio/transcriptions' => Http::response([
+ 'text' => 'I coordinated a release checklist and verified the final result with my team.',
+ ], 200)]);
+ AiProvider::create([
+ 'name' => 'OpenAI', 'api_endpoint' => 'https://api.openai.com/v1',
+ 'api_key' => Crypt::encryptString('test-key'), 'status' => 'active',
+ ]);
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ $category = $this->category();
+ $session = $this->sessionFor($user, $category, [
+ 'response_mode' => 'hybrid',
+ 'accommodation_profile' => ['camera_detection' => true],
+ ]);
+ $question = $this->question($category, ['interview_session_id' => $session->id]);
+ $samples = array_map(fn (int $index): array => [
+ 'capture_session_id' => 'camera-feature-test-stream-000001',
+ 'sample_index' => $index + 1,
+ 'at_seconds' => $index + 1,
+ 'captured_at_ms' => 100000 + $index * 1000,
+ 'frame_time_ms' => 1000 + $index * 1000,
+ 'detection_age_ms' => 80,
+ 'face_count' => 1,
+ 'pose_count' => 1,
+ 'face_detected' => true,
+ 'face_confidence' => 95,
+ 'face_size_percent' => 12,
+ 'face_size_status' => 'good',
+ 'camera_facing' => true,
+ 'camera_facing_score' => 95,
+ 'centered' => true,
+ 'framing_quality' => true,
+ 'pose_detected' => true,
+ 'pose_confidence' => 95,
+ 'shoulders_visible' => true,
+ 'torso_visible' => true,
+ 'shoulders_level' => true,
+ 'upright_posture' => true,
+ 'movement_score' => 10,
+ 'high_movement' => false,
+ 'sample_quality' => 95,
+ 'observation_status' => 'measured',
+ ], range(0, 179));
+ $observations = ['camera_detection_protocol' => 3, 'camera_samples' => $samples, 'filler_events' => []];
+ $payload = json_encode($observations, JSON_THROW_ON_ERROR);
+ $state = json_encode(['answersData' => [['observation_data' => $observations]]], JSON_THROW_ON_ERROR);
+ $this->assertGreaterThan(100000, strlen($payload));
+
+ $this->actingAs($user)->withSession(['active_interview_id' => $session->id])
+ ->postJson(route('interview.saveState'), ['session_state' => $state])
+ ->assertOk();
+ $this->assertSame($state, $session->fresh()->session_state);
+
+ $this->post(route('interview.answer'), [
+ 'question_id' => $question->id,
+ 'answer_text' => 'I coordinated a release checklist and verified the final result with my team.',
+ 'response_mode' => 'hybrid',
+ 'voice_audio' => UploadedFile::fake()->createWithContent('answer.webm', str_repeat('camera-audio-', 320))->mimeType('audio/webm'),
+ 'elapsed_seconds' => 180,
+ 'observation_data' => $payload,
+ ])->assertOk();
+ $answer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
+ $this->assertSame(180, data_get($answer->observation_data, 'camera.sample_count'));
+ $this->assertSame(0, $answer->eye_contact_score);
+ $this->assertSame(0, $answer->posture_score);
+
+ $this->postJson(route('interview.answer'), [
+ 'question_id' => $question->id,
+ 'answer_text' => 'A bounded request is still required.',
+ 'observation_data' => str_repeat('x', 250001),
+ ])->assertUnprocessable()->assertJsonValidationErrors('observation_data');
+ }
+
  public function test_interview_answer_respects_text_voice_hybrid_and_legacy_response_modes(): void
  {
  Storage::fake('local');

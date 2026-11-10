@@ -187,13 +187,19 @@
  $fillerEvents =! $isUnavailableStatus($deliveryStatus) && is_array($deliveryEvidence['filler_events']?? null)? array_values(array_filter($deliveryEvidence['filler_events'], fn ($item) => is_array($item) && trim((string) ($item['word']?? ''))!== '' && is_numeric($item['at_seconds']?? null))): [];
 
  $cameraMetricItems = [];
+ if (is_numeric($cameraEvidence['rejected_sample_count']?? null) && (int) $cameraEvidence['rejected_sample_count'] > 0) {
+ $cameraMetricItems[] = ['label' => 'Checks excluded from cues', 'value' => (int) $cameraEvidence['rejected_sample_count']];
+ }
+ if (is_numeric($cameraEvidence['usable_sample_count']?? null) && (int) $cameraEvidence['usable_sample_count'] > 0) {
+ $cameraMetricItems[] = ['label' => 'Usable checks', 'value' => (int) $cameraEvidence['usable_sample_count']];
+ }
  $cameraSampleCount = is_numeric($cameraEvidence['sample_count']?? null)? max(0, (int) round($cameraEvidence['sample_count'])): 0;
  $cameraReliabilityPercent = is_numeric($cameraEvidence['reliability_percent']?? null)? max(0, min(100, (int) round($cameraEvidence['reliability_percent']))): null;
  $cameraReliabilityBand = trim((string) ($cameraEvidence['reliability_band']?? ''));
  if ($cameraSampleCount > 0 && $cameraReliabilityPercent !== null) {
  $cameraMetricItems[] = [
- 'label' => 'Signal reliability',
- 'value' => $cameraReliabilityPercent.'%'.($cameraReliabilityBand !== ''? ' · '.$cameraReliabilityBand: ''),
+ 'label' => 'Signal checks',
+ 'value' => $cameraReliabilityPercent.' / 100'.($cameraReliabilityBand !== ''? ' · '.$cameraReliabilityBand: ''),
  ];
  }
  if (! $isUnavailableStatus($cameraStatus) && $cameraSampleCount > 0) {
@@ -208,7 +214,7 @@
  $cameraMetricItems[] = ['label' => 'Face seen', 'value' => (int) round($cameraEvidence['face_visibility_percent']).'%'];
  }
  if (array_key_exists('camera_facing_percent', $cameraEvidence) && is_numeric($cameraEvidence['camera_facing_percent'])) {
- $cameraMetricItems[] = ['label' => 'Facing camera', 'value' => (int) round($cameraEvidence['camera_facing_percent']).'%'];
+ $cameraMetricItems[] = ['label' => 'No sideways head turn (estimate)', 'value' => (int) round($cameraEvidence['camera_facing_percent']).'%'];
  } elseif (array_key_exists('camera_facing_count', $cameraEvidence) && is_numeric($cameraEvidence['camera_facing_count'])) {
  $cameraMetricItems[] = [
  'label' => 'Facing camera checks',
@@ -228,7 +234,7 @@
  $cameraMetricItems[] = ['label' => 'Usable framing', 'value' => (int) round($cameraEvidence['framing_quality_percent']).'%'];
  }
  if (array_key_exists('average_sample_quality', $cameraEvidence) && is_numeric($cameraEvidence['average_sample_quality'])) {
- $cameraMetricItems[] = ['label' => 'Camera quality', 'value' => (int) round($cameraEvidence['average_sample_quality']).' / 100'];
+ $cameraMetricItems[] = ['label' => 'Landmark signal quality', 'value' => (int) round($cameraEvidence['average_sample_quality']).' / 100'];
  }
  if (array_key_exists('average_face_size_percent', $cameraEvidence) && is_numeric($cameraEvidence['average_face_size_percent'])) {
  $cameraMetricItems[] = ['label' => 'Face frame size', 'value' => round((float) $cameraEvidence['average_face_size_percent'], 1).'%'];
@@ -243,10 +249,10 @@
  $cameraMetricItems[] = ['label' => 'Shoulders level', 'value' => (int) round($cameraEvidence['shoulders_level_percent']).'%'];
  }
  if (array_key_exists('upright_posture_percent', $cameraEvidence) && is_numeric($cameraEvidence['upright_posture_percent'])) {
- $cameraMetricItems[] = ['label' => 'Upright body', 'value' => (int) round($cameraEvidence['upright_posture_percent']).'%'];
+ $cameraMetricItems[] = ['label' => 'Torso alignment (estimate)', 'value' => (int) round($cameraEvidence['upright_posture_percent']).'%'];
  }
  if (array_key_exists('average_movement_score', $cameraEvidence) && is_numeric($cameraEvidence['average_movement_score'])) {
- $cameraMetricItems[] = ['label' => 'Movement score', 'value' => (int) round($cameraEvidence['average_movement_score']).' / 100'];
+ $cameraMetricItems[] = ['label' => 'Visible movement (estimate)', 'value' => (int) round($cameraEvidence['average_movement_score']).' / 100'];
  }
  if (array_key_exists('high_movement_percent', $cameraEvidence) && is_numeric($cameraEvidence['high_movement_percent'])) {
  $cameraMetricItems[] = ['label' => 'High movement checks', 'value' => (int) round($cameraEvidence['high_movement_percent']).'%'];
@@ -538,7 +544,7 @@
  <div class="{{ $deliveryLimitation!== ''? 'mt-1': '' }}"><strong style="color:var(--tx2);">Camera note:</strong> {{ $cameraLimitation }}</div>
  @endif
  @if(!empty($cameraMetricItems))
- <div class="mt-1"><i class="fa-solid fa-shield-halved me-1"></i>Camera notes only describe what was seen in frame. They do not measure confidence, personality, honesty, job fit, or intent.</div>
+ <div class="mt-1"><i class="fa-solid fa-shield-halved me-1"></i>Camera notes only describe what was seen in frame. They do not measure confidence, personality, honesty, job fit, or intent. Signal checks describe data quality, not proven detection accuracy. Cue percentages use only checks where that cue could be measured.</div>
  @endif
  @if($transparencyNote!== '')
  <div class="mt-1"><strong style="color:var(--tx2);">How to read this:</strong> {{ $transparencyNote }}</div>

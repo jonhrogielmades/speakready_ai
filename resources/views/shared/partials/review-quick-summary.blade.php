@@ -61,7 +61,7 @@
  );
  $cameraObservation = $removeHandFeedback($cameraObservation);
  if ($cameraObservation === '') {
- $cameraObservation = 'Camera feedback was measured from face, posture, and movement cues.';
+ $cameraObservation = 'Camera notes describe the visible cues that could be measured in frame.';
  }
  $cameraTip = is_scalar($camera['tip'] ?? null)
  ? trim((string) $camera['tip'])

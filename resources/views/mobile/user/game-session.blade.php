@@ -383,7 +383,11 @@ const serverSpeechUrlCache = new Map();
  let gameAnswerWaveTimeData = null;
  let gameAnswerWaveFrequencyData = null;
 window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
-let gameCameraMovementBaseline = null;
+let gameCameraTracker = null;
+let gameCameraTrackingInFlight = false;
+let gameCameraEpoch = 0;
+let gameCameraLastObservationAtMs = null;
+let gameCameraRequestToken = 0;
 let cameraTrackingInterval = null;
 let preRecordingText = '';
 let recordingAnswerTextAtStart = '';
@@ -627,9 +631,13 @@ let gameMatchFullscreenBusy = false;
 
  document.addEventListener('fullscreenchange', handleGameMatchFullscreenChange);
  document.addEventListener('visibilitychange', () => {
- if (document.visibilityState === 'hidden') saveGameStateOnPageHide();
+ if (document.visibilityState === 'hidden') {
+ gameCameraEpoch++;
+ saveGameStateOnPageHide();
+ }
  });
  window.addEventListener('pagehide', () => {
+ stopGameCamera();
 saveGameStateOnPageHide();
  removeGameMatchFullscreenRetry();
  clearGameVoiceSessionPlayback();
@@ -1355,23 +1363,29 @@ saveGameStateOnPageHide();
 
  function initCamera() {
  if (!cameraCoachingEnabled) return;
+ const cameraRequest = ++gameCameraRequestToken;
  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
  navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+ if (cameraRequest !== gameCameraRequestToken || !challengeSessionStarted || isFinishingChallenge) {
+ stream.getTracks().forEach(track => track.stop());
+ return;
+ }
  setGameCameraStatus(window.faceFramingModelUnavailable || window.bodyLanguageModelState?.failed
  ? 'Camera preview ready; coaching models are unavailable.'
  : 'Camera ready. Calibrating cues...');
  let video = document.getElementById('userCamera');
  if (video) {
  video.srcObject = stream;
- video.play();
+ video.play()?.catch(() => setGameCameraStatus('Camera preview is waiting for playback.'));
  }
  let mobileVideo = document.getElementById('userCameraMobile');
  if (mobileVideo) {
  mobileVideo.srcObject = stream;
- mobileVideo.play();
+ mobileVideo.play()?.catch(() => setGameCameraStatus('Camera preview is waiting for playback.'));
  }
  document.querySelector('.mobile-camera-pip')?.classList.add('camera-ready');
  }).catch(function(err) {
+ if (cameraRequest !== gameCameraRequestToken || isFinishingChallenge) return;
  console.error("Error accessing camera: ", err);
  setGameCameraStatus('Camera unavailable. You can continue without camera cues.');
  window.SpeakReadyUiNotice?.('Camera access is unavailable. Your challenge can continue without it.');
@@ -1380,6 +1394,18 @@ saveGameStateOnPageHide();
  console.error("getUserMedia not supported");
  setGameCameraStatus('Camera unavailable in this browser. You can continue.');
  }
+ }
+ function stopGameCamera() {
+ gameCameraEpoch++;
+ gameCameraRequestToken++;
+ clearInterval(cameraTrackingInterval);
+ ['userCamera', 'userCameraMobile'].forEach(id => {
+ const video = document.getElementById(id);
+ if (!video?.srcObject) return;
+ video.srcObject.getTracks().forEach(track => track.stop());
+ video.srcObject = null;
+ });
+ gameCameraLastObservationAtMs = null;
  }
  function setGameCameraStatus(message) {
  ['cameraAvailabilityStatus', 'mobileCameraAvailabilityStatus'].forEach(id => {
@@ -1398,115 +1424,61 @@ saveGameStateOnPageHide();
  });
  }
 
- function gameVisibleLandmark(landmark, threshold = 0.35) {
- if (!landmark ||!Number.isFinite(Number(landmark.x)) ||!Number.isFinite(Number(landmark.y))) return false;
- return Number(landmark.visibility?? landmark.presence?? 1) >= threshold;
+ async function trackBodyLanguage() {
+ const sharedCamera = window.SpeakReadyCameraObservations;
+ const bodyLanguageState = window.bodyLanguageModelState || {};
+ if (!cameraCoachingEnabled || !challengeSessionStarted || isFinishingChallenge || isChallengeTransitioning
+ || document.visibilityState === 'hidden' || !sharedCamera) return;
+ if (gameCameraLastObservationAtMs !== null && performance.now() - gameCameraLastObservationAtMs > 2000) {
+ sharedCamera.renderUnavailable(setGameCameraStat);
+ setGameCameraStatus('Camera cues paused until a fresh visible frame is available.');
  }
-
- function gameCenterOf(points) {
- const usable = points.filter(point => point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y)));
- if (usable.length === 0) return null;
- const total = usable.reduce(
- (point, current) => ({ x: point.x + current.x, y: point.y + current.y }),
- { x: 0, y: 0 }
- );
- return { x: total.x / usable.length, y: total.y / usable.length };
+ if (gameCameraTrackingInFlight) return;
+ const video = document.getElementById('userCamera') || document.getElementById('userCameraMobile');
+ if (!video || !video.srcObject || video.readyState < 2 || !video.videoWidth || !video.videoHeight) {
+ sharedCamera.renderUnavailable(setGameCameraStat);
+ return;
  }
-
- function gamePointDistance(left, right) {
- if (!left ||!right) return null;
- return Math.hypot(Number(left.x) - Number(right.x), Number(left.y) - Number(right.y));
+ const stream = video.srcObject;
+ if (!stream.getVideoTracks().some(track => track.readyState === 'live' && !track.muted)) {
+ sharedCamera.renderUnavailable(setGameCameraStat);
+ return;
  }
-
- function gameDetectVideoFrame(landmarker, video, timestamp) {
- if (!landmarker || typeof landmarker.detectForVideo!== 'function') return null;
+ const trackedQuestion = currentQIdx;
+ const trackedEpoch = gameCameraEpoch;
+ const stillCurrent = () => cameraCoachingEnabled && challengeSessionStarted && !isFinishingChallenge
+ && !isChallengeTransitioning && currentQIdx === trackedQuestion && gameCameraEpoch === trackedEpoch
+ && document.visibilityState !== 'hidden' && video.srcObject === stream
+ && stream.getVideoTracks().some(track => track.readyState === 'live' && !track.muted);
+ gameCameraTrackingInFlight = true;
  try {
- return landmarker.detectForVideo(video, timestamp);
+ gameCameraTracker = gameCameraTracker || sharedCamera.createTracker();
+ const sample = await gameCameraTracker.sample(video, {
+ faceApi: window.faceapi,
+ faceReady: Boolean(window.faceFramingModelReady),
+ poseLandmarker: bodyLanguageState.ready ? bodyLanguageState.poseLandmarker : null,
+ questionKey: trackedEpoch + ':' + trackedQuestion,
+ current: stillCurrent,
+ atSeconds: Math.max(0, Number(recTimerSeconds || 0))
+ });
+ if (!sample || !stillCurrent()) return;
+ gameCameraLastObservationAtMs = performance.now();
+ sharedCamera.render(sample, setGameCameraStat);
+ const statusMessages = {
+ multiple_people: 'One person at a time is needed for camera cues.',
+ model_unavailable: 'Camera preview ready; detection is unavailable.',
+ not_visible: 'Move into view for camera cues.',
+ low_confidence: 'Camera cues are uncertain. Improve lighting or framing.',
+ calibrating: 'Checking visible frames before showing camera cues.'
+ };
+ setGameCameraStatus(statusMessages[sample.observation_status] || 'Camera cues are estimates from visible frames.');
  } catch (error) {
- return landmarker.detectForVideo(video);
- }
- }
-
-async function trackBodyLanguage() {
-const bodyLanguageState = window.bodyLanguageModelState || {};
-const canUseBodyModels = Boolean(bodyLanguageState.ready && bodyLanguageState.poseLandmarker);
-const canUseFaceModel = Boolean(window.faceFramingModelReady && typeof faceapi!== 'undefined');
-if (!cameraCoachingEnabled || !canUseBodyModels || !canUseFaceModel) return;
-const video = document.getElementById('userCamera');
- if (!video ||!video.srcObject) return;
-
- try {
- let detection = null;
- let faceConfidence = null;
- if (canUseFaceModel) {
- try {
- detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.60 })).withFaceLandmarks();
- faceConfidence = detection?.detection?.score !== undefined? Number(detection.detection.score) * 100: (detection? 100: null);
- if (faceConfidence !== null && faceConfidence < 60) detection = null;
- } catch (faceError) {
- console.error("Face framing tracking error", faceError);
- }
-}
-
-let poseLandmarks = null;
-if (canUseBodyModels) {
-const timestamp = performance.now();
-const poseResult = gameDetectVideoFrame(bodyLanguageState.poseLandmarker, video, timestamp);
-poseLandmarks = Array.isArray(poseResult?.landmarks) && poseResult.landmarks.length > 0? poseResult.landmarks[0]: null;
-}
-
-const poseDetected = Array.isArray(poseLandmarks) && poseLandmarks.length > 0;
- const faceVisible = Boolean(detection || (poseDetected && gameVisibleLandmark(poseLandmarks[0])));
- let shouldersVisible = false;
- let shouldersLevel = null;
- let uprightPosture = null;
- let poseCameraFacing = null;
- const movementPoints = {};
-
- if (poseDetected) {
- const nose = poseLandmarks[0];
- const leftShoulder = poseLandmarks[11];
- const rightShoulder = poseLandmarks[12];
- const leftHip = poseLandmarks[23];
- const rightHip = poseLandmarks[24];
- const noseVisible = gameVisibleLandmark(nose);
- shouldersVisible = gameVisibleLandmark(leftShoulder) && gameVisibleLandmark(rightShoulder);
- const hipsVisible = gameVisibleLandmark(leftHip) && gameVisibleLandmark(rightHip);
- const shoulderMidpoint = shouldersVisible? gameCenterOf([leftShoulder, rightShoulder]): null;
- const hipMidpoint = hipsVisible? gameCenterOf([leftHip, rightHip]): null;
- const shoulderWidth = shouldersVisible? Math.max(0.01, gamePointDistance(leftShoulder, rightShoulder)?? 0.01): 0.01;
- if (noseVisible) movementPoints.nose = { x: nose.x, y: nose.y };
- if (shoulderMidpoint) {
- movementPoints.shoulders = shoulderMidpoint;
- shouldersLevel = Math.abs(Number(leftShoulder.y) - Number(rightShoulder.y)) <= 0.065;
- }
- if (noseVisible && shoulderMidpoint) {
- poseCameraFacing = Math.abs((Number(nose.x) - shoulderMidpoint.x) / shoulderWidth) <= 0.38;
- uprightPosture = Math.abs((Number(nose.x) - shoulderMidpoint.x) / shoulderWidth) <= 0.45;
- }
- if (shoulderMidpoint && hipMidpoint) {
- const torsoHeight = Math.max(0.01, Math.abs(hipMidpoint.y - shoulderMidpoint.y));
- uprightPosture = Math.abs((shoulderMidpoint.x - hipMidpoint.x) / torsoHeight) <= 0.28;
-}
-}
-
-let movementScore = null;
-if (gameCameraMovementBaseline && Object.keys(movementPoints).length > 0) {
-const distances = Object.entries(movementPoints).map(([key, point]) => gamePointDistance(point, gameCameraMovementBaseline[key])).filter(distance => Number.isFinite(distance));
-if (distances.length > 0) {
-movementScore = Math.min(100, Math.round((distances.reduce((total, distance) => total + distance, 0) / distances.length) * 650));
-}
-}
-gameCameraMovementBaseline = movementPoints;
-
-const highConfidenceFrame = Boolean(detection && faceConfidence !== null && faceConfidence >= 60 && poseDetected && shouldersVisible && poseCameraFacing !== null);
-setGameCameraStatus(highConfidenceFrame ? 'Camera cues ready.' : 'Camera ready. Move into frame for reliable cues.');
-setGameCameraStat('stEyeContact', highConfidenceFrame? '<i class="fa-solid fa-check me-1"></i>Reliable frame': (faceVisible? '<i class="fa-solid fa-circle-info me-1"></i>Signal checking': '<i class="fa-solid fa-circle-info me-1"></i>Move into frame'), highConfidenceFrame? 'text-success': 'text-warning', true);
-setGameCameraStat('stPosture', highConfidenceFrame? (poseCameraFacing === false? 'Head turned estimate': 'Camera-facing estimate'): 'Awaiting reliable signal', highConfidenceFrame? (poseCameraFacing === false? 'text-warning': 'text-success'): 'text-secondary');
-setGameCameraStat('stPose', highConfidenceFrame? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): 'Awaiting reliable signal', highConfidenceFrame? (shouldersLevel && uprightPosture!== false? 'text-success': 'text-warning'): 'text-secondary');
-setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal': (movementScore === null? 'Calibrating': (movementScore >= 45? 'Higher movement': 'Steady')), !highConfidenceFrame || movementScore === null? 'text-secondary': (movementScore >= 45? 'text-warning': 'text-success'));
-} catch(e) {
- console.error("Tracking error", e);
+ if (!stillCurrent()) return;
+ setGameCameraStatus('Camera preview ready; detection is temporarily unavailable.');
+ ['stEyeContact', 'stPosture', 'stPose', 'stMovement'].forEach(id => setGameCameraStat(id, 'Not measured'));
+ console.warn('Optional camera detection unavailable', error);
+ } finally {
+ gameCameraTrackingInFlight = false;
  }
  }
 
@@ -2050,7 +2022,7 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  enterGameMatchFullscreen({ auto: true, requestBrowser: false });
  if (cameraCoachingEnabled) {
  initCamera();
- cameraTrackingInterval = setInterval(trackBodyLanguage, 2000);
+ cameraTrackingInterval = setInterval(trackBodyLanguage, 500);
  }
  
  if(isVoiceTranscriptionMode()) {
@@ -2091,6 +2063,9 @@ setGameCameraStat('stMovement', !highConfidenceFrame? 'Awaiting reliable signal'
  }
 
  async function loadQuestion(idx) {
+ gameCameraEpoch++;
+ gameCameraLastObservationAtMs = null;
+ window.SpeakReadyCameraObservations?.renderUnavailable(setGameCameraStat);
  currentQIdx = idx;
  const q = questions[idx];
  randomizeInterviewerAvatar();
@@ -3148,14 +3123,10 @@ function saveGameStateOnPageHide() {
  function finishChallenge() {
  if (isFinishingChallenge) return;
  isFinishingChallenge = true;
+ stopGameCamera();
  showChallengeFinishModal('Scoring your answers and preparing your result modal...');
  document.querySelectorAll('.next-btn-class,.end-challenge-btn-class').forEach(el => el.disabled = true);
- let video = document.getElementById('userCamera');
- if (video && video.srcObject) {
- video.srcObject.getTracks().forEach(track => track.stop());
- }
  clearInterval(timerInterval);
- clearInterval(cameraTrackingInterval);
  clearTimeout(autoStartAfterQuestionTimer);
  questionSpeechToken++;
  cancelGameSpeechOutput();
@@ -3218,18 +3189,22 @@ function saveGameStateOnPageHide() {
 </div>
 
 @if(isset($cameraCoachingEnabled) && $cameraCoachingEnabled)
+<script src="{{ asset('js/shared/camera-observations.js') }}?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
+ window.faceFramingModelReady = false;
  if (!window.faceapi) {
  window.faceFramingModelUnavailable = true;
  setGameCameraStatus('Camera preview ready; coaching models are unavailable.');
  } else Promise.all([
- faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/'),
- faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/')
+ faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@a86f011d72124e5fb93e59d5c4ab98f699dd5c9c/weights/'),
+ faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@a86f011d72124e5fb93e59d5c4ab98f699dd5c9c/weights/')
  ]).then(() => {
  window.faceFramingModelReady = true;
+ window.faceFramingModelUnavailable = false;
  console.log("Optional face-framing models loaded");
  }).catch(err => {
+ window.faceFramingModelReady = false;
  window.faceFramingModelUnavailable = true;
  setGameCameraStatus('Camera preview ready; coaching models are unavailable.');
  console.error("Error loading optional face-framing models", err);
@@ -3248,13 +3223,13 @@ const vision = await FilesetResolver.forVisionTasks(
 );
 const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
 baseOptions: {
-modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task'
+modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
 },
  runningMode: 'VIDEO',
- numPoses: 1,
- minPoseDetectionConfidence: 0.60,
-minPosePresenceConfidence: 0.60,
-minTrackingConfidence: 0.60,
+ numPoses: 2,
+ minPoseDetectionConfidence: 0.65,
+minPosePresenceConfidence: 0.65,
+minTrackingConfidence: 0.65,
 outputSegmentationMasks: false
 });
 

@@ -387,7 +387,7 @@ class InterviewController extends Controller
  'answer_text' => 'nullable|string|max:20000',
  'speech_transcript' => 'nullable|string|max:20000',
  'transcript_timeline' => 'nullable|string|max:50000',
- 'observation_data' => 'nullable|string|max:50000',
+ 'observation_data' => 'nullable|string|max:250000',
  'pronunciation_analysis' => 'nullable|string|max:100000',
  'paste_event_count' => 'nullable|integer|min:0|max:500',
  'pasted_character_count' => 'nullable|integer|min:0|max:20000',
@@ -470,7 +470,7 @@ class InterviewController extends Controller
  'notes' => 'nullable|string|max:10000',
  'duration_seconds' => 'nullable|integer|min:0|max:28800',
  'current_question_index' => 'nullable|integer|min:0|max:200',
- 'session_state' => 'nullable|string|max:100000',
+ 'session_state' => 'nullable|string|max:500000',
  ]);
 
  $saved = DB::transaction(function () use ($session, $validated): bool {
@@ -571,7 +571,7 @@ class InterviewController extends Controller
  'speech_transcript' => 'nullable|string|max:20000',
  'conversation_context' => 'nullable|string|max:50000',
  'transcript_timeline' => 'nullable|string|max:50000',
- 'observation_data' => 'nullable|string|max:50000',
+ 'observation_data' => 'nullable|string|max:250000',
  'pronunciation_analysis' => 'nullable|string|max:100000',
  'paste_event_count' => 'nullable|integer|min:0|max:500',
  'pasted_character_count' => 'nullable|integer|min:0|max:20000',
@@ -1903,7 +1903,7 @@ return response()->json([
  'answer_text' => 'nullable|string|max:20000',
  'speech_transcript' => 'nullable|string|max:20000',
  'transcript_timeline' => 'nullable|string|max:50000',
- 'observation_data' => 'nullable|string|max:50000',
+ 'observation_data' => 'nullable|string|max:250000',
  'pronunciation_analysis' => 'nullable|string|max:100000',
  'paste_event_count' => 'nullable|integer|min:0|max:500',
  'pasted_character_count' => 'nullable|integer|min:0|max:20000',
@@ -2064,7 +2064,7 @@ return response()->json([
  'answer_text' => 'required|string|max:20000',
  'speech_transcript' => 'nullable|string|max:20000',
  'transcript_timeline' => 'nullable|string|max:50000',
- 'observation_data' => 'nullable|string|max:50000',
+ 'observation_data' => 'nullable|string|max:250000',
  'pronunciation_analysis' => 'nullable|string|max:100000',
  'paste_event_count' => 'nullable|integer|min:0|max:500',
  'pasted_character_count' => 'nullable|integer|min:0|max:20000',
@@ -2654,6 +2654,7 @@ return response()->json([
  $metrics = array_merge($deliveryMetrics, [
  'response_mode' => $responseMode,
  'is_skipped' => (bool) ($answer->is_skipped?? false),
+ 'elapsed_seconds' => $this->clampInt($answer->elapsed_seconds?? 0, 0, 7200),
  'pronunciation_analysis' => $pronunciationAnalysis,
  'pronunciation_score' => $pronunciationScore,
  ]);
@@ -2990,6 +2991,7 @@ return response()->json([
  $metrics = array_merge($deliveryMetrics, [
  'response_mode' => $responseMode,
  'is_skipped' => filter_var($validated['is_skipped']?? false, FILTER_VALIDATE_BOOLEAN),
+ 'elapsed_seconds' => $this->clampInt($validated['elapsed_seconds']?? 0, 0, 7200),
  'pronunciation_analysis' => $pronunciationAnalysis,
  'pronunciation_score' => $pronunciationScore,
  ]);
@@ -3048,7 +3050,7 @@ return response()->json([
  if ($cameraEnabled) {
  // The server selects the strict camera protocol whenever the session has
  // camera detection enabled; clients cannot opt out by omitting the marker.
- $clientData['camera_detection_protocol'] = max(2, (int) ($clientData['camera_detection_protocol']?? 0));
+ $clientData['camera_detection_protocol'] = max(2, (int) ($clientData['camera_detection_protocol']?? data_get($clientData, 'camera.camera_detection_protocol', 0)));
  }
 
  return app(EvidenceBasedCoachingService::class)->normalizeObservationData(

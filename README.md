@@ -77,6 +77,18 @@ Interview sessions support:
 - Evidence-based coaching and AI provider fallback handling when external providers are unavailable or return incomplete JSON.
 - Admin-side KNN readiness matching support, comparing a scored interview with similar historical scored sessions as a secondary readiness signal.
 
+### Optional Camera Observations
+
+Desktop and mobile interviews and challenges share `public/js/shared/camera-observations.js`. Each check freezes one video frame for both detectors, rejects stale results and multiple people, and waits for stable observations before showing head direction, shoulder alignment, torso alignment, or movement. Missing or uncertain landmarks remain unmeasured. Torso alignment requires visible shoulders and hips; a face or nose alone cannot establish posture. Movement uses elapsed time and shoulder width to reduce changes caused by sampling speed and camera distance.
+
+Interview camera protocol 3 includes frame timestamps, detector age, person counts, landmark confidence, and per-cue availability. The server independently rejects malformed, duplicate, stale, and ambiguous samples, checks temporal coverage, and uses only measured cues in each percentage. Camera observations are optional and do not contribute to answer scores or readiness, whether feedback comes from local assessment or an AI provider. The signal-check score describes input quality, not the probability that a cue is correct.
+
+Model assets use fixed versions. Landmark geometry follows the [MediaPipe pose landmark coordinate documentation](https://ai.google.dev/edge/mediapipe/solutions/vision/pose_landmarker), with face detection supplied by [face-api.js](https://github.com/justadudewhohacks/face-api.js). Camera geometry remains a browser estimate: the head cue estimates sideways turns, not vertical tilt or eye contact, and visible alignment does not establish confidence, honesty, personality, intent, or job fit. Only a bounded window of recent samples is retained; very long answers may have insufficient coverage for a camera summary.
+
+Automated camera tests use synthetic landmarks and simulated browser lifecycle events. These verify safeguards and regressions, **not a 95–100% real-world accuracy claim**. Before publishing an accuracy target, evaluate consented, independently labelled recordings across lighting, devices, camera angles, skin tones, glasses, seated positions, and mobility differences. Report per-cue precision/recall, false cues, abstention rates, latency, and subgroup results on a held-out set; do not count unmeasured frames as correct detections.
+
+Run the browser regression suite with `node --test tests/Frontend/*.test.mjs` and camera feedback checks with `php artisan test --filter=EvidenceBasedCoachingServiceTest`.
+
 ### Question Generation Algorithm Evaluation
 
 Question generation uses a hybrid pipeline instead of relying on one algorithm. The current default path is source-backed retrieval plus AI generation, with deterministic dataset fallback when an external model is unavailable.

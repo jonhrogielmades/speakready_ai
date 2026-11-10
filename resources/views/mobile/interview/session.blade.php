@@ -295,10 +295,10 @@
  <div id="cameraDetectionStatus" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.65);padding:2px 8px;border-radius:4px;font-size:.7rem;color:#cbd5e1"><i class="fa-solid fa-laptop me-1"></i>Local landmark estimate</div>
  </div>
  <div class="stat-row"><span>Face in frame</span><span id="stEyeContact" class="text-secondary">Waiting</span></div>
- <div class="stat-row"><span>Head alignment estimate</span><span id="stPosture" class="text-secondary">Not scored</span></div>
- <div class="stat-row"><span>Shoulders / posture pose</span><span id="stPose" class="text-secondary">Waiting</span></div>
- <div class="stat-row mb-0"><span>Movement steadiness</span><span id="stMovement" class="text-secondary">Waiting</span></div>
- <div class="small mt-2" style="color:var(--tx3)">Camera feedback uses a high-confidence gate: enough time-spread frames, strong face confidence, usable framing, and pose cross-checks. If those checks do not pass, the report withholds the camera conclusion. Video is analyzed in your browser; no images, video, or raw landmarks are stored. It does not infer confidence, honesty, personality, or employability, and it is excluded from readiness.</div>
+ <div class="stat-row"><span>Sideways head turn estimate</span><span id="stPosture" class="text-secondary">Not scored</span></div>
+ <div class="stat-row"><span>Torso / shoulder estimates</span><span id="stPose" class="text-secondary">Waiting</span></div>
+ <div class="stat-row mb-0"><span>Observed movement</span><span id="stMovement" class="text-secondary">Waiting</span></div>
+ <div class="small mt-2" style="color:var(--tx3)">Camera estimates require repeated, fresh observations with sufficient landmark confidence. Partial, ambiguous, or outdated observations are withheld. Video is analyzed in your browser; no images, video, or raw landmarks are stored. These estimates do not measure eye contact, confidence, honesty, personality, or employability, and are excluded from readiness.</div>
  </div>
 
  </div>
@@ -554,7 +554,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  filler_events: [],
  camera_samples: [],
  camera_detection_enabled: cameraDetectionEnabled,
- camera_detection_protocol: 2,
+ camera_detection_protocol: 3,
  camera_unavailable_reason: cameraDetectionEnabled? cameraUnavailableReason: null
  },
  pronunciation_analysis: null,
@@ -589,7 +589,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  filler_events: Array.isArray(observations.filler_events)? observations.filler_events: [],
  camera_samples: cameraDetectionEnabled && Array.isArray(observations.camera_samples)? observations.camera_samples: [],
  camera_detection_enabled: cameraDetectionEnabled,
- camera_detection_protocol: 2,
+ camera_detection_protocol: 3,
  camera_unavailable_reason: cameraDetectionEnabled? (observations.camera_unavailable_reason || cameraUnavailableReason): null
  };
 
@@ -603,7 +603,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  filler_events: Array.isArray(observations.filler_events)? observations.filler_events.slice(-fillerLimit): [],
  camera_samples: cameraDetectionEnabled && Array.isArray(observations.camera_samples)? observations.camera_samples.slice(-cameraLimit): [],
  camera_detection_enabled: cameraDetectionEnabled,
- camera_detection_protocol: 2,
+ camera_detection_protocol: 3,
  camera_unavailable_reason: cameraDetectionEnabled? (observations.camera_unavailable_reason || cameraUnavailableReason): null
  };
  }
@@ -666,9 +666,9 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let answerWaveFrequencyData = null;
  let cameraTrackingInFlight = false;
  window.bodyLanguageModelState = window.bodyLanguageModelState || { ready: false, failed: false, poseLandmarker: null };
- const cameraMovementBaselines = {};
- let cameraSampleSequence = 0;
- const cameraFaceSizeRange = { min: 3, max: 42 };
+ let cameraObservationTracker = null;
+ let cameraRecordingEpoch = 0;
+ let cameraLastObservationAtMs = 0;
 
  const BrowserSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
  const serverTranscriptionEnabled = @json(\App\Services\AIService::speechTranscriptionAvailable());
@@ -3190,289 +3190,79 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  element.className = className;
  }
 
- function visibleLandmark(landmark, threshold = 0.35) {
- if (!landmark ||!Number.isFinite(Number(landmark.x)) ||!Number.isFinite(Number(landmark.y))) {
- return false;
- }
- const visibility = Number(landmark.visibility?? landmark.presence?? 1);
- return visibility >= threshold;
- }
-
- function centerOfNormalized(points) {
- const usable = points.filter(point => point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y)));
- if (usable.length === 0) return null;
- const total = usable.reduce(
- (point, current) => ({ x: point.x + current.x, y: point.y + current.y }),
- { x: 0, y: 0 }
- );
- return { x: total.x / usable.length, y: total.y / usable.length };
- }
-
- function pointDistance(left, right) {
- if (!left ||!right) return null;
- return Math.hypot(Number(left.x) - Number(right.x), Number(left.y) - Number(right.y));
- }
-
- function boundedCameraNumber(value, minimum, maximum) {
- const number = Number(value);
- if (!Number.isFinite(number)) return null;
- return Math.max(minimum, Math.min(maximum, number));
- }
-
- function cameraPercent(value, decimals = 0) {
- const number = boundedCameraNumber(value, 0, 100);
- if (number === null) return null;
- const factor = Math.pow(10, decimals);
- return Math.round(number * factor) / factor;
- }
-
  function cameraVideoReady(video) {
- return Boolean(video && video.srcObject && video.readyState >= 2 && (video.videoWidth || video.clientWidth) && (video.videoHeight || video.clientHeight));
+ const tracks = video?.srcObject?.getVideoTracks?.() || [];
+ return Boolean(video && video.srcObject && video.readyState >= 2 && !video.paused && !video.ended
+ && video.videoWidth > 0 && video.videoHeight > 0 && !document.hidden
+ && (!tracks.length || tracks.some(track => track.readyState === 'live' && track.enabled && !track.muted)));
  }
 
- function cameraFaceSizeStatus(faceSizePercent) {
- if (!Number.isFinite(Number(faceSizePercent))) return null;
- if (faceSizePercent < cameraFaceSizeRange.min) return 'too_far';
- if (faceSizePercent > cameraFaceSizeRange.max) return 'too_close';
- return 'good';
- }
-
- function detectVideoFrame(landmarker, video, timestamp) {
- if (!landmarker || typeof landmarker.detectForVideo!== 'function') return null;
- try {
- return landmarker.detectForVideo(video, timestamp);
- } catch (error) {
- return landmarker.detectForVideo(video);
+ function clearCameraObservationDisplay() {
+ window.SpeakReadyCameraObservations?.renderUnavailable(setCameraStat);
+ const detectionStatus = document.getElementById('cameraDetectionStatus');
+ if (detectionStatus) {
+ detectionStatus.textContent = 'Not measured / checking';
+ detectionStatus.style.color = '#cbd5e1';
  }
  }
 
  async function trackBodyLanguageDetection() {
- const bodyLanguageState = window.bodyLanguageModelState || {};
- const canUseBodyModels = Boolean(bodyLanguageState.ready && bodyLanguageState.poseLandmarker);
- const canUseFaceModel = typeof faceapi!== 'undefined' &&!window.faceFramingModelUnavailable;
- if (!cameraDetectionEnabled || cameraTrackingInFlight || (!canUseBodyModels &&!canUseFaceModel)) return;
+ const helper = window.SpeakReadyCameraObservations;
+ if (!cameraDetectionEnabled || !helper || !isRecording || interviewTerminated) return;
+ if (performance.now() - cameraLastObservationAtMs > 2000) clearCameraObservationDisplay();
+ if (cameraTrackingInFlight) return;
  const video = document.getElementById('userCamera') || document.getElementById('userCameraMobile');
- if (!cameraVideoReady(video)) return;
+ if (!cameraVideoReady(video)) {
+ clearCameraObservationDisplay();
+ return;
+ }
  const trackedQuestionIndex = currentQIdx;
- const capturedAtMs = Math.round((window.performance && typeof window.performance.now === 'function'? window.performance.now(): Date.now()));
- const sampleIndex = ++cameraSampleSequence;
- const videoWidth = Math.max(1, video.videoWidth || video.clientWidth || 1);
- const videoHeight = Math.max(1, video.videoHeight || video.clientHeight || 1);
-
+ const trackedEpoch = cameraRecordingEpoch;
+ const trackedStream = video.srcObject;
+ const current = () => isRecording && !interviewTerminated && currentQIdx === trackedQuestionIndex
+ && cameraRecordingEpoch === trackedEpoch && video.srcObject === trackedStream && cameraVideoReady(video);
+ const modelState = window.bodyLanguageModelState || {};
+ cameraObservationTracker ||= helper.createTracker();
  cameraTrackingInFlight = true;
  try {
- let detection = null;
- let faceConfidence = null;
- if (canUseFaceModel) {
- try {
- const detectorOptions = new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.60 });
- detection = await faceapi.detectSingleFace(video, detectorOptions).withFaceLandmarks();
- faceConfidence = detection?.detection?.score!== undefined? cameraPercent(Number(detection.detection.score) * 100): (detection? 100: null);
- if (faceConfidence!== null && faceConfidence < 60) detection = null;
- } catch (faceError) {
- console.error("Face framing tracking error", faceError);
+ const sample = await cameraObservationTracker.sample(video, {
+ faceApi: window.faceapi,
+ faceReady: Boolean(window.faceFramingModelReady),
+ poseLandmarker: modelState.ready ? modelState.poseLandmarker : null,
+ questionKey: `${trackedEpoch}:${trackedQuestionIndex}`,
+ current,
+ atSeconds: Math.max(0, Number(recTimerSeconds || 0))
+ });
+ if (!current()) return;
+ if (!sample) {
+ if (performance.now() - cameraLastObservationAtMs > 2000) clearCameraObservationDisplay();
+ return;
  }
- }
-
- let poseLandmarks = null;
- if (canUseBodyModels) {
- try {
- const poseResult = detectVideoFrame(bodyLanguageState.poseLandmarker, video, capturedAtMs);
- poseLandmarks = Array.isArray(poseResult?.landmarks) && poseResult.landmarks.length > 0? poseResult.landmarks[0]: null;
- } catch (bodyError) {
- console.error("Body-language tracking error", bodyError);
- }
- }
-
- const state = answersData[trackedQuestionIndex] || defaultAnswerState();
- state.observation_data = state.observation_data || { filler_events: [], camera_samples: [] };
- state.observation_data.camera_samples = Array.isArray(state.observation_data.camera_samples)? state.observation_data.camera_samples: [];
- let cameraFacing = false;
- let centered = false;
- let poseCameraFacing = null;
- let poseDetected = Array.isArray(poseLandmarks) && poseLandmarks.length > 0;
- let shouldersVisible = false;
- let shouldersLevel = null;
- let uprightPosture = null;
- let movementScore = null;
- let highMovement = null;
- let faceSizePercent = null;
- let faceSizeStatus = null;
- let faceFacingScore = null;
- let poseFacingScore = null;
- let cameraFacingScore = null;
- const movementPoints = {};
-
- if (detection) {
- const leftEye = detection.landmarks.getLeftEye();
- const rightEye = detection.landmarks.getRightEye();
- const nose = detection.landmarks.getNose();
- const centerOf = points => {
- const usable = points.filter(point => point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y)));
- const total = usable.reduce(
- (point, current) => ({ x: point.x + current.x, y: point.y + current.y }),
- { x: 0, y: 0 }
- );
- return { x: total.x / Math.max(1, usable.length), y: total.y / Math.max(1, usable.length) };
- };
- const leftCenter = centerOf(leftEye);
- const rightCenter = centerOf(rightEye);
- const eyeMidpoint = { x: (leftCenter.x + rightCenter.x) / 2, y: (leftCenter.y + rightCenter.y) / 2 };
- const noseTip = nose[Math.min(3, Math.max(0, nose.length - 1))] || eyeMidpoint;
- const eyeDistance = Math.max(1, Math.hypot(rightCenter.x - leftCenter.x, rightCenter.y - leftCenter.y));
- const faceYawOffset = Math.abs((noseTip.x - eyeMidpoint.x) / eyeDistance);
- faceFacingScore = cameraPercent((1 - Math.min(faceYawOffset / 0.55, 1)) * 100);
- cameraFacing = faceYawOffset <= 0.35;
-
- const box = detection.detection.box;
- const boxCenterX = box.x + (box.width / 2);
- const boxCenterY = box.y + (box.height / 2);
- centered = Math.abs(boxCenterX - (videoWidth / 2)) <= videoWidth * 0.25
- && Math.abs(boxCenterY - (videoHeight / 2)) <= videoHeight * 0.30;
- faceSizePercent = cameraPercent(((box.width * box.height) / Math.max(1, videoWidth * videoHeight)) * 100, 1);
- faceSizeStatus = cameraFaceSizeStatus(faceSizePercent);
- }
-
- if (poseDetected) {
- const nose = poseLandmarks[0];
- const leftShoulder = poseLandmarks[11];
- const rightShoulder = poseLandmarks[12];
- const leftHip = poseLandmarks[23];
- const rightHip = poseLandmarks[24];
- const noseVisible = visibleLandmark(nose, 0.45);
- shouldersVisible = visibleLandmark(leftShoulder, 0.45) && visibleLandmark(rightShoulder, 0.45);
- const hipsVisible = visibleLandmark(leftHip, 0.4) && visibleLandmark(rightHip, 0.4);
- const shoulderMidpoint = shouldersVisible? centerOfNormalized([leftShoulder, rightShoulder]): null;
- const hipMidpoint = hipsVisible? centerOfNormalized([leftHip, rightHip]): null;
- const shoulderWidth = shouldersVisible? Math.max(0.01, pointDistance(leftShoulder, rightShoulder)?? 0.01): 0.01;
-
- if (noseVisible) {
- movementPoints.nose = { x: nose.x, y: nose.y };
- }
- if (shoulderMidpoint) {
- movementPoints.shoulders = shoulderMidpoint;
- shouldersLevel = Math.abs(Number(leftShoulder.y) - Number(rightShoulder.y)) <= 0.065;
- }
- if (noseVisible && shoulderMidpoint) {
- const poseYawOffset = Math.abs((Number(nose.x) - shoulderMidpoint.x) / shoulderWidth);
- poseFacingScore = cameraPercent((1 - Math.min(poseYawOffset / 0.7, 1)) * 100);
- poseCameraFacing = poseYawOffset <= 0.38;
- }
- if (shoulderMidpoint && hipMidpoint) {
- const torsoHeight = Math.max(0.01, Math.abs(hipMidpoint.y - shoulderMidpoint.y));
- uprightPosture = Math.abs((shoulderMidpoint.x - hipMidpoint.x) / torsoHeight) <= 0.28;
- } else if (noseVisible && shoulderMidpoint) {
- uprightPosture = Math.abs((Number(nose.x) - shoulderMidpoint.x) / shoulderWidth) <= 0.45;
- }
- }
-
- const previousBaseline = cameraMovementBaselines[trackedQuestionIndex] || null;
- const previousPoints = previousBaseline?.points || previousBaseline;
- if (previousPoints && Object.keys(movementPoints).length > 0) {
- const distances = Object.entries(movementPoints).map(([key, point]) => pointDistance(point, previousPoints[key])).filter(distance => Number.isFinite(distance));
- if (distances.length > 0) {
- const averageDistance = distances.reduce((total, distance) => total + distance, 0) / distances.length;
- movementScore = Math.min(100, Math.round(averageDistance * 560));
- highMovement = movementScore >= 45;
- }
- }
- if (Object.keys(movementPoints).length > 0) {
- cameraMovementBaselines[trackedQuestionIndex] = { points: movementPoints, captured_at_ms: capturedAtMs };
- }
-
- const faceDetected = Boolean(detection || (poseDetected && visibleLandmark(poseLandmarks[0], 0.45)));
- if (faceFacingScore!== null && poseFacingScore!== null) {
- cameraFacingScore = Math.round((faceFacingScore * 0.65) + (poseFacingScore * 0.35));
- } else {
- cameraFacingScore = faceFacingScore!== null? faceFacingScore: poseFacingScore;
- }
- cameraFacing = cameraFacingScore!== null? cameraFacingScore >= 55: Boolean(detection? cameraFacing: poseCameraFacing);
- if (!detection && poseDetected && shouldersVisible) {
- const shoulderCenter = movementPoints.shoulders;
- centered = Boolean(shoulderCenter && Math.abs(shoulderCenter.x - 0.5) <= 0.24 && Math.abs(shoulderCenter.y - 0.5) <= 0.32);
- }
-
- const framingQuality = Boolean(faceDetected && centered && (faceSizeStatus === null || faceSizeStatus === 'good'));
- let sampleQuality = 20;
- if (detection) sampleQuality += 35;
- if (poseDetected) sampleQuality += 25;
- if (centered) sampleQuality += 10;
- if (faceSizeStatus === 'good') sampleQuality += 10;
- if (faceConfidence!== null) sampleQuality += Math.max(-10, Math.min(10, (faceConfidence - 50) / 5));
- sampleQuality = cameraPercent(sampleQuality);
-
- let faceStatusText = faceDetected? '<i class="fa-solid fa-check me-1"></i>Visible': '<i class="fa-solid fa-circle-info me-1"></i>Move into frame';
- let faceStatusClass = faceDetected? 'text-success': 'text-warning';
- if (faceDetected && faceSizeStatus === 'too_far') {
- faceStatusText = '<i class="fa-solid fa-arrow-up-right-from-square me-1"></i>Move closer';
- faceStatusClass = 'text-warning';
- } else if (faceDetected && faceSizeStatus === 'too_close') {
- faceStatusText = '<i class="fa-solid fa-down-left-and-up-right-to-center me-1"></i>Move back';
- faceStatusClass = 'text-warning';
- } else if (faceDetected &&!centered) {
- faceStatusText = '<i class="fa-solid fa-crosshairs me-1"></i>Center frame';
- faceStatusClass = 'text-warning';
- }
- setCameraStat('stEyeContact', faceStatusText, faceStatusClass, true);
- setCameraStat(
- 'stPosture',
- faceDetected? (cameraFacing? 'Looking near camera': 'Head turned estimate'): 'Not measured',
- faceDetected? (cameraFacing? 'text-success': 'text-warning'): 'text-secondary'
- );
- setCameraStat(
- 'stPose',
- shouldersVisible? (shouldersLevel && uprightPosture!== false? 'Balanced upper body': 'Posture cue available'): (poseDetected? 'Partial pose estimate': 'Shoulders not visible'),
- shouldersVisible? (shouldersLevel && uprightPosture!== false? 'text-success': 'text-warning'): 'text-secondary'
- );
- setCameraStat(
- 'stMovement',
- movementScore === null? 'Calibrating': (highMovement? 'Higher movement': 'Steady'),
- movementScore === null? 'text-secondary': (highMovement? 'text-warning': 'text-success')
- );
-
+ cameraLastObservationAtMs = performance.now();
+ helper.render(sample, setCameraStat);
  const detectionStatus = document.getElementById('cameraDetectionStatus');
  if (detectionStatus) {
- const highConfidenceFrame = Boolean(
- sampleQuality !== null
- && sampleQuality >= 70
- && faceDetected
- && faceConfidence !== null
- && faceConfidence >= 60
- && poseDetected
- && centered
- && faceSizeStatus === 'good'
- );
- const lowQuality = sampleQuality!== null && sampleQuality < 70;
- detectionStatus.innerHTML = lowQuality
- ? '<i class="fa-solid fa-circle-exclamation me-1"></i>Below high-confidence gate'
- : (highConfidenceFrame? '<i class="fa-solid fa-shield-check me-1"></i>High-confidence frame': '<i class="fa-solid fa-person-rays me-1"></i>Signal checking');
- detectionStatus.style.color = lowQuality? '#fbbf24': (highConfidenceFrame? '#34d399': '#cbd5e1');
+ const labels = {
+ measured: 'Camera estimates available',
+ calibrating: 'Checking repeated observations',
+ multiple_people: 'Multiple people — not measured',
+ low_confidence: 'Insufficient camera signal',
+ not_visible: 'Move into camera frame',
+ model_unavailable: 'Camera models unavailable'
+ };
+ detectionStatus.textContent = labels[sample.observation_status] || 'Not measured / checking';
+ detectionStatus.style.color = '#cbd5e1';
  }
-
- state.observation_data.camera_samples.push({
- sample_index: sampleIndex,
- captured_at_ms: capturedAtMs,
- at_seconds: Math.max(0, Number(state.voice_duration || recTimerSeconds || 0)),
- face_detected: faceDetected,
- face_confidence: faceConfidence,
- face_size_percent: faceSizePercent,
- face_size_status: faceSizeStatus,
- camera_facing: Boolean(faceDetected && cameraFacing),
- camera_facing_score: cameraFacingScore,
- centered: Boolean(faceDetected && centered),
- framing_quality: framingQuality,
- pose_detected: poseDetected,
- shoulders_visible: shouldersVisible,
- shoulders_level: shouldersLevel,
- upright_posture: uprightPosture,
- movement_score: movementScore,
- high_movement: highMovement,
- sample_quality: sampleQuality
- });
+ const state = answersData[trackedQuestionIndex] || defaultAnswerState();
+ state.observation_data ||= { filler_events: [], camera_samples: [] };
+ state.observation_data.camera_detection_protocol = 3;
+ state.observation_data.camera_samples = Array.isArray(state.observation_data.camera_samples) ? state.observation_data.camera_samples : [];
+ state.observation_data.camera_samples.push(sample);
  state.observation_data.camera_samples = state.observation_data.camera_samples.slice(-180);
  answersData[trackedQuestionIndex] = state;
- } catch(e) {
- console.error("Tracking error", e);
+ } catch (error) {
+ if (current()) clearCameraObservationDisplay();
+ console.warn('Camera observation unavailable:', error);
  } finally {
  cameraTrackingInFlight = false;
  }
@@ -5579,6 +5369,9 @@ return fallbackText;
  }
 
  function scheduleRecordingTimerSideEffects(previousSeconds) {
+ if (cameraDetectionEnabled && isRecording) {
+ trackBodyLanguageDetection();
+ }
  const crossedAnalysisBoundary = recTimerSeconds >= 2 && Math.floor(recTimerSeconds / 2) > Math.floor(Math.max(0, previousSeconds) / 2);
  if (!crossedAnalysisBoundary) return;
 
@@ -5587,10 +5380,6 @@ return fallbackText;
  if (!isRecording || recTimerSeconds < analysisSecond) return;
  triggerAnalysis();
 
- // Optional body-language detection is descriptive and never affects readiness scoring.
- if (cameraDetectionEnabled) {
- trackBodyLanguageDetection();
- }
  }, 50);
  }
 
@@ -5693,6 +5482,9 @@ return fallbackText;
  lastSpeechEnd = 0;
  shouldAutoRestartRecognition =!voiceOnly;
  isRecording = true;
+ cameraRecordingEpoch += 1;
+ cameraLastObservationAtMs = 0;
+ if (cameraDetectionEnabled) clearCameraObservationDisplay();
  isRecordingPaused = false;
  activeTranscriptionEngine = voiceOnly? null: engine;
  updateAnswerTranscriptionOverlay();
@@ -5790,6 +5582,7 @@ return fallbackText;
  }
  isRecording = false;
  isRecordingPaused = true;
+ if (cameraDetectionEnabled) clearCameraObservationDisplay();
  pauseRecordingTimer();
  pauseVoiceSessionRecorder();
  setRecordingControlButtons('paused');
@@ -6946,15 +6739,20 @@ setFinishViewReviewReady(false);
 </div>
 
 @if(isset($sessionRecord) && (bool) data_get($sessionRecord->accommodation_profile, 'camera_detection', data_get($sessionRecord->accommodation_profile, 'camera_coaching', false)))
+<script src="{{ asset('js/shared/camera-observations.js') }}?v=1"></script>
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script>
  if (typeof cameraDetectionEnabled!== 'undefined' && cameraDetectionEnabled) {
- Promise.all([
- faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/'),
- faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/')
- ]).then(() => {
+ window.faceFramingModelReady = false;
+ Promise.resolve().then(() => Promise.all([
+ faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@a86f011d72124e5fb93e59d5c4ab98f699dd5c9c/weights/'),
+ faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@a86f011d72124e5fb93e59d5c4ab98f699dd5c9c/weights/')
+ ])).then(() => {
+ window.faceFramingModelReady = true;
+ window.faceFramingModelUnavailable = false;
  console.log("Optional face-framing models loaded");
  }).catch(err => {
+ window.faceFramingModelReady = false;
  window.faceFramingModelUnavailable = true;
  console.error("Error loading optional face-framing models", err);
  });
@@ -6974,13 +6772,13 @@ setFinishViewReviewReady(false);
  );
  const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
  baseOptions: {
- modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task'
+ modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'
  },
  runningMode: 'VIDEO',
- numPoses: 1,
- minPoseDetectionConfidence: 0.60,
- minPosePresenceConfidence: 0.60,
- minTrackingConfidence: 0.60,
+ numPoses: 2,
+ minPoseDetectionConfidence: 0.65,
+ minPosePresenceConfidence: 0.65,
+ minTrackingConfidence: 0.65,
  outputSegmentationMasks: false
  });
 

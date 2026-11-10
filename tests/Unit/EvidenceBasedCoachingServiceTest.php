@@ -811,8 +811,9 @@ class EvidenceBasedCoachingServiceTest extends TestCase
         $this->assertSame('measured', $camera['status']);
         $this->assertSame(4, $camera['sample_count']);
         $this->assertSame([1, 2, 3, 4], array_column($camera['samples'], 'sample_index'));
-        $this->assertSame(75, $camera['centered_percent']);
-        $this->assertSame(50, $camera['framing_quality_percent']);
+        $this->assertSame(3, $camera['usable_sample_count']);
+        $this->assertSame(100, $camera['centered_percent']);
+        $this->assertSame(67, $camera['framing_quality_percent']);
         $this->assertSame(61, $camera['average_sample_quality']);
         $this->assertSame(1, $camera['low_quality_sample_count']);
         $this->assertSame(25, $camera['low_quality_sample_percent']);
@@ -826,7 +827,7 @@ class EvidenceBasedCoachingServiceTest extends TestCase
             $observations
         );
 
-        $this->assertSame(50, data_get($coaching, 'camera_feedback.evidence.framing_quality_percent'));
+        $this->assertSame(67, data_get($coaching, 'camera_feedback.evidence.framing_quality_percent'));
         $this->assertStringContainsString('framing', strtolower(json_encode($coaching['camera_feedback'], JSON_THROW_ON_ERROR)));
     }
 
