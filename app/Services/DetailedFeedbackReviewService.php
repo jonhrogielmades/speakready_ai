@@ -315,6 +315,10 @@ class DetailedFeedbackReviewService
  is_scalar($item['better_sample_answer_source']?? null)? (string) $item['better_sample_answer_source']: null,
  is_scalar($item['better_sample_answer_provider']?? null)? (string) $item['better_sample_answer_provider']: null
  );
+  // A verified provider refresh replaces any earlier local recovery result.
+  // Do not let its marker force the refreshed AI narrative back through the
+  // local display path on a later request.
+  unset($coachingFeedback['local_fallback'], $coachingFeedback['local_fallback_reason']);
  $coachingFeedback['provider_narrative'] = [
  'verified' => true,
  'input_fingerprint' => $this->answerInputFingerprint($answer),
@@ -730,7 +734,11 @@ class DetailedFeedbackReviewService
  // every API provider is unavailable. Keep older locally stored answer notes
  // hidden, but allow this explicitly marked recovery output to be useful now.
  $localFallback = ! $inputsStale && ($coaching['local_fallback'] ?? false) === true;
- if ($localFallback) {
+ // A local-fallback marker can survive on an older answer row after a
+ // provider refresh has already written a valid AI narrative. Prefer the
+ // validated provider result in that case; local fallback is only a recovery
+ // path when no usable provider feedback is available.
+ if ($localFallback && ! $feedbackReady) {
  $local = AIService::localReviewQuestionFeedback($input);
  $localFeedback = trim((string) ($local['ai_feedback'] ?? ''));
  $localPossible = trim((string) ($local['better_sample_answer'] ?? ''));

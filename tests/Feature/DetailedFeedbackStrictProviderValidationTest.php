@@ -162,6 +162,33 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->assertTrue($service->answerReviewProviderState($savedAnswer)['possible_answer_ready']);
     }
 
+    public function test_valid_provider_feedback_wins_over_a_stale_local_fallback_marker(): void
+    {
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $service = $this->app->make(DetailedFeedbackReviewService::class);
+        $feedback = $this->validProviderFeedback($answer);
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+
+        (new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback'))->invoke(
+            $service, $session, collect([$answer]), $feedback, 'openai', $validation
+        );
+
+        $savedAnswer = $answer->fresh('question');
+        $savedAnswer->forceFill([
+            'coaching_feedback' => array_replace(
+                $savedAnswer->coaching_feedback ?? [],
+                ['local_fallback' => true, 'local_fallback_reason' => 'old_provider_failure']
+            ),
+        ])->save();
+
+        $state = $service->answerReviewProviderState($savedAnswer->fresh('question'));
+
+        $this->assertTrue($state['feedback_ready']);
+        $this->assertSame($feedback['per_question_feedback'][0]['ai_feedback'], $state['feedback']);
+        $this->assertSame('openai', $savedAnswer->fresh()->ai_provider);
+    }
+
     public function test_final_gate_still_rejects_invalid_reliability_metadata_and_failed_safeguards(): void
     {
         $answer = $this->answer();
