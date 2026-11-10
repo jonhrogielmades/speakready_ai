@@ -1844,18 +1844,18 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Feedback')
  ->assertSee('Your Answer')
  ->assertDontSee('What To Improve')
- ->assertSee('Evidence-based answer check')
- ->assertSee('Evidence from your answer')
- ->assertSee('What worked')
- ->assertSee('Improvement focus')
- ->assertSee('Why it matters')
- ->assertSee('Next attempt')
- ->assertSee('Success check')
- ->assertSee('Source limitation:')
+ ->assertDontSee('Evidence-based answer check')
+ ->assertDontSee('Evidence from your answer')
+ ->assertDontSee('What worked')
+ ->assertDontSee('Improvement focus')
+ ->assertDontSee('Why it matters')
+ ->assertDontSee('Next attempt')
+ ->assertDontSee('Success check')
+ ->assertDontSee('Source limitation:')
  ->assertSee('Possible Answer')
- ->assertSee('High internal coverage')
- ->assertSee('High safeguard coverage')
- ->assertSee('not an independently measured accuracy rate');
+ ->assertDontSee('High internal coverage')
+ ->assertDontSee('High safeguard coverage')
+ ->assertDontSee('not an independently measured accuracy rate');
 
  $savedAnswer = $answer->fresh();
  $savedFeedback = Feedback::where('interview_session_id', $session->id)->firstOrFail();
@@ -2887,8 +2887,8 @@ class ReliabilityHardeningTest extends TestCase
  ->assertSee('Feedback')
  ->assertSee('Your Answer')
  ->assertSee('Possible Answer')
- ->assertSee('Not enough detail')
- ->assertSee('Score: Not scored')
+ ->assertDontSee('Not enough detail')
+ ->assertDontSee('Score: Not scored')
  ->assertDontSee('Score: 0')
  ->assertDontSee('0% relevance');
  }

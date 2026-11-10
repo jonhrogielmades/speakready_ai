@@ -735,14 +735,14 @@
                     heroTitle: 'Detailed session review',
                     heroDescription: 'Check the saved interview context, answer feedback, and the next practice plan. An interview ended early shows responses without a score.',
                     workspaceTitle: 'Answer review',
-                    workspaceDescription: 'Open each question to compare your response with the available feedback and supporting evidence.',
-                    metricsTitle: 'Evidence and practice plan',
-                    metricsDescription: 'The evidence safeguard describes internal coverage; the practice plan suggests what to work on next.',
+                    workspaceDescription: 'Open each question to compare your response with the available feedback.',
+                    metricsTitle: 'Practice plan',
+                    metricsDescription: 'Use the practice plan to focus on what to work on next.',
                     actionsTitle: 'Review actions',
                     actionsDescription: 'Export a PDF or return to the Feedback Center after reading your report.',
                     heroSelectors: ['.feedback-report-meta', '.review-back-button-wrap'],
                     workspaceSelectors: ['#answersAccordion', '.answer-review-card'],
-                    metricsSelectors: ['.review-session-reliability', '#review-action-plan-title'],
+                    metricsSelectors: ['#review-action-plan-title'],
                     actionSelectors: ['.feedback-report-actions', '.review-back-button'],
                 });
             }

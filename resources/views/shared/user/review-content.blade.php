@@ -4,7 +4,6 @@
  $sessionEndedEarly = isset($sessionEndedEarly)? (bool) $sessionEndedEarly: ($sessionRecord->status === 'ended' || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false));
  $feedback = $sessionRecord->feedback;
  $report = \App\Support\FeedbackReportPresenter::forSession($sessionRecord);
- $reviewEvidence = $reviewEvidence ?? \App\Support\FeedbackEvidencePresenter::forSession($sessionRecord);
  $strengthItems = $report['strength_items'];
  $weaknessItems = $report['weakness_items'];
  $comparisonRows = $comparisonRows?? [];
@@ -53,23 +52,6 @@
  $actionPlanNextAssistance,
  !empty($actionPlanQuestionTypes)? implode(', ', $actionPlanQuestionTypes).' questions': '',
  ]));
- $evidenceSafeguardLabel = match (true) {
- ($reviewEvidence?->reliability?->score?? null) === null => 'Coverage pending',
- $reviewEvidence->reliability->score >= 95 => 'High internal coverage',
- $reviewEvidence->reliability->score >= 80 => 'Moderate internal coverage',
- $reviewEvidence->reliability->score >= 55 => 'Limited internal coverage',
- default => 'Low internal coverage',
- };
- $evidenceSafeguardDescription = str_ireplace(
- ['high-reliability evidence threshold', 'high-reliability threshold', 'Confidence is not stored'],
- ['high internal safeguard-coverage threshold', 'high internal safeguard-coverage threshold', 'Internal safeguard coverage is not stored'],
- (string) ($reviewEvidence?->reliability?->description?? '')
- );
- $evidenceQualityLabel = str_ireplace(
- 'evidence reliability',
- 'internal evidence checks',
- (string) ($reviewEvidence?->reliability?->quality_label?? 'Quality checks pending')
- );
  @endphp
  <!-- Feature 2 & 15: Header, Report Info, Export -->
  <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -128,43 +110,6 @@
  <i class="fa-solid fa-circle-info me-2 text-primary"></i>
  This was a coached practice session. You can still read the feedback, but it is not used for your readiness score. To get a readiness score, finish a real interview session without live coaching.
  </div>
- @endif
-
- @if($reviewEvidence)
- <section class="review-session-reliability mb-4" aria-labelledby="review-evidence-safeguard-title" style="--reliability-color: {{ $reviewEvidence->reliability->color }};">
- <div class="review-session-reliability-main">
- <span id="review-evidence-safeguard-title"><i class="fa-solid fa-shield-check" aria-hidden="true"></i> Evidence safeguard score</span>
- <strong>{{ $reviewEvidence->reliability->score === null ? 'Pending' : $reviewEvidence->reliability->score.'%' }} - {{ $evidenceSafeguardLabel }}</strong>
- <p>This is an internal evidence-and-check coverage signal. It is not an independently measured accuracy rate or a guarantee that every coaching judgment is correct.</p>
- @if(($reviewEvidence->reliability->coverage_label?? '')!== '')
- <p><strong style="display:inline;color:inherit;font-size:inherit;margin:0;">Cross-check coverage:</strong> {{ $reviewEvidence->reliability->coverage_label }}</p>
- @endif
- <p>{{ $evidenceSafeguardDescription }}</p>
- <p>{{ $evidenceQualityLabel }}.</p>
- @if($reviewEvidence->reliability->context_label !== '')
- <p><strong style="display:inline;color:inherit;font-size:inherit;margin:0;">Internal processing context:</strong> {{ $reviewEvidence->reliability->context_label }}</p>
- @endif
- </div>
- <div class="review-session-proof-grid">
- <div><span>Answers</span><strong>{{ $reviewEvidence->proof_stats->answers }}</strong></div>
- <div><span>Evidence Quotes</span><strong>{{ $reviewEvidence->proof_stats->with_evidence }}</strong></div>
- <div><span>Missing Points</span><strong>{{ $reviewEvidence->proof_stats->missing_points }}</strong></div>
- <div><span>Practice Targets</span><strong>{{ $reviewEvidence->proof_stats->needs_practice }}</strong></div>
- </div>
- <div class="review-session-next-action">
- <span>Next action</span>
- <strong>{{ $reviewEvidence->next_action->area }}</strong>
- <p>{{ $reviewEvidence->next_action->action }}</p>
- <div>
- <span>Why this focus</span>
- <p>{{ $reviewEvidence->next_action->evidence!== ''? $reviewEvidence->next_action->evidence: 'No separate supporting observation was stored for this action.' }}</p>
- </div>
- <div>
- <span>Success check</span>
- <p>{{ $reviewEvidence->next_action->success_check!== ''? $reviewEvidence->next_action->success_check: 'Complete the action, then confirm the next answer contains the requested evidence.' }}</p>
- </div>
- </div>
- </section>
  @endif
 
  @include('shared.partials.review-quick-summary', [
@@ -243,9 +188,6 @@
  @foreach($sessionRecord->answers as $index => $answer)
  @php
  $headerQuestionText = trim((string) ($answer->question->question_text?? ''));
- $answerEvidence = $reviewEvidence?->answers?->first(
- fn ($item): bool => (int) ($item->answer_id?? 0) === (int) ($answer->id?? 0)
- );
  @endphp
  <div class="accordion-item premium-panel animate-fade-up answer-review-card" style="margin-bottom:20px;overflow:hidden; animation-delay: {{ 0.5 + ($loop->index * 0.1) }}s; transform: none; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.05);">
  <h2 class="accordion-header" id="answer-heading-{{ $index }}">
@@ -255,12 +197,6 @@
  <strong>Question {{ $index + 1 }}</strong>
  <small class="answer-review-question-text" style="display:block;color:var(--tx3);font-size:.85rem;font-weight:500;line-height:1.45;margin-top:4px;">{{ $headerQuestionText!== ''? $headerQuestionText: 'Question text unavailable.' }}</small>
  </span>
- @if(!$sessionEndedEarly && $answerEvidence)
- <span class="answer-review-score d-flex flex-wrap gap-2 ms-md-auto" aria-label="Question {{ $index + 1 }} assessment summary">
- <span class="badge" style="color:{{ $answerEvidence->status_color }};border:1px solid color-mix(in srgb, {{ $answerEvidence->status_color }} 28%, transparent);background:color-mix(in srgb, {{ $answerEvidence->status_color }} 9%, transparent);">{{ $answerEvidence->status_label }}</span>
- <span class="badge" style="color:var(--tx2);border:1px solid var(--bd);background:var(--bg);">{{ $answerEvidence->score_label }}</span>
- </span>
- @endif
  </div>
  </button>
  </h2>
@@ -269,7 +205,6 @@
  @include('shared.partials.review-answer-detail', [
  'answer' => $answer,
  'sessionRecord' => $sessionRecord,
- 'answerEvidence' => $answerEvidence,
  'sessionEndedEarly' => $sessionEndedEarly,
  ])
 
