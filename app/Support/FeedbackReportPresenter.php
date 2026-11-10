@@ -200,7 +200,9 @@ class FeedbackReportPresenter
  }
  $source = trim((string) data_get($summary, 'overall_summary_source', ''));
  $repairedFields = (array) data_get($summary, 'review_context.session_feedback_repaired_fields', []);
+ $localFallback = (bool) data_get($summary, 'review_context.local_fallback', false);
  $sourceTrusted = $source === 'ai_provider_validated'
+ || ($localFallback && in_array($source, ['local_evidence', 'local_trained_model', 'local_evidence_validated'], true))
  || ($source === 'local_evidence_validated'
  && in_array('overall_summary', $repairedFields, true)
  && data_get($summary, 'review_context.detailed_review_validation.status') === 'verified');
@@ -209,6 +211,10 @@ class FeedbackReportPresenter
  }
 
  $providerKey = strtolower(trim((string) data_get($summary, 'review_context.provider_key', '')));
+ if ($localFallback) {
+ return in_array($providerKey, ['local', 'localmodel'], true)
+ && in_array(trim((string) data_get($summary, 'review_context.provider_source', '')), ['', 'local_evidence', 'local_trained_model'], true);
+ }
  if (in_array($providerKey, ['local', 'localmodel'], true)) {
  return false;
  }

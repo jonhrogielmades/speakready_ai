@@ -1660,7 +1660,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertEmpty($savedAnswer->ai_feedback);
  }
 
- public function test_interview_finish_preserves_answers_without_claiming_review_ready_when_all_providers_fail(): void
+ public function test_interview_finish_completes_with_local_feedback_when_all_providers_fail(): void
  {
  foreach ([
  'GEMINI_API_KEY' => 'gemini_test_token',
@@ -1756,19 +1756,19 @@ class ReliabilityHardeningTest extends TestCase
  'active_interview_provider' => 'gemini',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertStatus(503)
- ->assertJsonPath('error_code', 'ai_feedback_providers_failed')
- ->assertJsonMissingPath('redirect_url');
+ ->assertOk()
+ ->assertJsonPath('review_ready', true)
+ ->assertJsonPath('redirect_url', route('user.review', $session));
 
- $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'in_progress']);
- $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
- $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
+ $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
+ $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+ $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
  $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
  $this->assertSame('I owned the support handoff, documented repeated issues, coordinated the update, and confirmed the final result with my supervisor.', $savedAnswer->answer_text);
- $this->assertEmpty($savedAnswer->ai_provider);
- $this->assertEmpty($savedAnswer->ai_feedback);
- $this->assertEmpty($savedAnswer->better_sample_answer);
- $this->assertEmpty($savedAnswer->coaching_feedback);
+ $this->assertContains($savedAnswer->ai_provider, ['local', 'localmodel']);
+ $this->assertNotEmpty($savedAnswer->ai_feedback);
+ $this->assertNotEmpty($savedAnswer->better_sample_answer);
+ $this->assertTrue((bool) data_get($savedAnswer->coaching_feedback, 'local_fallback'));
  $this->assertNull($session->fresh()->feedback_processing_token);
  Http::assertSentCount(8);
  }

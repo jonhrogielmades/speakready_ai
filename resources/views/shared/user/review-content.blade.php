@@ -98,11 +98,12 @@
  @php
  $initialProviderReviewStatus = in_array($providerReviewStatus ?? null, ['processing', 'waiting', 'ready', 'unavailable', 'failed'], true) ? $providerReviewStatus : 'processing';
  $providerReviewCanContinue = ! in_array($initialProviderReviewStatus, ['unavailable', 'failed'], true);
+ $hasLocalFeedbackFallback = (bool) ($localFeedbackAvailable ?? false);
  @endphp
- <div class="alert mb-4" data-detailed-review-status data-review-status-url="{{ route('user.review.status', $sessionRecord) }}" data-review-status="{{ $initialProviderReviewStatus }}" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;overflow-wrap:anywhere;">
+ <div class="alert mb-4" data-detailed-review-status data-local-fallback="{{ $hasLocalFeedbackFallback ? 'true' : 'false' }}" data-review-status-url="{{ route('user.review.status', $sessionRecord) }}" data-review-status="{{ $initialProviderReviewStatus }}" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;overflow-wrap:anywhere;">
  <div role="status" aria-live="polite" aria-atomic="true">
- <strong class="d-block mb-1" data-review-status-title>{{ $providerReviewCanContinue ? 'Your AI answer reviews are being prepared.' : 'Your AI answer reviews need another attempt.' }}</strong>
- <p class="mb-2" data-review-status-message>{{ $providerReviewCanContinue ? 'This page updates automatically when the reviews are ready. You can keep reading your saved responses below.' : 'Some questions are still waiting for a validated AI review. Your saved responses are available below.' }}</p>
+ <strong class="d-block mb-1" data-review-status-title>{{ $hasLocalFeedbackFallback ? 'Local answer feedback is ready.' : ($providerReviewCanContinue ? 'Your AI answer reviews are being prepared.' : 'Your AI answer reviews need another attempt.') }}</strong>
+ <p class="mb-2" data-review-status-message>{{ $hasLocalFeedbackFallback ? 'Your report is based on saved-answer checks while the AI providers recover. You can read the local feedback now; a later provider retry may add richer notes.' : ($providerReviewCanContinue ? 'This page updates automatically when the reviews are ready. You can keep reading your saved responses below.' : 'Some questions are still waiting for a validated AI review. Your saved responses are available below.') }}</p>
  </div>
  <form method="POST" action="{{ route('user.review.refresh', $sessionRecord) }}" data-review-retry @if($providerReviewCanContinue) hidden @endif>
  @csrf

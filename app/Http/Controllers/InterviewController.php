@@ -1507,6 +1507,7 @@ return response()->json([
  session(['active_interview_feedback_provider' => $feedbackProvider]);
  }
  $aiFeedback = $this->safeInterviewFeedback($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+  $localFeedbackFallback = $this->isLocalFeedbackFallback($aiFeedback);
  $feedbackEvidenceProvider = $this->feedbackEvidenceProvider($aiFeedback, $feedbackProvider);
  $assessment = app(TrustworthyAssessmentService::class);
  DB::beginTransaction();
@@ -1576,6 +1577,10 @@ return response()->json([
  is_scalar($qFeedback['better_sample_answer_source']?? null)? (string) $qFeedback['better_sample_answer_source']: null,
  is_scalar($qFeedback['better_sample_answer_provider']?? null)? (string) $qFeedback['better_sample_answer_provider']: null
  );
+  if ($localFeedbackFallback) {
+  $coachingFeedback['local_fallback'] = true;
+  $coachingFeedback['local_fallback_reason'] = trim((string) ($aiFeedback['_local_fallback_reason']?? 'provider_failure'));
+  }
  $answer->update([
  'ai_feedback' => trim((string) ($qFeedback['ai_feedback']?? '')),
  'better_sample_answer' => trim((string) ($qFeedback['better_sample_answer']?? '')),
@@ -1623,7 +1628,15 @@ return response()->json([
  $session,
  $sFeedback,
  $feedbackEvidenceProvider,
- is_array($aiFeedback['review_context']?? null)? $aiFeedback['review_context']: null
+  array_merge(
+  is_array($aiFeedback['review_context']?? null)? $aiFeedback['review_context']: [],
+  $localFeedbackFallback? [
+  'local_fallback' => true,
+  'local_fallback_reason' => trim((string) ($aiFeedback['_local_fallback_reason']?? 'provider_failure')),
+  'providers_attempted' => $aiFeedback['_providers_attempted']?? [],
+  'provider_failure_reasons' => $aiFeedback['_provider_failure_reasons']?? [],
+  ]: []
+  )
  );
 
  // Game perks affect game progression, never the stored assessment score.
@@ -1680,7 +1693,7 @@ return response()->json([
  'session_state' => null,
  ]);
 
- if (! $gameLevel) {
+  if (! $gameLevel && ! $localFeedbackFallback) {
  app(DetailedFeedbackReviewService::class)->acceptGeneratedProviderReview($session, $aiFeedback, $answersData, $sessionData);
  }
 
@@ -1791,15 +1804,17 @@ return response()->json([
  $profile->refresh();
 
  try {
- ActivityLogger::log(
+  ActivityLogger::log(
  Auth::user(),
  'interview_completed',
- Auth::user()->name." completed an interview session with an overall score of {$overall}%.",
+  Auth::user()->name." completed an interview session with an overall score of {$overall}%.",
  $request->ip(),
  true,
  [
- 'title' => 'AI Feedback Ready',
- 'message' => "Your AI interview feedback is ready. Overall score: {$overall}%.",
+  'title' => $localFeedbackFallback? 'Local Feedback Ready': 'AI Feedback Ready',
+  'message' => $localFeedbackFallback
+  ? "Your saved-answer feedback is ready while AI providers recover. Overall score: {$overall}%."
+  : "Your AI interview feedback is ready. Overall score: {$overall}%.",
  'icon' => 'fa-flag-checkered',
  'type' => 'success',
  'push' => true,
@@ -3168,6 +3183,15 @@ return response()->json([
  'local' => 'local_evidence',
  default => 'ai_provider',
  })),
+  'local_fallback' => (bool) ($reviewContext['local_fallback']?? false),
+  'local_fallback_reason' => trim((string) ($reviewContext['local_fallback_reason']?? '')),
+  'providers_attempted' => array_values(array_filter(array_map(
+  fn ($provider): string => AIService::normalizeProviderKey($provider),
+  (array) ($reviewContext['providers_attempted']?? [])
+  ))),
+  'provider_failure_reasons' => is_array($reviewContext['provider_failure_reasons']?? null)
+  ? $reviewContext['provider_failure_reasons']
+  : [],
  'provider_confidence' => trim((string) ($reviewContext['provider_confidence']?? 'medium')),
  'insufficient_data' => (bool) ($reviewContext['insufficient_data']?? false),
  'evidence_policy' => trim((string) ($reviewContext['evidence_policy']?? 'Scores and comments use only saved answer evidence, the exact question, and explicit missing requirements.')),
@@ -5699,10 +5723,19 @@ return response()->json([
  }
 
  if (! SystemSettings::enabled('int_ai_eval', true)) {
- throw new AiFeedbackProviderFailureException([]);
+  return $this->localInterviewFeedbackFallback(
+  $session,
+  $sessionData,
+  $answersData,
+  new AiFeedbackProviderFailureException([])
+  );
  }
 
- return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+  try {
+  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
+  } catch (AiFeedbackProviderFailureException $providerError) {
+  return $this->localInterviewFeedbackFallback($session, $sessionData, $answersData, $providerError);
+  }
  }
 
  protected function generateInterviewFeedbackForSession(
@@ -5736,6 +5769,59 @@ return response()->json([
  ]
  );
  }
+
+  /**
+   * A provider failure must not turn a completed interview into a retry-only
+   * state. The local path is quality-gated, answer-grounded, and falls back
+   * deterministically when the local model is unavailable or unsafe.
+   */
+  private function localInterviewFeedbackFallback(
+  InterviewSession $session,
+  array $sessionData,
+  array $answersData,
+  AiFeedbackProviderFailureException $providerError
+  ): array {
+  try {
+  $feedback = AIService::generateLocalFeedback($sessionData, $answersData);
+  if (! is_array($feedback) || ! is_array($feedback['per_question_feedback']?? null)
+  || count($feedback['per_question_feedback']) !== count($answersData)) {
+  throw new \RuntimeException('The local feedback fallback did not cover every saved answer.');
+  }
+
+  $feedback['_local_fallback'] = true;
+  $feedback['_local_fallback_reason'] = $providerError->failureCode();
+  $feedback['_providers_attempted'] = $providerError->attemptedProviders();
+  $feedback['_provider_failure_reasons'] = $providerError->failureReasons();
+
+  Log::warning('AI feedback providers failed; completed the interview with local evidence feedback.', [
+  'session_id' => $session->id,
+  'user_id' => $session->user_id,
+  'failure_code' => $providerError->failureCode(),
+  'providers_attempted' => $providerError->attemptedProviders(),
+  ]);
+
+  return $feedback;
+  } catch (\Throwable $localError) {
+  Log::error('Local interview feedback fallback failed after provider failure.', [
+  'session_id' => $session->id,
+  'user_id' => $session->user_id,
+  'provider_failure_code' => $providerError->failureCode(),
+  'error_type' => $localError::class,
+  'message' => Str::limit($localError->getMessage(), 300),
+  ]);
+
+  throw $providerError;
+  }
+  }
+
+  private function isLocalFeedbackFallback(array $feedback): bool
+  {
+  if (($feedback['_local_fallback']?? false) === true) {
+  return true;
+  }
+
+  return in_array(AIService::normalizeProviderKey($feedback['_provider_key']?? null), ['local', 'localmodel'], true);
+  }
 
  private function learningGameFeedback(GameLevel $gameLevel, array $sessionData, array $answersData): array
  {

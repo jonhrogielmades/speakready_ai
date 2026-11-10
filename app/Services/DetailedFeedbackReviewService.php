@@ -726,6 +726,27 @@ class DetailedFeedbackReviewService
  && hash_equals((string) ($provenance['possible_answer_hash'] ?? ''), hash('sha256', $possible))
  && AIService::visibleReviewPossibleAnswerIsProviderUsable($possible, $input);
 
+ // A completed report may intentionally use the deterministic local path when
+ // every API provider is unavailable. Keep older locally stored answer notes
+ // hidden, but allow this explicitly marked recovery output to be useful now.
+ $localFallback = ! $inputsStale && ($coaching['local_fallback'] ?? false) === true;
+ if ($localFallback) {
+ $local = AIService::localReviewQuestionFeedback($input);
+ $localFeedback = trim((string) ($local['ai_feedback'] ?? ''));
+ $localPossible = trim((string) ($local['better_sample_answer'] ?? ''));
+
+ return [
+ 'feedback_ready' => $localFeedback !== '',
+ 'possible_answer_ready' => ! $eligibility['is_skipped'] && ! $eligibility['is_too_short'] && $localPossible !== '',
+ 'feedback' => $localFeedback,
+ 'possible_answer' => $localPossible,
+ 'skipped' => $eligibility['is_skipped'],
+ 'insufficient' => $eligibility['is_too_short'],
+ 'local_fallback' => true,
+ 'source' => 'local_fallback',
+ ];
+ }
+
  return [
  'feedback_ready' => $feedbackReady,
  'possible_answer_ready' => $possibleReady,

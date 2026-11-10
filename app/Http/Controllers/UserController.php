@@ -950,8 +950,11 @@ class UserController extends Controller
  && $sessionRecord->answers->isNotEmpty() && $reviewService->shouldRefreshWithProvider($sessionRecord);
  $providerReviewStatus = ! $providerReviewPending ? 'ready'
  : ($reviewService->hasConfiguredProvider() ? DetailedReviewProgress::status((int) $sessionRecord->id) : 'unavailable');
+ $localFeedbackAvailable = $sessionRecord->answers->contains(
+ fn ($answer): bool => (bool) data_get($answer->coaching_feedback ?? [], 'local_fallback', false)
+ );
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'feedbackRefreshQueued', 'providerReviewPending', 'providerReviewStatus'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'feedbackRefreshQueued', 'providerReviewPending', 'providerReviewStatus', 'localFeedbackAvailable'));
  }
 
  public function reviewStatus($id, DetailedFeedbackReviewService $reviewService)

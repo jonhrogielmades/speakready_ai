@@ -125,20 +125,30 @@ class InitialProviderReviewReadinessTest extends TestCase
         Http::assertSentCount(1);
     }
 
-    public function test_provider_failure_preserves_answers_without_completing_the_interview(): void
+    public function test_provider_failure_completes_with_local_feedback_fallback(): void
     {
         [$user, $session, $answer] = $this->fixture();
-        Http::fake(Http::response(['error' => ['message' => 'Unavailable']], 401));
+        Http::fake(Http::response(['error' => ['message' => 'Too many requests']], 429));
 
         $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
-            ->assertStatus(503)->assertJsonPath('error_code', 'ai_feedback_providers_failed')
-            ->assertJsonPath('failure_code', 'provider_authentication')
-            ->assertJsonMissingPath('redirect_url');
+            ->assertOk()->assertJsonPath('review_ready', true)
+            ->assertJsonPath('redirect_url', route('user.review', $session));
 
-        $this->assertSame('in_progress', $session->fresh()->status);
-        $this->assertSame($answer->answer_text, $answer->fresh()->answer_text);
-        $this->assertSame(0, Score::where('interview_session_id', $session->id)->count());
-        $this->assertSame(0, Feedback::where('interview_session_id', $session->id)->count());
+        $this->assertSame('completed', $session->fresh()->status);
+        $savedAnswer = $answer->fresh();
+        $this->assertSame($answer->answer_text, $savedAnswer->answer_text);
+        $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+        $this->assertContains($savedAnswer->ai_provider, ['local', 'localmodel']);
+        $this->assertNotEmpty($savedAnswer->ai_feedback);
+        $this->assertTrue((bool) data_get($savedAnswer->coaching_feedback, 'local_fallback'));
+        foreach (['desktop', 'mobile'] as $layout) {
+            $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout)
+                ->assertOk()->assertViewIs($layout.'.user.review')
+                ->assertSee('Local answer feedback is ready.')
+                ->assertSee('Your report is based on saved-answer checks while the AI providers recover.')
+                ->assertDontSee('AI feedback is not ready for this question yet.');
+        }
         Http::assertSentCount(2);
     }
 

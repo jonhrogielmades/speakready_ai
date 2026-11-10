@@ -5,6 +5,7 @@
         var panel = document.querySelector('[data-detailed-review-status]');
         if (!panel || panel.dataset.reviewStatusBound === 'true') return;
         panel.dataset.reviewStatusBound = 'true';
+        var localFallback = panel.dataset.localFallback === 'true';
 
         var title = panel.querySelector('[data-review-status-title]');
         var message = panel.querySelector('[data-review-status-message]');
@@ -45,7 +46,10 @@
 
         function offerRetry(detail, heading) {
             stop();
-            setText(heading || 'Your AI answer reviews need another attempt.', detail);
+            setText(
+                heading || (localFallback ? 'Local answer feedback is ready.' : 'Your AI answer reviews need another attempt.'),
+                detail || (localFallback ? 'Your saved-answer report is available now. You can retry later for provider-written detail.' : 'Some questions are still waiting for a validated AI review.')
+            );
             if (retry) retry.hidden = false;
         }
 
@@ -63,7 +67,9 @@
 
         function exhausted() {
             if (Date.now() - startedAt < maximumWait && attempts < maximumAttempts) return false;
-            offerRetry('Your reviews are taking longer than expected. Your responses are saved; you can request another attempt below.');
+            offerRetry(localFallback
+                ? 'Your saved-answer report is available now. You can request a provider retry below when the service is ready.'
+                : 'Your reviews are taking longer than expected. Your responses are saved; you can request another attempt below.');
             return true;
         }
 
@@ -118,7 +124,9 @@
             if (result.status === 'ready') {
                 reloadReadyReview();
             } else if (result.status === 'failed' || result.status === 'unavailable') {
-                offerRetry(detail || 'Some questions are still waiting for a validated AI review. You can request another attempt below.');
+                offerRetry(localFallback
+                    ? 'Your saved-answer report is available now. You can request a provider retry below.'
+                    : (detail || 'Some questions are still waiting for a validated AI review. You can request another attempt below.'));
             } else {
                 setText('Your AI answer reviews are being prepared.', detail || 'This page updates automatically when the reviews are ready. You can keep reading your saved responses below.');
                 var delay = Number(result.retry_after_ms);
@@ -174,7 +182,9 @@
         }
 
         if (['failed', 'unavailable'].includes(panel.dataset.reviewStatus)) {
-            offerRetry('Some questions are still waiting for a validated AI review. You can request another attempt below.');
+            offerRetry(localFallback
+                ? 'Your saved-answer report is available now. You can request a provider retry below.'
+                : 'Some questions are still waiting for a validated AI review. You can request another attempt below.');
             return;
         }
         if (retry) retry.hidden = true;
