@@ -688,7 +688,7 @@ class AIService
  $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. ';
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
- $prompt.= 'Base the next interviewer turn on the candidate answer, the target role, and the earlier conversation. Generate a fresh question even when no matching example exists in the dataset. Dataset examples are optional inspiration, never a limit on what you may ask. ';
+ $prompt.= 'Base the next interviewer turn on the candidate answer, the target role, and the earlier conversation. Dataset examples are optional inspiration, never a limit on what you may ask. Use the supplied source dataset when it contains a relevant topic, competency, or representative question pattern, but do not require an exact dataset match. If no dataset example fits, create a fresh role-specific question through the AI provider instead of stopping or returning an error. ';
  $prompt.= 'Do not use the phrases "You mentioned", "You said", "You shared", or "Thinking about what you shared". Do not repeat or quote the candidate answer. Use a short natural transition only when necessary, then ask the one focused question. ';
  $prompt.= 'Read the earlier turns before choosing what to ask: do not ask again for an action, result, reason, or constraint already explained. Ask one narrow unanswered detail about the same example, or explicitly bridge from that detail when the required question type changes. Preserve negation and uncertainty; a plan is not a past achievement. Do not presume success, a problem, a tool, or a tradeoff the candidate never mentioned. ';
  $prompt.= $liveFeedbackMode === 'real_interview'
@@ -734,7 +734,7 @@ class AIService
  $contextText = is_array($datasetContext)? QuestionDatasetProvider::promptContext($datasetContext): (string) $datasetContext;
 
  $prompt.= "\nOptional interview dataset context for relevant topics and skills:\n{$contextText}\n";
- $prompt.= 'You may ask a provider-generated question outside these examples when it better fits the candidate answer and role. Do not fabricate source claims, leaked questions, or protected exam items. ';
+ $prompt.= 'Use these examples as optional grounding. Dataset examples are optional inspiration; you may ask a provider-generated question outside these examples when it better fits the candidate answer and role. Do not fabricate source claims, leaked questions, or protected exam items. ';
  }
 
  $conversation = array_map(static function (array $interaction): array {
@@ -1273,9 +1273,9 @@ return [
  return mb_substr($answer, 0, 1600);
  }
 
- public static function fallbackInterviewReply($session, array $history, string $latestAnswer, bool $isFinal = false): string
+ public static function fallbackInterviewReply($session, array $history, string $latestAnswer, bool $isFinal = false,?string $requiredQuestionType = null): string
  {
- return app(InterviewConversationService::class)->fallbackReply($session, $history, $latestAnswer, $isFinal);
+ return app(InterviewConversationService::class)->fallbackReply($session, $history, $latestAnswer, $isFinal, $requiredQuestionType);
  }
 
  private static function fallbackInterviewOpeningIntro($session): string

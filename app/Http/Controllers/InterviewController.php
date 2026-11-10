@@ -747,18 +747,22 @@ class InterviewController extends Controller
  session('active_interview_provider', AIService::defaultProviderKey())
  );
  session(['active_interview_provider' => $provider]);
- if (! AIService::providerIsConfigured($provider)) {
- return response()->json([
- 'success' => false,
- 'answer_saved' => true,
- 'error_code' => 'ai_interview_provider_unavailable',
- 'error' => 'No configured AI provider is available to prepare the next interview question. Please try again later.',
- ], 503);
- }
  $isFinal = $currentQuestionIndex >= $targetQuestionCount - 2;
  $requiredQuestionType = $this->selectedQuestionTypeForIndex($session, $currentQuestionIndex + 1);
 
+ try {
  $dataset = $this->datasetForSession($session);
+ if (! is_array($dataset) || empty($dataset['questions'])) {
+ // A missing or empty dataset must never block live AI question generation.
+ $dataset = null;
+ }
+ } catch (\Throwable $error) {
+ Log::warning('Interview question dataset lookup failed; continuing with provider generation.', [
+ 'session_id' => $session->id,
+ 'error_type' => $error::class,
+ ]);
+ $dataset = null;
+ }
  $spokenQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))->all();
  try {
@@ -774,40 +778,50 @@ class InterviewController extends Controller
  $provider = $usedProvider?? $provider;
  session(['active_interview_provider' => $provider]);
  } catch (InterviewFollowUpProviderFailureException $error) {
- Log::warning('AI interview follow-up provider failed; no local fallback will be used.', [
+ Log::warning('AI interview follow-up provider failed; using a local question fallback.', [
  'session_id' => $session->id,
  'question_id' => $question->id,
  'provider' => $provider,
  'error_type' => $error::class,
  ]);
-
- return response()->json([
- 'success' => false,
- 'answer_saved' => true,
- 'error_code' => 'ai_interview_provider_failed',
- 'error' => $error->getMessage(),
- 'retry_after_ms' => 1500,
- ], 503);
+ $provider = 'local';
+ $followUpText = $this->localInterviewFollowUpText(
+ $session,
+ $history,
+ $interviewerInputText,
+ $isFinal,
+ $requiredQuestionType,
+ $spokenQuestionTexts
+ );
  } catch (\Throwable $error) {
- Log::warning('Interview follow-up generation failed; no local fallback will be used.', [
+ Log::warning('Interview follow-up generation failed; using a local question fallback.', [
  'session_id' => $session->id,
  'question_id' => $question->id,
  'provider' => $provider,
  'error_type' => $error::class,
  ]);
+ $provider = 'local';
+ $followUpText = $this->localInterviewFollowUpText(
+ $session,
+ $history,
+ $interviewerInputText,
+ $isFinal,
+ $requiredQuestionType,
+ $spokenQuestionTexts
+ );
+ }
+
+ $followUpText = trim((string) $followUpText);
+ if ($followUpText === '') {
  return response()->json([
  'success' => false,
  'answer_saved' => true,
- 'error_code' => 'ai_interview_provider_failed',
- 'error' => 'The AI interviewer could not prepare the next question. Please try again.',
- 'retry_after_ms' => 1500,
+ 'error' => 'Your answer was saved, but no reliable next question could be prepared. Please try again.',
  ], 503);
  }
 
- $followUpText = trim($followUpText);
-
  try {
- return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $requiredQuestionType) {
+ return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $requiredQuestionType, $interviewerInputText, $history, $isFinal) {
  $lockedSession = InterviewSession::with('category')
  ->where('user_id', Auth::id())
  ->where('status', 'in_progress')
@@ -836,24 +850,46 @@ class InterviewController extends Controller
  ]);
  }
 
- // 4. Save new AI Question
- // Unanswered future drafts are replaced below; spoken questions must stay unique.
+ // 4. Save the next question. Unanswered future drafts are replaced below;
+ // spoken questions must stay unique even when local recovery is used.
  $existingQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))->all();
- if (in_array($this->normalizedQuestionText($followUpText), $existingQuestionTexts, true)) {
+ $safeFollowUpText = $followUpText;
+ if (in_array($this->normalizedQuestionText($safeFollowUpText), $existingQuestionTexts, true)) {
+ if ($provider !== 'local') {
  return response()->json(['error' => 'The AI interviewer repeated an earlier question. Please try again.'], 503);
+ }
+
+ $safeFollowUpText = $this->localInterviewFollowUpText(
+ $lockedSession,
+ $history,
+ $interviewerInputText,
+ $isFinal,
+ $requiredQuestionType,
+ $existingQuestionTexts
+ );
+ if ($safeFollowUpText === null) {
+ return response()->json(['error' => 'No reliable next question could be prepared. Please try again.'], 503);
+ }
  }
  $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
  $this->deleteUnansweredFutureQuestions($lockedSession, $question);
 
- $questionMetadata = $this->aiGeneratedQuestionSourceMetadata($provider);
+ $questionMetadata = $provider === 'local'
+ ? [
+ 'source_name' => 'SpeakReady local question fallback',
+ 'source_url' => null,
+ 'source_type' => 'local_question_fallback',
+ 'ai_provider' => 'local',
+ ]
+ : $this->aiGeneratedQuestionSourceMetadata($provider);
  if ($requiredQuestionType !== null) {
  $questionMetadata['question_type'] = $requiredQuestionType;
  }
  $newQuestion = $this->createInterviewQuestion(
  $lockedSession,
  $lockedSession->category,
- $followUpText,
+ $safeFollowUpText,
  $lockedSession->difficulty,
  $this->decodeQuestionTypes($lockedSession->question_types),
  $nextQuestionIndex,
@@ -3595,7 +3631,7 @@ return response()->json([
  InterviewAnswer $answer,
  array $evidence,
  string $stage,?string $fallback = null
- ): string {
+ ):?string {
  try {
  $revision = $assessment->groundedRevisionTemplate($this->answerContentForAssessment($answer), $evidence);
  if (trim($revision)!== '') {
@@ -5312,6 +5348,82 @@ return response()->json([
  'Situational' => ! $personal && ! $behavioral && $situational && ! $technicalMethod,
  default => false,
  };
+ }
+
+ private function localInterviewFollowUpText(
+ InterviewSession $session,
+ array $history,
+ string $latestAnswer,
+ bool $isFinal,
+?string $requiredQuestionType,
+ array $spokenQuestionTexts = []
+ ): string {
+ $isAccepted = function (string $candidate) use ($session, $latestAnswer, $history, $requiredQuestionType, $spokenQuestionTexts): bool {
+ $candidate = trim($candidate);
+
+ return $candidate !== ''
+ && $this->isReliableInterviewFollowUpText($candidate, $session, $latestAnswer, $history)
+ && ($requiredQuestionType === null || $this->questionMatchesSelectedType($candidate, $requiredQuestionType))
+ && ! in_array($this->normalizedQuestionText($candidate), $spokenQuestionTexts, true);
+ };
+
+ try {
+ $candidate = trim(AIService::fallbackInterviewReply(
+ $session,
+ $history,
+ $latestAnswer,
+ $isFinal,
+ $requiredQuestionType
+ ));
+ } catch (\Throwable $error) {
+ $candidate = '';
+ }
+
+ if ($isAccepted($candidate)) {
+ return $candidate;
+ }
+
+ $fallbackType = $requiredQuestionType ?: 'Behavioral';
+ try {
+ $candidate = trim($this->fallbackQuestionForSelectedType($session, $fallbackType, $latestAnswer, $isFinal));
+ } catch (\Throwable $error) {
+ $candidate = '';
+ }
+
+ if ($isAccepted($candidate)) {
+ return $candidate;
+ }
+
+ // Try the existing type-specific alternatives when the conversational
+ // question was already asked or did not pass the role and evidence checks.
+ $alternativesSeen = $spokenQuestionTexts;
+ $seed = $spokenQuestionTexts[0]?? $candidate;
+ for ($attempt = 0; $attempt < 4 && $seed !== ''; $attempt++) {
+ $alternative = $this->uniqueQuestionTextForSession(
+ $session,
+ $seed,
+ $alternativesSeen,
+ $requiredQuestionType,
+ $latestAnswer
+ );
+ if ($isAccepted($alternative)) {
+ return $alternative;
+ }
+
+ $normalizedAlternative = $this->normalizedQuestionText($alternative);
+ if ($normalizedAlternative === '' || in_array($normalizedAlternative, $alternativesSeen, true)) {
+ break;
+ }
+ $alternativesSeen[] = $normalizedAlternative;
+ }
+
+ $position = trim((string) ($session->target_position?? 'this position'))?: 'this position';
+
+ $candidate = $isFinal
+ ? "For my final question, what specific evidence best proves your fit for the {$position} role?"
+ : "What specific example, decision, or result best shows how you would succeed in the {$position} role?";
+
+ return $isAccepted($candidate)? $candidate: null;
  }
 
  private function fallbackQuestionForSelectedType(InterviewSession $session, string $requiredType, string $latestAnswer, bool $isFinal): string

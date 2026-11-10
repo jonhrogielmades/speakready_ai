@@ -9,6 +9,7 @@ use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\AIService;
 use App\Services\QuestionDatasetProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -174,6 +175,33 @@ class InterviewChatReplyFlowTest extends TestCase
         Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
     }
 
+    public function test_provider_generates_a_follow_up_without_dataset_context(): void
+    {
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        $generated = 'What interests you about improving reliability as a Developer?';
+        Http::fake(['api.openai.com/*' => Http::response([
+            'choices' => [['finish_reason' => 'stop', 'message' => ['content' => $generated]]],
+        ])]);
+        $session = new InterviewSession(['target_position' => 'Developer', 'difficulty' => 'medium']);
+        $answer = 'I build small web services and want to make them more reliable.';
+        $history = [['question' => 'Tell me about a work improvement you made.', 'answer' => $answer]];
+        $usedProvider = null;
+
+        $reply = AIService::generateChatReply(
+            $session, $history, $answer, 'openai', false, null, [], null, null, null, $usedProvider
+        );
+
+        $this->assertSame($generated, $reply);
+        $this->assertSame('openai', $usedProvider);
+        Http::assertSentCount(1);
+    }
+
     public function test_start_without_a_working_provider_does_not_create_local_questions(): void
     {
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -324,9 +352,10 @@ class InterviewChatReplyFlowTest extends TestCase
         ]);
     }
 
-    public function test_seaman_session_rejects_an_ai_software_follow_up_without_using_local_fallback(): void
+    public function test_seaman_session_uses_a_role_safe_local_follow_up_when_provider_output_is_unreliable(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        config(['services.interview_follow_up.max_retries' => 1]);
         AiProvider::create([
             'name' => 'OpenAI',
             'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
@@ -356,16 +385,100 @@ class InterviewChatReplyFlowTest extends TestCase
                 'response_mode' => 'text',
                 'answer_text' => 'I inspected the lifeboat before departure, found expired flares, and reported the safety issue to the captain.',
             ])
-            ->assertStatus(503)
-            ->assertJsonPath('success', false)
-            ->assertJsonPath('error_code', 'ai_interview_provider_failed');
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('source_type', 'local_question_fallback');
 
         Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
-        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
+        $next = Question::findOrFail($response->json('next_question_id'));
+        $this->assertSame($next->question_text, $response->json('next_question_text'));
+        $this->assertMatchesRegularExpression(
+            '/\b(?:vessel|ship|deck|watchkeeping|navigation|maritime|lifeboat|cargo|bridge|port|crew|safety|emergency)\b/i',
+            $next->question_text
+        );
+        $this->assertDoesNotMatchRegularExpression('/\b(?:cloud|software|deployment|debug)\b/i', $next->question_text);
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
         $this->assertDatabaseHas('interview_answers', [
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
         ]);
+    }
+
+    public function test_provider_failure_advances_with_a_local_question_fallback(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        config(['services.interview_follow_up.max_retries' => 1]);
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        Http::fake([
+            'api.openai.com/*' => Http::response(['error' => ['message' => 'rate limited']], 429),
+        ]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+
+        $response = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'response_mode' => 'text',
+                'answer_text' => 'I improved the support workflow and checked the result with the team.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('source_type', 'local_question_fallback');
+
+        Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+        $this->assertDatabaseHas('interview_answers', [
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+        ]);
+        $this->assertNotEmpty($response->json('next_question_text'));
+    }
+
+    public function test_repeated_provider_failures_keep_local_questions_distinct(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        config(['services.interview_follow_up.max_retries' => 1]);
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        Http::fake(['api.openai.com/*' => Http::response(['error' => ['message' => 'rate limited']], 429)]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+        $session->forceFill(['num_questions' => 3])->save();
+
+        $first = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I improved the support workflow and checked the result with the team.',
+            ])->assertOk()->assertJsonPath('source_type', 'local_question_fallback');
+
+        $second = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $first->json('next_question_id'),
+                'answer_text' => 'I compared the handoff steps and verified the change with the team.',
+            ])->assertOk()->assertJsonPath('source_type', 'local_question_fallback');
+
+        $this->assertNotSame($first->json('next_question_text'), $second->json('next_question_text'));
+        $this->assertSame(3, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(2, InterviewAnswer::where('interview_session_id', $session->id)->count());
     }
 
     public function test_disabled_ai_follow_up_does_not_use_local_conversation_questions(): void
