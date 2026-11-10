@@ -104,7 +104,7 @@ return [
  'api_endpoint' => env('OPENAI_API_URL', 'https://api.openai.com/v1'),
  'model' => env('OPENAI_MODEL', 'gpt-6-astra'),
  'feedback_model' => env('OPENAI_FEEDBACK_MODEL', env('OPENAI_MODEL', 'gpt-6-astra')),
- 'json_mode_fallback' => env('OPENAI_JSON_MODE_FALLBACK', false),
+ 'json_mode_fallback' => env('OPENAI_JSON_MODE_FALLBACK', true),
  'tts_enabled' => env('AI_TTS_ENABLED', false),
  'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),
  'tts_voice' => env('OPENAI_TTS_VOICE', 'nova'),
@@ -206,6 +206,8 @@ return [
  ],
 
  'ai_feedback_review' => [
+ 'provider_priority' => env('AI_DETAILED_REVIEW_PROVIDER_PRIORITY', env('AI_FEEDBACK_PROVIDER_PRIORITY', 'openai,gemini,groq,cohere')),
+ 'max_providers' => env('AI_DETAILED_REVIEW_MAX_PROVIDERS', 0),
  'min_reliability_percent' => env('AI_FEEDBACK_REVIEW_MIN_RELIABILITY_PERCENT', 95),
  'retry_cooldown_minutes' => env('AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES', 10),
  'timeout_seconds' => env('AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 30),
@@ -279,7 +281,7 @@ return [
  'allow_custom_endpoints' => env('AI_PROVIDER_ALLOW_CUSTOM_ENDPOINTS', false),
  'max_response_bytes' => env('AI_PROVIDER_MAX_RESPONSE_BYTES', 1048576),
  'max_retry_delay_ms' => env('AI_PROVIDER_MAX_RETRY_DELAY_MS', 5000),
- 'json_mode_fallback' => env('AI_PROVIDER_JSON_MODE_FALLBACK', false),
+ 'json_mode_fallback' => env('AI_PROVIDER_JSON_MODE_FALLBACK', true),
  ],
 
  'question_recommender' => [

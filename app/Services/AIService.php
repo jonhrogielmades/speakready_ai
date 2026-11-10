@@ -4931,19 +4931,47 @@ PROMPT;
  return "Write {$contentScope} in {$target}. Keep names, company names, technical terms, acronyms, numbers, and JSON keys unchanged unless translating them would be natural and unambiguous. ";
  }
 
- /**
- * Detailed reviews always try every configured API in the supported order.
- * Interview preferences and the general feedback provider cap do not narrow
- * this cascade; explicit provider-only calls still target their chosen API.
- *
- * @return array<int, string>
- */
+  /**
+  * Return the configured provider cascade for strict Detailed Review calls.
+  *
+  * The dedicated priority lets production deployments put their verified
+  * provider first without changing generic feedback or interviewer routing.
+  * Configured providers not listed in the priority are appended in the
+  * supported order so a stale preference cannot silently remove a fallback.
+  * A dedicated cap can reduce latency while the provider pool is validated;
+  * zero means all configured providers.
+  *
+  * @return array<int, string>
+  */
  public static function detailedReviewProviderPriority(): array
  {
- return array_values(array_filter(
- self::activeProviderKeys(),
- fn (string $provider): bool => self::providerIsConfigured($provider)
- ));
+  $priorityString = RuntimeConfiguration::get(
+  'services.ai_feedback_review.provider_priority',
+  'AI_DETAILED_REVIEW_PROVIDER_PRIORITY',
+  self::DEFAULT_PROVIDER_PRIORITY
+  );
+  $providers = array_merge(
+  array_map('trim', explode(',', (string) $priorityString)),
+  self::activeProviderKeys()
+  );
+  $providers = array_values(array_filter(
+  array_unique(array_filter(
+  array_map(fn ($name): string => self::normalizeProviderName($name), $providers)
+  )),
+  fn (string $provider): bool => self::providerIsSupported($provider)
+  && self::providerIsConfigured($provider)
+  ));
+
+  $maxProviders = (int) RuntimeConfiguration::get(
+  'services.ai_feedback_review.max_providers',
+  'AI_DETAILED_REVIEW_MAX_PROVIDERS',
+  0
+  );
+  if ($maxProviders > 0) {
+  $providers = array_slice($providers, 0, min($maxProviders, count($providers)));
+  }
+
+  return $providers;
  }
 
  private static function feedbackProviderPriority($provider): array

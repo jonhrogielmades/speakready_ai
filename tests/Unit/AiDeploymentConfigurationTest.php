@@ -29,6 +29,8 @@ class AiDeploymentConfigurationTest extends TestCase
             'services.ai_feedback.http_attempts',
             'services.ai_feedback.retry_delay_ms',
             'services.ai_feedback.max_output_tokens',
+            'services.ai_feedback_review.provider_priority',
+            'services.ai_feedback_review.max_providers',
             'services.ai_transcription.finish_recovery_timeout_seconds',
             'services.ai_transcription.local_fallback_reserve_seconds',
             'services.ai_transcription.rate_limit_per_minute',
@@ -177,6 +179,8 @@ class AiDeploymentConfigurationTest extends TestCase
             'AI_TRANSCRIPTION_LOCAL_FALLBACK_RESERVE_SECONDS',
             'AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES',
             'AI_FEEDBACK_REVIEW_MIN_RELIABILITY_PERCENT',
+            'AI_DETAILED_REVIEW_PROVIDER_PRIORITY',
+            'AI_DETAILED_REVIEW_MAX_PROVIDERS',
         ] as $name) {
             $this->assertStringContainsString("{$name}:", $compose);
             $this->assertStringContainsString("{$name}=", $dokploy);

@@ -145,8 +145,9 @@ class InitialProviderReviewReadinessTest extends TestCase
         foreach (['desktop', 'mobile'] as $layout) {
             $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout)
                 ->assertOk()->assertViewIs($layout.'.user.review')
-                ->assertDontSee('Local answer feedback is ready.')
-                ->assertDontSee('Retry AI review')
+                ->assertSee('Local answer feedback is ready.')
+                ->assertSee('temporary local saved-answer checks')
+                ->assertSee('Retry AI review')
                 ->assertDontSee('AI feedback is not ready for this question yet.');
         }
         Queue::assertPushed(RefreshDetailedFeedbackReview::class, 1);

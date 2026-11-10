@@ -306,6 +306,14 @@ class ProviderOnlyReviewGenerationTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_strict_review_honors_the_dedicated_detailed_review_priority_and_cap(): void
+    {
+        $this->setEnvironment('AI_DETAILED_REVIEW_PROVIDER_PRIORITY', 'gemini,openai');
+        $this->setEnvironment('AI_DETAILED_REVIEW_MAX_PROVIDERS', '1');
+
+        $this->assertSame(['gemini'], AIService::detailedReviewProviderPriority());
+    }
+
     public function test_strict_review_tries_all_configured_providers_in_order_despite_general_provider_cap(): void
     {
         $this->setEnvironment('AI_FEEDBACK_PROVIDER_PRIORITY', 'cohere,groq,gemini,openai');
