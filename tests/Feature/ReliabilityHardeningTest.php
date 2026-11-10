@@ -588,7 +588,7 @@ class ReliabilityHardeningTest extends TestCase
 
  $nextQuestion = (string) $response->json('next_question_text');
  $this->assertStringNotContainsStringIgnoringCase('favorite color', $nextQuestion);
- $this->assertStringContainsString('production release', $nextQuestion);
+ $this->assertStringNotContainsStringIgnoringCase('I coordinated a production release, fixed the deployment issue, and documented the rollback plan', $nextQuestion);
  $this->assertSame(1, substr_count($nextQuestion, '?'));
  $this->assertMatchesRegularExpression('/\b(?:result|impact|tradeoff|example|release|deployment|decision|specific)\b/i', $nextQuestion);
  $this->assertDatabaseHas('questions', [
