@@ -74,7 +74,7 @@
  </div>
  @once
  @push('scripts')
- <script src="{{ asset('js/detailed-review-status.js?v=1') }}" defer></script>
+ <script src="{{ asset('js/detailed-review-status.js?v=2') }}" defer></script>
  @endpush
  @endonce
  @elseif(!$sessionEndedEarly && ($feedbackRefreshQueued?? false) && !($localFeedbackAvailable ?? false))

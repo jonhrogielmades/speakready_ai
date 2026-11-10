@@ -38,10 +38,12 @@ function harness(options = {}) {
         '[data-review-reload]': reload,
     };
     const panel = {
+        hidden: false,
         dataset: {
             reviewStatus: options.status || 'processing',
             reviewStatusUrl: options.url || '/session/42/review/status',
         },
+        setAttribute() {},
         querySelector(selector) { return elements[selector] || null; },
     };
     const document = eventTarget({
@@ -108,7 +110,7 @@ function harness(options = {}) {
         now = target;
         await settle();
     }
-    return { window, document, heading, detail, retry, reload, requests, storage, advance, settle, timers, get reloads() { return reloads; } };
+    return { window, document, panel, heading, detail, retry, reload, requests, storage, advance, settle, timers, get reloads() { return reloads; } };
 }
 
 test('desktop and mobile use the shared pending-only poller and preserve the manual POST fallback', () => {
@@ -117,7 +119,7 @@ test('desktop and mobile use the shared pending-only poller and preserve the man
     assert.match(view, /route\('user\.review\.status', \$sessionRecord\)/);
     assert.match(view, /method="POST" action="{{ route\('user\.review\.refresh', \$sessionRecord\) }}" data-review-retry @if\(\$providerReviewCanContinue\) hidden @endif/);
     assert.match(view, /role="status" aria-live="polite" aria-atomic="true"/);
-    assert.match(view, /detailed-review-status\.js\?v=1/);
+    assert.match(view, /detailed-review-status\.js\?v=2/);
     for (const layout of ['desktop', 'mobile']) {
         const wrapper = readFileSync(join(root, `resources/views/${layout}/user/review.blade.php`), 'utf8');
         assert.match(wrapper, /@include\('shared\.user\.review-content'/);
@@ -141,6 +143,7 @@ test('reads status without mutations and refreshes automatically after processin
     await ui.advance(5000);
     await ui.advance(7000);
     assert.equal(ui.reloads, 1);
+    assert.equal(ui.panel.hidden, true);
     await ui.advance(180000);
     assert.equal(ui.requests.length, 3);
 });
@@ -153,6 +156,7 @@ test('a stale page cannot enter an automatic reload loop', async () => {
     const second = harness({ storage, responses: [{ status: 'ready' }] });
     await second.advance(0);
     assert.equal(second.reloads, 0);
+    assert.equal(second.panel.hidden, false);
     assert.equal(second.retry.hidden, true);
     assert.equal(second.reload.hidden, false);
     second.reload.emit('click');

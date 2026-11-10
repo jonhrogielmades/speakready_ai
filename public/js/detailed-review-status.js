@@ -28,6 +28,18 @@
             if (message) message.textContent = detail;
         }
 
+        function showPanel() {
+            panel.hidden = false;
+            panel.setAttribute('aria-hidden', 'false');
+        }
+
+        function hidePanel() {
+            panel.hidden = true;
+            panel.setAttribute('aria-hidden', 'true');
+            if (retry) retry.hidden = true;
+            if (reload) reload.hidden = true;
+        }
+
         function pause() {
             generation += 1;
             if (timer !== null) window.clearTimeout(timer);
@@ -46,11 +58,13 @@
 
         function offerRetry(detail, heading) {
             stop();
+            showPanel();
             setText(
                 heading || (localFallback ? 'Local answer feedback is ready.' : 'Your AI answer reviews need another attempt.'),
                 detail || (localFallback ? 'Your saved-answer report is available now. You can retry later for provider-written detail.' : 'Some questions are still waiting for a validated AI review.')
             );
             if (retry) retry.hidden = false;
+            if (reload) reload.hidden = true;
         }
 
         try {
@@ -107,10 +121,12 @@
                 persisted = true;
             } catch (_) { /* A manual reload is safe if both storage methods fail. */ }
             if (seen || !persisted) {
+                showPanel();
                 setText('Your AI reviews are ready.', 'Reload this page to display the latest saved report.');
                 if (reload) reload.hidden = false;
                 return;
             }
+            hidePanel();
             setText('Your AI reviews are ready.', 'Updating your report…');
             window.location.reload();
         }
@@ -128,6 +144,7 @@
                     ? 'Your saved-answer report is available now. You can request a provider retry below.'
                     : (detail || 'Some questions are still waiting for a validated AI review. You can request another attempt below.'));
             } else {
+                showPanel();
                 setText('Your AI answer reviews are being prepared.', detail || 'This page updates automatically when the reviews are ready. You can keep reading your saved responses below.');
                 var delay = Number(result.retry_after_ms);
                 nextDelay = Number.isFinite(delay) ? Math.max(2000, Math.min(15000, delay)) : 5000;
@@ -187,6 +204,7 @@
                 : 'Some questions are still waiting for a validated AI review. You can request another attempt below.');
             return;
         }
+        showPanel();
         if (retry) retry.hidden = true;
         if (reload) reload.addEventListener('click', function () { window.location.reload(); });
         document.addEventListener('visibilitychange', resume);
