@@ -551,7 +551,7 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  }
 
- public function test_unrelated_provider_follow_up_uses_a_safe_local_fallback(): void
+ public function test_unrelated_provider_follow_up_is_rejected_without_local_fallback(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Software Engineering']);
@@ -571,7 +571,7 @@ class ReliabilityHardeningTest extends TestCase
  ], 200),
  ]);
 
- $response = $this->actingAs($user)
+  $this->actingAs($user)
  ->withSession([
  'active_interview_id' => $session->id,
  'active_interview_provider' => 'openai',
@@ -582,20 +582,16 @@ class ReliabilityHardeningTest extends TestCase
  'response_mode' => 'text',
  'ai_provider' => 'openai',
  ])
- ->assertOk()
- ->assertJsonPath('success', true)
- ->assertJsonPath('source_type', 'local_question_fallback');
+  ->assertStatus(503)
+  ->assertJsonPath('success', false)
+  ->assertJsonPath('answer_saved', true)
+  ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
 
- $nextQuestion = (string) $response->json('next_question_text');
- $this->assertStringNotContainsStringIgnoringCase('favorite color', $nextQuestion);
- $this->assertStringNotContainsStringIgnoringCase('I coordinated a production release, fixed the deployment issue, and documented the rollback plan', $nextQuestion);
- $this->assertSame(1, substr_count($nextQuestion, '?'));
- $this->assertMatchesRegularExpression('/\b(?:result|impact|tradeoff|example|release|deployment|decision|specific)\b/i', $nextQuestion);
- $this->assertDatabaseHas('questions', [
- 'interview_session_id' => $session->id,
- 'question_text' => $nextQuestion,
- 'source_type' => 'local_question_fallback',
- ]);
+  $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
+  $this->assertDatabaseHas('interview_answers', [
+  'interview_session_id' => $session->id,
+  'question_id' => $question->id,
+  ]);
  }
 
  public function test_interview_does_not_use_a_local_followup_when_ai_followups_are_disabled(): void

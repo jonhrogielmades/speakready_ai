@@ -770,45 +770,32 @@ class InterviewController extends Controller
  $usedProvider = null;
  $followUpText = AIService::generateChatReply(
  $session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType,
- fn (string $reply): bool => $this->isReliableInterviewFollowUpText($reply, $session, $interviewerInputText, $history)
+  fn (string $reply): bool => $this->isReliableInterviewFollowUpText($reply, $session, $interviewerInputText, $history, false, true)
  && ($requiredQuestionType === null || $this->questionMatchesSelectedType($reply, $requiredQuestionType))
  && ! in_array($this->normalizedQuestionText($reply), $spokenQuestionTexts, true),
  $usedProvider
  );
  $provider = $usedProvider?? $provider;
+  if ($provider === 'local' || ! AIService::providerIsSupported($provider)) {
+  return $this->aiInterviewFollowUpUnavailableResponse();
+  }
  session(['active_interview_provider' => $provider]);
  } catch (InterviewFollowUpProviderFailureException $error) {
- Log::warning('AI interview follow-up provider failed; using a local question fallback.', [
+ Log::warning('AI interview follow-up providers could not produce a reliable next question.', [
  'session_id' => $session->id,
  'question_id' => $question->id,
  'provider' => $provider,
  'error_type' => $error::class,
  ]);
- $provider = 'local';
- $followUpText = $this->localInterviewFollowUpText(
- $session,
- $history,
- $interviewerInputText,
- $isFinal,
- $requiredQuestionType,
- $spokenQuestionTexts
- );
+ return $this->aiInterviewFollowUpUnavailableResponse();
  } catch (\Throwable $error) {
- Log::warning('Interview follow-up generation failed; using a local question fallback.', [
+ Log::warning('Interview follow-up generation failed before an AI next question was prepared.', [
  'session_id' => $session->id,
  'question_id' => $question->id,
  'provider' => $provider,
  'error_type' => $error::class,
  ]);
- $provider = 'local';
- $followUpText = $this->localInterviewFollowUpText(
- $session,
- $history,
- $interviewerInputText,
- $isFinal,
- $requiredQuestionType,
- $spokenQuestionTexts
- );
+ return $this->aiInterviewFollowUpUnavailableResponse();
  }
 
  $followUpText = trim((string) $followUpText);
@@ -856,33 +843,14 @@ class InterviewController extends Controller
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))->all();
  $safeFollowUpText = $followUpText;
  if (in_array($this->normalizedQuestionText($safeFollowUpText), $existingQuestionTexts, true)) {
- if ($provider !== 'local') {
- return response()->json(['error' => 'The AI interviewer repeated an earlier question. Please try again.'], 503);
- }
-
- $safeFollowUpText = $this->localInterviewFollowUpText(
- $lockedSession,
- $history,
- $interviewerInputText,
- $isFinal,
- $requiredQuestionType,
- $existingQuestionTexts
- );
- if ($safeFollowUpText === null) {
- return response()->json(['error' => 'No reliable next question could be prepared. Please try again.'], 503);
- }
+ return $this->aiInterviewFollowUpUnavailableResponse(
+  'The AI providers returned a repeated question. Please try again so a new answer-based question can be generated.'
+  );
  }
  $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
  $this->deleteUnansweredFutureQuestions($lockedSession, $question);
 
- $questionMetadata = $provider === 'local'
- ? [
- 'source_name' => 'SpeakReady local question fallback',
- 'source_url' => null,
- 'source_type' => 'local_question_fallback',
- 'ai_provider' => 'local',
- ]
- : $this->aiGeneratedQuestionSourceMetadata($provider);
+  $questionMetadata = $this->aiGeneratedQuestionSourceMetadata($provider);
  if ($requiredQuestionType !== null) {
  $questionMetadata['question_type'] = $requiredQuestionType;
  }
@@ -4955,12 +4923,23 @@ return response()->json([
  return $questions;
  }
 
+ private function aiInterviewFollowUpUnavailableResponse(string $message = 'Your answer was saved, but no AI provider returned a reliable role- and answer-based next question. Please try again.'): \Illuminate\Http\JsonResponse
+ {
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => true,
+ 'error_code' => 'ai_interview_follow_up_unavailable',
+ 'error' => $message,
+ ], 503);
+ }
+
  private function isReliableInterviewFollowUpText(
  string $questionText,
  InterviewSession $session,
  string $latestAnswer,
  array $history = [],
- bool $allowNeutralAcknowledgement = false
+ bool $allowNeutralAcknowledgement = false,
+ bool $requireAnswerAnchor = false
  ): bool
  {
  $questionText = trim(preg_replace('/\s+/u', ' ', strip_tags($questionText))?? '');
@@ -4994,8 +4973,15 @@ return response()->json([
  $mentionsPosition = Str::contains(Str::lower($questionText), Str::lower($position));
  $answerTokens = $this->interviewGroundingTokens($latestAnswer, $position);
  $questionTokens = $this->interviewGroundingTokens($questionText, $position);
- $overlap = count(array_intersect($answerTokens, $questionTokens));
+ $overlap = $this->interviewGroundingTokenOverlap($answerTokens, $questionTokens);
  $hasEvidenceProbe = preg_match('/\b(?:specific|example|situation|experience|result|outcome|impact|decision|action|responsib\w*|role|tradeoff|constraint|stakeholder|tool|process|metric|lesson|learn\w*|improv\w*|verif\w*|risk|priorit\w*|challenge|handle|apply|evidence|fit|strength|motivat\w*|weakness|ownership|personally|describe|walk|explain|tell|detail|approach|choose|check|happened|difficult|part|interests|skill|prepare|support)\b/i', $questionText) === 1;
+
+ if ($requireAnswerAnchor
+ && ! $this->unavailableInterviewAnswerText($latestAnswer)
+ && TranscriptService::wordCount($latestAnswer) >= 8
+ && $overlap === 0) {
+ return false;
+ }
 
  // A short or unavailable answer cannot support a claim about what happened.
  // Ask for evidence in the target role instead of treating a generic probe as
@@ -5061,6 +5047,26 @@ return response()->json([
  $matches[0]?? [],
  fn (string $token): bool => ! in_array($token, $stopWords, true)
  )));
+ }
+
+ private function interviewGroundingTokenOverlap(array $answerTokens, array $questionTokens): int
+ {
+ $overlap = 0;
+
+ foreach ($answerTokens as $answerToken) {
+  foreach ($questionTokens as $questionToken) {
+  if ($answerToken === $questionToken
+  || (strlen($answerToken) >= 6
+  && strlen($questionToken) >= 6
+  && (str_starts_with($answerToken, substr($questionToken, 0, 6))
+  || str_starts_with($questionToken, substr($answerToken, 0, 6))))) {
+  $overlap++;
+  break;
+  }
+  }
+ }
+
+ return $overlap;
  }
 
  private function roleAlignedQuestionTexts(array $questions, string $position): array

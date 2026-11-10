@@ -33,6 +33,18 @@ class InterviewFollowUpReliabilityTest extends TestCase
         ));
     }
 
+    public function test_provider_follow_up_requires_a_concrete_anchor_from_a_substantive_answer(): void
+    {
+        $answer = 'I coordinated a billing migration with the finance team, resolved duplicate invoices, and reduced reconciliation time by 30 percent.';
+
+        $this->assertFalse($this->isReliable(
+            'What evidence best shows your fit for the Billing Specialist role?',
+            $answer,
+            'Billing Specialist',
+            true
+        ));
+    }
+
     public function test_short_or_unavailable_answers_require_a_role_grounded_evidence_prompt(): void
     {
         $question = 'What specific example could you share for the Billing Specialist role?';
@@ -96,13 +108,13 @@ class InterviewFollowUpReliabilityTest extends TestCase
         ));
     }
 
-    private function isReliable(string $question, string $answer, string $position = 'Billing Specialist'): bool
+    private function isReliable(string $question, string $answer, string $position = 'Billing Specialist', bool $requireAnswerAnchor = false): bool
     {
         $session = new InterviewSession;
         $session->setRawAttributes(['target_position' => $position]);
         $method = new ReflectionMethod(InterviewController::class, 'isReliableInterviewFollowUpText');
         $method->setAccessible(true);
 
-        return $method->invoke(app(InterviewController::class), $question, $session, $answer);
+        return $method->invoke(app(InterviewController::class), $question, $session, $answer, [], false, $requireAnswerAnchor);
     }
 }

@@ -685,7 +685,7 @@ class AIService
  if ($roleGuidance !== '') {
  $prompt.= $roleGuidance.' ';
  }
- $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. ';
+ $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. For a substantive latest answer, the next question must reuse at least one concrete detail from that answer, such as a task, tool, stakeholder, constraint, decision, or outcome; do not ask a generic fit question when the answer provides a concrete topic. ';
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
  $prompt.= 'Base the next interviewer turn on the candidate answer, the target role, and the earlier conversation. Dataset examples are optional inspiration, never a limit on what you may ask. Use the supplied source dataset when it contains a relevant topic, competency, or representative question pattern, but do not require an exact dataset match. If no dataset example fits, create a fresh role-specific question through the AI provider instead of stopping or returning an error. ';
@@ -781,15 +781,15 @@ class AIService
  }
  $prompt.= ' Keep the reply natural for speech, under 75 words, with exactly one interviewer question. '.self::liveFeedbackReplyBoundary($liveFeedbackMode);
 
- $maxRetries = max(1, min(3, (int) config('services.interview_follow_up.max_retries', 3)));
  $providers = array_values(array_filter(self::providerPriorityList($provider), fn (string $key): bool => self::providerIsConfigured($key)));
  if ($providers === []) {
  throw new InterviewFollowUpProviderFailureException('No configured AI provider is available to prepare the next interview question.');
  }
  $maxProviders = max(1, min(count($providers), (int) config('services.interview_follow_up.max_providers', 1)));
  $providers = array_slice($providers, 0, $maxProviders);
+ $maxRetries = max(1, min(4, (int) config('services.interview_follow_up.max_retries', 4)));
  $chatRequestOptions = [
- 'timeout_seconds' => max(2, min(20, (int) config('services.interview_follow_up.timeout', 6))),
+ 'timeout_seconds' => max(2, min(20, (int) config('services.interview_follow_up.timeout', 20))),
  'attempts' => max(1, min(2, (int) config('services.interview_follow_up.http_attempts', 1))),
  'max_providers' => 1,
  ];
@@ -810,7 +810,7 @@ class AIService
  $usedProvider = $currentProvider;
  return $response;
  }
- } catch (\Exception $e) {
+  } catch (\Throwable $e) {
  Log::error('AI Chat Reply Error (Attempt '.($attempt + 1).'): '.self::safeProviderErrorMessage($e));
  }
 
