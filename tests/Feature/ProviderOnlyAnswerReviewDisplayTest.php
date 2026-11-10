@@ -53,6 +53,24 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_answer_review_uses_tabs_for_feedback_answer_and_possible_answer(): void
+    {
+        [$user, $session] = $this->fixture();
+
+        foreach (['desktop', 'mobile'] as $layout) {
+            $html = $this->reviewHtml($user, $session, $layout);
+
+            $this->assertSame(1, substr_count($html, 'data-answer-review-tabs>'));
+            $this->assertSame(1, substr_count($html, 'data-review-tab="feedback"'));
+            $this->assertSame(1, substr_count($html, 'data-review-tab="answer"'));
+            $this->assertSame(1, substr_count($html, 'data-review-tab="possible"'));
+            $this->assertStringContainsString('aria-selected="true"', $html);
+            $this->assertStringContainsString('data-review-panel="feedback"', $html);
+            $this->assertStringContainsString('data-review-panel="answer"', $html);
+            $this->assertStringContainsString('data-review-panel="possible"', $html);
+        }
+    }
+
     public function test_provider_name_without_verified_narrative_does_not_authorize_legacy_text(): void
     {
         [$user, $session, $answer] = $this->fixture();
@@ -189,12 +207,18 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
 
     private function reviewCards(User $user, InterviewSession $session, string $layout): array
     {
-        $response = $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout);
-        $response->assertOk()->assertViewIs($layout.'.user.review');
         $document = new \DOMDocument();
-        @$document->loadHTML('<?xml encoding="UTF-8">'.$response->getContent());
+        @$document->loadHTML('<?xml encoding="UTF-8">'.$this->reviewHtml($user, $session, $layout));
         $nodes = (new \DOMXPath($document))->query('//div[contains(concat(" ", normalize-space(@class), " "), " review-answer-simple ")]');
 
         return array_map(static fn (\DOMNode $node): string => $node->textContent, iterator_to_array($nodes));
+    }
+
+    private function reviewHtml(User $user, InterviewSession $session, string $layout): string
+    {
+        $response = $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout);
+        $response->assertOk()->assertViewIs($layout.'.user.review');
+
+        return $response->getContent();
     }
 }

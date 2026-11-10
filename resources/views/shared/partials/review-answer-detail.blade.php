@@ -41,6 +41,7 @@
  'My answer: '.$coachAnswer,
  'Please tell me what worked, what I should improve, and a stronger structure I can practice for this answer.',
  ]));
+ $answerTabKey = 'answer-review-'.((int) ($answer->id ?? 0)).'-'.$index;
 @endphp
 
 <div class="review-answer-simple review-answer-minimal">
@@ -60,29 +61,42 @@
  </section>
  </div>
  @else
- <div class="review-answer-example-grid review-answer-feedback-grid">
- <section class="review-answer-section-wide">
+ <div class="review-answer-tabs" data-answer-review-tabs>
+ <div class="review-answer-tab-list" role="tablist" aria-label="Answer review sections">
+ <button type="button" class="review-answer-tab is-active" id="{{ $answerTabKey }}-feedback-tab" role="tab" aria-selected="true" aria-controls="{{ $answerTabKey }}-feedback-panel" data-review-tab="feedback" title="Show feedback" tabindex="0">
+ <i class="fa-solid fa-comment-dots" aria-hidden="true"></i>
  <span>Feedback</span>
+ </button>
+ <button type="button" class="review-answer-tab" id="{{ $answerTabKey }}-answer-tab" role="tab" aria-selected="false" aria-controls="{{ $answerTabKey }}-answer-panel" data-review-tab="answer" title="Show your saved answer" tabindex="-1">
+ <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+ <span>Your Answer</span>
+ </button>
+ <button type="button" class="review-answer-tab" id="{{ $answerTabKey }}-possible-tab" role="tab" aria-selected="false" aria-controls="{{ $answerTabKey }}-possible-panel" data-review-tab="possible" title="Show a possible answer" tabindex="-1">
+ <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+ <span>Possible Answer</span>
+ </button>
+ </div>
+ <div class="review-answer-tab-panels">
+ <section class="review-answer-section review-answer-tab-panel" id="{{ $answerTabKey }}-feedback-panel" role="tabpanel" aria-labelledby="{{ $answerTabKey }}-feedback-tab" data-review-panel="feedback" aria-hidden="false" tabindex="0">
  <p @if(!$feedbackReady) role="status" @endif>{{ $feedbackText }}</p>
  </section>
- <section>
- <span>Your Answer</span>
+ <section class="review-answer-section review-answer-tab-panel" id="{{ $answerTabKey }}-answer-panel" role="tabpanel" aria-labelledby="{{ $answerTabKey }}-answer-tab" data-review-panel="answer" aria-hidden="true" tabindex="0" hidden>
  @if($isVoiceModeAnswer)
  @include('shared.partials.interview-answer-voice-recording', ['answer' => $answer])
  @else
  <p>{{ $answerDisplay }}</p>
  @endif
  </section>
- <section class="review-answer-possible-section">
- <span>Possible Answer</span>
+ <section class="review-answer-section review-answer-tab-panel review-answer-possible-section" id="{{ $answerTabKey }}-possible-panel" role="tabpanel" aria-labelledby="{{ $answerTabKey }}-possible-tab" data-review-panel="possible" aria-hidden="true" tabindex="0" hidden>
  <p @if(!$possibleAnswerReady && !$possibleAnswerNeedsMoreDetail && !$answerWasSkipped) role="status" @endif>{{ $possibleAnswer }}</p>
  <div class="review-ai-coach-action" data-ai-coach-prompt-wrapper>
  <textarea class="review-ai-coach-prompt" data-ai-coach-prompt hidden readonly>{{ $coachPrompt }}</textarea>
- <button type="button" class="review-ai-coach-button" data-coach-url="{{ route('user.coach') }}" data-review-answer-id="{{ (int) ($answer->id?? 0) }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach about this answer">
+ <button type="button" class="review-ai-coach-button" data-coach-url="{{ route('user.coach') }}" data-review-answer-id="{{ (int) ($answer->id ?? 0) }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach about this answer">
  <span>ASK AI COACH</span>
  </button>
  </div>
  </section>
+ </div>
  </div>
  @endif
 </div>
@@ -90,6 +104,69 @@
 @once
 <script>
     (function () {
+        function initAnswerReviewTabs() {
+            document.querySelectorAll('[data-answer-review-tabs]').forEach(function (root) {
+                if (root.dataset.answerReviewTabsBound === 'true') {
+                    return;
+                }
+
+                root.dataset.answerReviewTabsBound = 'true';
+
+                const tabs = Array.from(root.querySelectorAll('[data-review-tab]'));
+                const panels = Array.from(root.querySelectorAll('[data-review-panel]'));
+
+                if (!tabs.length || !panels.length) {
+                    return;
+                }
+
+                function activate(key, shouldFocus) {
+                    tabs.forEach(function (tab) {
+                        const isActive = tab.dataset.reviewTab === key;
+                        tab.classList.toggle('is-active', isActive);
+                        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                        tab.setAttribute('tabindex', isActive ? '0' : '-1');
+
+                        if (isActive && shouldFocus) {
+                            tab.focus();
+                        }
+                    });
+
+                    panels.forEach(function (panel) {
+                        const isActive = panel.dataset.reviewPanel === key;
+                        panel.hidden = !isActive;
+                        panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+                    });
+                }
+
+                tabs.forEach(function (tab, index) {
+                    tab.addEventListener('click', function () {
+                        activate(tab.dataset.reviewTab, false);
+                    });
+
+                    tab.addEventListener('keydown', function (event) {
+                        let nextIndex = index;
+
+                        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+                            nextIndex = (index + 1) % tabs.length;
+                        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+                            nextIndex = (index - 1 + tabs.length) % tabs.length;
+                        } else if (event.key === 'Home') {
+                            nextIndex = 0;
+                        } else if (event.key === 'End') {
+                            nextIndex = tabs.length - 1;
+                        } else {
+                            return;
+                        }
+
+                        event.preventDefault();
+                        activate(tabs[nextIndex].dataset.reviewTab, true);
+                    });
+                });
+
+                activate('feedback', false);
+            });
+        }
+
         const reviewCoachPromptKey = 'speakready.aiCoach.reviewPrompt';
 
         window.speakReadyAskAiCoachFromReview = function (button) {
@@ -116,6 +193,12 @@
 
             window.location.href = target;
         };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAnswerReviewTabs, { once: true });
+        } else {
+            initAnswerReviewTabs();
+        }
     })();
 </script>
 @endonce
