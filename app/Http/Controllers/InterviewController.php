@@ -21,6 +21,7 @@ use App\Services\AiProviderEvaluationService;
 use App\Services\AudioDurationService;
 use App\Services\ChallengePositionService;
 use App\Services\CareerRoleSuggestionService;
+use App\Services\DetailedFeedbackReviewService;
 use App\Services\EvidenceBasedCoachingService;
 use App\Services\InterviewConversationService;
 use App\Services\InterviewQuestionAlignmentService;
@@ -1351,8 +1352,27 @@ return response()->json([
  }
 
  if ($session->status === 'completed') {
- if ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
+ if ($gameLevel && $this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
  $session->refresh()->load(['score', 'feedback']);
+ }
+ if (! $gameLevel) {
+ $reviewService = app(DetailedFeedbackReviewService::class);
+ if ($reviewService->shouldRefreshWithProvider($session)) {
+ $reviewLock = Cache::lock('feedback-review-running:'.$session->id, 145);
+ if (! $reviewLock->get()) {
+ return $request->expectsJson()? response()->json(['review_ready' => false, 'message' => 'AI feedback analysis is already in progress.', 'retry_after_ms' => 1500], 202): back()->with('success', 'AI feedback analysis is already in progress.');
+ }
+ try {
+ $reviewService->refreshWithProvidersIfNeeded($session);
+ } finally {
+ $reviewLock->release();
+ }
+ $session->refresh();
+ if ($reviewService->shouldRefreshWithProvider($session)) {
+ $message = 'Your answers are saved. AI feedback is still being prepared for every question. Please try the analysis again shortly.';
+ return $request->expectsJson()? response()->json(['review_ready' => false, 'message' => $message, 'retry_after_ms' => 1500], 503): back()->with('error', $message);
+ }
+ }
  }
 
   $this->syncScoredInterviewOnboarding($request, $session);
@@ -1360,7 +1380,7 @@ return response()->json([
  $this->forgetCompletedSessionState($session, $gameLevel);
  $redirect = $this->completedSessionRedirect($session, $gameLevel);
 
- return $request->expectsJson()? response()->json(['redirect_url' => $redirect->getTargetUrl()]): $redirect;
+ return $request->expectsJson()? response()->json(['redirect_url' => $redirect->getTargetUrl(), 'review_ready' => true]): $redirect;
  }
 
  $processingToken = null;
@@ -1450,6 +1470,12 @@ return response()->json([
  ];
  })->toArray();
 
+ if (! $gameLevel) {
+ // Use the exact same saved-input representation as Detailed Review, including
+ // voice answers and short/empty responses, so verification survives display.
+ $answersData = app(DetailedFeedbackReviewService::class)->providerAnswerInputs($answers);
+ }
+
  $sessionData = [
  'target_position' => $session->target_position,
  'difficulty' => $session->difficulty,
@@ -1475,10 +1501,9 @@ return response()->json([
  $sessionData['game_retry_hint'] = $gameLevel->retry_hint;
  }
 
- $feedbackProvider = $gameLevel? null: $this->bestEvaluatedInterviewProvider(
- 'feedback_generation',
- session('active_interview_feedback_provider', session('active_interview_provider', AIService::defaultProviderKey()))
- );
+ // Detailed Review has its own API-only order. Historic benchmark rankings
+ // must not redirect a configured provider cascade to local feedback.
+ $feedbackProvider = $gameLevel? null: (AIService::detailedReviewProviderPriority()[0] ?? null);
  if (! $gameLevel) {
  session(['active_interview_feedback_provider' => $feedbackProvider]);
  }
@@ -1656,6 +1681,10 @@ return response()->json([
  'session_state' => null,
  ]);
 
+ if (! $gameLevel) {
+ app(DetailedFeedbackReviewService::class)->acceptGeneratedProviderReview($session, $aiFeedback, $answersData, $sessionData);
+ }
+
  $badges = [];
  if (! empty($profile->badges_earned)) {
  $badges = is_array($profile->badges_earned)? $profile->badges_earned: json_decode($profile->badges_earned, true)?? [];
@@ -1801,7 +1830,7 @@ return response()->json([
  'next_level' => $nextLevel,
  ]);
 
- return $request->expectsJson()? response()->json(['redirect_url' => $redirect->getTargetUrl()]): $redirect;
+ return $request->expectsJson()? response()->json(['redirect_url' => $redirect->getTargetUrl(), 'review_ready' => true]): $redirect;
  } catch (\Throwable $error) {
  if ($reportTransactionStarted && DB::transactionLevel() > 0) {
  DB::rollBack();
@@ -5670,31 +5699,11 @@ return response()->json([
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
  }
 
- $feedbackProviderKey = AIService::normalizeProviderKey($feedbackProvider);
- if (! SystemSettings::enabled('int_ai_eval', true)
- || in_array($feedbackProviderKey, ['local', 'localmodel'], true)) {
- return AIService::generateLocalFeedback($sessionData, $answersData);
+ if (! SystemSettings::enabled('int_ai_eval', true)) {
+ throw new AiFeedbackProviderFailureException([]);
  }
 
- try {
  return $this->generateInterviewFeedbackForSession($session, $gameLevel, $sessionData, $answersData, $feedbackProvider);
- } catch (AiFeedbackProviderFailureException $error) {
- $fallbackFeedback = AIService::generateLocalFeedback($sessionData, $answersData);
- $fallbackFeedback['_api_refresh_blocked_until'] = now()
- ->addMinutes(max(1, (int) RuntimeConfiguration::get('services.ai_feedback_review.retry_cooldown_minutes', 'AI_FEEDBACK_REVIEW_RETRY_COOLDOWN_MINUTES', 10)))
- ->toIso8601String();
- Log::warning('AI feedback providers failed; completing report with local feedback fallback.', [
- 'session_id' => $session->id,
- 'user_id' => $session->user_id,
- 'requested_provider' => AIService::normalizeProviderKey($feedbackProvider),
- 'provider_count' => $error->providerCount(),
- 'providers_configured' => $error->providers(),
- 'providers_attempted' => $error->attemptedProviders(),
- 'fallback_provider' => AIService::normalizeProviderKey($fallbackFeedback['_provider_key']?? null),
- ]);
-
- return $fallbackFeedback;
- }
  }
 
  protected function generateInterviewFeedbackForSession(
@@ -5713,10 +5722,13 @@ return response()->json([
  return AIService::generateFeedback(
  $sessionData,
  $answersData,
- $feedbackProvider?: $this->bestEvaluatedInterviewProvider('feedback_generation'),
+ $feedbackProvider?: (AIService::detailedReviewProviderPriority()[0] ?? 'openai'),
  false,
- true,
+ false,
  [
+ 'require_provider_narratives' => true,
+ 'allow_provider_completion' => true,
+ 'response_validator' => app(DetailedFeedbackReviewService::class)->providerResponseValidator($session),
  'timeout_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_finalization.timeout_seconds', 'AI_FEEDBACK_FINALIZATION_TIMEOUT', $defaultFinalizationTimeout),
  'deadline_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_finalization.deadline_seconds', 'AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS', $defaultFinalizationDeadline),
  'max_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_finalization.max_attempts', 'AI_FEEDBACK_FINALIZATION_ATTEMPTS', 2),

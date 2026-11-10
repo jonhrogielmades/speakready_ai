@@ -6298,6 +6298,7 @@ return fallbackText;
 
 const finishReviewRequestTimeoutMs = 195000;
 const finishReviewProcessingRetryWindowMs = 180000;
+const finishRequiresProviderReview = @json(! $sessionRecord->game_level_id);
 let finishReviewChecklistTimers = [];
 let finishReviewProgressTimer = null;
 let finishReviewProgressValue = 0;
@@ -6578,7 +6579,7 @@ startFinishReviewProgress();
  const payload = await parseResponsePayload(response);
  const data = payload.data || {};
 
- if (response.status === 409) {
+ if (response.status === 202 || response.status === 409) {
  if (!processingRetryDeadline) {
  processingRetryDeadline = Date.now() + finishReviewProcessingRetryWindowMs;
  }
@@ -6595,6 +6596,10 @@ startFinishReviewProgress();
  const error = new Error(finishResponseErrorMessage(response, payload));
  error.status = response.status;
  throw error;
+ }
+
+ if (finishRequiresProviderReview && data.review_ready !== true) {
+ throw new Error('Your answers are saved, but AI feedback has not finished for every question. Please retry the analysis.');
  }
 
  window.SpeakReadyInterviewSetupDraft?.clear();

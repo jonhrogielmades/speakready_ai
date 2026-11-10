@@ -18,12 +18,15 @@
  $feedbackReady = (bool) ($providerReview['feedback_ready'] ?? false);
  $possibleAnswerReady = (bool) ($providerReview['possible_answer_ready'] ?? false);
  $answerWasSkipped = (bool) ($providerReview['skipped'] ?? false);
+ $possibleAnswerNeedsMoreDetail = $feedbackReady && (bool) ($providerReview['insufficient'] ?? false);
  $feedbackText = $feedbackReady ? $providerReview['feedback'] : ($answerWasSkipped
  ? 'No answer content is available to review for this question.'
  : 'AI feedback is not ready for this question yet.');
  $possibleAnswer = $possibleAnswerReady ? $providerReview['possible_answer'] : ($answerWasSkipped
  ? 'No possible answer is generated for an unanswered question.'
- : 'An AI-generated possible answer is not available for this question yet.');
+ : ($possibleAnswerNeedsMoreDetail
+ ? 'There is not enough answer detail to create a grounded possible answer.'
+ : 'An AI-generated possible answer is not available for this question yet.'));
  $coachQuestion = review_question_text($questionSource);
  if ($coachQuestion === '') {
  $coachQuestion = 'Question text unavailable.';
@@ -72,7 +75,7 @@
  </section>
  <section class="review-answer-possible-section">
  <span>Possible Answer</span>
- <p @if(!$possibleAnswerReady) role="status" @endif>{{ $possibleAnswer }}</p>
+ <p @if(!$possibleAnswerReady && !$possibleAnswerNeedsMoreDetail && !$answerWasSkipped) role="status" @endif>{{ $possibleAnswer }}</p>
  <div class="review-ai-coach-action" data-ai-coach-prompt-wrapper>
  <textarea class="review-ai-coach-prompt" data-ai-coach-prompt hidden readonly>{{ $coachPrompt }}</textarea>
  <button type="button" class="review-ai-coach-button" data-coach-url="{{ route('user.coach') }}" data-review-answer-id="{{ (int) ($answer->id?? 0) }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach about this answer">

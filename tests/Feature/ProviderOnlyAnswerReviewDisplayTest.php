@@ -105,6 +105,31 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
         $this->assertStringNotContainsString('Possible Answer', $card);
     }
 
+    public function test_reviewed_short_answer_does_not_show_a_permanently_pending_possible_answer(): void
+    {
+        [$user, $session, $answer] = $this->fixture();
+        $feedback = 'The saved answer "Index" is too short to assess the database query approach. Add the exact check and what it showed.';
+        $answer->question->update([
+            'question_text' => 'How did you improve a slow database query?',
+            'expected_guide' => 'Explain the query issue, the checks you performed, and the result.',
+        ]);
+        $answer->update([
+            'answer_text' => 'Index.',
+            'ai_feedback' => $feedback,
+            'better_sample_answer' => '',
+        ]);
+        $this->verifyProviderNarrative($answer);
+
+        foreach (['desktop', 'mobile'] as $layout) {
+            $card = $this->reviewCards($user, $session, $layout)[0];
+            $this->assertStringContainsString($feedback, $card);
+            $this->assertStringContainsString('There is not enough answer detail to create a grounded possible answer.', $card);
+            $this->assertStringNotContainsString('not available for this question yet', $card);
+            $this->assertStringNotContainsString('AI feedback is not ready', $card);
+        }
+        Http::assertNothingSent();
+    }
+
     private function fixture(): array
     {
         $user = User::factory()->create(['status' => 'active', 'is_admin' => false]);
@@ -150,8 +175,8 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
             'provider_narrative' => [
                 'verified' => true,
                 'input_fingerprint' => $fingerprint,
-                'feedback_hash' => hash('sha256', self::FEEDBACK),
-                'possible_answer_hash' => hash('sha256', self::POSSIBLE),
+                'feedback_hash' => hash('sha256', trim((string) $answer->ai_feedback)),
+                'possible_answer_hash' => hash('sha256', trim((string) $answer->better_sample_answer)),
             ],
             'content_alignment' => [
                 'answer_review_source' => 'ai_provider',

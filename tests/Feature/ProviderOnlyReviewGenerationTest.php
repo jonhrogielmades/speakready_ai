@@ -87,6 +87,42 @@ class ProviderOnlyReviewGenerationTest extends TestCase
         $this->generate($answer);
     }
 
+    public function test_calibrated_scores_do_not_leave_a_valid_provider_review_with_conflicting_alignment(): void
+    {
+        $answer = $this->answer();
+        $payload = $this->payload($answer);
+        foreach (['score', 'clarity_score', 'relevance_score', 'grammar_score', 'professionalism_score'] as $field) {
+            $payload['per_question_feedback'][0][$field] = 20;
+        }
+        $payload['per_question_feedback'][0]['answer_alignment'] = 'not_addressed';
+        Http::fake(Http::response($this->openAiResponse($payload)));
+
+        $review = $this->generate($answer);
+        $item = $review['per_question_feedback'][0];
+        $this->assertTrue($item['score_calibration']['adjustment_applied']);
+        $this->assertTrue($item['feedback_quality']['checks']['alignment_cross_checked']);
+        $this->assertSame('verified', $item['feedback_quality']['status']);
+        $this->assertSame($payload['per_question_feedback'][0]['ai_feedback'], $item['ai_feedback']);
+    }
+
+    public function test_visible_provider_feedback_does_not_require_duplicate_impact_keywords(): void
+    {
+        $answer = [
+            'id' => 73,
+            'question' => 'How would you respond to an upset customer?',
+            'question_type' => 'Technical',
+            'answer' => 'I listened to the customer and checked the order status before sharing the delivery update.',
+        ];
+        $feedback = 'You stated "I listened to the customer and checked the order status". Keep that sequence and add the follow-up.';
+        $this->assertTrue(AIService::visibleReviewFeedbackIsProviderUsable($feedback, $answer));
+        $this->assertFalse(AIService::visibleReviewFeedbackIsProviderUsable(
+            'You earned a promotion and increased revenue by 50%.', $answer
+        ));
+        $this->assertFalse(AIService::visibleReviewFeedbackIsProviderUsable(
+            'Your nervous personality proves you are dishonest.', $answer
+        ));
+    }
+
     public function test_invalid_summary_cannot_be_locally_repaired_in_provider_only_mode(): void
     {
         $answer = $this->answer();
@@ -120,6 +156,98 @@ class ProviderOnlyReviewGenerationTest extends TestCase
         $this->assertTrue($review['_provider_narratives_verified']);
         $this->assertFalse($review['_repair_applied']);
         $this->assertSame($valid['per_question_feedback'][0]['ai_feedback'], $review['per_question_feedback'][0]['ai_feedback']);
+        Http::assertSentCount(2);
+    }
+
+    public function test_strict_review_completes_only_the_missing_question_with_provider_calls(): void
+    {
+        $first = $this->answer();
+        $second = array_replace($first, [
+            'id' => 72,
+            'answer' => 'I checked the database server load, reviewed query latency, and inspected the execution plan before changing the index.',
+        ]);
+        $partial = $this->payload($first);
+        $secondPayload = $this->payload($second);
+        $hosts = [];
+        Http::fake(function ($request, array $options) use ($partial, $secondPayload, &$hosts) {
+            $hosts[] = parse_url($request->url(), PHP_URL_HOST);
+            $this->assertGreaterThan(0, $options['timeout']);
+            if (count($hosts) === 2) {
+                return Http::response($this->geminiResponse($partial));
+            }
+            return Http::response($this->openAiResponse(count($hosts) === 1 ? $partial : $secondPayload));
+        });
+
+        $review = AIService::generateFeedback(['target_position' => 'Database Developer'], [$first, $second], 'openai', false, false, [
+            'require_provider_narratives' => true, 'allow_provider_completion' => true,
+            'deadline_seconds' => 30, 'max_attempts' => 1, 'http_attempts' => 1, 'retry_delay_ms' => 0,
+        ]);
+
+        $this->assertSame(['api.openai.com', 'generativelanguage.googleapis.com', 'api.openai.com'], $hosts);
+        $this->assertTrue($review['_provider_completion_applied']);
+        $this->assertFalse($review['_repair_applied']);
+        $this->assertTrue($review['_provider_narratives_verified']);
+        $this->assertSame([71, 72], array_column($review['per_question_feedback'], 'id'));
+        $this->assertSame($partial['per_question_feedback'][0]['ai_feedback'], $review['per_question_feedback'][0]['ai_feedback']);
+        $this->assertSame($secondPayload['per_question_feedback'][0]['ai_feedback'], $review['per_question_feedback'][1]['ai_feedback']);
+        foreach ($partial['session_feedback'] as $field => $text) {
+            $this->assertSame($text, $review['session_feedback'][$field]);
+        }
+        Http::assertSentCount(3);
+    }
+
+    public function test_strict_review_retries_invalid_session_notes_with_an_api_without_rewriting_valid_answers(): void
+    {
+        $answer = $this->answer();
+        $valid = $this->payload($answer);
+        $invalid = $valid;
+        $invalid['session_feedback']['overall_summary'] = 'You earned a promotion and increased revenue by 50%.';
+        $count = 0;
+        Http::fake(function ($request) use ($valid, $invalid, &$count) {
+            $count++;
+            if ($count === 2) {
+                return Http::response($this->geminiResponse($invalid));
+            }
+            if ($count === 3) {
+                $this->assertSame('interview_session_feedback', data_get($request->data(), 'response_format.json_schema.name'));
+                return Http::response($this->openAiResponse(['session_feedback' => $valid['session_feedback']]));
+            }
+            return Http::response($this->openAiResponse($invalid));
+        });
+
+        $review = $this->generate($answer, false, 'openai', ['allow_provider_completion' => true]);
+        $this->assertFalse($review['_repair_applied']);
+        $this->assertTrue($review['_provider_completion_applied']);
+        foreach ($valid['session_feedback'] as $field => $text) {
+            $this->assertSame($text, $review['session_feedback'][$field]);
+        }
+        $this->assertSame($valid['per_question_feedback'][0]['ai_feedback'], $review['per_question_feedback'][0]['ai_feedback']);
+        Http::assertSentCount(3);
+    }
+
+    public function test_provider_completion_cannot_bypass_the_final_review_validator(): void
+    {
+        $answer = $this->answer();
+        $payload = $this->payload($answer);
+        $invalid = $payload;
+        $invalid['session_feedback']['overall_summary'] = 'You earned a promotion and increased revenue by 50%.';
+        Http::fakeSequence()
+            ->push($this->openAiResponse($invalid))
+            ->push($this->openAiResponse(['session_feedback' => $payload['session_feedback']]));
+        $validatedCompletion = false;
+
+        try {
+            $this->generate($answer, true, 'openai', [
+                'allow_provider_completion' => true,
+                'response_validator' => function (array $review) use (&$validatedCompletion): bool {
+                    $validatedCompletion = $review['_provider_completion_applied'] ?? false;
+                    return false;
+                },
+            ]);
+            $this->fail('A failed final safeguard must never become a completed review.');
+        } catch (AiFeedbackProviderFailureException) {
+            $this->assertTrue($validatedCompletion);
+        }
         Http::assertSentCount(2);
     }
 

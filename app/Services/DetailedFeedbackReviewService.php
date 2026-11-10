@@ -209,10 +209,49 @@ class DetailedFeedbackReviewService
  return false;
  }
 
- private function persistProviderFeedback(InterviewSession $session, Collection $answers, array $feedback, string $providerKey, array $validation): void
+ /** Validate the first provider response while the interview is being analyzed. */
+ public function providerResponseValidator(InterviewSession $session): \Closure
+ {
+ $answers = $this->originalAnswersQuery($session)->get();
+ return fn (array $feedback, string $provider): bool =>
+ ($this->providerFeedbackValidation($answers, $feedback, $provider)['status'] ?? null) === 'verified';
+ }
+
+ public function providerAnswerInputs(Collection $answers): array
+ {
+ return $this->answersData($answers);
+ }
+
+ /** Certify the response already generated during finalization; no new API call. */
+ public function acceptGeneratedProviderReview(InterviewSession $session, array $feedback, array $generatedAnswers, array $generatedContext): void
+ {
+ $session->refresh();
+ $answers = $this->originalAnswersQuery($session)->get();
+ $currentAnswers = collect($this->answersData($answers))->sortBy('id')->values()->all();
+ $generatedAnswers = collect($generatedAnswers)->sortBy('id')->values()->all();
+ $contextKeys = ['target_position', 'difficulty', 'interview_focus', 'ai_assistance_level', 'assessment_mode', 'accommodation_profile'];
+ if ($session->status !== 'completed'
+ || $currentAnswers !== $generatedAnswers
+ || array_intersect_key($this->sessionData($session), array_flip($contextKeys)) !== array_intersect_key($generatedContext, array_flip($contextKeys))) {
+ throw new \RuntimeException('Interview inputs changed before the generated review could be saved.');
+ }
+ $provider = AIService::normalizeProviderKey($feedback['_provider_key'] ?? null);
+ $validation = $this->providerFeedbackValidation($answers, $feedback, $provider);
+ if (($validation['status'] ?? null) !== 'verified') {
+ throw new \RuntimeException('The generated interview review did not pass all saved-answer checks.');
+ }
+ // Finalization has already calculated scores, game rewards and progress.
+ // Save the verified prose and its fingerprints without applying those twice.
+ $this->persistProviderFeedback($session, $answers, $feedback, $provider, $validation, true);
+ if ($this->shouldRefreshWithProvider($session->fresh())) {
+ throw new \RuntimeException('The saved interview review is not ready for every question.');
+ }
+ }
+
+ private function persistProviderFeedback(InterviewSession $session, Collection $answers, array $feedback, string $providerKey, array $validation, bool $preserveScores = false): void
  {
  $inputFingerprint = $this->reviewInputFingerprint($session, $answers);
- DB::transaction(function () use ($session, $feedback, $providerKey, $validation, $inputFingerprint): void {
+ DB::transaction(function () use ($session, $feedback, $providerKey, $validation, $inputFingerprint, $preserveScores): void {
  // The provider request can take seconds. Never attach its findings to an
  // answer, transcript, question, or session context that changed meanwhile.
  $currentSession = InterviewSession::whereKey($session->id)->lockForUpdate()->firstOrFail();
@@ -264,8 +303,6 @@ class DetailedFeedbackReviewService
  }
 
  $answerText = $this->answerContent($answer);
- $evidence = $this->assessment->answerEvidence($answerText, $item['ai_feedback']?? null, $answer->question);
- $rubric = $this->assessment->rubricLevel($answerScore);
  $coachingFeedback = $this->coaching->forAnswer(
  $answerText,
  $answer->question,
@@ -296,11 +333,13 @@ class DetailedFeedbackReviewService
  'coaching_feedback' => $coachingFeedback,
  'ai_provider' => $providerKey,
  ];
- if ((int) ($session->game_level_id ?? 0) > 0) {
+ if ($preserveScores || (int) ($session->game_level_id ?? 0) > 0) {
  // Game results use their own rubric. A review refresh updates prose only.
  $answer->forceFill($narrativeFields)->save();
  continue;
  }
+ $evidence = $this->assessment->answerEvidence($answerText, $item['ai_feedback']?? null, $answer->question);
+ $rubric = $this->assessment->rubricLevel($answerScore);
  $answer->forceFill(array_merge($narrativeFields, [
  'clarity_score' => $clarity,
  'relevance_score' => $relevance,
@@ -324,7 +363,7 @@ class DetailedFeedbackReviewService
 
  $evaluatedAnswers = $this->originalAnswers($session->fresh(['answers.question']) ?? $session);
  $sessionFeedback = is_array($feedback['session_feedback']?? null)? $feedback['session_feedback']: [];
- if ((int) ($session->game_level_id ?? 0) > 0) {
+ if ($preserveScores || (int) ($session->game_level_id ?? 0) > 0) {
  Feedback::updateOrCreate(['interview_session_id' => $session->id], [
  'strengths' => trim((string) ($sessionFeedback['strengths'] ?? '')),
  'weaknesses' => trim((string) ($sessionFeedback['weaknesses'] ?? '')),
@@ -650,6 +689,7 @@ class DetailedFeedbackReviewService
  {
  return [
  'require_provider_narratives' => true,
+ 'allow_provider_completion' => true,
  'timeout_seconds' => (int) RuntimeConfiguration::get('services.ai_feedback_review.timeout_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_TIMEOUT', 30),
  'deadline_seconds' => max(3, min($deadlineSeconds ?? 120, (int) RuntimeConfiguration::get('services.ai_feedback_review.deadline_seconds', 'AI_FEEDBACK_REVIEW_REFRESH_DEADLINE_SECONDS', 120))),
  'max_attempts' => (int) RuntimeConfiguration::get('services.ai_feedback_review.max_attempts', 'AI_FEEDBACK_REVIEW_REFRESH_ATTEMPTS', 2),
