@@ -2330,6 +2330,8 @@ EOT;
  $visibleRepairableProvider = null;
  $visibleRepairableErrors = [];
  $providerFailureReasons = [];
+ $providerValidationDetails = [];
+ $providerHttpStatuses = [];
 
  $providerCount = count($providers);
  foreach ($providers as $providerIndex => $currentProvider) {
@@ -2430,6 +2432,18 @@ EOT;
  (array) ($providerFailureReasons[$currentProvider]?? []),
  [$failureReason]
  )));
+ if ($validationErrors !== []) {
+ $providerValidationDetails[$currentProvider] = array_slice($validationErrors, 0, 8);
+ }
+ if ($e instanceof RequestException) {
+ $status = (int) ($e->response?->status() ?? 0);
+ if ($status >= 100 && $status <= 599) {
+ $providerHttpStatuses[$currentProvider] = array_values(array_unique(array_merge(
+ (array) ($providerHttpStatuses[$currentProvider] ?? []),
+ [$status]
+ )));
+ }
+ }
  if (is_array($candidateResponse) && $validationErrors !== []) {
  $providerValidationErrors = $validationErrors;
  Log::warning("AI Feedback Generation rejected an untrusted response from {$currentProvider} on attempt {$attempt}.", [
@@ -2610,6 +2624,18 @@ EOT;
  (array) ($providerFailureReasons[$repairableProvider]?? []),
  [self::feedbackProviderFailureReason($repairError)]
  )));
+ if (($completionErrors ?? []) !== []) {
+ $providerValidationDetails[$repairableProvider] = array_slice($completionErrors, 0, 8);
+ }
+ if ($repairError instanceof RequestException) {
+ $status = (int) ($repairError->response?->status() ?? 0);
+ if ($status >= 100 && $status <= 599) {
+ $providerHttpStatuses[$repairableProvider] = array_values(array_unique(array_merge(
+ (array) ($providerHttpStatuses[$repairableProvider] ?? []),
+ [$status]
+ )));
+ }
+ }
  Log::warning($requireProviderNarratives
  ? 'Provider per-answer completion failed; provider-only review remains unavailable.'
  : 'Provider per-answer completion failed; falling back to the local report path.', [
@@ -2627,7 +2653,15 @@ EOT;
  'providers_reached' => $attemptedProviders,
  ]);
 
- throw new AiFeedbackProviderFailureException($providers, $attemptedProviders, null, null, $providerFailureReasons);
+ throw new AiFeedbackProviderFailureException(
+ $providers,
+ $attemptedProviders,
+ null,
+ null,
+ $providerFailureReasons,
+ $providerValidationDetails,
+ $providerHttpStatuses
+ );
  }
 
  private static function completeProviderFeedbackPerAnswer(
@@ -5667,7 +5701,7 @@ PROMPT;
 
  $id = (string) $item['id'];
  if ($id === '' ||! isset($expectedAnswers[$id]) || isset($feedbackById[$id])) {
- $errors[] = "Feedback ID {$id} is missing, unexpected, or duplicated.";
+ $errors[] = 'A feedback item ID is missing, unexpected, or duplicated.';
 
  continue;
  }

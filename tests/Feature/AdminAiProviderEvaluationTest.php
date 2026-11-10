@@ -98,6 +98,73 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSessionHas('error', 'No configured AI API key is available for the live feedback smoke test.');
  }
 
+ public function test_live_smoke_test_reports_rate_limit_without_claiming_schema_repair(): void
+ {
+ $this->clearProviderEnv();
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $this->configuredProvider();
+ Http::fake([
+ 'api.openai.com/*' => Http::response(['error' => ['message' => 'Rate limit exceeded.']], 429),
+ ]);
+
+ $this->actingAs($admin)
+ ->post(route('admin.ai.evaluation.smoke'))
+ ->assertRedirect(route('admin.ai.evaluation'))
+ ->assertSessionHas('ai_provider_smoke_results.0.api_status', 'Rate limited')
+ ->assertSessionHas('ai_provider_smoke_results.0.json_status', 'Not checked')
+ ->assertSessionHas('ai_provider_smoke_results.0.strict_schema_status', 'Not checked')
+ ->assertSessionHas('ai_provider_smoke_results.0.repair_status', 'No')
+ ->assertSessionHas('ai_provider_smoke_results.0.final_usable', false)
+ ->assertSessionHas('ai_provider_smoke_results.0.failure_reasons', ['rate_limited'])
+ ->assertSessionHas('ai_provider_smoke_results.0.http_statuses', [429]);
+
+ $this->actingAs($admin)
+ ->get(route('admin.ai.evaluation'))
+ ->assertOk()
+ ->assertSee('Rate limited')
+ ->assertSee('Not checked')
+ ->assertSee('Provider rate limit or quota reached')
+ ->assertSee('HTTP 429')
+ ->assertDontSee('Repaired');
+
+ Http::assertSentCount(1);
+ }
+
+ public function test_live_smoke_test_identifies_a_response_rejected_by_saved_answer_checks(): void
+ {
+ $this->clearProviderEnv();
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $this->configuredProvider();
+ Http::fake([
+ 'api.openai.com/*' => Http::response([
+ 'choices' => [[
+ 'message' => ['content' => '{"per_question_feedback":[]}'],
+ 'finish_reason' => 'stop',
+ ]],
+ ], 200),
+ ]);
+
+ $this->actingAs($admin)
+ ->post(route('admin.ai.evaluation.smoke'))
+ ->assertRedirect(route('admin.ai.evaluation'))
+ ->assertSessionHas('ai_provider_smoke_results.0.api_status', 'OK')
+ ->assertSessionHas('ai_provider_smoke_results.0.json_status', 'OK')
+ ->assertSessionHas('ai_provider_smoke_results.0.strict_schema_status', 'Failed')
+ ->assertSessionHas('ai_provider_smoke_results.0.repair_status', 'No')
+ ->assertSessionHas('ai_provider_smoke_results.0.final_usable', false)
+ ->assertSessionHas('ai_provider_smoke_results.0.failure_reasons',
+ fn ($reasons): bool => is_array($reasons) && in_array('validation', $reasons, true))
+ ->assertSessionHas('ai_provider_smoke_results.0.validation_errors',
+ fn ($errors): bool => is_array($errors) && in_array('session_feedback must be an object.', $errors, true));
+
+ $this->actingAs($admin)
+ ->get(route('admin.ai.evaluation'))
+ ->assertOk()
+ ->assertSee('Parsed JSON failed the saved-answer checks')
+ ->assertSee('session_feedback must be an object.')
+ ->assertDontSee('Repaired');
+ }
+
  public function test_admin_provider_dashboard_omits_openai_process_connections(): void
  {
  $this->clearProviderEnv();

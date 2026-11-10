@@ -59,6 +59,7 @@
     @if(session('ai_provider_smoke_results'))
         <div class="alert alert-info mb-4" role="alert">
             <strong>Live Provider Smoke Test</strong>
+            <p class="mb-0 mt-2">This test sends one sample answer to each provider. Full reports apply additional checks to saved interview answers.</p>
             <div class="table-responsive mt-3">
                 <table class="table table-sm align-middle mb-0">
                     <thead>
@@ -66,9 +67,9 @@
                             <th>Provider</th>
                             <th>API</th>
                             <th>JSON</th>
-                            <th>Strict Schema</th>
+                            <th>Schema &amp; Answer Checks</th>
                             <th>Repair</th>
-                            <th>Final Feedback</th>
+                            <th>Sample Feedback</th>
                             <th>Score</th>
                             <th>Latency</th>
                             <th>Note</th>
@@ -81,14 +82,20 @@
                             @endphp
                             <tr>
                                 <td>{{ strtoupper($result['provider'] ?? '') }}</td>
-                                <td>{{ !empty($result['api_reachable']) ? 'OK' : 'Fail' }}</td>
-                                <td>{{ !empty($result['json_parse_passed']) ? 'OK' : 'Fail' }}</td>
-                                <td>{{ !empty($result['strict_schema_passed']) ? 'OK' : 'Repaired' }}</td>
-                                <td>{{ !empty($result['repair_applied']) ? 'Used' : 'No' }}</td>
+                                <td>{{ $result['api_status'] ?? (!empty($result['api_reachable']) ? 'OK' : 'Unknown') }}</td>
+                                <td>{{ $result['json_status'] ?? (!empty($result['json_parse_passed']) ? 'OK' : 'Not checked') }}</td>
+                                <td>{{ $result['strict_schema_status'] ?? (!empty($result['strict_schema_passed']) ? 'OK' : 'Not checked') }}</td>
+                                <td>{{ $result['repair_status'] ?? (!empty($result['repair_applied']) ? 'Used' : 'No') }}</td>
                                 <td>{{ !empty($result['final_usable']) ? 'Usable' : 'Failed' }}</td>
                                 <td>{{ $result['score'] ?? '-' }}</td>
                                 <td>{{ $result['latency_ms'] ?? 0 }}ms</td>
-                                <td>{{ $errors !== [] ? \Illuminate\Support\Str::limit(implode(' | ', $errors), 180) : 'Ready' }}</td>
+                                <td>
+                                    @forelse($errors as $error)
+                                        <div>{{ $error }}</div>
+                                    @empty
+                                        Ready
+                                    @endforelse
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\AiFeedbackProviderFailureException;
 use App\Models\AiProvider;
 use App\Models\AiProviderLog;
 use App\Services\AiProviderEvaluationService;
@@ -207,6 +208,10 @@ class AdminAiController extends Controller
  'json_parse_passed' => true,
  'strict_schema_passed' => (bool) ($feedback['_strict_validation_passed']?? false),
  'repair_applied' => (bool) ($feedback['_repair_applied']?? false),
+ 'api_status' => 'OK',
+ 'json_status' => 'OK',
+ 'strict_schema_status' => !empty($feedback['_strict_validation_passed']) ? 'OK' : 'Failed',
+ 'repair_status' => !empty($feedback['_repair_applied']) ? 'Used' : 'No',
  'final_usable' => (($item['evaluation_source']?? '') === 'ai_evidence_validated'),
  'score' => $item['score']?? null,
  'quality' => $quality['completeness_percent']?? null,
@@ -214,18 +219,64 @@ class AdminAiController extends Controller
  'errors' => array_values((array) ($feedback['_validation_errors']?? [])),
  ];
  } catch (\Throwable $error) {
+ $failureReasons = $error instanceof AiFeedbackProviderFailureException
+ ? (array) ($error->failureReasons()[$provider]?? [])
+ : [];
+ $validationDetails = $error instanceof AiFeedbackProviderFailureException
+ ? (array) ($error->validationErrors()[$provider]?? [])
+ : [];
+ $httpStatuses = $error instanceof AiFeedbackProviderFailureException
+ ? (array) ($error->httpStatuses()[$provider]?? [])
+ : [];
+ $failureCode = $error instanceof AiFeedbackProviderFailureException
+ ? $error->failureCode()
+ : 'unexpected_error';
+ $parsedJson = in_array('validation', $failureReasons, true);
+ $invalidResponse = in_array('invalid_response', $failureReasons, true);
+ $apiStatus = match ($failureCode) {
+ 'provider_rate_limit' => 'Rate limited',
+ 'provider_timeout' => 'Timed out',
+ 'provider_network' => 'Network error',
+ 'provider_circuit_open' => 'Paused',
+ 'provider_authentication', 'provider_model', 'provider_server_error', 'provider_request_rejected' => 'Fail',
+ default => $parsedJson ? 'OK' : 'Unknown',
+ };
+ $failureNote = match ($failureCode) {
+ 'provider_authentication' => 'Provider rejected the API credentials. Check its key and permissions.',
+ 'provider_model' => 'Provider rejected the model. Check the configured model name and access.',
+ 'provider_rate_limit' => 'Provider rate limit or quota reached. Check quota, then retry.',
+ 'provider_timeout' => 'Provider request timed out. Check its status and the smoke-test timeout.',
+ 'provider_network' => 'Could not connect to the provider. Check the endpoint and server network.',
+ 'provider_circuit_open' => 'Provider circuit is cooling down after failures. Retry after the cooldown.',
+ 'provider_response_rejected' => 'Parsed JSON failed the saved-answer checks. Inspect validation errors in the server log.',
+ 'provider_invalid_response' => 'Provider returned no complete valid JSON response. Check output limits and the server log.',
+ 'provider_server_error' => 'Provider returned a server error. Check its status and retry.',
+ 'provider_request_rejected' => 'Provider rejected the request. Check its model and structured-output support.',
+ default => 'Provider failed for an unknown reason. Inspect the server log.',
+ };
+ if ($httpStatuses !== []) {
+ $failureNote.= ' HTTP '.implode(', ', $httpStatuses).'.';
+ }
+
  return [
  'provider' => $provider,
  'status' => 'failed',
- 'api_reachable' => false,
- 'json_parse_passed' => false,
+ 'api_reachable' => $parsedJson,
+ 'json_parse_passed' => $parsedJson,
  'strict_schema_passed' => false,
  'repair_applied' => false,
+ 'api_status' => $apiStatus,
+ 'json_status' => $parsedJson ? 'OK' : ($invalidResponse ? 'Failed' : 'Not checked'),
+ 'strict_schema_status' => $parsedJson ? 'Failed' : 'Not checked',
+ 'repair_status' => 'No',
+ 'failure_reasons' => $failureReasons,
+ 'validation_errors' => $validationDetails,
+ 'http_statuses' => $httpStatuses,
  'final_usable' => false,
  'score' => null,
  'quality' => null,
  'latency_ms' => (int) round((microtime(true) - $startedAt) * 1000),
- 'errors' => [Str::limit($error->getMessage(), 220)],
+ 'errors' => array_merge([$failureNote], array_slice($validationDetails, 0, 2)),
  ];
  }
  })->values()->all();
