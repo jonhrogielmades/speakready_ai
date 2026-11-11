@@ -607,8 +607,8 @@ class AdminController extends Controller
  $providerUsed = 'local';
  $notice = null;
 
- if ($requestedProvider!== 'local' && AIService::providerIsConfigured($requestedProvider)) {
- $generatedQuestions = AIService::generateQuestions(
+ if ($requestedProvider!== 'local') {
+  $generation = AIService::generateQuestionsWithProvider(
  1,
  $position,
  $difficulty,
@@ -621,23 +621,47 @@ class AdminController extends Controller
  $dataset,
  null,
  false,
- ['exclude_question_texts' => array_slice($existingQuestionTexts, -200)]
+  [
+   'exclude_question_texts' => array_slice($existingQuestionTexts, -200),
+   // The browser request has a 60-second deadline. Try every configured
+   // provider quickly instead of waiting on one unavailable provider and then
+   // silently returning a dataset question.
+   'timeout_seconds' => 10,
+   'attempts' => 1,
+   'generation_attempts' => 1,
+  ]
  );
 
- $generatedText = trim((string) ($generatedQuestions[0]?? ''));
+  $generatedText = trim((string) (($generation['questions']?? [])[0]?? ''));
  if ($generatedText!== '') {
  $questionRecord['question_text'] = $generatedText;
  $source = 'ai';
- $providerUsed = $requestedProvider;
+  $providerUsed = (string) ($generation['provider']?? $requestedProvider);
+  if ($providerUsed!== $requestedProvider) {
+   $notice = 'The selected AI provider was unavailable, so the question was generated with '.$this->questionProviderLabel($providerUsed).'.';
+  }
  } else {
- $notice = 'The selected AI provider did not return a question, so a reliable source-based question was used.';
+  return response()->json([
+   'message' => 'No configured AI provider could generate a role-specific question right now. Check the provider API keys and models, then try again.',
+   'error_code' => 'ai_question_generation_unavailable',
+   'source' => 'ai_unavailable',
+   'ai_provider' => null,
+   'attempted_providers' => $generation['attempted_providers']?? [],
+  ], 503);
  }
- } elseif ($requestedProvider!== 'local') {
- $notice = 'The selected AI provider is not configured, so a reliable source-based question was used.';
  }
 
  $alignment = app(InterviewQuestionAlignmentService::class);
  if (! $alignment->isRoleRelevant((string) ($questionRecord['question_text']?? ''), $position)) {
+  if ($source === 'ai') {
+   return response()->json([
+    'message' => 'The AI providers returned questions that did not match the selected role. Please try again.',
+    'error_code' => 'ai_question_role_validation_failed',
+    'source' => 'ai_unavailable',
+    'ai_provider' => $providerUsed,
+   ], 503);
+  }
+
  $questionRecord['question_text'] = $alignment->fallbackQuestion(
  $position,
  (string) ($questionRecord['type']?? 'Behavioral'),

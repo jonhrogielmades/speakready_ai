@@ -268,6 +268,73 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertStringNotContainsStringIgnoringCase('software', $question);
  }
 
+ public function test_admin_question_generation_uses_another_configured_provider_when_the_requested_provider_fails(): void
+ {
+  $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+  $category = $this->category(['title' => 'Behavioral']);
+  $this->aiProvider('OpenAI', ['api_endpoint' => 'https://api.openai.com/v1']);
+  $this->aiProvider('Gemini', ['api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta']);
+
+  Http::fake([
+   'api.openai.com/*' => Http::response([], 503),
+   'generativelanguage.googleapis.com/*' => Http::response([
+    'candidates' => [[
+     'content' => [
+      'parts' => [[
+       'text' => json_encode(['questions' => [
+        'How would you prioritize a high-impact task in the Developer role?',
+       ]]),
+      ]],
+     ],
+    ]],
+   ], 200),
+  ]);
+
+  $this->actingAs($admin)
+   ->postJson(route('admin.questions.ai-generate'), [
+    'category_id' => $category->id,
+    'position' => 'Developer',
+    'difficulty' => 'Medium',
+    'ai_provider' => 'openai',
+   ])
+   ->assertOk()
+   ->assertJsonPath('source', 'ai')
+   ->assertJsonPath('ai_provider', 'gemini')
+   ->assertJsonPath('question_text', 'How would you prioritize a high-impact task in the Developer role?');
+
+  Http::assertSent(fn ($request): bool => str_contains($request->url(), 'api.openai.com'));
+  Http::assertSent(fn ($request): bool => str_contains($request->url(), 'generativelanguage.googleapis.com'));
+ }
+
+ public function test_admin_question_generation_does_not_use_a_dataset_fallback_when_all_ai_providers_fail(): void
+ {
+  $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+  $category = $this->category(['title' => 'Behavioral']);
+  $this->aiProvider('OpenAI', ['api_endpoint' => 'https://api.openai.com/v1']);
+  $this->aiProvider('Gemini', ['api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta']);
+  $this->aiProvider('Groq', ['api_endpoint' => 'https://api.groq.com/openai/v1']);
+  $this->aiProvider('Cohere', ['api_endpoint' => 'https://api.cohere.com']);
+
+  Http::fake([
+   'api.openai.com/*' => Http::response([], 503),
+   'generativelanguage.googleapis.com/*' => Http::response([], 503),
+   'api.groq.com/*' => Http::response([], 503),
+   'api.cohere.com/*' => Http::response([], 503),
+  ]);
+
+  $this->actingAs($admin)
+   ->postJson(route('admin.questions.ai-generate'), [
+    'category_id' => $category->id,
+    'position' => 'Developer',
+    'difficulty' => 'Medium',
+    'ai_provider' => 'openai',
+   ])
+   ->assertStatus(503)
+   ->assertJsonPath('error_code', 'ai_question_generation_unavailable')
+   ->assertJsonPath('source', 'ai_unavailable')
+   ->assertJsonMissingPath('question_text');
+ }
+
  public function test_default_ai_provider_uses_openai_first_when_no_primary_or_env_override_is_set(): void
  {
  $this->unsetEnvValue('INTERVIEW_CHATBOT_DEFAULT_PROVIDER');

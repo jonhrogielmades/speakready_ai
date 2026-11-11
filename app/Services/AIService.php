@@ -350,6 +350,34 @@ class AIService
 
  public static function generateQuestions($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $questionTypes = [], $assistanceLevel = 'standard', $datasetContext = null, $targetLanguage = null, $simplifiedQuestions = false, array $requestOptions = [])
  {
+ $result = self::generateQuestionsWithProvider(
+  $num,
+  $position,
+  $difficulty,
+  $focus,
+  $provider,
+  $resumeText,
+  $jobDescription,
+  $questionTypes,
+  $assistanceLevel,
+  $datasetContext,
+  $targetLanguage,
+  $simplifiedQuestions,
+  $requestOptions
+ );
+
+ return $result['questions'];
+ }
+
+ /**
+  * Generate questions through the requested provider and then the configured
+  * provider priority. This keeps provider outages from silently turning an AI
+  * request into a dataset/fallback response.
+  *
+  * @return array{questions: array<int, string>, provider: ?string, attempted_providers: array<int, string>}
+  */
+ public static function generateQuestionsWithProvider($num, $position, $difficulty, $focus, $provider, $resumeText = null, $jobDescription = null, $questionTypes = [], $assistanceLevel = 'standard', $datasetContext = null, $targetLanguage = null, $simplifiedQuestions = false, array $requestOptions = []): array
+ {
  $jobDescription = self::truncateText($jobDescription);
  $resumeText = self::truncateText($resumeText);
  $targetPosition = trim((string) $position)!== ''? trim((string) $position): 'the target role';
@@ -441,47 +469,83 @@ class AIService
  );
  $prompt.= json_encode(['questions' => $examples], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
- $maxRetries = 3;
- $attempt = 0;
-
- while ($attempt < $maxRetries) {
- try {
- $questions = self::normalizeGeneratedQuestions(
- self::callStructuredProvider(
- $provider,
- $prompt,
- array_merge(['module' => 'question_generation'], $requestOptions)
- )
+ $maxRetries = max(1, min(3, (int) ($requestOptions['generation_attempts']?? 3)));
+ $providers = self::limitProvidersForRequest(
+  array_values(array_filter(
+   self::providerPriorityList($provider),
+   fn (string $candidate): bool => self::shouldAttemptProvider($candidate)
+  )),
+  $requestOptions
  );
- $questions = array_values(array_filter(
- $questions,
- fn (string $question): bool => app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
- $question,
- $targetPosition,
- $jobDescription
- )
- ));
+ $attemptedProviders = [];
 
- if (! empty($questions)) {
- return array_slice($questions, 0, (int) $num);
- }
- } catch (\Exception $e) {
- if (self::externalAiDisabledForTests() && $e instanceof StrayRequestException) {
- return [];
+ foreach ($providers as $currentProvider) {
+  $attemptedProviders[] = $currentProvider;
+
+  for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
+   try {
+    $questions = self::normalizeGeneratedQuestions(
+     self::callStructuredProvider(
+      $currentProvider,
+      $prompt,
+      array_merge(['module' => 'question_generation'], $requestOptions)
+     )
+    );
+    $questions = array_values(array_filter(
+     $questions,
+     fn (string $question): bool => app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
+      $question,
+      $targetPosition,
+      $jobDescription
+     )
+    ));
+
+    if (! empty($questions)) {
+     return [
+      'questions' => array_slice($questions, 0, (int) $num),
+      'provider' => $currentProvider,
+      'attempted_providers' => $attemptedProviders,
+     ];
+    }
+   } catch (\Exception $e) {
+    if (self::externalAiDisabledForTests() && $e instanceof StrayRequestException) {
+     return [
+      'questions' => [],
+      'provider' => null,
+      'attempted_providers' => $attemptedProviders,
+     ];
+    }
+
+    Log::warning('AI question generation failed.', [
+     'provider' => $currentProvider,
+     'attempt' => $attempt + 1,
+     'message' => self::safeProviderErrorMessage($e),
+    ]);
+   }
+
+   if ($attempt + 1 < $maxRetries) {
+    sleep(1);
+   }
+  }
  }
 
- Log::error('AI Generation Error (Attempt '.($attempt + 1).'): '.self::safeProviderErrorMessage($e));
+ if ($providers === []) {
+  Log::error('AI question generation could not start because no configured provider was available.', [
+   'requested_provider' => self::normalizeProviderName($provider),
+  ]);
+ } else {
+  Log::error('AI question generation failed on all configured providers.', [
+   'requested_provider' => self::normalizeProviderName($provider),
+   'attempted_providers' => $attemptedProviders,
+   'attempts_per_provider' => $maxRetries,
+  ]);
  }
 
- $attempt++;
- if ($attempt < $maxRetries) {
- sleep(1);
- }
- }
-
- Log::error("AI Generation Failed after {$maxRetries} attempts.");
-
- return [];
+ return [
+  'questions' => [],
+  'provider' => null,
+  'attempted_providers' => $attemptedProviders,
+ ];
  }
 
  private static function questionGenerationRetrievalContext(array $datasetContext, string $targetPosition, string $difficulty, string $focus,?string $resumeText,?string $jobDescription, array $questionTypes, array $excludeQuestionTexts = []): string
