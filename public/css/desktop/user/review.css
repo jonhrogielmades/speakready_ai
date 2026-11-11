@@ -1799,6 +1799,14 @@ html body.user-desktop-shell:not(.admin-shell) .review-ai-coach-button,
     width: auto !important;
 }
 
+html body.user-desktop-shell:not(.admin-shell) .review-ai-coach-feedback-button,
+.review-ai-coach-feedback-button {
+    line-height: 1.2 !important;
+    max-width: 100% !important;
+    padding: 10px 20px !important;
+    white-space: normal !important;
+}
+
 html body.user-desktop-shell:not(.admin-shell) .review-ai-coach-button:hover,
 html body.user-desktop-shell:not(.admin-shell) .review-ai-coach-button:focus-visible,
 .review-ai-coach-button:hover,

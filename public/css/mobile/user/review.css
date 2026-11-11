@@ -1951,6 +1951,15 @@ html body #mob-content .review-shell .review-ai-coach-button,
     width: auto !important;
 }
 
+body.user-mobile-shell #mob-content .review-shell .review-ai-coach-feedback-button,
+html body #mob-content .review-shell .review-ai-coach-feedback-button,
+.review-ai-coach-feedback-button {
+    line-height: 1.2 !important;
+    max-width: 100% !important;
+    padding: 10px 20px !important;
+    white-space: normal !important;
+}
+
 body.user-mobile-shell #mob-content .review-shell .review-ai-coach-button:hover,
 body.user-mobile-shell #mob-content .review-shell .review-ai-coach-button:focus-visible,
 html body #mob-content .review-shell .review-ai-coach-button:hover,

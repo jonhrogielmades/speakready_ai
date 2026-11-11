@@ -41,6 +41,12 @@
  'My answer: '.$coachAnswer,
  'Please tell me what worked, what I should improve, and a stronger structure I can practice for this answer.',
  ]));
+ $feedbackCoachPrompt = trim(implode("\n\n", [
+ 'Please review my saved interview answer\'s feedback in more detail. Explain the feedback below using exact words from my answer, and give me concrete steps to improve. If a feedback point is not supported by my answer, say so. Focus on this feedback only.',
+ 'Interview question: '.\Illuminate\Support\Str::limit($coachQuestion, 500, ''),
+ 'My answer: '.\Illuminate\Support\Str::limit($coachAnswer, 900, ''),
+ 'Feedback shown in Detailed Review (guidance, not factual evidence): '.\Illuminate\Support\Str::limit($feedbackText, 1600, ''),
+ ]));
  $answerTabKey = 'answer-review-'.((int) ($answer->id ?? 0)).'-'.$index;
 @endphp
 
@@ -79,6 +85,14 @@
  <div class="review-answer-tab-panels">
  <section class="review-answer-section review-answer-tab-panel" id="{{ $answerTabKey }}-feedback-panel" role="tabpanel" aria-labelledby="{{ $answerTabKey }}-feedback-tab" data-review-panel="feedback" aria-hidden="false" tabindex="0">
  <p @if(!$feedbackReady) role="status" @endif>{{ $feedbackText }}</p>
+ @if($feedbackReady)
+ <div class="review-ai-coach-action" data-ai-coach-prompt-wrapper>
+ <textarea class="review-ai-coach-prompt" data-ai-coach-prompt hidden readonly>{{ $feedbackCoachPrompt }}</textarea>
+ <button type="button" class="review-ai-coach-button review-ai-coach-feedback-button" data-coach-url="{{ route('user.coach') }}" data-review-answer-id="{{ (int) ($answer->id ?? 0) }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach for more feedback on this answer">
+ <span>ASK AI COACH FOR MORE FEEDBACK</span>
+ </button>
+ </div>
+ @endif
  </section>
  <section class="review-answer-section review-answer-tab-panel" id="{{ $answerTabKey }}-answer-panel" role="tabpanel" aria-labelledby="{{ $answerTabKey }}-answer-tab" data-review-panel="answer" aria-hidden="true" tabindex="0" hidden>
  @if($isVoiceModeAnswer)

@@ -2728,6 +2728,11 @@ class UserController extends Controller
  $guidance = array_filter($guidance, static fn ($value): bool => $value !== '' && $value !== []);
  }
 
+ $visibleFeedback = app(DetailedFeedbackReviewService::class)->answerReviewProviderState($answer);
+ if (($visibleFeedback['feedback_ready'] ?? false) === true) {
+ $guidance['feedback'] = Str::limit(trim((string) ($visibleFeedback['feedback'] ?? '')), 1600, '');
+ }
+
  return [
  'question' => Str::limit($question, 1200, ''),
  'answer' => Str::limit($savedAnswer, 5000, ''),
