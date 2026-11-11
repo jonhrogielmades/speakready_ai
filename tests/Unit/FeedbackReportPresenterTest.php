@@ -67,10 +67,11 @@ class FeedbackReportPresenterTest extends TestCase
 
         $report = FeedbackReportPresenter::forSession($session);
 
-        $this->assertSame(['The reviewed answers name the customer process action'], $report['strength_items']);
-        $this->assertSame(['The reviewed answers need to add the final customer result'], $report['weakness_items']);
-        $this->assertStringContainsString('Strength pattern across the answer reviews: The reviewed answers name the customer process action.', $report['overview']['summary']);
-        $this->assertStringContainsString('Weakness pattern across the answer reviews: The reviewed answers need to add the final customer result.', $report['overview']['summary']);
+        $this->assertSame(['The saved answer names the customer process action'], $report['strength_items']);
+        $this->assertStringContainsString('Explain a time you helped a customer.', $report['weakness_items'][0]);
+        $this->assertStringContainsString('I explained the customer process and coordinated the next action.', $report['weakness_items'][0]);
+        $this->assertStringContainsString('Strength noted in the saved answer: The saved answer names the customer process action.', $report['overview']['summary']);
+        $this->assertStringContainsString('Next focus from the saved answer:', $report['overview']['summary']);
         $this->assertStringNotContainsString('Main strength', $report['overview']['summary']);
         $this->assertStringNotContainsString('Main weakness', $report['overview']['summary']);
         $this->assertStringNotContainsString('Answer 1:', $report['overview']['summary']);
@@ -140,7 +141,7 @@ class FeedbackReportPresenterTest extends TestCase
 
         $this->assertStringContainsString('what made the response useful for an interviewer', $combined);
         $this->assertStringContainsString('the reason this example proves you can help similar customers again', $combined);
-        $this->assertStringContainsString('why the example proves you can handle the role', $combined);
+        $this->assertStringNotContainsString('why the example proves you can handle the role', $combined);
         $this->assertStringNotContainsString('...', $combined);
     }
 
@@ -306,7 +307,8 @@ class FeedbackReportPresenterTest extends TestCase
         $report = FeedbackReportPresenter::forSession($session);
         $this->assertStringNotContainsString('Microsoft', json_encode($report));
         $this->assertStringNotContainsString('90%', json_encode($report));
-        $this->assertStringContainsString('No answer-level strength', $report['strength_items'][0]);
+        $this->assertStringContainsString('I documented a customer support handoff and shared the checklist.', $report['strength_items'][0]);
+        $this->assertStringContainsString('Explain a time you helped a customer.', $report['strength_items'][0]);
     }
 
     public function test_empty_answers_and_fabricated_quotes_do_not_become_strengths(): void
@@ -319,7 +321,43 @@ class FeedbackReportPresenterTest extends TestCase
         $report = FeedbackReportPresenter::forSession($session);
         $this->assertStringNotContainsString('nonexistent leadership', json_encode($report));
         $this->assertStringNotContainsString('fifty employees', json_encode($report));
-        $this->assertStringContainsString('No answer-level strength', $report['strength_items'][0]);
+        $this->assertStringContainsString('I documented the checklist.', $report['strength_items'][0]);
+        $this->assertStringContainsString('no further strength was verified', $report['strength_items'][0]);
+    }
+
+    public function test_unverified_fallback_uses_the_actual_salary_question_and_answer(): void
+    {
+        $session = $this->sessionWithAnswers([
+            ['answer_text' => 'I expect PHP 35,000 to 40,000 monthly and can discuss the responsibilities.'],
+        ]);
+        $session->answers->first()->question->setRawAttributes([
+            'question_text' => 'What salary range are you expecting?',
+        ], true);
+
+        $report = FeedbackReportPresenter::forSession($session);
+        $visible = implode(' ', array_merge($report['strength_items'], $report['weakness_items'], $report['suggestion_items']));
+
+        $this->assertStringContainsString('What salary range are you expecting?', $visible);
+        $this->assertStringContainsString('PHP 35,000 to 40,000', $visible);
+        $this->assertStringNotContainsString('one true result or lesson', $visible);
+        $this->assertStringNotContainsString('STAR', $visible);
+    }
+
+    public function test_unverified_fallback_does_not_treat_a_high_score_as_proof_of_strength(): void
+    {
+        $session = $this->sessionWithAnswers([
+            ['answer_text' => 'Maybe.', 'score' => 96],
+        ]);
+        $session->answers->first()->question->setRawAttributes([
+            'question_text' => 'Can you work weekends?',
+        ], true);
+
+        $report = FeedbackReportPresenter::forSession($session);
+
+        $this->assertStringContainsString('Maybe.', $report['strength_items'][0]);
+        $this->assertStringContainsString('too limited', $report['strength_items'][0]);
+        $this->assertStringContainsString('Can you work weekends?', $report['weakness_items'][0]);
+        $this->assertStringNotContainsString('scored well enough', json_encode($report));
     }
 
     public function test_explicitly_rejected_provider_validation_cannot_be_overridden_by_source_label(): void

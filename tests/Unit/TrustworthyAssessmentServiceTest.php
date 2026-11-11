@@ -61,7 +61,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $this->assertContains('A clear result, effect, or lesson', $map['missing_evidence']);
     }
 
-    public function test_revision_template_preserves_candidate_text_and_marks_missing_facts(): void
+    public function test_revision_template_keeps_a_short_answer_without_invented_padding(): void
     {
         $service = new TrustworthyAssessmentService;
         $answer = 'I designed and tested a new onboarding checklist for our support team.';
@@ -69,10 +69,11 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $revision = $service->groundedRevisionTemplate($answer);
 
         $this->assertStringContainsString($answer, $revision);
-        $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
-        $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
+        $this->assertSame($answer, $revision);
+        $this->assertSame(1, $this->sentenceCount($revision));
         $this->assertStringNotContainsString('[', $revision);
         $this->assertStringNotContainsString('increased revenue', $revision);
+        $this->assertStringNotContainsString('I would connect', $revision);
     }
 
     public function test_technical_guidance_does_not_require_a_past_result_or_star_format(): void
@@ -89,7 +90,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
 
         $this->assertFalse($evidence['result_required']);
         $this->assertNotContains('A clear result, effect, or lesson', $evidence['missing_evidence']);
-        $this->assertStringContainsString('I would explain what each check tells me', $revision);
+        $this->assertSame('I would inspect the query plan. I would compare row estimates. I would verify index usage before changing the query.', $revision);
         $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
         $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
         $this->assertStringNotContainsString('Situation/Task:', $revision);
@@ -116,7 +117,7 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
     }
 
-    public function test_customer_revision_coaches_for_missing_result_without_inventing_one(): void
+    public function test_customer_revision_keeps_actions_without_inventing_a_missing_result(): void
     {
         $service = new TrustworthyAssessmentService;
         $question = new Question([
@@ -130,7 +131,8 @@ class TrustworthyAssessmentServiceTest extends TestCase
 
         $this->assertFalse($evidence['has_result']);
         $this->assertStringContainsString('I listened to the customer', $revision);
-        $this->assertStringContainsString('adding the true customer result or lesson', $revision);
+        $this->assertSame('I listened to the customer. I checked the account. I explained the next step clearly.', $revision);
+        $this->assertStringNotContainsString('adding the true customer result or lesson', $revision);
         $this->assertStringNotContainsString('customer was satisfied', mb_strtolower($revision, 'UTF-8'));
         $this->assertStringNotContainsString('[', $revision);
         $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
@@ -153,9 +155,9 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $this->assertFalse($evidence['star_applicable']);
         $this->assertFalse($evidence['personal_action_required']);
         $this->assertSame('role_fit', $evidence['question_intent']);
-        $this->assertStringContainsString('This connects my answer to the role', $revision);
-        $this->assertGreaterThanOrEqual(3, $this->sentenceCount($revision));
-        $this->assertLessThanOrEqual(6, $this->sentenceCount($revision));
+        $this->assertSame($answer, $revision);
+        $this->assertSame(1, $this->sentenceCount($revision));
+        $this->assertStringNotContainsString('This connects my answer', $revision);
         $this->assertStringNotContainsString('Situation/Task:', $revision);
     }
 
@@ -194,7 +196,8 @@ class TrustworthyAssessmentServiceTest extends TestCase
         $this->assertStringContainsString($answer, $revision);
         $this->assertStringNotContainsString('In a customer situation, I needed', $revision);
         $this->assertStringNotContainsString('My task was', $revision);
-        $this->assertStringContainsString('using only details I can confirm', $revision);
+        $this->assertSame($answer, $revision);
+        $this->assertStringNotContainsString('using only details I can confirm', $revision);
     }
 
     public function test_session_confidence_respects_answer_scoring_confidence(): void

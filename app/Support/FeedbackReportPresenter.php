@@ -30,26 +30,26 @@ class FeedbackReportPresenter
  && ! $isStale
  && self::providerSessionFeedbackIsUsable($feedback, $answers);
  $providerStrengthItems = self::nonEmptyItems(self::bulletItems($strengths, '', 4, null));
- $answerStrengthItems = self::generalizedAnswerReviewItems(self::answerReviewStrengthItems($answers));
+ $answerStrengthItems = self::generalizedAnswerReviewItems(self::answerReviewStrengthItems($answers), $answers->count());
  $strengthItems = $providerSessionFeedbackTrusted && $providerStrengthItems!== []
  ? $providerStrengthItems
  : $answerStrengthItems;
  if ($strengthItems === []) {
- $strengthItems = ['No answer-level strength is reliable yet. Add a complete answer so the review can identify what worked.'];
+ $strengthItems = self::fallbackStrengthItems($answers);
  }
  $providerWeaknessItems = self::nonEmptyItems(self::mergedItems(
  self::bulletItems($weaknesses, '', 4, null),
  self::bulletItems($suggestions, '', 2, null)
  ));
- $answerWeaknessItems = self::generalizedAnswerReviewItems(self::answerReviewWeaknessItems($answers));
+ $answerWeaknessItems = self::generalizedAnswerReviewItems(self::answerReviewWeaknessItems($answers), $answers->count());
  $weaknessItems = $providerSessionFeedbackTrusted && $providerWeaknessItems!== []
  ? $providerWeaknessItems
  : $answerWeaknessItems;
  if ($weaknessItems === []) {
- $weaknessItems = ['Add one direct answer, one specific detail, and one true result or lesson.'];
+ $weaknessItems = self::fallbackNextStepItems($answers);
  }
- $safeSuggestions = $providerSessionFeedbackTrusted? $suggestions: implode('. ', $answerWeaknessItems);
- $suggestionItems = self::bulletItems($safeSuggestions, 'Practice one answer again with a clearer structure.', 3, 130);
+ $safeSuggestions = $providerSessionFeedbackTrusted? $suggestions: implode(' ', array_map(self::sentence(...), $weaknessItems));
+ $suggestionItems = self::bulletItems($safeSuggestions, '', 3, 130);
 
  return [
  'is_stale' => $isStale,
@@ -303,16 +303,78 @@ class FeedbackReportPresenter
  }
  }
 
- if (! $added && is_numeric($answer->score?? null) && (int) round((float) $answer->score) >= 70) {
- $items[] = $label.': scored well enough to count as a current strength.';
- }
-
  if (count($items) >= 4) {
  break;
  }
  }
 
  return self::mergedItems($items);
+ }
+
+ private static function fallbackStrengthItems(Collection $answers): array
+ {
+ foreach ($answers as $answer) {
+ $question = self::questionForFallback($answer);
+ $text = self::answerContent($answer);
+ if ($text === '') {
+ continue;
+ }
+
+ $excerpt = self::limitText($text, 130);
+ $input = self::providerAnswerData(collect([$answer]))[0];
+ $eligibility = AIService::feedbackAnswerEligibility($input);
+ if ((bool) ($eligibility['is_too_short'] ?? false)) {
+ return ['For “'.$question.'”, the saved response “'.$excerpt.'” is too limited to identify a reliable strength.'];
+ }
+
+ return ['For “'.$question.'”, the saved response includes “'.$excerpt.'”. This is the detail available to review; no further strength was verified.'];
+ }
+
+ if ($answers->isNotEmpty()) {
+ return ['For “'.self::questionForFallback($answers->first()).'”, no answer was submitted, so a strength cannot be identified.'];
+ }
+
+ return ['No answer was saved, so a strength cannot be identified.'];
+ }
+
+ private static function fallbackNextStepItems(Collection $answers): array
+ {
+ foreach ($answers as $answer) {
+ $question = self::questionForFallback($answer);
+ $text = self::answerContent($answer);
+ if ($text === '') {
+ continue;
+ }
+
+ $excerpt = self::limitText($text, 110);
+ $input = self::providerAnswerData(collect([$answer]))[0];
+ $eligibility = AIService::feedbackAnswerEligibility($input);
+ if ((bool) ($eligibility['is_too_short'] ?? false)) {
+ return ['For “'.$question.'”, expand “'.$excerpt.'” into a direct answer with a true supporting detail.'];
+ }
+
+ $local = AIService::localReviewQuestionFeedback($input);
+ $followUp = self::cleanText((string) ($local['follow_up_question'] ?? ''));
+ if ($followUp !== '') {
+ $context = str_contains(mb_strtolower($followUp), mb_strtolower($question))
+ ? ''
+ : 'For “'.$question.'”, ';
+ return [$context.($context === ''? 'After': 'after').' “'.$excerpt.'”, consider: '.$followUp];
+ }
+
+ return ['For “'.$question.'”, check whether “'.$excerpt.'” covers every requested point before adding any further detail.'];
+ }
+
+ if ($answers->isNotEmpty()) {
+ return ['For “'.self::questionForFallback($answers->first()).'”, submit a direct answer before reviewing a possible improvement.'];
+ }
+
+ return ['Submit an answer before reviewing a possible improvement.'];
+ }
+
+ private static function questionForFallback(mixed $answer): string
+ {
+ return self::limitText(trim((string) ($answer->question->question_text ?? '')) ?: 'this question', 150);
  }
 
  private static function answerReviewWeaknessItems(Collection $answers): array
@@ -326,7 +388,7 @@ class FeedbackReportPresenter
  $label = 'Answer '.($index + 1);
 
  if ((bool) ($answer->is_skipped?? false)) {
- $items[] = $label.': no answer was submitted, so there is no response to check.';
+ $items[] = $label.': no answer was submitted for “'.self::questionForFallback($answer).'”, so there is no response to check.';
  continue;
  }
 
@@ -383,11 +445,11 @@ class FeedbackReportPresenter
  return $limit === null? $clean: self::limitText($clean, $limit);
  }
 
- private static function generalizedAnswerReviewItems(array $items): array
+ private static function generalizedAnswerReviewItems(array $items, int $answerCount): array
  {
  $patterns = [];
  foreach ($items as $item) {
- $pattern = self::generalizeAnswerReviewItem((string) $item);
+ $pattern = self::generalizeAnswerReviewItem((string) $item, $answerCount);
  if ($pattern === '' || in_array($pattern, $patterns, true)) {
  continue;
  }
@@ -401,11 +463,11 @@ class FeedbackReportPresenter
  return $patterns;
  }
 
- private static function answerReviewPattern(array $items): string
+ private static function answerReviewPattern(array $items, int $answerCount): string
  {
  $patterns = [];
  foreach ($items as $item) {
- $pattern = self::generalizeAnswerReviewItem((string) $item);
+ $pattern = self::generalizeAnswerReviewItem((string) $item, $answerCount);
  if ($pattern === '' || in_array($pattern, $patterns, true)) {
  continue;
  }
@@ -419,7 +481,7 @@ class FeedbackReportPresenter
  return self::humanList($patterns);
  }
 
- private static function generalizeAnswerReviewItem(string $item): string
+ private static function generalizeAnswerReviewItem(string $item, int $answerCount = 0): string
  {
  $text = self::cleanText($item);
  $text = preg_replace('/^Answer\s+\d+\s*:\s*/iu', '', $text)?? $text;
@@ -428,30 +490,19 @@ class FeedbackReportPresenter
  return '';
  }
 
- $verbMap = [
- 'names' => 'name',
- 'explains' => 'explain',
- 'includes' => 'include',
- 'shows' => 'show',
- 'gives' => 'give',
- 'uses' => 'use',
- 'mentions' => 'mention',
- 'states' => 'state',
- 'adds' => 'add',
- 'identifies' => 'identify',
- ];
+ $verbs = 'names|explains|includes|shows|gives|uses|mentions|states|adds|identifies';
+ $scope = $answerCount === 1? 'the saved answer': 'one saved answer';
 
  $text = preg_replace_callback(
- '/^(?:the\s+)?(?:saved\s+)?answer\s+(' . implode('|', array_keys($verbMap)) . ')\b/iu',
- static fn (array $matches): string => 'the reviewed answers '.$verbMap[mb_strtolower($matches[1])],
+ '/^(?:the\s+)?(?:saved\s+)?answer\s+(' . $verbs . ')\b/iu',
+ static fn (array $matches): string => $scope.' '.$matches[1],
  $text
  )?? $text;
- $text = preg_replace('/^(?:the\s+)?(?:saved\s+)?answer\s+needs?\b/iu', 'the reviewed answers need', $text)?? $text;
- $text = preg_replace('/^this\s+answer\s+/iu', 'the reviewed answers ', $text)?? $text;
- $text = preg_replace('/^add\s+/iu', 'the reviewed answers need to add ', $text)?? $text;
- $text = preg_replace('/^use\s+/iu', 'the reviewed answers need to use ', $text)?? $text;
- $text = preg_replace('/^include\s+/iu', 'the reviewed answers need to include ', $text)?? $text;
- $text = preg_replace('/^no\s+answer\s+was\s+submitted\b/iu', 'some answer reviews have no submitted response', $text)?? $text;
+ $text = preg_replace('/^(?:the\s+)?(?:saved\s+)?answer\s+needs?\b/iu', $scope.' needs', $text)?? $text;
+ $text = preg_replace('/^this\s+answer\s+/iu', $scope.' ', $text)?? $text;
+ $text = preg_replace_callback('/^(add|use|include)\s+/iu',
+ static fn (array $matches): string => 'A next attempt could '.mb_strtolower($matches[1]).' ',
+ $text)?? $text;
 
  return self::sentenceCase($text);
  }
@@ -528,18 +579,20 @@ class FeedbackReportPresenter
  $sentences[] = 'The readiness score is still pending, so the safest next step is to use the answer notes instead of guessing performance.';
  }
 
- $strengthPattern = self::answerReviewPattern($strengthItems);
+ $strengthPattern = self::answerReviewPattern($strengthItems, $answerCount);
  if ($strengthPattern!== '') {
- $sentences[] = self::sentence('Strength pattern across the answer reviews: '.$strengthPattern);
+ $sentences[] = self::sentence('Strength noted in '.($answerCount === 1? 'the saved answer': 'an answer review').': '.$strengthPattern);
  }
 
- $weaknessPattern = self::answerReviewPattern($weaknessItems);
+ $weaknessPattern = self::answerReviewPattern($weaknessItems, $answerCount);
  $suggestion = self::firstEvidenceItem($suggestions);
  if ($weaknessPattern!== '') {
- $sentences[] = self::sentence('Weakness pattern across the answer reviews: '.$weaknessPattern);
+ $sentences[] = self::sentence('Next focus from '.($answerCount === 1? 'the saved answer': 'an answer review').': '.$weaknessPattern);
  }
 
- $prioritySentence = self::priorityContextSentence((array) data_get($summary, 'priority_actions', []));
+ $prioritySentence = $providerSessionFeedbackTrusted
+ ? self::priorityContextSentence((array) data_get($summary, 'priority_actions', []))
+ : '';
  if ($prioritySentence!== '') {
  $sentences[] = $prioritySentence;
  } elseif ($suggestion!== '') {

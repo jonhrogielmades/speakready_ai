@@ -49,7 +49,167 @@ def best_quote(answer: str) -> str:
 
 
 def answer_tokens(text: Any) -> list[str]:
-    return re.findall(r"[a-zA-Z][a-zA-Z']{1,}", str(text or "").lower())
+    return re.findall(r"[^\W\d_][\w'-]{1,}", str(text or "").lower(), flags=re.UNICODE)
+
+
+QUESTION_STOP_WORDS = {
+    "about", "an", "and", "are", "can", "describe", "did", "do", "does", "example",
+    "explain", "for", "give", "have", "how", "in", "is", "me", "of", "or", "the",
+    "tell", "that", "time", "to", "was", "were", "what", "when", "where", "which",
+    "why", "with", "would", "you", "your",
+}
+
+
+def focus_tokens(text: str) -> set[str]:
+    aliases = {
+        "clients": "customer", "client": "customer", "customers": "customer",
+        "pay": "salary", "compensation": "salary", "salaries": "salary",
+        "complaints": "complaint", "issues": "issue", "problems": "problem",
+        "resolved": "resolve", "resolving": "resolve", "solutions": "solution",
+        "improved": "improve", "improving": "improve", "processes": "process",
+        "teams": "team", "skills": "skill", "results": "result",
+    }
+    return {
+        aliases.get(token, token)
+        for token in answer_tokens(text)
+        if token not in QUESTION_STOP_WORDS and len(token) >= 3
+    }
+
+
+def topic_match_status(question: str, answer_text: str, kind: str, signals: dict[str, bool]) -> str:
+    # A salary amount/flexibility or work arrangement can answer the intent
+    # without repeating the exact words in the prompt. Otherwise a single
+    # shared word only shows a possible connection, not question coverage.
+    if kind in {"salary", "work_setup"}:
+        return "strong" if signals["salary" if kind == "salary" else "setup"] else "unconfirmed"
+    matches = focus_tokens(question) & focus_tokens(answer_text)
+    if len(matches) >= 2:
+        return "strong"
+    return "one_term" if matches else "unconfirmed"
+
+
+def question_kind(question: str, answer: dict[str, Any]) -> str:
+    lowered = question.lower()
+    # An experience involving payroll or a salary error is a behavioral
+    # question; only a request for the candidate's own expectation is salary.
+    if is_behavioral(answer) and re.search(r"\b(?:time|example|experience|issue|error|problem|case)\b|\bhow\s+did\s+you\b", lowered):
+        return "behavioral"
+    if re.search(
+        r"\b(?:salary|pay|compensation|wage)\b.{0,70}\b(?:expect\w*|range|desired|seeking|looking for|negotiab\w*)\b"
+        r"|\b(?:expect\w*|desired|seeking|looking for|range)\b.{0,70}\b(?:salary|pay|compensation|wage)\b",
+        lowered,
+    ):
+        return "salary"
+    if re.search(r"\bweakness(?:es)?\b", lowered):
+        return "weakness"
+    if re.search(r"\bstrengths?\b", lowered):
+        return "strength"
+    if re.search(r"\b(?:introduce yourself|tell me about yourself)\b", lowered):
+        return "introduction"
+    if re.search(r"\b(?:why.*(?:join|apply|want|interested)|what interests you)\b", lowered):
+        return "motivation"
+    if re.search(r"\b(?:remote|hybrid|on-?site|work setup|shifts?|schedules?|availability|available)\b", lowered):
+        return "work_setup"
+    if is_behavioral(answer):
+        return "behavioral"
+    if re.search(r"\b(?:how would you|what would you do|suppose|imagine)\b", lowered):
+        return "situational"
+    technical_wording = re.search(r"\b(?:explain how|describe how|how does|how would you debug)\b", lowered) \
+        and not re.search(r"\bhow\s+(?:you|we|i)\s+work\b", lowered)
+    if str(answer.get("question_type", "")).lower() == "technical" or technical_wording:
+        return "technical"
+    return "direct"
+
+
+def work_setup_signal(text: str) -> bool:
+    """Detect a stated availability or preference, not a past shift mention."""
+    target = (
+        r"(?:remote(?:ly)?|hybrid|on[ -]?site|from home|"
+        r"(?:(?:the|a|any)\s+)?(?:rotating|evening|night|day|morning|weekend)\s+shifts?|"
+        r"shifts|weekdays?|weekends?|(?:any|flexible|rotating|the posted|your)\s+schedule|"
+        r"(?:full|part)[ -]?time|\d+\s+days?\s+(?:a|per)\s+week|"
+        r"(?:morning|evening|night)\s+hours|anytime)"
+    )
+    patterns = [
+        rf"\bI\s+(?:can|could|will|would|cannot|can't)\s+(?:work|do|take|cover|handle)\s+(?:on\s+|during\s+|for\s+)?{target}\b",
+        rf"\bI\s+(?:am|am not|'m|'m not)\s+(?:available|open|flexible)\s+(?:for|to|with|on|during)?\s*{target}\b",
+        rf"\bI\s+(?:prefer|need|require)\s+(?:to work\s+|a\s+|the\s+)?{target}\b",
+        rf"\bmy\s+(?:availability|preference|preferred schedule)\s+(?:is|would be)\s+{target}\b",
+        rf"\b{target}\s+(?:works for me|is fine for me|would work for me)\b",
+    ]
+    return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
+
+
+def answer_signals(text: str) -> dict[str, bool]:
+    lowered = text.lower()
+    action_pattern = re.compile(
+        r"\bI\s+(?:(?:personally|also|then|first|carefully|directly)\s+)?"
+        r"(?:(?:have|had)\s+)?(?:led|built|wrote|made|took|gave|spoke|"
+        r"checked|created|handled|resolved|solved|fixed|improved|reduced|"
+        r"increased|updated|trained|explained|organized|planned|tested|"
+        r"reviewed|found|identified|helped|supported|communicated|delivered|"
+        r"designed|implemented|coordinated|managed|analyzed|verified|"
+        r"documented|presented|mentored|worked|inspected|diagnosed|"
+        r"prioritized|validated|measured|compared|escalated|prepared|"
+        r"assisted|proposed|researched|configured|deployed|investigated|"
+        r"monitored|reported|facilitated|maintained|migrated|automated|"
+        r"optimized|launched|processed|scheduled|delegated|selected|"
+        r"evaluated|gathered|contacted|collaborated|recommended|listened|"
+        r"asked|shared)\b", re.IGNORECASE,
+    )
+    has_personal_action = False
+    for match in action_pattern.finditer(text):
+        # A conditional first-person verb is a plan, not past work. A negated
+        # action does not match because "did not"/"never" separates I from it.
+        prefix = text[max(0, text.rfind(".", 0, match.start()) + 1):match.start()]
+        if not re.search(r"\b(?:if|suppose|imagine)\b", prefix, re.IGNORECASE):
+            has_personal_action = True
+            break
+
+    result_pattern = re.compile(
+        r"\b(?:resulted|learned|reduced|increased|improved|"
+        r"resolved|completed|saved|customer (?:remained unhappy|understood|"
+        r"accepted|responded))\b"
+    )
+    has_result = False
+    for match in result_pattern.finditer(lowered):
+        prefix = lowered[max(0, lowered.rfind(".", 0, match.start()) + 1):match.start()]
+        if not re.search(r"\b(?:if|suppose|imagine|would|could|should|might|will)\b", prefix) \
+                and not re.search(r"\bto\s+$", prefix):
+            has_result = True
+            break
+    for match in re.finditer(r"\b(?:result|outcome)\s+(?:was|were|is|became|showed|meant|included|led to)\s+([^.!?;]{2,100})", lowered):
+        value = match.group(1).strip()
+        prefix = lowered[max(0, lowered.rfind(".", 0, match.start()) + 1):match.start()]
+        if not re.search(r"\b(?:if|suppose|imagine|would|could|should|might|will)\b", prefix) \
+                and not re.match(r"(?:still\s+)?(?:unknown|unclear|pending|not\s+(?:known|clear|measured)|a\s+(?:goal|plan)|to\b)\b", value):
+            has_result = True
+
+    has_amount = bool(re.search(
+        r"(?:[$₱€£]\s*\d|\b(?:php|usd)\s*\d|\d[\d,.]*\s*(?:k|pesos?|dollars?|per month|monthly|annually|per year))",
+        lowered,
+    ))
+    has_pay_context = bool(re.search(r"\b(?:salary|pay|compensation|wage|package)\b", lowered))
+    expectation_cue = bool(re.search(
+        r"\b(?:expect\w*|seeking|looking for|aiming for|desired|"
+        r"would like|open to|negotiab\w*|flexib\w*)\b", lowered,
+    ))
+    flexibility = bool(re.search(r"\b(?:negotiab\w*|flexib\w*|open to (?:discuss|negotiat))\b", lowered))
+    payroll_history = bool(re.search(r"\b(?:payroll|invoice|reimburse\w*|budget|past salary|current salary|previous salary|salary error)\b", lowered))
+    salary_expectation = (
+        (expectation_cue and (has_amount or has_pay_context))
+        or (flexibility and word_count(text) <= 4
+            and not re.search(r"\b(?:shifts?|schedules?|hours?|remote|hybrid|onsite)\b", lowered))
+        or (has_amount and word_count(text) <= 8 and not payroll_history)
+    )
+    return {
+        "personal_action": has_personal_action,
+        "result": has_result,
+        "reason": bool(re.search(r"\b(?:because|so that|in order to|interested|motivated|value)\b", lowered)),
+        "salary": salary_expectation,
+        "setup": work_setup_signal(text),
+        "past_example": bool(re.search(r"\b(?:when|during|at my|in my|last|previously|once|a time)\b", lowered)),
+    }
 
 
 def is_behavioral(answer: dict[str, Any]) -> bool:
@@ -62,25 +222,41 @@ def is_behavioral(answer: dict[str, Any]) -> bool:
         ]
     )
     question_type = str(answer.get("question_type", "")).lower()
+    # Follow the wording the candidate saw before a coarse stored type or
+    # broad guide. A technical explanation is not a past-event STAR prompt.
+    descriptive_technical = re.search(
+        r"\b(?:describe|explain|walk me through)\s+(?:how|what)\b.*\b(?:work|works|operates|functions)\b",
+        question, re.IGNORECASE,
+    ) and not re.search(r"\bhow\s+(?:you|we|i)\s+work\b", question, re.IGNORECASE)
+    if descriptive_technical or question_type == "technical":
+        return False
+    if re.search(r"\b(?:describe|explain)\s+how\s+(?:you|we|i)\s+work\b", question, re.IGNORECASE):
+        return False
     experiential = re.search(
         r"\b(tell me about|describe|share|give (?:me )?an example|walk me through)\b.*\b(time|situation|experience|project|incident|challenge|mistake|conflict|case|deadline|decision|failure|success|problem|issue|achievement|change|pressure|setback)\b|\bexample of how you\b",
         question,
         re.IGNORECASE,
     )
+    past_handling = re.search(
+        r"\bhow\s+did\s+you\s+(?:handle|resolve|solve|manage|address|fix|respond to|deal with|"
+        r"prioritize|overcome|improve|investigate)\b",
+        question, re.IGNORECASE,
+    )
     star_guide = re.search(r"\buse STAR\b|\bSTAR Method\b|\bsituation[, ]+task[, ]+action[, ]+(?:and )?result\b", context, re.IGNORECASE)
-    return bool(experiential or star_guide or question_type == "behavioral")
+    return bool(experiential or past_handling or star_guide)
 
 
 def local_star_score(answer_text: str) -> int:
     text = answer_text.lower()
+    signals = answer_signals(answer_text)
     parts = 0
     if re.search(r"\b(?:when|while|during|at my|in my|there was|we had|i had|challenge|problem|situation)\b", text):
         parts += 1
     if re.search(r"\b(?:my task|my goal|i needed|i had to|responsible|objective|assigned)\b", text):
         parts += 1
-    if re.search(r"\b(?:i|we)\s+(?:led|built|created|resolved|solved|improved|reduced|increased|delivered|designed|implemented|organized|managed|tested|analyzed|coordinated|handled|supported|communicated|verified|planned|documented|trained|presented|mentored)\b", text):
+    if signals["personal_action"]:
         parts += 1
-    if re.search(r"\b(?:result|outcome|impact|improved|reduced|increased|saved|resolved|completed|learned|success|percent|%)\b|\d+", text):
+    if signals["result"]:
         parts += 1
     return parts * 25
 
@@ -151,13 +327,37 @@ def predict_scores(model: dict[str, Any], row: dict[str, Any], star_applicable: 
     return scores
 
 
-def missing_criteria(answer: dict[str, Any], scores: dict[str, int]) -> list[str]:
+def missing_criteria(answer: dict[str, Any], scores: dict[str, int], signals: dict[str, bool]) -> list[str]:
+    """Return only a demonstrably missing, verbatim part of the question guide."""
     guide = normalize_text(answer.get("expected_guide", ""))
-    question = normalize_text(answer.get("question", ""))
-    source = guide or question
-    if not source or (scores.get("relevance_score", 0) >= 75 and scores.get("score", 0) >= 70):
+    answer_text = normalize_text(answer.get("answer", ""))
+    if not guide:
         return []
-    return [excerpt(source, 180)]
+
+    chunks = [part.strip() for part in re.split(r"[.;\n]+|\s+and\s+", guide, flags=re.IGNORECASE) if part.strip()]
+    gaps: list[str] = []
+    for chunk in chunks:
+        lowered = chunk.lower()
+        absent = False
+        if re.search(r"\b(?:star|situation|task|action|result)\b", lowered):
+            if "star" in lowered or "situation" in lowered:
+                absent = local_star_score(answer_text) < 100
+            elif "result" in lowered:
+                absent = not signals["result"]
+            elif "action" in lowered:
+                absent = not signals["personal_action"]
+        elif re.search(r"\b(?:result|outcome|lesson)\b", lowered):
+            absent = not signals["result"]
+        elif re.search(r"\b(?:personal|your own|what you did)\b", lowered):
+            absent = not signals["personal_action"]
+        # Other guide clauses can be paraphrased or optional. Word overlap
+        # cannot establish that one is genuinely missing from the answer.
+
+        if absent and len(chunk) <= 180 and word_count(chunk) <= 12 and len(focus_tokens(chunk)) >= 1:
+            gaps.append(chunk)
+        if len(gaps) >= 2:
+            break
+    return gaps
 
 
 def alignment_for(relevance: int, skipped: bool, too_short: bool) -> str:
@@ -172,31 +372,106 @@ def alignment_for(relevance: int, skipped: bool, too_short: bool) -> str:
     return "not_addressed"
 
 
-def feedback_text(question: str, quote: str, alignment: str, missing: list[str], too_short: bool) -> str:
+def question_assessment(question: str, answer_text: str, kind: str, signals: dict[str, bool], missing: list[str]) -> dict[str, str]:
+    question_terms = focus_tokens(question)
+    answer_terms = focus_tokens(answer_text)
+    matched = sorted(question_terms & answer_terms)
+    focus = ", ".join(matched[:2])
+    topic_status = topic_match_status(question, answer_text, kind, signals)
+
+    if kind == "behavioral":
+        covered = "a personal action and a stated result" if signals["personal_action"] and signals["result"] else (
+            "a personal action" if signals["personal_action"] else "an answer detail, but no clearly detected personal action"
+        )
+        gap = "the final result or lesson" if not signals["result"] else (
+            "the action you personally took" if not signals["personal_action"] else "why that action addressed the problem"
+        )
+        follow_up = "What happened after your action, and what did you learn?" if not signals["result"] else (
+            "Which step did you personally take in that situation?" if not signals["personal_action"] else
+            "Why did you choose that action, and how did you check the result?"
+        )
+    elif kind == "salary":
+        covered = "a pay expectation or flexibility" if signals["salary"] else "an answer without a clear pay expectation"
+        gap = "a truthful range, amount, or clear statement of flexibility" if not signals["salary"] else "the basis for that expectation, if you can explain it"
+        follow_up = "What range or flexibility can you genuinely offer for this role?" if not signals["salary"] else "What factors shaped the expectation you stated?"
+    elif kind == "work_setup":
+        covered = "a specific work arrangement" if signals["setup"] else "a response without a clear work arrangement"
+        gap = "the arrangement or schedule you can actually maintain" if not signals["setup"] else "any real condition that affects your availability"
+        follow_up = "Which arrangement or hours can you reliably work?" if not signals["setup"] else "Is there any real limit on the arrangement you described?"
+    elif kind == "motivation":
+        covered = "a reason for your interest" if signals["reason"] else "an interest in the role without a stated reason"
+        gap = "why this particular role or organization interests you" if not signals["reason"] else "a link between that reason and one job responsibility"
+        follow_up = "Why does this specific role interest you?" if not signals["reason"] else "Which responsibility connects most clearly to your stated reason?"
+    elif kind == "weakness":
+        covered = "an area for improvement" if re.search(r"\b(?:weakness|improv|develop|practice|working on)\b", answer_text, re.IGNORECASE) else "an answer without a clear development area"
+        gap = "a real improvement habit and a sign of progress"
+        follow_up = "What are you doing to improve that area, and how can you tell it is working?"
+    elif kind == "strength":
+        covered = "a stated strength" if re.search(r"\b(?:strength|skilled|good at|experience|able to)\b", answer_text, re.IGNORECASE) else "an answer without a clearly named strength"
+        gap = "one true example that shows the strength in use"
+        follow_up = "Which real example best shows the strength you named?"
+    elif kind == "introduction":
+        covered = "a background detail" if re.search(r"\b(?:experience|worked|working|graduate|student|background|skill)\b", answer_text, re.IGNORECASE) else "an introduction without a clear background detail"
+        gap = "a true background detail connected to this role"
+        follow_up = "Which part of your background is most relevant to this role?"
+    elif kind == "situational":
+        covered = "a proposed first step" if re.search(r"\b(?:first|would|start|check|ask|assess)\b", answer_text, re.IGNORECASE) else "a response without a clear first step"
+        gap = "the first action you would take and how you would check its effect"
+        follow_up = "What would you do first, and how would you know it worked?"
+    elif kind == "technical":
+        covered = "a technical explanation" if signals["reason"] or focus else "an answer whose technical link is unclear"
+        gap = "why the proposed approach works or how you would test it"
+        follow_up = "How would you verify that your approach works?"
+    else:
+        covered = "a point connected to " + focus if focus else "a response whose link to the prompt is unclear"
+        gap = "one reason or example that directly supports the point asked"
+        follow_up = "What true reason or example would make your answer more direct?"
+
+    if missing:
+        gap = 'the guide point "' + missing[0] + '"'
+    if topic_status != "strong" and kind == "direct":
+        covered = "an answer detail"
+    if topic_status != "strong" and kind == "technical":
+        covered = "an explanation detail"
+    return {"covered": covered, "gap": gap, "follow_up": follow_up,
+            "topic_status": topic_status, "matched_term": matched[0] if matched else ""}
+
+
+def feedback_text(question: str, quote: str, alignment: str, assessment: dict[str, str], too_short: bool) -> str:
     if too_short:
         return (
-            f'The answer was too short to check your interview readiness. For the question "{question}", '
-            f'the answer text was "{quote}", but it did not give enough clear detail. '
-            "Next step: give a full direct answer, then add one true detail."
+            f'For "{question}", you wrote "{quote}". That is too short to judge how fully it answers the question. '
+            f'Next step: state your main point, then add {assessment["gap"]} if it is true.'
+        )
+
+    if assessment["topic_status"] != "strong" and alignment != "not_addressed":
+        uncertainty = (
+            f'It shares only "{assessment["matched_term"]}" with the question; that alone cannot confirm the answer covers the prompt.'
+            if assessment["topic_status"] == "one_term"
+            else "The local check cannot confirm from these words how the answer connects to the question."
+        )
+        return (
+            f'For "{question}", you wrote "{quote}". '
+            f'This gives {assessment["covered"]}. {uncertainty} '
+            f'Next step: explain {assessment["gap"]} using only details that are true for you.'
         )
 
     relation = {
-        "directly_addressed": "answered the question directly",
-        "partially_addressed": "answered part of the question",
-        "not_addressed": "did not clearly answer the question",
+        "directly_addressed": "addresses the question directly",
+        "partially_addressed": "addresses part of the question",
+        "not_addressed": "does not yet clearly address the question",
     }.get(alignment, "needs more detail")
-    gap = f' It still needs "{missing[0]}".' if missing else " Keep the same focus and add a clearer result."
     return (
-        f'For the question "{question}", you said "{quote}". '
-        f'That {relation} because it gives a saved answer detail.{gap} '
-        "Next step: make your exact action and result easy to see."
+        f'For "{question}", you wrote "{quote}". '
+        f'This {relation}: it gives {assessment["covered"]}. '
+        f'Next step: explain {assessment["gap"]} using only details that are true for you.'
     )
 
 
-def coaching_for(question: str, quote: str, alignment: str, missing: list[str], skipped: bool, too_short: bool) -> dict[str, Any]:
+def coaching_for(question: str, quote: str, alignment: str, assessment: dict[str, str], skipped: bool, too_short: bool) -> dict[str, Any]:
     question_label = excerpt(question, 140) or "this question"
-    quote_label = quote or question_label
-    missing_label = missing[0] if missing else "a clearer action, result, or lesson"
+    quote_label = excerpt(quote, 100) or question_label
+    missing_label = assessment["gap"]
 
     if skipped:
         return {
@@ -215,46 +490,45 @@ def coaching_for(question: str, quote: str, alignment: str, missing: list[str], 
     if too_short:
         return {
             "keep": f'For "{question_label}", keep the answer idea from "{quote_label}" if it is true.',
-            "improve": f'For "{question_label}", expand "{quote_label}" with your exact action and result.',
+            "improve": f'For "{question_label}", expand "{quote_label}" with {missing_label}.',
             "impact": f'The short answer "{quote_label}" is not enough for the interviewer to judge the answer to "{question_label}" well.',
             "next_try": f'Turn "{quote_label}" into a full answer to "{question_label}".',
             "next_attempt_steps": [
                 f'Start with a full sentence that answers "{question_label}".',
-                f'Explain what you personally did after "{quote_label}".',
-                f'Add the result, effect, or lesson for "{question_label}".',
+                f'Explain {missing_label} if it is true for you.',
+                f'Check that the expanded answer responds to "{question_label}".',
             ],
-            "success_check": f'The retry works when "{quote_label}" is supported by an action and result.',
+            "success_check": f'The retry works when "{quote_label}" is developed with {missing_label}.',
         }
 
     if alignment == "directly_addressed":
-        keep = f'Keep the detail "{quote_label}" because it helps answer "{question_label}".'
-        improve = f'Add {missing_label} for "{question_label}".'
+        keep = f'Keep "{quote_label}" as the evidence for {assessment["covered"]}.'
+        improve = f'Explain {missing_label} for "{question_label}".'
     elif alignment == "partially_addressed":
-        keep = f'Keep the useful part "{quote_label}" because it gives some detail for "{question_label}".'
-        improve = f'Cover the missing point "{missing_label}" so "{question_label}" is answered more fully.'
+        keep = f'Keep "{quote_label}" because it gives {assessment["covered"]}.'
+        improve = f'Cover {missing_label} so "{question_label}" is answered more fully.'
     else:
         keep = f'Use "{quote_label}" only if it truly supports "{question_label}".'
-        improve = f'Make the answer connect directly to "{question_label}" and add {missing_label}.'
+        improve = f'Make the answer connect directly to "{question_label}" and explain {missing_label}.'
 
     return {
         "keep": keep,
         "improve": improve,
-        "impact": f'The interviewer can judge "{question_label}" better when "{quote_label}" is linked to a clear action and result.',
+        "impact": f'The interviewer can judge "{question_label}" better when "{quote_label}" is linked to {missing_label}.',
         "next_try": f'Rewrite the answer so "{quote_label}" clearly supports "{question_label}".',
         "next_attempt_steps": [
             f'Open with a direct answer to "{question_label}".',
             f'Use "{quote_label}" as the proof point only if it is true.',
-            f'Add {missing_label} before ending the answer.',
+            f'Explain {missing_label} before ending the answer.',
         ],
-        "success_check": f'The retry works when "{question_label}" is answered directly and "{quote_label}" supports the main point.',
+        "success_check": f'The retry works when "{question_label}" is answered directly and {missing_label} is clear.',
     }
 
 
 def fallback_answer(answer_text: str) -> str:
-    quote = best_quote(answer_text)
-    if not quote:
-        return ""
-    return f"{quote} Add the missing context, your exact action, and the result without inventing new facts."
+    # Repeating an answer unchanged would mislabel it as an improvement. The
+    # PHP evidence-based revision builder can make a safer grounded revision.
+    return ""
 
 
 def session_feedback(items: list[dict[str, Any]]) -> dict[str, Any]:
@@ -268,14 +542,24 @@ def session_feedback(items: list[dict[str, Any]]) -> dict[str, Any]:
         }
 
     average = lambda field: clamp_int(sum(int(item.get(field, 0)) for item in items) / max(1, len(items)))
-    best = max(items, key=lambda item: int(item.get("score", 0)))
+    answered = [item for item in items if item.get("evidence_quotes")]
+    if not answered:
+        return {
+            "overall_readiness_score": 0,
+            "star_method_score": 0,
+            "strengths": "No submitted answer detail is available to describe a strength.",
+            "weaknesses": "The saved questions were skipped.",
+            "improvement_suggestions": "Choose one skipped question and give a direct, truthful answer.",
+        }
+    best = max(answered, key=lambda item: int(item.get("score", 0)))
     weakest = min(items, key=lambda item: int(item.get("score", 0)))
+    weakest_coaching = weakest.get("coaching", {})
     return {
         "overall_readiness_score": average("score"),
         "star_method_score": average("star_method_score"),
-        "strengths": f'The strongest saved answer included "{(best.get("evidence_quotes") or [""])[0]}".',
-        "weaknesses": f'The answer for "{best_quote(str(weakest.get("question_focus", "")))}" needs clearer detail.',
-        "improvement_suggestions": "For the next attempt, answer the question first, then add your action and the result.",
+        "strengths": f'The saved answer for "{best.get("question_focus", "this question")}" included "{(best.get("evidence_quotes") or [""])[0]}". This is the detail available to review.',
+        "weaknesses": str(weakest_coaching.get("improve", "")),
+        "improvement_suggestions": str(weakest_coaching.get("next_try", "")),
     }
 
 
@@ -300,6 +584,8 @@ def main() -> int:
         question = normalize_text(answer.get("question", ""))
         quote = "" if skipped else best_quote(answer_text)
         star_applicable = is_behavioral(answer)
+        kind = question_kind(question, answer)
+        signals = answer_signals(answer_text)
         scores = predict_scores(model, {"input": dict(answer, answer=answer_text)}, star_applicable)
 
         if skipped:
@@ -308,14 +594,32 @@ def main() -> int:
         elif too_short:
             for field in SCORE_FIELDS:
                 scores[field] = min(scores[field], 10)
+        else:
+            # The trained score is only one signal. A fluent but unrelated
+            # answer must not become "directly addressed" merely because the
+            # model assigned a high score or the answer supplied a long quote.
+            topic_status = topic_match_status(question, answer_text, kind, signals)
+            missing_primary = (
+                (kind == "salary" and not signals["salary"])
+                or (kind == "work_setup" and not signals["setup"])
+            )
+            if missing_primary:
+                scores["relevance_score"] = min(scores["relevance_score"], 49)
+            elif topic_status != "strong" or (kind == "behavioral" and (not signals["personal_action"] or not signals["result"])):
+                scores["relevance_score"] = min(scores["relevance_score"], 74)
+            scores["score"] = weighted_score(scores, star_applicable)
 
+        gaps = [] if skipped else missing_criteria(dict(answer, answer=answer_text), scores, signals)
+        if gaps and not skipped and not too_short and scores["relevance_score"] >= 75:
+            scores["relevance_score"] = 74
+            scores["score"] = weighted_score(scores, star_applicable)
         alignment = alignment_for(scores.get("relevance_score", 0), skipped, too_short)
-        gaps = [] if skipped else missing_criteria(answer, scores)
+        assessment = question_assessment(question, answer_text, kind, signals, gaps)
         text = (
             f'The question "{question}" was skipped, so there is no answer to check for that question. '
             "Next attempt: answer the question first, then add one true detail."
             if skipped
-            else feedback_text(question, quote, alignment, gaps, too_short)
+            else feedback_text(question, quote, alignment, assessment, too_short)
         )
 
         items.append(
@@ -334,8 +638,9 @@ def main() -> int:
                 "missing_criteria": gaps,
                 "ai_feedback": text,
                 "better_sample_answer": "" if skipped else fallback_answer(answer_text),
-                "follow_up_question": f'What result or lesson would you add to strengthen your answer to "{question}"?',
-                "coaching": coaching_for(question, quote, alignment, gaps, skipped, too_short),
+                "follow_up_question": f'For "{question}", {assessment["follow_up"]}',
+                "coaching": coaching_for(question, quote, alignment, assessment, skipped, too_short),
+                "topic_match_status": assessment["topic_status"],
                 "evaluation_source": "local_trained_model",
             }
         )

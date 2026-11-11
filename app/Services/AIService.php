@@ -1953,6 +1953,8 @@ Never say or imply the review is 100% accurate, perfectly reliable, guaranteed, 
 PER-QUESTION MATCHING REQUIREMENTS:
 Each feedback item is an isolated question-answer pair. Check candidate_answer only against the question, expected_answer_guide, and mapped_skills inside the same object and same id.
 Never use details, points, strengths, gaps, or wording from another answer id.
+The question and guide state what was requested, not what the candidate did. Never turn a suggested guide detail into a candidate achievement. Do not list a guide point as missing when the answer already covers it, including in different words.
+Shared topic words alone do not prove the answer addressed the request. Check the requested action or explanation against what the candidate actually wrote. For a salary-expectation question, a story about processing payroll is not a pay expectation.
 In ai_feedback, explicitly explain whether that answer answered the question directly, answered part of it, or did not clearly answer that specific question, and why.
 In ai_feedback, include one short impact sentence that explains how the answer detail or missing detail affects the score, interviewer understanding, or next practice priority.
 Every non-skipped item must have distinct commentary tied to its own question focus and exact answer evidence. Do not reuse an identical feedback template across different ids.
@@ -6003,7 +6005,10 @@ PROMPT;
  '/\b(?:you|the candidate)\s+(?:will|would|can|could)\s+(?:perform|check|inspect|measure|test|verify|describe|explain|list|name|plan)\b/iu',
  $sentence
  ) === 1;
- if (self::personalFactualClausesHaveUnsupportedGrounding($personalClaimText, $answerText, $providedContext)) {
+ // Per-question reviews must not borrow candidate facts from the prompt or
+ // its guide. Session summaries still use their broader topic context here.
+ $claimContext = $ignoreExactPromptReferencesForOutcomes? $answerText: $providedContext;
+ if (self::personalFactualClausesHaveUnsupportedGrounding($personalClaimText, $answerText, $claimContext)) {
  return true;
  }
  $statesMissingEvidence = preg_match(
@@ -6017,7 +6022,7 @@ PROMPT;
  }
 
  if (! $statesMissingEvidence
- && self::textHasUnsupportedPersonalClaims($personalClaimText, $answerText, $providedContext)) {
+ && self::textHasUnsupportedPersonalClaims($personalClaimText, $answerText, $claimContext)) {
  return true;
  }
 
@@ -7484,19 +7489,12 @@ PROMPT;
 
  $aiFeedback = $providerFeedback;
  if (! $requireProviderNarratives) {
+ $questionLabel = self::localQuestionFocusLabel($questionText, $evidenceProfile);
  if ($isSkipped) {
- $aiFeedback = 'No answer was submitted, so there is no response to check. Skipping makes it hard for the interviewer to judge the skill or experience. Next attempt: give a direct answer, then add one true detail.';
+ $aiFeedback = 'No answer was submitted for the '.$questionLabel.' question, so there is no response to check. Next attempt: '.self::answerSpecificNextStep($evidenceProfile, $questionText);
  } elseif ($isTooShort) {
- $required = self::wordCount($answerText) < 5
- ? 'The answer was too short to check your communication skills, knowledge, and interview readiness.'
- : 'The answer was too general to check how well it addressed the question.';
  $shortEvidence = trim((string) ($evidenceQuotes[0]?? self::excerpt($answerText, 80)));
- $evidenceExplanation = $shortEvidence!== ''
- ? (self::wordCount($answerText) < 5
- ? ' The saved answer was very short, so it did not give enough clear detail to evaluate the response.'
- : ' The saved answer did not name a clear point or example that could be checked.')
- : ' The answer did not give enough clear detail to evaluate the response.';
- $aiFeedback = $required.$evidenceExplanation.' Next attempt: give a full direct answer, then add one true detail.';
+ $aiFeedback = 'For the '.$questionLabel.' question, the saved answer was "'.$shortEvidence.'". The answer was too short or general to check its main point. The saved answer was very short, so the score is uncertain. Next attempt: '.self::answerSpecificNextStep($evidenceProfile, $questionText);
  } elseif (! $hasProviderScores
  || ! $providerFeedbackIsUsable
  ) {
@@ -7512,7 +7510,7 @@ PROMPT;
  $betterAnswer = $requireProviderNarratives? $providerBetterAnswer: ($providerBetterAnswerIsValid? self::plainUserFeedbackText($providerBetterAnswer, [$questionText, $answerText]): self::fallbackBetterAnswer($answerText, $questionText, $starApplicable));
  $betterAnswerProvider = self::normalizeProviderKey($feedbackSource);
  $betterAnswerSource = match (true) {
- $isSkipped || ($requireProviderNarratives && $providerBetterAnswer === '') => 'none',
+ $isSkipped || $betterAnswer === '' => 'none',
  $providerBetterAnswerIsValid && $betterAnswerProvider === 'localmodel' => 'local_trained_model',
  $providerBetterAnswerIsValid && $betterAnswerProvider!== '' && $betterAnswerProvider!== 'local' => 'ai_provider',
  default => 'local_evidence',
@@ -7610,6 +7608,7 @@ PROMPT;
  $text = trim((string) $feedback);
  $answerText = self::candidateAnswerText($answer);
  if ($text !== ''
+ && ! self::isGenericFeedback($text)
  && ! self::feedbackInfersForbiddenTrait($text)
  && ! self::feedbackClaimsPerfectCertainty($text)
  && ! self::feedbackHasUnsupportedNumbers($text, $answerText)
@@ -8050,6 +8049,7 @@ PROMPT;
  || mb_strlen($criterion) > 300
  || self::meaningfulKeywords($criterion) === []
  ||! str_contains($context, $criterion)
+ || self::candidateTextContainsPhrase(self::candidateAnswerText($answer), $criterion)
  || in_array($criterion, $validated, true)) {
  continue;
  }
@@ -8231,7 +8231,10 @@ PROMPT;
  $hasTeamAction = $signals['has_team_action'];
  $hasMetric = $signals['has_metric'];
  $hasResult = $signals['has_result'];
- $questionContext = self::feedbackQuestionContext($answer!== []? $answer: ['question' => $questionText]);
+ // Guides and mapped skills describe possible coverage. They are not part of
+ // the question the candidate heard, so they must not inflate or lower the
+ // local answer-match score through word overlap.
+ $questionContext = $questionText;
  $relevanceOverlap = self::keywordOverlapScore($answerText, $questionContext);
  $questionKeywords = self::meaningfulKeywords($questionContext);
  $answerKeywords = self::meaningfulKeywords($answerText);
@@ -8261,6 +8264,8 @@ PROMPT;
  'requires_personal_action' => $requiresPersonalAction,
  'uses_asr_transcript' => $usesAsrTranscript,
  'question_intent' => $intent,
+ 'states_salary_expectation' => $intent === 'salary_expectation' && self::answerStatesSalaryExpectation($answerText),
+ 'states_work_arrangement' => $intent === 'work_setup' && self::answerStatesWorkArrangement($answerText),
  'intent_alignment' => self::questionIntentAlignmentScore($answerText, $intent),
  'relevance_overlap' => $relevanceOverlap,
  'question_keywords' => $questionKeywords,
@@ -8325,13 +8330,23 @@ PROMPT;
  if (! $hasProviderScores
  && ($profile['question_keywords']?? [])!== []
  && ($profile['relevance_overlap']?? 0) < 8) {
- $scores['relevance_score'] = min($scores['relevance_score'], 55);
+ // Missing shared words is stronger evidence for a missing past-example
+ // topic than for broad self-description or a technical paraphrase.
+ $overlapCap = in_array((string) ($profile['question_intent']?? ''), ['behavioral', 'situational', 'salary_expectation'], true)
+ ? 45: 65;
+ $scores['relevance_score'] = min($scores['relevance_score'], $overlapCap);
  }
 
  if (! $hasProviderScores
  && ($profile['question_intent']?? '') === 'salary_expectation'
- && ($profile['intent_alignment']?? 0) < 10) {
- $scores['relevance_score'] = min($scores['relevance_score'], 45);
+ && ! ($profile['states_salary_expectation']?? false)) {
+ $scores['relevance_score'] = min($scores['relevance_score'], 40);
+ }
+
+ if (! $hasProviderScores
+ && ($profile['question_intent']?? '') === 'work_setup'
+ && ! ($profile['states_work_arrangement']?? false)) {
+ $scores['relevance_score'] = min($scores['relevance_score'], 40);
  }
 
  if (! $hasProviderScores
@@ -8365,12 +8380,19 @@ PROMPT;
  if (! $hasProviderScores
  && ($profile['question_keywords']?? [])!== []
  && ($profile['relevance_overlap']?? 0) < 8) {
- $cap = min($cap, 62);
+ $overlapCap = in_array((string) ($profile['question_intent']?? ''), ['behavioral', 'situational', 'salary_expectation'], true)
+ ? 55: 75;
+ $cap = min($cap, $overlapCap);
  }
  if (! $hasProviderScores
  && ($profile['question_intent']?? '') === 'salary_expectation'
- && ($profile['intent_alignment']?? 0) < 10) {
- $cap = min($cap, 55);
+ && ! ($profile['states_salary_expectation']?? false)) {
+ $cap = min($cap, 50);
+ }
+ if (! $hasProviderScores
+ && ($profile['question_intent']?? '') === 'work_setup'
+ && ! ($profile['states_work_arrangement']?? false)) {
+ $cap = min($cap, 50);
  }
  if (! $hasProviderScores && $starApplicable && (int) ($profile['star_score']?? 0) < 75) {
  $cap = min($cap, 70);
@@ -8395,7 +8417,17 @@ PROMPT;
  // of the question's terms. Keep a narrow check for salary questions, where
  // a high relevance score needs an observable pay expectation or flexibility.
  if (self::questionIntent($answer) === 'salary_expectation') {
- return preg_match('/\b(?:salary|pay|compensation|wage|income|rate|range|budget|negotiab\w*|flexib\w*|open to|market|thousand|million|monthly|annual|yearly|per month|per year|\d)\b|[₱$£€]/iu', self::candidateAnswerText($answer)) === 1;
+ if (! self::englishCalibrationEligible(self::candidateAnswerText($answer), (string) ($answer['question']?? $answer['question_text']?? ''))) {
+ return true;
+ }
+ return self::answerStatesSalaryExpectation(self::candidateAnswerText($answer));
+ }
+
+ if (self::questionIntent($answer) === 'work_setup') {
+ if (! self::englishCalibrationEligible(self::candidateAnswerText($answer), (string) ($answer['question']?? $answer['question_text']?? ''))) {
+ return true;
+ }
+ return self::answerStatesWorkArrangement(self::candidateAnswerText($answer));
  }
 
  return true;
@@ -8691,22 +8723,51 @@ PROMPT;
  return FeedbackNumericEvidence::hasUnsupportedQuantity($feedback, $answerText);
  }
 
+ private static function localQuestionFocusLabel(string $questionText, array $profile): string
+ {
+ $keywords = array_values(array_filter(
+ (array) ($profile['question_keywords']?? self::meaningfulKeywords($questionText)),
+ fn (string $keyword): bool => ! in_array($keyword, [
+ 'time', 'handled', 'handle', 'helped', 'help', 'greatest',
+ 'expecting', 'expect', 'resolved', 'resolve', 'useful',
+ ], true)
+ ));
+ $keywords = array_slice($keywords, 0, 4);
+ if ($keywords !== []) {
+ return implode(' ', $keywords);
+ }
+
+ return match ((string) ($profile['question_intent']?? 'direct_evidence')) {
+ 'salary_expectation' => 'salary expectation',
+ 'self_introduction' => 'self introduction',
+ 'role_fit' => 'role fit',
+ 'motivation' => 'motivation',
+ 'behavioral' => 'past example',
+ 'situational' => 'hypothetical situation',
+ 'technical' => 'technical explanation',
+ default => 'interview',
+ };
+ }
+
  private static function evidenceGroundedFeedback(string $answerText, string $questionText, array $profile, bool $hadProviderScores): string
  {
  $excerpt = self::excerpt((string) ($profile['supporting_excerpt']?: $answerText), 180);
  $parts = [];
- $prefix = $hadProviderScores? 'The AI note was changed because it did not clearly match the answer.': 'This report uses only what you wrote in the answer.';
-
- $parts[] = "{$prefix} The best proof in this answer was: \"{$excerpt}\".";
- $parts[] = self::answerSignalFeedbackDetail($profile);
+ $question = self::localQuestionFocusLabel($questionText, $profile);
+ $parts[] = 'For the '.$question.' question, your saved answer says "'.$excerpt.'".';
+ if ($hadProviderScores) {
+ $parts[] = 'The earlier AI note did not clearly match the answer.';
+ } else {
+ $parts[] = 'This report uses only what you wrote in the answer.';
+ }
+ $signalDetail = self::answerSignalFeedbackDetail($profile);
+ if ($signalDetail !== '') {
+ $parts[] = $signalDetail;
+ }
  $parts[] = self::questionSpecificFeedbackDetail($profile, $questionText);
 
  foreach (($profile['missing']?? []) as $missing) {
  $parts[] = $missing;
- }
-
- if (($profile['missing']?? []) === []) {
- $parts[] = 'The answer gave enough detail to check structure, fit to the question, and tone without adding facts.';
  }
 
  $nextStep = self::answerSpecificNextStep($profile, $questionText);
@@ -8721,12 +8782,6 @@ PROMPT;
  {
  $signals = [];
 
- if ((int) ($profile['word_count']?? 0) >= 45) {
- $signals[] = 'a full answer';
- } elseif ((int) ($profile['word_count']?? 0) >= 25) {
- $signals[] = 'enough length to review';
- }
-
  if ($profile['has_personal_action']?? false) {
  $signals[] = 'what you did yourself';
  } elseif ($profile['has_team_action']?? false) {
@@ -8734,9 +8789,10 @@ PROMPT;
  }
 
  if ($profile['has_metric']?? false) {
- $signals[] = 'a number';
- } elseif ($profile['has_result']?? false) {
- $signals[] = 'a result or lesson';
+ $signals[] = 'a number you supplied';
+ }
+ if (($profile['requires_result']?? false) && ($profile['has_result']?? false)) {
+ $signals[] = 'a stated result or lesson';
  }
 
  if (($profile['star_score']?? 0) >= 100) {
@@ -8746,10 +8802,10 @@ PROMPT;
  }
 
  if ($signals === []) {
- return 'Answer detail: this gives a starting point. Add one specific reason or example if the question needs it.';
+ return '';
  }
 
- return 'Answer detail: this shows '.self::readableList(array_slice($signals, 0, 4)).'.';
+ return 'Answer detail: this includes '.self::readableList(array_slice($signals, 0, 3)).'.';
  }
 
  private static function questionSpecificFeedbackDetail(array $profile, string $questionText): string
@@ -8769,21 +8825,21 @@ PROMPT;
  'technical' => 'technical',
  'situational' => 'situation',
  'behavioral' => 'past example',
- default => 'direct answer',
+ default => 'direct',
  };
  $questionKeywords = array_values((array) ($profile['question_keywords']?? self::meaningfulKeywords($questionText)));
  $answerKeywords = array_values((array) ($profile['answer_keywords']?? []));
  $focusTerms = array_slice($questionKeywords, 0, 4);
  $matchedTerms = array_slice(array_values(array_intersect($questionKeywords, $answerKeywords)), 0, 3);
  if ($focusTerms === []) {
- return "Answer focus: this {$intentLabel} answer was checked against the expected interview topic, not a general answer pattern.";
+ return "Answer focus: this {$intentLabel} answer needs a direct check against the question; this local check cannot confirm the full meaning from words alone.";
  }
 
  if ($matchedTerms!== []) {
- return "Answer focus: this {$intentLabel} answer connects to the question through ".self::readableList($matchedTerms).'.';
+ return "Answer focus: this {$intentLabel} answer shares ".self::readableList($matchedTerms).' with the question. Shared words alone do not confirm that the main point was answered.';
  }
 
- return "Answer focus: this {$intentLabel} answer uses different words from the question, so this fallback check cannot confirm whether it covers the main point.";
+ return "Answer focus: this {$intentLabel} answer uses different words from the question, so this local check could not confirm a direct word match and cannot confirm whether it covers the main point.";
  }
 
  private static function answerSpecificNextStep(array $profile, string $questionText): string
@@ -8791,9 +8847,29 @@ PROMPT;
  $questionKeywords = array_values((array) ($profile['question_keywords']?? self::meaningfulKeywords($questionText)));
  $answerKeywords = array_values((array) ($profile['answer_keywords']?? []));
  $missingFocusTerms = array_slice(array_values(array_diff($questionKeywords, $answerKeywords)), 0, 3);
+ $intent = (string) ($profile['question_intent']?? 'direct_evidence');
+
+ if ($intent === 'salary_expectation' && ! ($profile['states_salary_expectation']?? false)) {
+ return 'state a genuine pay range or say what flexibility you can offer for this role.';
+ }
+
+ if ($intent === 'work_setup' && ! ($profile['states_work_arrangement']?? false)) {
+ return 'state the shifts, hours, or work arrangement you can actually maintain.';
+ }
+
+ if ((int) ($profile['word_count']?? 0) < 3) {
+ return match ($intent) {
+ 'salary_expectation' => 'state a genuine pay range or say what flexibility you can offer for this role.',
+ 'behavioral' => 'describe one real situation, what you did, and what happened next.',
+ 'situational' => 'say what you would do first and how you would check the outcome.',
+ 'technical' => 'give the main technical step and explain how you would verify it.',
+ 'self_introduction' => 'introduce your background and connect one true detail to this role.',
+ default => 'answer the main request in the question and add one true supporting detail.',
+ };
+ }
 
  if (($profile['requires_personal_action']?? false) &&! ($profile['has_personal_action']?? false)) {
- return 'say what you did yourself and use a specific action word already supported by your saved answer.';
+ return 'say what you did yourself, if you took an action, without taking credit for the whole team.';
  }
 
  if (($profile['requires_result']?? false) &&! ($profile['has_result']?? false)) {
@@ -8805,16 +8881,22 @@ PROMPT;
  }
 
  if ($missingFocusTerms!== []) {
- return match ((string) ($profile['question_intent']?? 'direct_evidence')) {
+ return match ($intent) {
  'technical' => 'briefly explain why your main step works or how you would check it.',
  'situational' => 'name the first action you would take and how you would check the result.',
  'salary_expectation' => 'state the range or flexibility you can genuinely offer.',
+ 'strength' => 'connect the strength you named to one true example relevant to the role.',
+ 'weakness' => 'name the habit you are changing and one real sign of progress.',
+ 'motivation' => 'connect your reason to a part of this role you genuinely know.',
+ 'self_introduction' => 'connect one background detail you gave to the role.',
  default => 'add one true detail that supports the main point you gave.',
  };
  }
 
  if ((int) ($profile['word_count']?? 0) < 35) {
- return 'add one short example with your action and the result.';
+ return ($profile['requires_result']?? false)
+ ? 'add one short example with your own action and its true result or lesson.'
+ : 'add one short detail that helps answer this question directly.';
  }
 
  return 'keep the same main example and add one true limit, tradeoff, or result if it helps the question.';
@@ -8950,15 +9032,44 @@ PROMPT;
  'self_introduction' => preg_match('/\bcurrent|currently|experience|background|graduate|student|work(?:ed|ing)?|skill|career/iu', $answerText)? 18: 5,
  'role_fit' => preg_match('/\bskill|experience|contribut|fit|value|result|support|help|qualified/iu', $answerText)? 20: 5,
  'motivation' => preg_match('/\bbecause|interest|motiv|align|opportunity|mission|growth|learn|contribut/iu', $answerText)? 20: 5,
- 'salary_expectation' => preg_match('/\b\d|₱|PHP|peso|salary|pay|compensation|range|budget|thousand|million|monthly|annual|yearly|negotiab|flexib|open to|market|benefit|responsibilit/iu', $answerText)? 22: 4,
+ 'salary_expectation' => self::answerStatesSalaryExpectation($answerText)? 22: 4,
  'career_transition' => preg_match('/\bgrowth|opportunity|align|next|career|left|leaving|learn|development|workplace/iu', $answerText)? 20: 5,
  'career_goal' => preg_match('/\bgrow|growth|develop|career|year|goal|progress|learn|lead/iu', $answerText)? 20: 5,
- 'work_setup' => preg_match('/\bonsite|hybrid|remote|shift|hours|setup|schedule|productive|prefer|flexib/iu', $answerText)? 22: 4,
+ 'work_setup' => self::answerStatesWorkArrangement($answerText)? 22: 4,
  'behavioral' => preg_match('/\bI\s+'.self::ACTION_VERB_PATTERN.'\b/i', $answerText)? 14: 0,
  'situational' => preg_match('/\bwould|first|then|next|verify|check|assess|prioriti/iu', $answerText)? 16: 2,
  'technical' => preg_match('/\bbecause|therefore|tradeoff|verify|test|check|measure|depend|first|then/iu', $answerText)? 10: 2,
  default => 0,
  };
+ }
+
+ private static function answerStatesSalaryExpectation(string $answerText): bool
+ {
+ // A reference to salary as a past work task (for example, processing
+ // payroll records) is not an answer to a requested pay expectation.
+ $hasAmount = preg_match('/[₱$£€]\s*\d|\b(?:PHP|USD|SGD)\s*\d|\b\d[\d,.]*\s*(?:k|thousand|million|monthly|annually|yearly|per\s+(?:month|year|hour))\b/iu', $answerText) === 1;
+ $hasPayTopic = preg_match('/\b(?:salary|pay|compensation|wage|range|rate|budget)\b/iu', $answerText) === 1;
+ $hasExpectation = preg_match('/\b(?:expect(?:ed|ing|ation|ations)?|seek(?:ing)?|looking\s+for|aiming\s+for|prefer(?:ring)?|open\s+to|flexib\w*|negotiab\w*|desired|market\s+rate)\b/iu', $answerText) === 1;
+ if ($hasExpectation && ($hasAmount || $hasPayTopic)) {
+ return true;
+ }
+
+ if (preg_match('/^\s*(?:I\s+(?:am|would\s+be)\s+)?(?:flexible|negotiable|open\s+to\s+discuss(?:ing)?)\s*[.!?]?\s*$/iu', $answerText) === 1) {
+ return true;
+ }
+
+ $describesPastPayWork = preg_match('/\b(?:process(?:ed|ing)?|payroll|records?|invoices?|account(?:ing)?|reported?|entered|calculated)\b/iu', $answerText) === 1;
+
+ return $hasAmount && ! $describesPastPayWork && self::wordCount($answerText) <= 8;
+ }
+
+ private static function answerStatesWorkArrangement(string $answerText): bool
+ {
+ $clean = preg_replace('/\b(?:did not|didn.t|have not|haven.t)\s+(?:say|state|mention)\s+(?:when|whether|what)\b[^.!?;]*/iu', '', $answerText)?? $answerText;
+ $hasArrangement = preg_match('/\b(?:remote|hybrid|onsite|on-site|office|shifts?|schedule|hours?|weekends?|weekdays?|nights?|evenings?|mornings?|afternoons?|flexib\w*|full-time|part-time)\b/iu', $clean) === 1;
+ $personalAvailability = preg_match('/\b(?:I|we)\s+(?:(?:can|cannot|can.t|could|would|will)\s+work|(?:am|are)\s+(?:available|open\s+to|flexible)|prefer|need)\b|\bmy\s+(?:availability|preference|preferred\s+schedule)\b|\b(?:remote|hybrid|onsite|on-site|weekends?|weekdays?)\s+(?:works?|suits?)\s+(?:for\s+me|me)\b/iu', $clean) === 1;
+
+ return $hasArrangement && $personalAvailability;
  }
 
  private static function questionRequiresResult(string $questionText, bool $starApplicable): bool
@@ -9081,6 +9192,14 @@ PROMPT;
  $aliases = [
  'addresses' => 'address',
  'addressing' => 'address',
+ 'buyers' => 'customer',
+ 'buyer' => 'customer',
+ 'clients' => 'customer',
+ 'client' => 'customer',
+ 'complaints' => 'complaint',
+ 'concerns' => 'complaint',
+ 'concern' => 'complaint',
+ 'compensation' => 'salary',
  'connects' => 'connect',
  'connecting' => 'connect',
  'demonstrates' => 'demonstrate',
@@ -9093,6 +9212,8 @@ PROMPT;
  'diagnosed' => 'diagnose',
  'diagnosing' => 'diagnose',
  'diagnostic' => 'diagnose',
+ 'fixed' => 'resolve',
+ 'fix' => 'resolve',
  'improved' => 'improve',
  'improving' => 'improve',
  'improvement' => 'improve',
@@ -9100,6 +9221,10 @@ PROMPT;
  'organizing' => 'organize',
  'responsibilities' => 'responsibility',
  'results' => 'result',
+ 'solved' => 'resolve',
+ 'solve' => 'resolve',
+ 'resolved' => 'resolve',
+ 'customers' => 'customer',
  'skills' => 'skill',
  ];
  $keywords = [];
@@ -9527,7 +9652,12 @@ PROMPT;
  'question_text' => $questionText,
  ]);
 
- return $assessment->groundedRevisionTemplate($answerText, $evidence);
+ $revision = $assessment->groundedRevisionTemplate($answerText, $evidence);
+ $canonical = static fn (string $text): string => trim((string) preg_replace('/[^\pL\pN]+/u', ' ', mb_strtolower($text)));
+
+ // Repeating the original answer under a "Possible Answer" label does not
+ // help the candidate. Leave that field empty unless structure changed.
+ return $canonical($revision) === $canonical($answerText)? '': $revision;
  }
 
  private static function excerpt(string $text, int $limit = 180): string

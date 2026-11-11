@@ -32,7 +32,7 @@ final class QuestionIntentService
         if (preg_match('/\bwhere do you see yourself\b|\bcareer (?:goal|path|direction)\b/i', $text)) {
             return 'career_goal';
         }
-        if (preg_match('/\bwork setup\b|\bonsite\b.*\bhybrid\b|\bremote\b.*\bshifting\b/i', $text)) {
+        if (preg_match('/\bwork setup\b|\bonsite\b.*\bhybrid\b|\bremote\b.*\bshifting\b|\b(?:can|could|would|will)\s+you\s+work\b.*\b(?:shifts?|weekends?|weekdays?|nights?|evenings?|hours?|schedule)\b|\b(?:are|can|could|would|will)\s+you\b.*\b(?:available|remote|hybrid|onsite|on-site|shifts?|schedule|weekends?|weekdays?)\b|\b(?:what|which)\b.*\b(?:shifts?|hours?|schedule|availability)\b/i', $text)) {
             return 'work_setup';
         }
 
@@ -52,12 +52,17 @@ final class QuestionIntentService
         // A request to explain how a system works is descriptive, not a request
         // for a personal past-event story. Keep the exact prompt authoritative
         // even when a broad level guide or mapped skill happens to mention STAR.
-        if (preg_match('/\b(?:describe|explain|walk me through)\s+(?:how|what)\b.*\b(?:works|operates|functions)\b/i', $text)) {
+        if (preg_match('/\b(?:describe|explain|walk me through)\s+(?:how|what)\b.*\b(?:work|works|operates|functions)\b/i', $text)
+            && ! preg_match('/\bhow\s+(?:you|we|I)\s+work\b/i', $text)) {
             return 'technical';
         }
 
         if ($type === 'technical') {
             return 'technical';
+        }
+
+        if (preg_match('/\b(?:describe|explain)\s+how\s+(?:you|we|I)\s+work\b/i', $text)) {
+            return 'direct_evidence';
         }
 
         // Cover common event nouns as well as explicit "time" or "situation"
@@ -68,7 +73,8 @@ final class QuestionIntentService
             $text
         ) === 1;
         $starGuide = preg_match('/\buse STAR\b|\bSTAR Method\b|\bsituation[, ]+task[, ]+action[, ]+(?:and )?result\b/i', $context) === 1;
-        if ($experiential || $starGuide) {
+        $pastAction = preg_match('/\bhow did you\s+(?:personally\s+)?(?:handle|resolve|manage|respond|deal|overcome|navigate|fix|address|solve|lead|work\s+through|approach)\b/i', $text) === 1;
+        if ($experiential || $starGuide || $pastAction) {
             return 'behavioral';
         }
         if (preg_match('/\bhow would you\b|\bwhat would you do\b|\bimagine\b|\bsuppose\b/i', $text)) {

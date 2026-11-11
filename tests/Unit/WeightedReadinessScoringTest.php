@@ -232,15 +232,18 @@ class WeightedReadinessScoringTest extends TestCase
         $starAnswer = ['answer_text' => 'I listened to the customer, checked the account, and explained the next step clearly.'];
         $starDraft = "Situation: A customer raised a concern.\nTask: I needed to respond to the concern.\nAction: I listened to the customer, checked the account, and explained the next step clearly.\nResult: This gave the customer a clear next step.";
         $shownStarDraft = review_better_answer_text($starDraft, $starAnswer, $starQuestion);
-        $this->assertStringContainsString($starAnswer['answer_text'], $shownStarDraft);
+        $this->assertStringContainsString('I listened to the customer.', $shownStarDraft);
+        $this->assertStringContainsString('I checked the account.', $shownStarDraft);
+        $this->assertStringContainsString('I explained the next step clearly.', $shownStarDraft);
         $this->assertStringNotContainsString('A customer raised a concern.', $shownStarDraft);
         $this->assertStringNotContainsString('This gave the customer a clear next step.', $shownStarDraft);
 
         $unstructuredStarDraft = review_better_answer_text('I listened to the customer and explained the next step.', $starAnswer, $starQuestion);
-        $this->assertStringContainsString($starAnswer['answer_text'], $unstructuredStarDraft);
+        $this->assertStringContainsString('I listened to the customer.', $unstructuredStarDraft);
+        $this->assertStringContainsString('I checked the account.', $unstructuredStarDraft);
         $this->assertStringNotContainsString('In a customer situation', $unstructuredStarDraft);
         $this->assertStringNotContainsString('My task was', $unstructuredStarDraft);
-        $this->assertStringContainsString('using only details I can confirm', $unstructuredStarDraft);
+        $this->assertStringNotContainsString('using only details I can confirm', $unstructuredStarDraft);
         $this->assertGreaterThanOrEqual(3, review_feedback_sentence_count($unstructuredStarDraft));
         $this->assertLessThanOrEqual(6, review_feedback_sentence_count($unstructuredStarDraft));
         $this->assertStringNotContainsString('Situation:', $unstructuredStarDraft);
@@ -287,10 +290,11 @@ class WeightedReadinessScoringTest extends TestCase
         $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
 
         $this->assertStringNotContainsString('A stronger answer would', $normalized['better_sample_answer']);
-        $this->assertStringContainsString($answer['answer'], $normalized['better_sample_answer']);
+        $this->assertStringContainsString('I listened to the customer.', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('I checked the account.', $normalized['better_sample_answer']);
         $this->assertStringNotContainsString('In a customer situation', $normalized['better_sample_answer']);
         $this->assertStringNotContainsString('My task was', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('using only details I can confirm', $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('using only details I can confirm', $normalized['better_sample_answer']);
         $this->assertGreaterThanOrEqual(3, review_feedback_sentence_count($normalized['better_sample_answer']));
         $this->assertLessThanOrEqual(6, review_feedback_sentence_count($normalized['better_sample_answer']));
         $this->assertStringNotContainsString('Situation:', $normalized['better_sample_answer']);
@@ -348,10 +352,11 @@ class WeightedReadinessScoringTest extends TestCase
         $feedback['better_sample_answer'] = $missingResult;
         $normalized = $this->invokePrivate('normalizeQuestionFeedback', [$feedback, $answer, []]);
 
-        $this->assertStringContainsString($answer['answer'], $normalized['better_sample_answer']);
+        $this->assertStringContainsString('I listened to a customer.', $normalized['better_sample_answer']);
+        $this->assertStringContainsString('I checked the account.', $normalized['better_sample_answer']);
         $this->assertStringNotContainsString('In a customer situation', $normalized['better_sample_answer']);
         $this->assertStringNotContainsString('My task was', $normalized['better_sample_answer']);
-        $this->assertStringContainsString('using only details I can confirm', $normalized['better_sample_answer']);
+        $this->assertStringNotContainsString('using only details I can confirm', $normalized['better_sample_answer']);
         $this->assertGreaterThanOrEqual(3, review_feedback_sentence_count($normalized['better_sample_answer']));
         $this->assertLessThanOrEqual(6, review_feedback_sentence_count($normalized['better_sample_answer']));
         $this->assertStringNotContainsString('Situation:', $normalized['better_sample_answer']);
@@ -746,13 +751,10 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertGreaterThan(0, $item['relevance_score']);
         $this->assertSame(50, $item['scoring_confidence']);
         $this->assertStringContainsString('uses only what you wrote in the answer', $item['ai_feedback']);
-        $this->assertSame('verified', $item['feedback_quality']['status']);
-        $this->assertSame(100, $item['feedback_quality']['completeness_percent']);
-        $this->assertSame(
-            $item['feedback_quality']['checks_total'],
-            $item['feedback_quality']['checks_passed']
-        );
-        $this->assertSame(100, $normalized['feedback_quality']['completeness_percent']);
+        $this->assertSame('limited', $item['feedback_quality']['status']);
+        $this->assertSame('', $item['better_sample_answer']);
+        $this->assertSame('none', $item['better_sample_answer_source']);
+        $this->assertFalse($item['feedback_quality']['checks']['next_attempt_actionable']);
     }
 
     public function test_it_rejects_trait_inference_even_when_question_and_answer_quotes_are_valid(): void
@@ -1801,7 +1803,8 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertNotEmpty($normalized['evidence_quotes']);
         $this->assertStringContainsString('listened to an upset customer', $normalized['evidence_quotes'][0]);
         $this->assertSame([], $normalized['provider_coaching']);
-        $this->assertNotSame('', $normalized['better_sample_answer']);
+        $this->assertSame('', $normalized['better_sample_answer']);
+        $this->assertSame('none', $normalized['better_sample_answer_source']);
         $this->assertNotSame('', $normalized['follow_up_question']);
     }
 

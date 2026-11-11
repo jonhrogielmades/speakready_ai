@@ -74,105 +74,56 @@ class TrustworthyAssessmentService
  return '';
  }
 
- $evidence??= $this->answerEvidence($clean);
+ // A possible answer must sound like something the candidate can say aloud.
+ // The question and evidence tell the caller what to coach separately; they
+ // cannot supply facts for this draft. Keep every saved claim and correction
+ // in order, and split only clear action lists that share an explicit subject.
  $sentences = $this->answerSentences($clean);
- $resultSentence = $this->resultSentenceFrom($sentences);
- // Keep the full response in its original order: a later qualification or
- // correction can change the meaning of an earlier action or result.
- $answerSentence = $this->sentenceText($clean, PHP_INT_MAX);
- $questionText = trim((string) ($evidence['question_text']?? ''));
-
- if ($evidence['star_applicable']?? false) {
- return $this->starParagraphRevision($answerSentence, $questionText, $resultSentence, $evidence);
+ $revision = [];
+ foreach ($sentences as $sentence) {
+ $parts = $this->spokenActionParts($sentence);
+ if (count($revision) + count($parts) > 6) {
+ $parts = [$sentence];
+ }
+ foreach ($parts as $part) {
+ $revision[] = $this->sentenceText($part);
+ }
  }
 
- $intent = (string) ($evidence['question_intent']?? 'direct_evidence');
-
- [$support, $closing] = match ($intent) {
- 'strength' => [
- 'This gives a clearer proof point for the strength I named.',
- 'I would connect that strength to how I can support the team and handle the role responsibilities.',
- ],
- 'strength_and_weakness' => [
- 'This keeps the strength and development area clear without adding details I did not give.',
- 'I would connect both points to how I work and how I am improving.',
- ],
- 'weakness' => [
- 'This names the development area honestly and keeps the focus on progress.',
- 'I would explain the habit I am building and stay within the example I already gave.',
- ],
- 'salary_expectation' => [
- 'This keeps the answer open and tied to the responsibilities already discussed.',
- 'I would avoid naming a number unless I can support it with a real range.',
- ],
- 'motivation', 'role_fit' => [
- 'This connects my answer to the role without adding unsupported details.',
- 'I would keep the response focused on the experience and contribution I already described.',
- ],
- 'self_introduction' => [
- 'This gives the interviewer a clearer view of my background.',
- 'I would connect that background to the role using only details I can explain truthfully.',
- ],
- 'career_transition' => [
- 'This explains my reason in a direct and simple way.',
- 'I would connect it to the next step I am aiming for without adding details I did not share.',
- ],
- 'technical' => [
- 'This answers the question by showing the checks I would make before changing the solution.',
- 'I would explain what each check tells me and how I would confirm the issue is resolved.',
- ],
- 'situational' => [
- 'This shows the action I would take and keeps the response practical.',
- $resultSentence !== ''
- ? 'I would keep the true result clear so the interviewer can see what happened next.'
- : 'I would finish by adding the true result or next step, because my saved answer does not include it yet.',
- ],
- default => [
- 'This keeps the main point clear and easy to follow.',
- 'I would keep the answer focused, direct, and connected to the role.',
- ],
- };
-
- if ($resultSentence !== '' && ! str_contains($answerSentence, $resultSentence)) {
- return trim($answerSentence.' '.$support.' '.$resultSentence.' '.$closing);
+ return implode(' ', $revision);
  }
 
- return trim($answerSentence.' '.$support.' '.$closing);
- }
-
- private function starParagraphRevision(string $answerSentence, string $questionText, string $resultSentence = '', array $evidence = []): string
+ /** @return array<int, string> */
+ private function spokenActionParts(string $sentence): array
  {
- // The question describes what was asked, not what the candidate experienced.
- // Never manufacture a situation or responsibility from that prompt.
- $context = 'I would make the real situation clear using only details I can confirm.';
- $task = 'I would explain my actual responsibility and keep it separate from the team\'s work.';
- $action = preg_match('/\b(?:I|we|my|our)\b/iu', $answerSentence) === 1
- ? $answerSentence
- : 'I would explain it this way: '.$answerSentence;
- $result = $resultSentence !== ''
- ? $this->sentenceText($resultSentence)
- : $this->starResultSentence($questionText, (bool) ($evidence['result_required']?? true));
- if ($result !== '' && str_contains(mb_strtolower($action, 'UTF-8'), mb_strtolower($result, 'UTF-8'))) {
- $result = '';
+ $body = trim($sentence);
+ $body = preg_replace('/[.!?]$/u', '', $body)?? $body;
+ $fragments = preg_split('/,\s+/u', $body) ?: [];
+ if (count($fragments) < 3 || count($fragments) > 5) {
+ return [$sentence];
+ }
+ if (preg_match('/^(?:and|then)\s+/iu', $fragments[array_key_last($fragments)]) !== 1) {
+ return [$sentence];
+ }
+ if (preg_match('/^(I|We)\s+((?:would|will|could|can)\s+)?(.+)$/iu', $fragments[0], $subject) !== 1) {
+ return [$sentence];
  }
 
- return trim($action.' '.$result.' '.$context.' '.$task);
+ $actionVerbs = 'listen(?:ed)?|check(?:ed)?|explain(?:ed)?|give|gave|inspect(?:ed)?|compare(?:d)?|verify|verified|review(?:ed)?|share|shared|document(?:ed)?|design(?:ed)?|test(?:ed)?|coordinate(?:d)?|contact(?:ed)?|ask(?:ed)?|update(?:d)?|prepare(?:d)?|send|sent|write|wrote|analy[sz](?:e|ed)|prioriti[sz](?:e|ed)|resolve(?:d)?|fix(?:ed)?|manage(?:d)?|support(?:ed)?';
+ if (preg_match('/^(?:'.$actionVerbs.')\b/iu', trim($subject[3])) !== 1) {
+ return [$sentence];
  }
 
- private function starResultSentence(string $questionText, bool $resultRequired = true): string
- {
- $question = mb_strtolower($questionText, 'UTF-8');
-
- if ($resultRequired) {
- return match (true) {
- preg_match('/\b(?:customer|client|complaint|concern|upset|angry|irate)\b/u', $question) === 1 => 'I would finish by adding the true customer result or lesson, because my saved answer does not include it yet.',
- preg_match('/\b(?:team|collaborat|coworker|colleague)\b/u', $question) === 1 => 'I would finish by adding the true team result or lesson, because my saved answer does not include it yet.',
- preg_match('/\b(?:project|assignment|task|deadline)\b/u', $question) === 1 => 'I would finish by adding the true project result or lesson, because my saved answer does not include it yet.',
- default => 'I would finish by adding the true result or lesson, because my saved answer does not include it yet.',
- };
+ $parts = [$fragments[0]];
+ foreach (array_slice($fragments, 1) as $fragment) {
+ $action = preg_replace('/^(?:and|then)\s+/iu', '', trim($fragment))?? trim($fragment);
+ if (preg_match('/^(?:'.$actionVerbs.')\b/iu', $action) !== 1) {
+ return [$sentence];
+ }
+ $parts[] = $subject[1].' '.$subject[2].$action;
  }
 
- return 'I would keep the answer tied to what actually happened without adding an outcome I cannot confirm.';
+ return $parts;
  }
 
  /**
@@ -182,17 +133,6 @@ class TrustworthyAssessmentService
  {
  // Decimal numbers and URLs contain periods, not sentence boundaries.
  return preg_split('/(?<=[.!?])\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY) ?: [];
- }
-
- private function resultSentenceFrom(array $sentences): string
- {
- foreach (array_reverse($sentences) as $sentence) {
- if (AnswerEvidenceSignals::analyze($sentence)['has_result']) {
- return $this->sentenceText($sentence);
- }
- }
-
- return '';
  }
 
  private function sentenceText(string $text, int $maxSentences = 1): string

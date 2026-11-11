@@ -645,7 +645,10 @@ final class FeedbackEvidencePresenter
     {
         $text = self::cleanText($text);
         if ($text === '') {
-            return 'No improved draft was generated. Retry with a direct answer, one specific detail, and a true result or lesson.';
+            $question = trim((string) data_get($questionSource, 'question_text', data_get($questionSource, 'question', '')));
+            $focus = $question !== '' ? ' for "'.Str::limit($question, 120, '').'"' : '';
+
+            return 'No separate rewrite could be made from the saved answer'.$focus.' without adding facts. Use the feedback above to decide what to add next.';
         }
 
         if (function_exists('review_better_answer_text')) {
