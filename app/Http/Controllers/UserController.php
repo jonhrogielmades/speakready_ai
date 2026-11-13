@@ -973,6 +973,11 @@ class UserController extends Controller
  if ($session->feedback_status === 'processing') {
  return redirect()->route('user.review', $session)->with('success', 'Your AI review is already running. This page will update automatically.');
  }
+ $retryKey = 'feedback-review-manual-retry:'.$session->id;
+ if (! Cache::add($retryKey, true, now()->addSeconds(30))) {
+ abort(429, 'An AI review retry was just queued. Please wait for it to complete.');
+ }
+ $claimToken = (string) Str::uuid();
  try {
  $claimed = InterviewSession::query()->whereKey($session->id)
  ->where('status', 'completed')
@@ -980,14 +985,18 @@ class UserController extends Controller
  ->update([
  'feedback_status' => 'pending',
  'feedback_failure_code' => null,
+ 'feedback_processing_token' => $claimToken,
  ]);
  if ($claimed !== 1) {
+ Cache::forget($retryKey);
  return redirect()->route('user.review', $session)->with('success', 'Your AI review changed while retrying. Reload this page for its current status.');
  }
  GenerateInterviewFeedback::dispatch((int) $session->id, (int) Auth::id());
  } catch (\Throwable $error) {
  InterviewSession::query()->whereKey($session->id)->where('feedback_status', 'pending')
- ->update(['feedback_status' => 'failed', 'feedback_failure_code' => 'queue_dispatch_failed']);
+ ->where('feedback_processing_token', $claimToken)
+ ->update(['feedback_status' => 'failed', 'feedback_failure_code' => 'queue_dispatch_failed', 'feedback_processing_token' => null]);
+ Cache::forget($retryKey);
  Log::warning('Manual AI review refresh could not be queued.', ['session_id' => $session->id, 'error_type' => $error::class]);
  return redirect()->route('user.review', $session)->with('error', 'The AI review could not be started. Please try again shortly.');
  }

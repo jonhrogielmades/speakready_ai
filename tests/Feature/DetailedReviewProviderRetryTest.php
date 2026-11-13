@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\RefreshDetailedFeedbackReview;
+use App\Jobs\GenerateInterviewFeedback;
 use App\Models\Category;
 use App\Models\InterviewSession;
 use App\Models\User;
@@ -25,10 +25,10 @@ class DetailedReviewProviderRetryTest extends TestCase
         Http::preventStrayRequests();
     }
 
-    public function test_owner_can_queue_one_provider_retry_and_clear_provider_backoff(): void
+    public function test_owner_can_queue_one_provider_retry_despite_legacy_backoff(): void
     {
         $user = $this->user();
-        $session = $this->reviewSession($user);
+        $session = $this->reviewSession($user, ['feedback_status' => 'pending']);
         $blockedUntil = now()->addMinutes(10)->toIso8601String();
         $session->update(['action_plan' => [
             '_provider_refresh' => ['blocked_until' => $blockedUntil],
@@ -40,26 +40,29 @@ class DetailedReviewProviderRetryTest extends TestCase
         $this->actingAs($user)->post(route('user.review.refresh', $session->id))
             ->assertRedirect(route('user.review', $session->id));
 
-        Queue::assertPushed(RefreshDetailedFeedbackReview::class, fn ($job): bool =>
+        Queue::assertPushed(GenerateInterviewFeedback::class, fn ($job): bool =>
             $job->sessionId === (int) $session->id && $job->userId === (int) $user->id
         );
-        Queue::assertPushed(RefreshDetailedFeedbackReview::class, 1);
-        $this->assertNull(data_get($session->fresh()->action_plan, '_provider_refresh.blocked_until'));
+        Queue::assertPushed(GenerateInterviewFeedback::class, 1);
+        $this->assertSame($blockedUntil, data_get($session->fresh()->action_plan, '_provider_refresh.blocked_until'));
         $this->assertSame('Keep this practice plan.', data_get($session->fresh()->action_plan, 'headline'));
+        $this->assertSame('pending', $session->fresh()->feedback_status);
+        $this->assertNotEmpty($session->fresh()->feedback_processing_token);
         $this->assertTrue(Cache::has('feedback-review-refresh:'.$session->id));
+        $this->assertTrue(Cache::has('feedback-review-manual-retry:'.$session->id));
         Http::assertNothingSent();
     }
 
     public function test_immediate_repeat_is_rate_limited_without_queueing_another_review(): void
     {
         $user = $this->user();
-        $session = $this->reviewSession($user);
+        $session = $this->reviewSession($user, ['feedback_status' => 'failed']);
         $this->providerAvailable(true);
 
         $this->actingAs($user)->post(route('user.review.refresh', $session->id))->assertRedirect();
         $this->actingAs($user)->post(route('user.review.refresh', $session->id))->assertStatus(429);
 
-        Queue::assertPushed(RefreshDetailedFeedbackReview::class, 1);
+        Queue::assertPushed(GenerateInterviewFeedback::class, 1);
         Http::assertNothingSent();
     }
 
@@ -114,6 +117,9 @@ class DetailedReviewProviderRetryTest extends TestCase
     {
         $this->mock(DetailedFeedbackReviewService::class, function (MockInterface $mock) use ($available): void {
             $mock->shouldReceive('hasConfiguredProvider')->andReturn($available);
+            if ($available) {
+                $mock->shouldReceive('shouldRefreshWithProvider')->andReturn(true);
+            }
         });
     }
 
