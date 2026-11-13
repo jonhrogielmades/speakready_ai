@@ -308,11 +308,13 @@ class PreparedAnswerProviderReviewTest extends TestCase
             'Your one saved answer directly addressed handling a difficult customer through a delivery-delay example. You described listening, apologizing, checking the order status, and coordinating with the delivery team. The stated outcome was that the customer "received the item the next day and thanked us for the update." This single example does not establish a repeated pattern across customer interactions.',
             'You connected your response to the customer\'s specific concern: you "apologized for the delivery delay" and followed that with an order-status check and coordination with the delivery team. These concrete actions make the answer relevant to customer support rather than simply claiming that you handled the situation well.',
             'The candidate described listening to an upset customer, apologizing for a delivery delay, checking the order status, and coordinating with the delivery team. The candidate noted that the customer received the item the next day and thanked us for the update.',
+            'Candidate described handling a difficult customer by listening, apologizing for the delivery delay, checking the order status, coordinating with the delivery team, and the customer received the item the next day and thanked the team for the update.',
         ];
         $method = new \ReflectionMethod(AIService::class, 'sessionFeedbackHasUnsupportedSpecificClaims');
         $results = array_map(fn (string $text): bool => $method->invoke(null, $text, [$answer]), $texts);
-        $this->assertSame([false, false, false], $results);
+        $this->assertSame([false, false, false, false], $results);
         $this->assertTrue($method->invoke(null, 'The candidate resolved the customer issue.', [$answer]));
+        $this->assertTrue($method->invoke(null, 'Candidate ensured the customer received the item.', [$answer]));
     }
 
     public function test_session_summary_accepts_question_framing_and_saved_actions(): void

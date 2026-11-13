@@ -1011,19 +1011,19 @@ parameters:
 		-
 			message: '#^Relation ''answers'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
-			count: 5
+			count: 4
 			path: app/Http/Controllers/UserController.php
 
 		-
 			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
-			count: 4
+			count: 3
 			path: app/Http/Controllers/UserController.php
 
 		-
 			message: '#^Relation ''gameLevel'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
-			count: 2
+			count: 1
 			path: app/Http/Controllers/UserController.php
 
 		-
@@ -1157,6 +1157,36 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: app/Models/UserOnboardingProgress.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Jobs/GenerateAnswerProviderFeedback.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$feedback\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Jobs/GenerateInterviewFeedback.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Jobs/GenerateInterviewFeedback.php
+
+		-
+			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Jobs/GenerateInterviewFeedback.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>coaching_summary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Jobs/GenerateInterviewFeedback.php
 
 		-
 			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
