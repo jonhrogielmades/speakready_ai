@@ -169,6 +169,9 @@ jobs:
       DEPLOY_HEALTHCHECK_URL: ${{ secrets.DEPLOY_HEALTHCHECK_URL }}
       DEPLOY_ASSET_URL: ${{ secrets.DEPLOY_ASSET_URL }}
     steps:
+      - name: Check out source for deployed asset verification
+        uses: actions/checkout@v7
+
       - name: Validate Dokploy trigger
         shell: bash
         run: |
