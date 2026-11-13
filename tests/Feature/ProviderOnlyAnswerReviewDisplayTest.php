@@ -4,14 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\InterviewAnswer;
+use App\Models\InterviewAnswerProviderReview;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\User;
-use App\Services\DetailedFeedbackReviewService;
+use App\Services\PreparedAnswerReviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
-use ReflectionMethod;
 use Tests\TestCase;
 
 class ProviderOnlyAnswerReviewDisplayTest extends TestCase
@@ -32,7 +32,7 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
     public function test_each_question_displays_only_its_verified_provider_review_on_desktop_and_mobile(): void
     {
         [$user, $session, $verified] = $this->fixture();
-        $this->verifyProviderNarrative($verified);
+        $this->verifyPreparedProviderNarrative($verified);
         $local = $this->answer($session, 'local');
         $local->update([
             'ai_feedback' => 'This locally generated review must not be used as provider feedback.',
@@ -45,8 +45,8 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
             $this->assertStringContainsString(self::FEEDBACK, $cards[0]);
             $this->assertStringContainsString(self::POSSIBLE, $cards[0]);
             $this->assertStringContainsString(self::ANSWER, $cards[1]);
-            $this->assertStringContainsString('AI feedback is not ready for this question yet.', $cards[1]);
-            $this->assertStringContainsString('An AI-generated possible answer is not available for this question yet.', $cards[1]);
+            $this->assertStringContainsString('Provider feedback will appear after the AI review passes validation.', $cards[1]);
+            $this->assertStringNotContainsString('Possible Answer', $cards[1]);
             $this->assertStringNotContainsString('locally generated review', $cards[1]);
             $this->assertStringNotContainsString('local possible answer', $cards[1]);
         }
@@ -55,7 +55,8 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
 
     public function test_answer_review_uses_tabs_for_feedback_answer_and_possible_answer(): void
     {
-        [$user, $session] = $this->fixture();
+        [$user, $session, $answer] = $this->fixture();
+        $this->verifyPreparedProviderNarrative($answer);
 
         foreach (['desktop', 'mobile'] as $layout) {
             $html = $this->reviewHtml($user, $session, $layout);
@@ -85,26 +86,35 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
             $card = $this->reviewCards($user, $session, $layout)[0];
             $this->assertStringNotContainsString(self::FEEDBACK, $card);
             $this->assertStringNotContainsString(self::POSSIBLE, $card);
-            $this->assertStringContainsString('AI feedback is not ready', $card);
+            $this->assertStringContainsString('Provider feedback will appear after the AI review passes validation.', $card);
         }
     }
 
     public function test_edited_input_and_modified_provider_text_cannot_bypass_display_checks(): void
     {
         [$user, $session, $answer] = $this->fixture();
-        $this->verifyProviderNarrative($answer);
+        $row = $this->verifyPreparedProviderNarrative($answer);
         $answer->update(['ai_feedback' => 'A changed note must not inherit an earlier provider verification.']);
         $card = $this->reviewCards($user, $session, 'desktop')[0];
         $this->assertStringNotContainsString('A changed note', $card);
-        $this->assertStringContainsString('AI feedback is not ready', $card);
+        $this->assertStringContainsString(self::FEEDBACK, $card);
         $this->assertStringContainsString(self::POSSIBLE, $card);
+
+        $originalPayload = $row->payload;
+        $changedPayload = $originalPayload;
+        $changedPayload['ai_feedback'] = 'You achieved a 50% gain in the support handoff.';
+        $row->update(['payload' => $changedPayload]);
+        $card = $this->reviewCards($user, $session, 'desktop')[0];
+        $this->assertStringNotContainsString('50% gain', $card);
+        $this->assertStringContainsString('Provider feedback will appear after the AI review passes validation.', $card);
+        $row->update(['payload' => $originalPayload]);
 
         $answer->update(['answer_text' => 'I only observed the handoff and did not perform the checklist update.']);
         foreach (['desktop', 'mobile'] as $layout) {
             $card = $this->reviewCards($user, $session, $layout)[0];
             $this->assertStringContainsString('I only observed the handoff', $card);
             $this->assertStringNotContainsString(self::POSSIBLE, $card);
-            $this->assertStringContainsString('An AI-generated possible answer is not available', $card);
+            $this->assertStringContainsString('Provider feedback will appear after the AI review passes validation.', $card);
         }
     }
 
@@ -112,8 +122,13 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
     {
         [$user, $session, $answer] = $this->fixture();
         $answer->update(['is_skipped' => true, 'answer_text' => '']);
+        $this->verifyPreparedProviderNarrative(
+            $answer,
+            'No answer was provided for the support handoff question. Give the handoff issue and your action in a future answer.',
+            ''
+        );
         $card = $this->reviewCards($user, $session, 'mobile')[0];
-        $this->assertStringContainsString('No answer content is available to review', $card);
+        $this->assertStringContainsString('No answer was provided for the support handoff question.', $card);
         $this->assertStringContainsString('No possible answer is generated for an unanswered question.', $card);
         $this->assertStringNotContainsString(self::POSSIBLE, $card);
 
@@ -136,7 +151,7 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
             'ai_feedback' => $feedback,
             'better_sample_answer' => '',
         ]);
-        $this->verifyProviderNarrative($answer);
+        $this->verifyPreparedProviderNarrative($answer, $feedback, '');
 
         foreach (['desktop', 'mobile'] as $layout) {
             $card = $this->reviewCards($user, $session, $layout)[0];
@@ -185,24 +200,35 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
         ])->load('question');
     }
 
-    private function verifyProviderNarrative(InterviewAnswer $answer): void
+    private function verifyPreparedProviderNarrative(
+        InterviewAnswer $answer,
+        ?string $feedback = null,
+        ?string $possibleAnswer = null
+    ): InterviewAnswerProviderReview
     {
-        $service = $this->app->make(DetailedFeedbackReviewService::class);
-        $fingerprint = (new ReflectionMethod(DetailedFeedbackReviewService::class, 'answerInputFingerprint'))->invoke($service, $answer);
-        $answer->update(['coaching_feedback' => [
-            'provider_narrative' => [
-                'verified' => true,
-                'input_fingerprint' => $fingerprint,
-                'feedback_hash' => hash('sha256', trim((string) $answer->ai_feedback)),
-                'possible_answer_hash' => hash('sha256', trim((string) $answer->better_sample_answer)),
-            ],
-            'content_alignment' => [
+        $prepared = app(PreparedAnswerReviewService::class);
+        $feedback ??= self::FEEDBACK;
+        $possibleAnswer ??= self::POSSIBLE;
+
+        return InterviewAnswerProviderReview::create([
+            'interview_session_id' => $answer->interview_session_id,
+            'interview_answer_id' => $answer->id,
+            'status' => 'verified',
+            'input_fingerprint' => $prepared->inputFingerprint($answer->interviewSession, $answer),
+            'provider_key' => 'openai',
+            'payload' => [
+                'id' => $answer->id,
+                'evaluation_source' => 'ai_evidence_validated',
                 'answer_review_source' => 'ai_provider',
-                'answer_review_provider' => 'openai',
-                'possible_answer_source' => 'ai_provider',
-                'possible_answer_provider' => 'openai',
+                'provider_narratives_verified' => true,
+                'feedback_quality' => ['status' => 'verified', 'completeness_percent' => 100],
+                'ai_feedback' => $feedback,
+                'better_sample_answer' => $possibleAnswer,
+                'better_sample_answer_source' => 'ai_provider',
+                'better_sample_answer_provider' => 'openai',
+                'insufficient_data' => trim((string) $answer->answer_text) === 'Index.',
             ],
-        ]]);
+        ]);
     }
 
     private function reviewCards(User $user, InterviewSession $session, string $layout): array
