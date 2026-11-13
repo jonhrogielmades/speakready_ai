@@ -220,7 +220,23 @@ jobs:
           }
 
           if [ "${DOKPLOY_TRIGGER_MODE}" = "webhook" ]; then
-            curl_with_retries --request POST "${DOKPLOY_WEBHOOK_URL}"
+            payload="$(
+              python3 - <<'PY'
+          import json
+          import os
+
+          print(json.dumps({
+              "ref": os.environ["GITHUB_REF"],
+              "repository": {"full_name": os.environ["GITHUB_REPOSITORY"]},
+          }))
+          PY
+            )"
+
+            curl_with_retries \
+              --request POST "${DOKPLOY_WEBHOOK_URL}" \
+              --header "Content-Type: application/json" \
+              --header "X-GitHub-Event: push" \
+              --data "${payload}"
             echo "Triggered Dokploy deployment through DOKPLOY_WEBHOOK_URL."
             exit 0
           fi
