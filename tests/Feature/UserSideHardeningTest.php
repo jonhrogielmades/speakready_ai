@@ -1749,30 +1749,30 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringNotContainsString('Coached practice mode is enabled', $realPrompt);
  }
 
- public function test_local_follow_up_fallback_respects_ai_assistance_level(): void
+ public function test_local_follow_up_fallback_changes_the_reason_probe_by_assistance_level(): void
  {
  $sessionBase = [
  'target_position' => 'Developer',
  'live_feedback_mode' => 'coaching',
  ];
- $shortAnswer = 'I helped.';
+ $answerWithResult = 'I chose the backup plan and reduced errors by 20%.';
 
  $beginnerReply = AIService::fallbackInterviewReply((object) array_merge($sessionBase, [
  'ai_assistance_level' => 'beginner',
- ]), [], $shortAnswer);
+ ]), [], $answerWithResult);
  $standardReply = AIService::fallbackInterviewReply((object) array_merge($sessionBase, [
  'ai_assistance_level' => 'standard',
- ]), [], $shortAnswer);
+ ]), [], $answerWithResult);
  $challengeReply = AIService::fallbackInterviewReply((object) array_merge($sessionBase, [
  'ai_assistance_level' => 'challenge',
- ]), [], $shortAnswer);
+ ]), [], $answerWithResult);
 
- $this->assertStringContainsString('You can start small', $beginnerReply);
- $this->assertStringContainsString("You're started; let's build it into a stronger practice answer", $standardReply);
- $this->assertStringContainsString('You have a starting point', $challengeReply);
+ $this->assertStringContainsString('What was your main reason for that choice?', $beginnerReply);
+ $this->assertStringContainsString('Why did you choose that approach?', $standardReply);
+ $this->assertStringContainsString('What evidence did you use to rule out another approach?', $challengeReply);
  }
 
- public function test_local_follow_up_fallback_respects_live_feedback_mode(): void
+ public function test_local_follow_up_stays_an_evidence_probe_in_both_feedback_modes(): void
  {
  $sessionBase = [
  'target_position' => 'Developer',
@@ -1786,9 +1786,9 @@ class UserSideHardeningTest extends TestCase
  'live_feedback_mode' => 'real_interview',
  ]), [], $shortAnswer);
 
- $this->assertStringContainsString("You're started; let's build it into a stronger practice answer", $coachedReply);
- $this->assertStringContainsString('To assess this fairly', $realReply);
- $this->assertStringNotContainsString('stronger practice answer', $realReply);
+ $this->assertSame($coachedReply, $realReply);
+ $this->assertStringContainsString('What result did you see after that?', $coachedReply);
+ $this->assertStringNotContainsString('stronger practice answer', $coachedReply);
  }
 
  public function test_interview_session_keeps_ai_coach_mode_without_live_confidence_widgets_on_desktop_and_mobile(): void
@@ -5226,6 +5226,7 @@ class UserSideHardeningTest extends TestCase
 
  try {
  foreach ([
+ 'interview_answer_provider_reviews',
  'feedback_audit_logs',
  'mentor_review_comments',
  'feedback',
