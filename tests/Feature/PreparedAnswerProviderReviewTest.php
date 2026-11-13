@@ -11,6 +11,7 @@ use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\User;
 use App\Services\AIService;
+use App\Services\DetailedFeedbackReviewService;
 use App\Services\PreparedAnswerReviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -224,6 +225,81 @@ class PreparedAnswerProviderReviewTest extends TestCase
 
         Queue::assertPushed(GenerateInterviewFeedback::class, fn ($job) =>
             $job->sessionId === $session->id && $job->userId === $user->id);
+    }
+
+    public function test_completed_customer_interview_persists_a_provider_verified_detailed_review_for_the_saved_answer(): void
+    {
+        [$user, $session, $question] = $this->fixture();
+        $session->forceFill([
+            'status' => 'completed',
+            'feedback_status' => 'pending',
+            'target_position' => 'Customer Service Representative',
+        ])->save();
+        $question->forceFill([
+            'question_text' => 'Tell me about a time you handled a difficult customer.',
+            'type' => 'Behavioral',
+        ])->save();
+        $savedText = 'I listened to an upset customer, apologized for the delivery delay, checked the order status, and coordinated with our delivery team. The customer received the item the next day and thanked us for the update.';
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => $savedText,
+            'response_mode' => 'text',
+        ]);
+        $evidence = 'I listened to an upset customer, apologized for the delivery delay, checked the order status';
+        $item = [
+            'id' => $answer->id,
+            'score' => 82, 'clarity_score' => 82, 'relevance_score' => 86,
+            'grammar_score' => 82, 'professionalism_score' => 82,
+            'star_applicable' => true, 'star_method_score' => 75,
+            'evidence_quotes' => [$evidence],
+            'question_focus' => $question->question_text,
+            'answer_alignment' => 'directly_addressed', 'missing_criteria' => [],
+            'ai_feedback' => 'The answer addresses handling a difficult customer through the exact action "'.$evidence.'". It also states that the customer received the item the next day and thanked us for the update. Add what the order-status check showed if you know it.',
+            'better_sample_answer' => 'I listened to an upset customer and apologized for the delivery delay. I checked the order status and coordinated with our delivery team. The customer received the item the next day and thanked us for the update.',
+            'follow_up_question' => 'What did the order-status check show?',
+            'coaching' => [
+                'keep' => 'Keep the detail "'.$evidence.'" in the customer example.',
+                'improve' => 'Add what the order-status check showed if you know it.',
+                'impact' => 'The answer does not say what the order-status check showed, so the interviewer cannot see how that check informed the next step.',
+                'next_try' => 'Retell the same customer example and add the true order-status detail if you know it.',
+                'next_attempt_steps' => [
+                    'State that you listened to an upset customer and apologized for the delivery delay.',
+                    'Explain what the order-status check showed if you know it.',
+                ],
+                'success_check' => 'A stronger retry keeps the saved actions and adds only a true detail about the order-status check.',
+            ],
+        ];
+        $summary = [
+            'overall_summary' => 'The saved answer describes listening to an upset customer, apologizing for the delivery delay, checking the order status, and coordinating with the delivery team. It states that the customer received the item the next day and thanked us for the update.',
+            'strengths' => 'The answer gives a specific sequence, including "'.$evidence.'". These actions directly address the difficult-customer question.',
+            'weaknesses' => 'The answer does not say what the order-status check showed or what coordination with the delivery team involved.',
+            'improvement_suggestions' => 'Keep the saved sequence of listening, apologizing, checking, and coordinating. If known, add what the order-status check showed.',
+        ];
+        Http::fakeSequence()
+            ->push($this->openAiResponse(['per_question_feedback' => [$item]]))
+            ->push($this->openAiResponse(['session_feedback' => $summary]));
+
+        $this->app->call([new GenerateAnswerProviderFeedback($session->id, $answer->id), 'handle']);
+        $prepared = app(PreparedAnswerReviewService::class);
+        $row = InterviewAnswerProviderReview::where('interview_answer_id', $answer->id)->firstOrFail();
+        $this->assertSame('verified', $row->status);
+        $this->assertSame($prepared->inputFingerprint($session, $answer), $row->input_fingerprint);
+
+        $this->app->call([new GenerateInterviewFeedback($session->id, $user->id), 'handle']);
+
+        $savedSession = $session->fresh(['answers.question', 'feedback', 'score']);
+        $this->assertSame('verified', $savedSession->feedback_status);
+        $this->assertNotNull($savedSession->feedback);
+        $this->assertNotNull($savedSession->score);
+        $this->assertSame('openai', $answer->fresh()->ai_provider);
+        $this->assertFalse(app(DetailedFeedbackReviewService::class)
+            ->shouldRefreshWithProvider($savedSession));
+        Http::assertSentCount(2);
+
+        $answer->forceFill(['answer_text' => 'I only listened to the customer.'])->save();
+        $this->assertTrue(app(DetailedFeedbackReviewService::class)
+            ->shouldRefreshWithProvider($session->fresh(['answers.question', 'feedback', 'score'])));
     }
 
     public function test_exhausted_provider_attempt_records_a_terminal_failure_for_recovery(): void

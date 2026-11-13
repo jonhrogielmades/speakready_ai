@@ -6999,7 +6999,7 @@ PROMPT;
  }
 
  $metaAnswerDescription = preg_match(
- '/\b(?:you|your (?:(?:one|saved)\s+){0,2}(?:answer|response)|(?:the )?candidate)\s+(?:(?:clearly|effectively|directly|briefly|well)\s+)*(?:answered|addressed|described|discussed|explained|outlined|provided|said|stated|showed|demonstrated|included)\b/iu',
+ '/\b(?:you|your (?:(?:one|saved)\s+){0,2}(?:answer|response)|(?:the )?candidate|(?:the )?(?:answer|response))\s+(?:(?:clearly|effectively|directly|briefly|well)\s+)*(?:answered|address(?:es|ed)|described|discussed|explained|outlined|provided|said|stated|showed|demonstrated|included)\b/iu',
  $sentence
  ) === 1;
  $quotedQuestionFraming = preg_match('/\b(?:excerpt|quote)\b.{0,120}\b(?:shows|demonstrates|supports)\b/iu', $sentence) === 1

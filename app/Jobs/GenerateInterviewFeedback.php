@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Exceptions\AiFeedbackProviderFailureException;
 use App\Helpers\ActivityLogger;
+use App\Models\InterviewAnswerProviderReview;
 use App\Models\InterviewSession;
 use App\Models\UserOnboardingProgress;
 use App\Services\DetailedFeedbackReviewService;
@@ -24,6 +25,10 @@ use Throwable;
 class GenerateInterviewFeedback implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    private const PREPARATION_GRACE_SECONDS = 180;
+
+    private const RECOVERY_WAIT_MINUTES = 10;
 
     public int $tries = 3;
 
@@ -63,6 +68,12 @@ class GenerateInterviewFeedback implements ShouldQueue
             return;
         }
 
+        if ((int) $session->feedback_attempts === 0) {
+            // A newly requested review must not inherit an earlier recovery
+            // wait for this same session after its answers changed.
+            Cache::forget($this->recoveryWaitKey());
+        }
+
         if (! $reviewService->shouldRefreshWithProvider($session)) {
             $this->markVerified($session);
             return;
@@ -97,13 +108,19 @@ class GenerateInterviewFeedback implements ShouldQueue
 
             $prepared = app(PreparedAnswerReviewService::class);
             $progress = $prepared->progressForSession($session);
-            if ($prepared->preparedReviewsForSession($session) === null
+            $initialPreparationIsRunning = (int) $session->feedback_attempts === 0
                 && ($progress['verified'] > 0 || $progress['processing'] > 0)
                 && $prepared->hasPendingPreparationsForSession($session)
-                && (int) $session->feedback_attempts === 0
-                && $session->updated_at?->gte(now()->subSeconds(90))) {
+                && $session->updated_at?->gte(now()->subSeconds(self::PREPARATION_GRACE_SECONDS));
+            $recoveryIsRunning = (int) $session->feedback_attempts > 0
+                && Cache::has($this->recoveryWaitKey())
+                && ($progress['pending'] > 0 || $progress['processing'] > 0)
+                && $progress['failed'] === 0;
+            if ($prepared->preparedReviewsForSession($session) === null
+                && ($initialPreparationIsRunning || $recoveryIsRunning)) {
                 // Let in-flight answer reviews finish before requesting a full
-                // interview review. A delayed attempt recovers if they stall.
+                // interview review. The first failed full review can also
+                // start answer recovery, with a bounded wait for its workers.
                 self::dispatch($this->sessionId, $this->userId)
                     ->delay(now()->addSeconds(10));
                 return;
@@ -168,6 +185,22 @@ class GenerateInterviewFeedback implements ShouldQueue
                 'failure_code' => $failureCode,
                 'error_type' => $error::class,
             ]);
+            try {
+                if (! Cache::has($this->recoveryWaitKey())) {
+                    // Recover from the first rejected full report immediately.
+                    // Otherwise Laravel would repeat the long full request before
+                    // failed() can dispatch focused answer reviews.
+                    $recovery = $this->queueMissingAnswerReviews($session);
+                    if ($recovery['queued'] > 0 || $recovery['active'] > 0) {
+                        Cache::put($this->recoveryWaitKey(), true, now()->addMinutes(self::RECOVERY_WAIT_MINUTES));
+                    }
+                }
+            } catch (Throwable $recoveryError) {
+                Log::warning('First provider review failure could not queue answer recovery.', [
+                    'session_id' => $this->sessionId,
+                    'error_type' => $recoveryError::class,
+                ]);
+            }
             throw $error;
         } finally {
             $lock->release();
@@ -191,15 +224,14 @@ class GenerateInterviewFeedback implements ShouldQueue
                     : 'provider_review_failed',
             ]);
 
-        if ($markedFailed !== 1 || ! $error instanceof AiFeedbackProviderFailureException
-            || ! SystemSettings::enabled('int_ai_eval', true)) {
+        if ($markedFailed !== 1 || ! SystemSettings::enabled('int_ai_eval', true)) {
             return;
         }
 
-        // A full provider response can fail validation while the smaller
-        // provider-only answer path still succeeds. Prepare only missing
-        // answers; the last verified answer queues a fresh session summary.
+        // The smaller answer path can recover a rejected full report even when
+        // the final exception is a persistence or validation error.
         try {
+            Cache::forget($this->recoveryWaitKey());
             $session = InterviewSession::query()->whereKey($this->sessionId)
                 ->where('user_id', $this->userId)
                 ->where('status', 'completed')
@@ -209,16 +241,58 @@ class GenerateInterviewFeedback implements ShouldQueue
                 return;
             }
 
-            $missingAnswerIds = app(PreparedAnswerReviewService::class)->missingAnswerIdsForSession($session);
-            foreach ($missingAnswerIds as $answerId) {
-                GenerateAnswerProviderFeedback::dispatch((int) $session->id, (int) $answerId);
-            }
+            $this->queueMissingAnswerReviews($session);
         } catch (Throwable $recoveryError) {
             Log::warning('Provider-only answer recovery could not be queued.', [
                 'session_id' => $this->sessionId,
                 'error_type' => $recoveryError::class,
             ]);
         }
+    }
+
+    private function recoveryWaitKey(): string
+    {
+        return 'feedback-answer-recovery-wait:'.$this->sessionId;
+    }
+
+    /** @return array{queued:int,active:int} */
+    private function queueMissingAnswerReviews(InterviewSession $session): array
+    {
+        $prepared = app(PreparedAnswerReviewService::class);
+        $missingAnswerIds = $prepared->missingAnswerIdsForSession($session);
+        if ($missingAnswerIds === []) {
+            return ['queued' => 0, 'active' => 0];
+        }
+
+        $answers = $prepared->originalAnswers($session)->keyBy('id');
+        $rows = InterviewAnswerProviderReview::query()
+            ->whereIn('interview_answer_id', $missingAnswerIds)
+            ->get()->keyBy('interview_answer_id');
+        $queued = 0;
+        $active = 0;
+        foreach ($missingAnswerIds as $answerId) {
+            $answer = $answers->get($answerId);
+            $row = $rows->get($answerId);
+            if ($answer && $row && in_array($row->status, ['pending', 'processing'], true)
+                && hash_equals((string) $row->input_fingerprint, $prepared->inputFingerprint($session, $answer))
+                && $row->updated_at?->gte(now()->subMinutes(3))) {
+                $active++;
+                continue;
+            }
+
+            try {
+                GenerateAnswerProviderFeedback::dispatch((int) $session->id, (int) $answerId);
+                $queued++;
+            } catch (Throwable $dispatchError) {
+                Log::warning('Missing answer review could not be queued.', [
+                    'session_id' => $session->id,
+                    'answer_id' => $answerId,
+                    'error_type' => $dispatchError::class,
+                ]);
+            }
+        }
+
+        return ['queued' => $queued, 'active' => $active];
     }
 
     private function markVerified(InterviewSession $session): void
@@ -242,6 +316,15 @@ class GenerateInterviewFeedback implements ShouldQueue
                 'feedback_input_fingerprint' => $fingerprint !== '' ? $fingerprint : null,
                 'feedback_processing_token' => null,
             ]);
+
+        try {
+            Cache::forget($this->recoveryWaitKey());
+        } catch (Throwable $cacheError) {
+            Log::warning('Verified interview review could not clear answer recovery wait.', [
+                'session_id' => $this->sessionId,
+                'error_type' => $cacheError::class,
+            ]);
+        }
 
         if ($changed !== 1) {
             return;

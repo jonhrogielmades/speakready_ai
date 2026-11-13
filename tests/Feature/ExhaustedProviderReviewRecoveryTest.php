@@ -7,11 +7,18 @@ use App\Jobs\GenerateAnswerProviderFeedback;
 use App\Jobs\GenerateInterviewFeedback;
 use App\Models\Category;
 use App\Models\InterviewAnswer;
+use App\Models\InterviewAnswerProviderReview;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\User;
+use App\Services\DetailedFeedbackReviewService;
+use App\Services\PreparedAnswerReviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
+use Mockery\MockInterface;
+use RuntimeException;
 use Tests\TestCase;
 
 class ExhaustedProviderReviewRecoveryTest extends TestCase
@@ -55,6 +62,111 @@ class ExhaustedProviderReviewRecoveryTest extends TestCase
         $this->assertSame('pending', $session->fresh()->feedback_status);
         $this->assertSame('newer-review-run-token', $session->fresh()->feedback_processing_token);
         Queue::assertNotPushed(GenerateAnswerProviderFeedback::class);
+    }
+
+    public function test_first_generic_full_review_failure_queues_missing_answers_before_queue_retries(): void
+    {
+        [$session, $answerIds] = $this->completedInterviewWithTwoAnswers();
+        $this->mock(DetailedFeedbackReviewService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('shouldRefreshWithProvider')->twice()->andReturn(true);
+            $mock->shouldReceive('refreshWithProvidersIfNeeded')->once()
+                ->andThrow(new RuntimeException('Provider response failed final validation.'));
+        });
+
+        $job = new GenerateInterviewFeedback($session->id, $session->user_id);
+        try {
+            $this->app->call([$job, 'handle']);
+            $this->fail('The full provider failure should make the queue retry.');
+        } catch (RuntimeException $error) {
+            $this->assertSame('Provider response failed final validation.', $error->getMessage());
+        }
+
+        $this->assertSame('pending', $session->fresh()->feedback_status);
+        $this->assertSame(1, (int) $session->fresh()->feedback_attempts);
+        $queued = Queue::pushed(GenerateAnswerProviderFeedback::class);
+        $this->assertEqualsCanonicalizing($answerIds, $queued->map(fn (GenerateAnswerProviderFeedback $answer): int => $answer->answerId)->all());
+    }
+
+    public function test_terminal_generic_failure_still_queues_missing_answer_recovery(): void
+    {
+        [$session, $answerIds] = $this->completedInterviewWithTwoAnswers();
+        $job = new GenerateInterviewFeedback($session->id, $session->user_id);
+        $session->update(['feedback_processing_token' => $job->runToken]);
+        $waitKey = 'feedback-answer-recovery-wait:'.$session->id;
+        Cache::put($waitKey, true, now()->addMinutes(10));
+
+        $job->failed(new RuntimeException('Provider response failed final validation.'));
+
+        $this->assertSame('failed', $session->fresh()->feedback_status);
+        $this->assertSame('provider_review_failed', $session->fresh()->feedback_failure_code);
+        $this->assertFalse(Cache::has($waitKey));
+        $queued = Queue::pushed(GenerateAnswerProviderFeedback::class);
+        $this->assertEqualsCanonicalizing($answerIds, $queued->map(fn (GenerateAnswerProviderFeedback $answer): int => $answer->answerId)->all());
+    }
+
+    public function test_manual_retry_with_prior_attempts_starts_answer_recovery_on_its_first_failure(): void
+    {
+        [$session, $answerIds] = $this->completedInterviewWithTwoAnswers();
+        $session->forceFill(['feedback_attempts' => 4])->save();
+        $this->mock(DetailedFeedbackReviewService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('shouldRefreshWithProvider')->twice()->andReturn(true);
+            $mock->shouldReceive('refreshWithProvidersIfNeeded')->once()
+                ->andThrow(new RuntimeException('Provider response failed final validation.'));
+        });
+
+        try {
+            $this->app->call([new GenerateInterviewFeedback($session->id, $session->user_id), 'handle']);
+            $this->fail('The full provider failure should make the queue retry.');
+        } catch (RuntimeException $error) {
+            $this->assertSame('Provider response failed final validation.', $error->getMessage());
+        }
+
+        $this->assertSame(5, (int) $session->fresh()->feedback_attempts);
+        $queued = Queue::pushed(GenerateAnswerProviderFeedback::class);
+        $this->assertEqualsCanonicalizing($answerIds, $queued->map(fn (GenerateAnswerProviderFeedback $answer): int => $answer->answerId)->all());
+    }
+
+    public function test_first_failure_waits_for_current_answer_jobs_without_queuing_duplicates(): void
+    {
+        [$session, $answerIds] = $this->completedInterviewWithTwoAnswers();
+        foreach ($answerIds as $answerId) {
+            InterviewAnswerProviderReview::create([
+                'interview_session_id' => $session->id,
+                'interview_answer_id' => $answerId,
+                'status' => 'processing',
+                'input_fingerprint' => 'current-fingerprint',
+            ]);
+        }
+        DB::table('interview_sessions')->where('id', $session->id)
+            ->update(['updated_at' => now()->subMinutes(4)]);
+        $answers = InterviewAnswer::with('question')->whereIn('id', $answerIds)->get();
+        $this->mock(PreparedAnswerReviewService::class, function (MockInterface $mock) use ($answerIds, $answers): void {
+            $mock->shouldReceive('progressForSession')->once()->andReturn([
+                'total' => 2, 'verified' => 0, 'pending' => 0, 'processing' => 2, 'failed' => 0,
+            ]);
+            $mock->shouldReceive('hasPendingPreparationsForSession')->once()->andReturn(true);
+            $mock->shouldReceive('preparedReviewsForSession')->twice()->andReturn(null);
+            $mock->shouldReceive('missingAnswerIdsForSession')->once()->andReturn($answerIds);
+            $mock->shouldReceive('originalAnswers')->once()->andReturn($answers);
+            $mock->shouldReceive('inputFingerprint')->twice()->andReturn('current-fingerprint');
+        });
+        $this->mock(DetailedFeedbackReviewService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('shouldRefreshWithProvider')->twice()->andReturn(true);
+            $mock->shouldReceive('refreshWithProvidersIfNeeded')->once()
+                ->andThrow(new RuntimeException('Full provider response rejected.'));
+        });
+
+        try {
+            $this->app->call([new GenerateInterviewFeedback($session->id, $session->user_id), 'handle']);
+            $this->fail('The full provider failure should make the queue retry.');
+        } catch (RuntimeException $error) {
+            $this->assertSame('Full provider response rejected.', $error->getMessage());
+        }
+
+        Queue::assertNotPushed(GenerateAnswerProviderFeedback::class);
+        $waitKey = 'feedback-answer-recovery-wait:'.$session->id;
+        $this->assertTrue(Cache::has($waitKey));
+        Cache::forget($waitKey);
     }
 
     private function completedInterviewWithTwoAnswers(): array
