@@ -1715,14 +1715,43 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  $response = $request->post($endpoint, $payload);
  } catch (RequestException $e) {
  // PendingRequest::retry throws the final 4xx response even when the retry
- // predicate correctly declines to retry it. Retain only a recognised schema
- // compatibility response so the explicitly configured JSON-mode fallback is
- // reachable; authentication and unrelated client errors still fail normally.
- if ($e->response === null ||! self::openAiShouldFallbackToJsonObject($e->response, $responseFormat, $feedbackSchemaFallback)) {
+ // predicate correctly declines to retry it. Retain only recognised feedback
+ // compatibility responses; unrelated client errors still fail normally.
+ if ($e->response === null || (! self::openAiShouldRetryCompletionTokens($e->response, $payload, $feedbackSchemaFallback)
+ && ! self::openAiShouldFallbackToJsonObject($e->response, $responseFormat, $feedbackSchemaFallback))) {
  throw $e;
  }
 
  $response = $e->response;
+ }
+
+ if (self::openAiShouldRetryCompletionTokens($response, $payload, $feedbackSchemaFallback)) {
+ $fallbackTimeout = self::jsonFallbackTimeoutSeconds(
+ $requestDeadlineAt,
+ self::providerTimeoutSeconds($timeoutSeconds)
+ );
+ if ($fallbackTimeout === null) {
+ $response->throw();
+ }
+
+ $payload['max_completion_tokens'] = $payload['max_tokens'];
+ unset($payload['max_tokens'], $payload['temperature']);
+ Log::warning('OpenAI model rejected max_tokens; retrying feedback with max_completion_tokens.', [
+ 'model' => $model,
+ 'status' => $response->status(),
+ ]);
+ $request->timeout($fallbackTimeout)->connectTimeout(min(
+ $fallbackTimeout,
+ self::providerConnectTimeoutSeconds($fallbackTimeout)
+ ));
+ try {
+ $response = $request->post($endpoint, $payload);
+ } catch (RequestException $e) {
+ if ($e->response === null || ! self::openAiShouldFallbackToJsonObject($e->response, $responseFormat, $feedbackSchemaFallback)) {
+ throw $e;
+ }
+ $response = $e->response;
+ }
  }
 
  if (self::openAiShouldFallbackToJsonObject($response, $responseFormat, $feedbackSchemaFallback)) {
@@ -1771,6 +1800,18 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  return [];
  }
 
+ private static function openAiShouldRetryCompletionTokens($response, array $payload, bool $feedbackRequest): bool
+ {
+ if (! $feedbackRequest || ! isset($payload['max_tokens'])
+ || ! in_array($response->status(), [400, 422], true)) {
+ return false;
+ }
+
+ // A structured parameter from OpenAI is required: provider prose may echo
+ // prompt text and must not trigger a second request on a different error.
+ return $response->json('error.param') === 'max_tokens';
+ }
+
  private static function openAiShouldFallbackToJsonObject($response, array $responseFormat, bool $feedbackSchemaFallback = false): bool
  {
  if (($responseFormat['type']?? null)!== 'json_schema'
@@ -1794,7 +1835,7 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  private static function openAiGenerationParameters(string $model, int $maximumTokens, float $temperature): array
  {
  $maximumTokens = max(128, min(65536, $maximumTokens));
- $isReasoningModel = preg_match('/^(?:gpt-[6-9](?:[.\-]|$)|o[1-9](?:-|$))/i', trim($model)) === 1;
+ $isReasoningModel = preg_match('/^(?:gpt-[5-9](?:[.\-]|$)|o[1-9](?:-|$))/i', trim($model)) === 1;
 
  if (! $isReasoningModel) {
  return [
@@ -10815,12 +10856,17 @@ PROMPT;
  'Content-Type' => 'application/json',
  ]);
  $endpoint = self::cohereChatEndpoint($credentials['endpoint']);
+ $requestedMaxTokens = $maxOutputTokens?? (int) env('AI_JSON_MAX_TOKENS', 4096);
+ // Command R7B's documented output ceiling is 4,000 tokens. The single
+ // answer review requests 4,096 by default, which this model rejects.
+ $cohereMaxTokens = strtolower(trim($credentials['model'])) === 'command-r7b-12-2024'
+ ? min($requestedMaxTokens, 4000) : $requestedMaxTokens;
  $payload = [
  'model' => $credentials['model'],
  'messages' => [
  ['role' => 'user', 'content' => $prompt],
  ],
- 'max_tokens' => $maxOutputTokens?? (int) env('AI_JSON_MAX_TOKENS', 4096),
+ 'max_tokens' => $cohereMaxTokens,
  'temperature' => 0.1,
  'response_format' => self::cohereResponseFormat($responseFormat),
  'safety_mode' => 'STRICT',

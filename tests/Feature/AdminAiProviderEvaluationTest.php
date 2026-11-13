@@ -105,7 +105,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
  $this->configuredProvider();
  Http::fake([
- 'api.openai.com/*' => Http::response(['error' => ['message' => 'Rate limit exceeded.']], 429),
+ 'api.openai.com/*' => Http::response(['error' => ['message' => 'Rate limit for this model exceeded.']], 429),
  ]);
 
  $this->actingAs($admin)
@@ -118,6 +118,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSessionHas('ai_provider_smoke_results.0.final_usable', false)
  ->assertSessionHas('ai_provider_smoke_results.0.failure_reasons', ['rate_limited'])
  ->assertSessionHas('ai_provider_smoke_results.0.http_statuses', [429])
+ ->assertSessionHas('ai_provider_smoke_results.0.http_diagnostics', [])
  ->assertSessionHas('ai_provider_smoke_results.0.rejected_drafts', []);
 
  $this->actingAs($admin)
@@ -224,13 +225,12 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSessionHas('ai_provider_smoke_results.0.http_diagnostics.0', [
  'status' => 400,
  'hint' => 'schema_or_format',
- 'param' => 'response_format',
  ]);
 
  $this->actingAs($admin)
  ->get(route('admin.ai.evaluation'))
  ->assertOk()
- ->assertSee('Provider HTTP error: status=400; param=response_format; hint=schema_or_format')
+ ->assertSee('Provider HTTP error: status=400; hint=schema_or_format')
  ->assertDontSee('private@example.com')
  ->assertDontSee('sk-secret-do-not-show');
  }

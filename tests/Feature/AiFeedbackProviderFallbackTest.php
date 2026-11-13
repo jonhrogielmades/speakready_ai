@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\AIService;
+use App\Exceptions\AiFeedbackProviderFailureException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -28,6 +29,112 @@ class AiFeedbackProviderFallbackTest extends TestCase
         }
 
         parent::tearDown();
+    }
+
+    public function test_openai_feedback_retries_a_structured_max_tokens_rejection_with_completion_tokens(): void
+    {
+        foreach ([
+            'OPENAI_API_KEY' => 'openai_test_token',
+            'OPENAI_API_URL' => 'https://api.openai.com/v1',
+            'OPENAI_FEEDBACK_MODEL' => 'gpt-4o-mini',
+            'AI_LIVE_TESTS' => 'false',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        $answer = [
+            'id' => 7011,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I inspected the query plan, compared row estimates, and verified index usage before changing the query.',
+        ];
+        $payload = $this->validFeedbackPayload($answer);
+        $sent = 0;
+        Http::fake(function () use ($payload, &$sent) {
+            $sent++;
+            return $sent === 1
+                ? Http::response(['error' => [
+                    'type' => 'invalid_request_error',
+                    'param' => 'max_tokens',
+                    'message' => 'max_tokens is unsupported for this model.',
+                ]], 400)
+                : Http::response(['choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => ['content' => json_encode($payload)],
+                ]]]);
+        });
+
+        $feedback = AIService::generateFeedback(
+            ['target_position' => 'Database Developer', 'difficulty' => 'Medium'],
+            [$answer],
+            'openai',
+            true,
+            false,
+            [
+                'require_provider_narratives' => true,
+                'answer_only_completion' => true,
+                'allow_provider_completion' => false,
+                'deadline_seconds' => 20,
+                'max_attempts' => 1,
+                'http_attempts' => 1,
+            ]
+        );
+
+        $requests = collect(Http::recorded())->map(fn (array $entry) => $entry[0])->values();
+        $this->assertCount(2, $requests);
+        $this->assertSame('gpt-4o-mini', data_get($requests[0]->data(), 'model'));
+        $this->assertIsInt(data_get($requests[0]->data(), 'max_tokens'));
+        $this->assertSame(data_get($requests[0]->data(), 'max_tokens'), data_get($requests[1]->data(), 'max_completion_tokens'));
+        $this->assertArrayNotHasKey('max_tokens', $requests[1]->data());
+        $this->assertArrayNotHasKey('temperature', $requests[1]->data());
+        $this->assertSame('openai', $feedback['_provider_key']);
+        $this->assertSame('ai_provider', $feedback['per_question_feedback'][0]['answer_review_source']);
+    }
+
+    public function test_openai_feedback_does_not_retry_an_unrelated_bad_request_as_a_token_error(): void
+    {
+        foreach ([
+            'OPENAI_API_KEY' => 'openai_test_token',
+            'OPENAI_API_URL' => 'https://api.openai.com/v1',
+            'OPENAI_FEEDBACK_MODEL' => 'gpt-4o-mini',
+            'AI_LIVE_TESTS' => 'false',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        Http::fake(['api.openai.com/*' => Http::response(['error' => [
+            'type' => 'invalid_request_error',
+            'param' => 'model',
+            'message' => 'Unknown model.',
+        ]], 400)]);
+
+        try {
+            AIService::generateFeedback(
+                ['target_position' => 'Database Developer', 'difficulty' => 'Medium'],
+                [[
+                    'id' => 7012,
+                    'question_type' => 'Technical',
+                    'question' => 'How would you diagnose a slow database query?',
+                    'answer' => 'I inspected the query plan before changing the query.',
+                ]],
+                'openai',
+                true,
+                false,
+                [
+                    'require_provider_narratives' => true,
+                    'answer_only_completion' => true,
+                    'allow_provider_completion' => false,
+                    'deadline_seconds' => 20,
+                    'max_attempts' => 1,
+                    'http_attempts' => 1,
+                ]
+            );
+            $this->fail('An unrelated provider error must fail.');
+        } catch (AiFeedbackProviderFailureException $error) {
+            $this->assertSame('provider_request_rejected', $error->failureCode());
+        }
+
+        Http::assertSentCount(1);
     }
 
     public function test_feedback_timeout_uses_the_full_provider_slice_and_leaves_http_retries_opportunistic(): void

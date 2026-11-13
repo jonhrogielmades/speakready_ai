@@ -55,28 +55,13 @@ final class ProviderHttpErrorDiagnostic
 
         // Classify message-only errors without retaining any provider prose.
         $message = $error['message'] ?? (is_array($decoded) ? ($decoded['message'] ?? '') : $body);
-        if (is_string($message)) {
+        if (is_string($message) && in_array($status, [400, 422], true)) {
             $diagnostic['hint'] = self::hintFor($message);
         }
 
-        $safe = self::sanitize($diagnostic);
-        if (! isset($safe['param']) && isset($safe['hint'])) {
-            $safe['param'] = match ($safe['hint']) {
-                'schema_or_format' => 'response_format',
-                'model' => 'model',
-                'token_limit' => 'max_tokens',
-                'reasoning_effort' => 'reasoning_effort',
-                'temperature' => 'temperature',
-                'safety_mode' => 'safety_mode',
-                'messages' => 'messages',
-                default => null,
-            };
-            if ($safe['param'] === null) {
-                unset($safe['param']);
-            }
-        }
-
-        return $safe;
+        // A hint is inferred from message text. Never present it as a
+        // provider-returned `param`, which has stronger diagnostic meaning.
+        return self::sanitize($diagnostic);
     }
 
     /** @return array{status?: int, type?: string, code?: string, param?: string, hint?: string} */
@@ -144,12 +129,12 @@ final class ProviderHttpErrorDiagnostic
         $message = strtolower($message);
         foreach ([
             'schema_or_format' => '/response[_ -]?format|json[_ -]?schema|structured[_ -]?output|\bschema\b/',
-            'model' => '/\bmodel\b/',
             'token_limit' => '/max[_ -]?(?:completion[_ -]?|output[_ -]?)?tokens|token[_ -]?limit|context[_ -]?length/',
             'reasoning_effort' => '/reasoning[_ -]?effort/',
             'temperature' => '/\btemperature\b/',
             'safety_mode' => '/safety[_ -]?mode/',
             'messages' => '/\bmessages?\b/',
+            'model' => '/\b(?:invalid|unknown|unavailable|unsupported)\s+model\b|\bmodel\s+(?:not\s+found|not\s+available|does\s+not\s+exist|is\s+invalid)\b/',
             'endpoint' => '/\bendpoint\b|\broute\b|\burl\b/',
             'access' => '/\bpermission\b|\bauthoriz(?:ed|ation)\b|\baccess\b/',
         ] as $hint => $pattern) {

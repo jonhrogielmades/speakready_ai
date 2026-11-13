@@ -201,6 +201,36 @@ class RemovedAiProviderSupportTest extends TestCase
  }
  }
 
+ public function test_cohere_feedback_caps_r7b_output_at_its_documented_limit(): void
+ {
+ foreach ([
+ 'COHERE_API_KEY' => 'cohere_test_token',
+ 'COHERE_API_URL' => 'https://api.cohere.com/v2/chat',
+ ] as $key => $value) {
+ $this->setEnvValue($key, $value);
+ }
+
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ foreach (['command-r7b-12-2024' => 4000, 'command-a-plus-05-2026' => 4096] as $model => $expectedMaxTokens) {
+ $this->setEnvValue('COHERE_MODEL', $model);
+ Http::fake(['api.cohere.com/*' => Http::response([
+ 'message' => ['content' => [['type' => 'text', 'text' => '{"provider":"cohere"}']]],
+ ], 200)]);
+
+ $this->assertSame(['provider' => 'cohere'], $providerMethod->invoke(null, 'cohere', 'Return JSON.', [
+ 'module' => 'feedback_generation',
+ 'max_output_tokens' => 4096,
+ 'attempts' => 1,
+ ]));
+ Http::assertSent(fn ($request): bool =>
+ $request->url() === 'https://api.cohere.com/v2/chat'
+ && $request->data()['model'] === $model
+ && $request->data()['max_tokens'] === $expectedMaxTokens);
+ }
+ }
+
  public function test_all_structured_providers_receive_a_machine_enforced_schema(): void
  {
  $schema = [
@@ -510,6 +540,7 @@ class RemovedAiProviderSupportTest extends TestCase
 
  $reasoning = $parameters->invoke(null, 'gpt-6-astra', 4096, 0.2);
  $reasoningWithSmallBudget = $parameters->invoke(null, 'gpt-6-astra', 1000, 0.2);
+ $gptFive = $parameters->invoke(null, 'gpt-5.4-mini', 4096, 0.2);
  $legacy = $parameters->invoke(null, 'gpt-4.1-mini', 2048, 0.3);
 
  $this->assertSame([
@@ -517,6 +548,7 @@ class RemovedAiProviderSupportTest extends TestCase
  'max_completion_tokens' => 4096,
  ], $reasoning);
  $this->assertSame(4096, $reasoningWithSmallBudget['max_completion_tokens']);
+ $this->assertSame($reasoning, $gptFive);
  $this->assertSame([
  'temperature' => 0.3,
  'max_tokens' => 2048,
