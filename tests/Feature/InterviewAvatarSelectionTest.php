@@ -230,8 +230,8 @@ class InterviewAvatarSelectionTest extends TestCase
             $session->interviewer_avatar = $avatar;
             $reply = AIService::fallbackInterviewReply($session, [], $answer);
             $this->assertSame(1, substr_count($reply, '?'));
-            $this->assertStringContainsString('approval queue', $reply);
-            $questions[] = preg_replace('/^.*[”]\.\s*/u', '', $reply);
+            $this->assertStringNotContainsString('approval queue', $reply);
+            $questions[] = preg_replace('/^Thanks for sharing that\.\s*/u', '', $reply);
             $replies[] = $reply;
         }
 
