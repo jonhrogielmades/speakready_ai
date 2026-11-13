@@ -621,7 +621,7 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  }
 
- public function test_unrelated_provider_follow_up_is_rejected_without_local_fallback(): void
+ public function test_unrelated_provider_follow_up_uses_grounded_backup(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Software Engineering']);
@@ -652,12 +652,17 @@ class ReliabilityHardeningTest extends TestCase
  'response_mode' => 'text',
  'ai_provider' => 'openai',
  ])
-  ->assertStatus(503)
-  ->assertJsonPath('success', false)
-  ->assertJsonPath('answer_saved', true)
-  ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+  ->assertOk()
+  ->assertJsonPath('success', true)
+  ->assertJsonPath('source_type', 'local_question_fallback')
+  ->assertJsonPath('ai_provider', null);
 
-  $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
+  $backup = Question::where('interview_session_id', $session->id)
+  ->where('source_type', 'local_question_fallback')->firstOrFail();
+  $this->assertStringContainsString('release', strtolower($backup->question_text));
+  $this->assertStringContainsString('Developer', $backup->question_text);
+  $this->assertNull($backup->ai_provider);
+  $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
   $this->assertDatabaseHas('interview_answers', [
   'interview_session_id' => $session->id,
   'question_id' => $question->id,
