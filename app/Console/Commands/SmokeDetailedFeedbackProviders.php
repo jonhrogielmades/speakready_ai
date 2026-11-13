@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Exceptions\AiFeedbackProviderFailureException;
 use App\Services\AIService;
+use App\Support\ProviderHttpErrorDiagnostic;
 use Illuminate\Console\Command;
 
 class SmokeDetailedFeedbackProviders extends Command
@@ -123,6 +124,9 @@ class SmokeDetailedFeedbackProviders extends Command
                 $httpStatuses = $error->httpStatuses()[$provider] ?? [];
                 if ($httpStatuses !== []) {
                     $this->line('  HTTP statuses: '.implode(', ', $httpStatuses));
+                }
+                foreach ($error->httpDiagnostics()[$provider] ?? [] as $diagnostic) {
+                    $this->line('  Provider HTTP error: '.ProviderHttpErrorDiagnostic::describe($diagnostic));
                 }
             }
 

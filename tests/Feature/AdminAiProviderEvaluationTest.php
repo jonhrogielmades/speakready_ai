@@ -117,7 +117,8 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSessionHas('ai_provider_smoke_results.0.repair_status', 'No local fallback')
  ->assertSessionHas('ai_provider_smoke_results.0.final_usable', false)
  ->assertSessionHas('ai_provider_smoke_results.0.failure_reasons', ['rate_limited'])
- ->assertSessionHas('ai_provider_smoke_results.0.http_statuses', [429]);
+ ->assertSessionHas('ai_provider_smoke_results.0.http_statuses', [429])
+ ->assertSessionHas('ai_provider_smoke_results.0.rejected_drafts', []);
 
  $this->actingAs($admin)
  ->get(route('admin.ai.evaluation'))
@@ -129,6 +130,109 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertDontSee('Repaired');
 
  Http::assertSentCount(1);
+ $this->assertSame(1, AiProviderLog::query()->where('module', 'feedback_smoke')->count());
+ $this->assertSame(0, AiProviderLog::query()->where('module', 'feedback_generation')->count());
+ }
+
+ public function test_live_smoke_test_shows_bounded_escaped_rejected_synthetic_prose_and_all_validation_errors(): void
+ {
+ $this->clearProviderEnv();
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $this->configuredProvider();
+ $invalidReview = ['per_question_feedback' => [[
+ 'id' => 1,
+ 'ai_feedback' => 'You resolved the issue. <script>alert(1)</script>',
+ 'coaching' => ['next_try' => 'Describe how you resolved the customer complaint.'],
+ ]]];
+ Http::fake([
+ 'api.openai.com/*' => Http::response($this->providerJsonResponse('OpenAI', $invalidReview)),
+ ]);
+
+ $this->actingAs($admin)
+ ->post(route('admin.ai.evaluation.smoke'))
+ ->assertRedirect(route('admin.ai.evaluation'))
+ ->assertSessionHas('ai_provider_smoke_results.0', static function ($result): bool {
+ $drafts = (array) ($result['rejected_drafts']?? []);
+ $validationErrors = (array) ($result['validation_errors']?? []);
+ $shownErrors = (array) ($result['errors']?? []);
+
+ return count($drafts) === 2
+ && str_contains((string) ($drafts[0]['fields_json']?? ''), '<script>alert(1)</script>')
+ && mb_strlen((string) ($drafts[0]['fields_json']?? '')) <= 3500
+ && count($validationErrors) > 2
+ && array_diff($validationErrors, $shownErrors) === [];
+ });
+
+ $this->actingAs($admin)
+ ->get(route('admin.ai.evaluation'))
+ ->assertOk()
+ ->assertSee('Rejected synthetic review text')
+ ->assertSee('&lt;script&gt;alert(1)&lt;/script&gt;', false)
+ ->assertDontSee('<script>alert(1)</script>', false);
+
+ $this->assertGreaterThan(0, AiProviderLog::query()->where('module', 'feedback_smoke')->count());
+ $this->assertSame(0, AiProviderLog::query()->where('module', 'feedback_generation')->count());
+ }
+
+ public function test_live_smoke_test_reports_allowlisted_openai_http_error_without_provider_message(): void
+ {
+ $this->clearProviderEnv();
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $this->configuredProvider();
+ Http::fake([
+ 'api.openai.com/*' => Http::response(['error' => [
+ 'type' => 'invalid_request_error',
+ 'code' => 'invalid_json_schema',
+ 'param' => 'response_format.json_schema.name',
+ 'message' => 'Invalid schema. Candidate private@example.com uses sk-secret-do-not-show.',
+ ]], 400),
+ ]);
+
+ $this->actingAs($admin)
+ ->post(route('admin.ai.evaluation.smoke'))
+ ->assertRedirect(route('admin.ai.evaluation'))
+ ->assertSessionHas('ai_provider_smoke_results.0.http_diagnostics.0', [
+ 'status' => 400,
+ 'type' => 'invalid_request_error',
+ 'code' => 'invalid_json_schema',
+ 'hint' => 'schema_or_format',
+ 'param' => 'response_format',
+ ]);
+
+ $this->actingAs($admin)
+ ->get(route('admin.ai.evaluation'))
+ ->assertOk()
+ ->assertSee('Provider HTTP error: status=400; type=invalid_request_error; code=invalid_json_schema; param=response_format; hint=schema_or_format')
+ ->assertDontSee('private@example.com')
+ ->assertDontSee('sk-secret-do-not-show');
+ }
+
+ public function test_live_smoke_test_classifies_cohere_message_only_http_error_without_leaking_text(): void
+ {
+ $this->clearProviderEnv();
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $this->configuredProvider('Cohere');
+ Http::fake([
+ 'api.cohere.com/*' => Http::response([
+ 'message' => 'Request invalid: response_format schema rejected. Contact private@example.com, token sk-secret-do-not-show.',
+ ], 400),
+ ]);
+
+ $this->actingAs($admin)
+ ->post(route('admin.ai.evaluation.smoke'))
+ ->assertRedirect(route('admin.ai.evaluation'))
+ ->assertSessionHas('ai_provider_smoke_results.0.http_diagnostics.0', [
+ 'status' => 400,
+ 'hint' => 'schema_or_format',
+ 'param' => 'response_format',
+ ]);
+
+ $this->actingAs($admin)
+ ->get(route('admin.ai.evaluation'))
+ ->assertOk()
+ ->assertSee('Provider HTTP error: status=400; param=response_format; hint=schema_or_format')
+ ->assertDontSee('private@example.com')
+ ->assertDontSee('sk-secret-do-not-show');
  }
 
  public function test_live_smoke_test_identifies_a_response_rejected_by_saved_answer_checks(): void
@@ -220,6 +324,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertRedirect(route('admin.ai.evaluation'))
  ->assertSessionHas('ai_provider_smoke_results.0.final_usable', true)
  ->assertSessionHas('ai_provider_smoke_results.0.strict_schema_status', 'OK')
+ ->assertSessionHas('ai_provider_smoke_results.0.rejected_drafts', [])
  ->assertSessionHas('ai_provider_smoke_summary.status', 'ok')
  ->assertSessionHas('ai_provider_smoke_summary.provider', 'openai');
 
@@ -232,6 +337,8 @@ class AdminAiProviderEvaluationTest extends TestCase
  Http::assertSentCount(2);
  Http::assertSent(fn ($request): bool =>
  data_get($request->data(), 'response_format.json_schema.name') === 'interview_session_feedback');
+ $this->assertSame(2, AiProviderLog::query()->where('module', 'feedback_smoke')->count());
+ $this->assertSame(0, AiProviderLog::query()->where('module', 'feedback_generation')->count());
  }
 
  public function test_admin_provider_dashboard_omits_openai_process_connections(): void

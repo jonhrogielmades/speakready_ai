@@ -10,6 +10,7 @@ use App\Services\AiProviderReliabilityService;
 use App\Services\AIService;
 use App\Services\CsvExportService;
 use App\Support\AiProviderSchema;
+use App\Support\ProviderHttpErrorDiagnostic;
 use App\Support\RuntimeConfiguration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -194,14 +195,39 @@ class AdminAiController extends Controller
  'require_provider_narratives' => true,
  'answer_only_completion' => true,
  'allow_provider_completion' => false,
+ 'module' => 'feedback_smoke',
  ];
 
  $preparedItem = null;
  $results = $providers->map(function (string $provider) use ($sessionData, $answersData, $runtimeOptions, &$preparedItem): array {
  $startedAt = microtime(true);
+ $rejectedDrafts = [];
+ $providerRuntimeOptions = $runtimeOptions;
+ $providerRuntimeOptions['rejected_response_observer'] = static function (?array $candidate, array $validationErrors, string $observedProvider, int $attempt) use (&$rejectedDrafts, $provider): void {
+ if ($observedProvider !== $provider || ! is_array($candidate)) {
+ return;
+ }
+ $item = $candidate['per_question_feedback'][0]?? null;
+ if (! is_array($item)) {
+ return;
+ }
+ $fields = array_intersect_key($item, array_flip(['ai_feedback', 'follow_up_question', 'coaching']));
+ if ($fields === []) {
+ return;
+ }
+ $encoded = json_encode($fields, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR);
+ $rejectedDrafts[$attempt] = [
+ 'attempt' => $attempt,
+ 'validation_errors' => array_map(
+ static fn (string $error): string => mb_substr($error, 0, 220),
+ array_slice(array_values(array_filter($validationErrors, 'is_string')), 0, 8)
+ ),
+ 'fields_json' => mb_substr(is_string($encoded) ? $encoded : '', 0, 3500),
+ ];
+ };
 
  try {
- $feedback = AIService::generateFeedback($sessionData, $answersData, $provider, true, false, $runtimeOptions);
+ $feedback = AIService::generateFeedback($sessionData, $answersData, $provider, true, false, $providerRuntimeOptions);
  $item = $feedback['per_question_feedback'][0]?? [];
  $quality = is_array($item) ? (array) ($item['feedback_quality']?? []) : [];
  $failedChecks = array_keys(array_filter((array) ($quality['checks']?? []), fn ($passed): bool => $passed !== true));
@@ -233,6 +259,7 @@ class AdminAiController extends Controller
  'score' => $item['score']?? null,
  'quality' => $quality['completeness_percent']?? null,
  'latency_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+ 'rejected_drafts' => array_values($rejectedDrafts),
  'errors' => $usable ? [] : array_merge(
  ['Provider answer review did not pass the saved-answer checks.'],
  $failedChecks === [] ? [] : ['Failed checks: '.implode(', ', $failedChecks).'.']
@@ -247,6 +274,9 @@ class AdminAiController extends Controller
  : [];
  $httpStatuses = $error instanceof AiFeedbackProviderFailureException
  ? (array) ($error->httpStatuses()[$provider]?? [])
+ : [];
+ $httpDiagnostics = $error instanceof AiFeedbackProviderFailureException
+ ? (array) ($error->httpDiagnostics()[$provider]?? [])
  : [];
  $failureCode = $error instanceof AiFeedbackProviderFailureException
  ? $error->failureCode()
@@ -292,11 +322,20 @@ class AdminAiController extends Controller
  'failure_reasons' => $failureReasons,
  'validation_errors' => $validationDetails,
  'http_statuses' => $httpStatuses,
+ 'http_diagnostics' => $httpDiagnostics,
  'final_usable' => false,
  'score' => null,
  'quality' => null,
  'latency_ms' => (int) round((microtime(true) - $startedAt) * 1000),
- 'errors' => array_merge([$failureNote], array_slice($validationDetails, 0, 2)),
+ 'rejected_drafts' => array_values($rejectedDrafts),
+ 'errors' => array_merge(
+ [$failureNote],
+ array_map(
+ static fn (array $diagnostic): string => 'Provider HTTP error: '.ProviderHttpErrorDiagnostic::describe($diagnostic),
+ $httpDiagnostics
+ ),
+ $validationDetails
+ ),
  ];
  }
  })->values()->all();
@@ -304,7 +343,7 @@ class AdminAiController extends Controller
  $summaryResult = ['status' => 'not_tested', 'note' => 'No verified answer review was available for the final summary test.'];
  if (is_array($preparedItem)) {
  try {
- $summary = AIService::generatePreparedReviewSummary($sessionData, $answersData, [$preparedItem], 45);
+ $summary = AIService::generatePreparedReviewSummary($sessionData, $answersData, [$preparedItem], 45, null, null, 'feedback_smoke');
  $summaryProvider = AIService::normalizeProviderKey($summary['_provider_key']?? null);
  $summaryUsable = $summaryProvider !== ''
  && ($summary['_provider_narratives_verified']?? null) === true

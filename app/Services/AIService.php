@@ -9,6 +9,7 @@ use App\Models\AiProvider;
 use App\Models\AiProviderLog;
 use App\Models\Setting;
 use App\Support\InterviewerAvatar;
+use App\Support\ProviderHttpErrorDiagnostic;
 use App\Support\RuntimeConfiguration;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
@@ -2487,7 +2488,7 @@ EOT;
  ];
  }
  $requestOptions = [
- 'module' => 'feedback_generation',
+ 'module' => ($runtimeOptions['module']?? null) === 'feedback_smoke' ? 'feedback_smoke' : 'feedback_generation',
  'timeout_seconds' => $runtimeInt('timeout_seconds', 'services.ai_feedback.timeout_seconds', 'AI_FEEDBACK_TIMEOUT', 45, 2, 60),
  'attempts' => $runtimeInt('http_attempts', 'services.ai_feedback.http_attempts', 'AI_FEEDBACK_HTTP_ATTEMPTS', 2, 1, 2),
  'response_format' => $responseFormat,
@@ -2511,6 +2512,7 @@ EOT;
  $providerFailureReasons = [];
  $providerValidationDetails = [];
  $providerHttpStatuses = [];
+ $providerHttpDiagnostics = [];
  $optionalCandidateResponse = null;
  $optionalCandidateProvider = null;
  $optionalCandidateErrors = [];
@@ -2738,6 +2740,10 @@ EOT;
  (array) ($providerHttpStatuses[$currentProvider] ?? []),
  [$status]
  )));
+ }
+ $httpDiagnostic = ProviderHttpErrorDiagnostic::fromResponse($e->response);
+ if (count($httpDiagnostic) > 1) {
+ $providerHttpDiagnostics[$currentProvider][] = $httpDiagnostic;
  }
  }
  if (is_array($candidateResponse) && $validationErrors !== []) {
@@ -2983,6 +2989,10 @@ EOT;
  [$status]
  )));
  }
+ $httpDiagnostic = ProviderHttpErrorDiagnostic::fromResponse($repairError->response);
+ if (count($httpDiagnostic) > 1) {
+ $providerHttpDiagnostics[$repairableProvider][] = $httpDiagnostic;
+ }
  }
  Log::warning($requireProviderNarratives
  ? 'Provider per-answer completion failed; provider-only review remains unavailable.'
@@ -3008,7 +3018,8 @@ EOT;
  null,
  $providerFailureReasons,
  $providerValidationDetails,
- $providerHttpStatuses
+ $providerHttpStatuses,
+ $providerHttpDiagnostics
  );
  }
 
@@ -3025,8 +3036,10 @@ EOT;
  array $preparedItems,
  int $deadlineSeconds = 30,
  ?callable $responseValidator = null,
- ?callable $rejectedResponseObserver = null
+ ?callable $rejectedResponseObserver = null,
+ string $module = 'feedback_generation'
  ): array {
+ $module = $module === 'feedback_smoke' ? 'feedback_smoke' : 'feedback_generation';
  if ($answersData === [] || count($preparedItems) !== count($answersData)) {
  throw new \RuntimeException('A prepared review needs one saved provider item for every answer.');
  }
@@ -3092,6 +3105,7 @@ EOT;
  $failureReasons = [];
  $validationDetails = [];
  $httpStatuses = [];
+ $httpDiagnostics = [];
  foreach ($providers as $index => $provider) {
  if ($deadlineAt - microtime(true) < 2) {
  break;
@@ -3110,7 +3124,7 @@ EOT;
  try {
  try {
  $raw = self::callStructuredProvider($provider, $prompt, [
- 'module' => 'feedback_generation',
+ 'module' => $module,
  'timeout_seconds' => self::fairRequestTimeoutSeconds($remaining, 1, 25),
  'request_deadline_at' => $providerDeadlineAt,
  'attempts' => 1,
@@ -3171,7 +3185,7 @@ EOT;
  ."\nUNTRUSTED REJECTED SUMMARY JSON:\n"
  .json_encode($rejectedSummary['session_feedback'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR);
  self::callStructuredProvider($provider, $repairPrompt, [
- 'module' => 'feedback_generation',
+ 'module' => $module,
  'timeout_seconds' => self::fairRequestTimeoutSeconds($repairRemaining, 1, 15),
  'request_deadline_at' => $providerDeadlineAt,
  'attempts' => 1,
@@ -3242,6 +3256,10 @@ EOT;
  if ($status >= 100 && $status <= 599) {
  $httpStatuses[$provider] = [$status];
  }
+ $httpDiagnostic = ProviderHttpErrorDiagnostic::fromResponse($error->response);
+ if (count($httpDiagnostic) > 1) {
+ $httpDiagnostics[$provider][] = $httpDiagnostic;
+ }
  }
  Log::warning('Prepared provider session summary failed.', [
  'provider' => $provider,
@@ -3252,7 +3270,7 @@ EOT;
  }
 
  throw new AiFeedbackProviderFailureException(
- $providers, $attempted, null, null, $failureReasons, $validationDetails, $httpStatuses
+ $providers, $attempted, null, null, $failureReasons, $validationDetails, $httpStatuses, $httpDiagnostics
  );
  }
 
@@ -6025,10 +6043,10 @@ PROMPT;
  $maxOutputTokens,
  $requireFinishReason,
  $requestDeadlineAt,
- $module === 'feedback_generation'
+ in_array($module, ['feedback_generation', 'feedback_smoke'], true)
  ),
  'gemini' => self::callGemini($prompt, $timeoutSeconds, $attempts, $responseFormat, $maxOutputTokens, $requireFinishReason, $requestDeadlineAt),
- 'cohere' => self::callCohere($prompt, $timeoutSeconds, $attempts, $responseFormat, $maxOutputTokens, $requireFinishReason, $requestDeadlineAt, $module === 'feedback_generation'),
+ 'cohere' => self::callCohere($prompt, $timeoutSeconds, $attempts, $responseFormat, $maxOutputTokens, $requireFinishReason, $requestDeadlineAt, in_array($module, ['feedback_generation', 'feedback_smoke'], true)),
  'groq' => self::callGroq($prompt, $timeoutSeconds, $attempts, $responseFormat, $maxOutputTokens, $requireFinishReason, $requestDeadlineAt),
  default => [],
  };
@@ -6196,10 +6214,13 @@ PROMPT;
  // Provider errors can echo prompts, transcripts, resumes, or attachment text.
  // Keep diagnostic metadata without persisting that user content in logs.
  return sprintf(
-  'HTTP %d; response_bytes=%d; response_sha256=%s',
+  'HTTP %d; response_bytes=%d; response_sha256=%s%s',
   $status,
   strlen($body),
-  hash('sha256', $body)
+  hash('sha256', $body),
+  ($diagnostic = ProviderHttpErrorDiagnostic::fromResponse($response)) && count($diagnostic) > 1
+   ? '; provider_error='.ProviderHttpErrorDiagnostic::describe($diagnostic)
+   : ''
  );
  }
 

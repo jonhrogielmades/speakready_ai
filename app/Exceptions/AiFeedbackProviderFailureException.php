@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use App\Support\ProviderHttpErrorDiagnostic;
 use RuntimeException;
 use Throwable;
 
@@ -13,6 +14,7 @@ class AiFeedbackProviderFailureException extends RuntimeException
      * @param  array<string, array<int, string>|string>  $failureReasons
      * @param  array<string, array<int, string>|string>  $validationErrors
      * @param  array<string, array<int, int>|int>  $httpStatuses
+     * @param  array<string, array<int, array<string, mixed>>>  $httpDiagnostics
      */
     public function __construct(
         private array $providers,
@@ -21,13 +23,15 @@ class AiFeedbackProviderFailureException extends RuntimeException
         ?Throwable $previous = null,
         private array $failureReasons = [],
         private array $validationErrors = [],
-        private array $httpStatuses = []
+        private array $httpStatuses = [],
+        private array $httpDiagnostics = []
     ) {
         $this->providers = $this->cleanProviderList($providers);
         $this->attemptedProviders = $this->cleanProviderList($attemptedProviders);
         $this->failureReasons = $this->cleanFailureReasons($failureReasons);
         $this->validationErrors = $this->cleanValidationErrors($validationErrors);
         $this->httpStatuses = $this->cleanHttpStatuses($httpStatuses);
+        $this->httpDiagnostics = $this->cleanHttpDiagnostics($httpDiagnostics);
 
         parent::__construct($message ?: $this->userMessage(), 0, $previous);
     }
@@ -89,6 +93,16 @@ class AiFeedbackProviderFailureException extends RuntimeException
     public function httpStatuses(): array
     {
         return $this->httpStatuses;
+    }
+
+    /**
+     * Fixed allowlisted HTTP error fields only; never a provider response body.
+     *
+     * @return array<string, array<int, array<string, int|string>>>
+     */
+    public function httpDiagnostics(): array
+    {
+        return $this->httpDiagnostics;
     }
 
     public function failureCode(): string
@@ -231,6 +245,30 @@ class AiFeedbackProviderFailureException extends RuntimeException
             )));
             if ($codes !== []) {
                 $clean[$provider] = $codes;
+            }
+        }
+
+        return $clean;
+    }
+
+    /** @return array<string, array<int, array<string, int|string>>> */
+    private function cleanHttpDiagnostics(array $diagnostics): array
+    {
+        $clean = [];
+        foreach ($diagnostics as $provider => $providerDiagnostics) {
+            $provider = trim((string) $provider);
+            if (! in_array($provider, $this->providers, true) || ! is_array($providerDiagnostics)) {
+                continue;
+            }
+
+            foreach (array_slice($providerDiagnostics, 0, 8) as $diagnostic) {
+                if (! is_array($diagnostic)) {
+                    continue;
+                }
+                $safe = ProviderHttpErrorDiagnostic::sanitize($diagnostic);
+                if (count($safe) > 1 && ! in_array($safe, $clean[$provider] ?? [], true)) {
+                    $clean[$provider][] = $safe;
+                }
             }
         }
 

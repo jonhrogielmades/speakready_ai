@@ -95,6 +95,19 @@
                                     @empty
                                         Ready
                                     @endforelse
+                                    @if(!empty($result['rejected_drafts']))
+                                        <details class="mt-2">
+                                            <summary>Rejected synthetic review text</summary>
+                                            <p class="mb-1 mt-2">These drafts came from the fixed smoke-test answer.</p>
+                                            @foreach($result['rejected_drafts'] as $draft)
+                                                <div class="fw-semibold">Attempt {{ $draft['attempt'] ?? '?' }}</div>
+                                                @foreach(($draft['validation_errors'] ?? []) as $validationError)
+                                                    <div>{{ $validationError }}</div>
+                                                @endforeach
+                                                <pre class="small text-break text-wrap mb-2">{{ $draft['fields_json'] ?? '' }}</pre>
+                                            @endforeach
+                                        </details>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
