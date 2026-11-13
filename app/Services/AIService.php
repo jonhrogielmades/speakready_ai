@@ -749,12 +749,12 @@ class AIService
  if ($roleGuidance !== '') {
  $prompt.= $roleGuidance.' ';
  }
- $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. For a substantive latest answer, put at least one concrete detail from that answer in the QUESTION itself, such as the actual task, tool, stakeholder, constraint, decision, or outcome. A detail in the acknowledgement alone is insufficient. Do not ask a generic fit question when the answer provides a concrete topic. ';
+ $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. For a substantive latest answer, put at least one concrete detail from that answer in the QUESTION itself, such as the actual task, tool, stakeholder, constraint, decision, or outcome. Reuse a distinctive noun or action word from the answer exactly as written so the question is visibly connected to it. A detail in the acknowledgement alone is insufficient. Do not ask a generic fit question when the answer provides a concrete topic. ';
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
  $prompt.= 'Base the next interviewer turn on the candidate answer, the target role, and the earlier conversation. Dataset examples are optional inspiration, never a limit on what you may ask. Use the supplied source dataset when it contains a relevant topic, competency, or representative question pattern, but do not require an exact dataset match. If no dataset example fits, create a fresh role-specific question through the AI provider instead of stopping or returning an error. ';
  $prompt.= 'Do not use the phrases "You mentioned", "You said", "You shared", or "Thinking about what you shared". Do not repeat or quote the full candidate answer; refer to one concrete detail naturally in the question. Use a short natural transition only when necessary, then ask the one focused question. ';
- $prompt.= 'Read the earlier turns before choosing what to ask: do not ask again for an action, result, reason, or constraint already explained. Ask one narrow unanswered detail about the same example, or explicitly bridge from that detail when the required question type changes. Preserve negation and uncertainty; a plan is not a past achievement. Do not presume success, a problem, a tool, or a tradeoff the candidate never mentioned. ';
+ $prompt.= 'Read the earlier turns before choosing what to ask: do not ask again for an action, result, reason, or constraint already explained. Ask one narrow unanswered detail about the same example, or explicitly bridge from that detail when the required question type changes. Preserve negation and uncertainty; a plan is not a past achievement. Do not presume success, a problem, a tool, or a tradeoff the candidate never mentioned. If probing an unstated technical method or safeguard, ask whether or how it was considered; do not claim the candidate chose, used, or ensured it. ';
  $prompt.= $liveFeedbackMode === 'real_interview'
  ? 'Acknowledge the answer briefly and neutrally before the question. Do not assess or coach the candidate mid-interview. '
  : 'Use a short confidence-building acknowledgement without restating the candidate answer. Keep encouragement specific to effort or shared evidence, not performance scoring. ';
@@ -863,14 +863,16 @@ class AIService
  'attempts' => $httpAttempts,
  'max_providers' => 1,
  ];
- // The controller holds the per-question lock for 180 seconds and the browser
- // waits for 200. Leave enough time for answer persistence and question save.
- $deadlineAt = microtime(true) + 140;
+ // Try all four providers even at the 20-second request limit, while leaving
+ // time for the grounded backup question, persistence, and the browser reply.
+ $deadlineAt = microtime(true) + 110;
  $attempt = 0;
  $rejectedProviders = [];
- $repairBudget = $configuredRetries > 1
- ? max(1, $configuredRetries - count($providers))
- : 0;
+ $failedProviders = [];
+ $rejectedReplies = [];
+ // The first sweep is provider failover; these are additional semantic repair
+ // attempts. A four-provider sweep must not leave just one provider a repair.
+ $repairBudget = $configuredRetries;
  $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation and target role; dataset examples are optional context. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. Never say "You mentioned", "You said", or "You shared"; avoid restating the full answer, but include one actual detail in the question. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
  $repairTypeRule = match ($requiredQuestionType) {
  'Behavioral' => 'keep it Behavioral: ask about a real past situation, the candidate\'s own action, and what happened; ',
@@ -882,9 +884,9 @@ class AIService
  $hasSubstantiveAnswer = self::wordCount((string) $latestAnswer) >= 8
  && preg_match('/^(?:\[User skipped|\[Voice answer saved|\(Skipped or no answer|\(No answer before)/i', trim((string) $latestAnswer)) !== 1;
  $answerRepairRule = $hasSubstantiveAnswer
- ? 'include one meaningful detail from the latest candidate answer in the QUESTION itself; connect that detail to the target role; '
+ ? 'include one distinctive noun or action word from the latest candidate answer exactly as written in the QUESTION itself; connect that detail to the target role; '
  : 'do not infer any unspoken candidate experience; ask for specific role-related evidence; ';
- $repairPrompt = $prompt."\nThe previous response could not be used. Write a DIFFERENT question that passes these checks: ask exactly ONE question with one question mark; {$answerRepairRule}keep it specific to the {$targetPosition} role; {$repairTypeRule}ask for an unanswered action, decision, result, or next step; do not invent candidate history or repeat an earlier question. Output only the spoken interviewer turn.\n";
+ $repairPrompt = $prompt."\nThe previous response could not be used. Write a DIFFERENT question that passes these checks: ask exactly ONE question with one question mark; {$answerRepairRule}keep it specific to the {$targetPosition} role; {$repairTypeRule}ask for an unanswered action, decision, result, or next step; ask whether an unstated method was considered instead of presuming it was chosen or completed; do not invent candidate history or repeat an earlier question. Output only the spoken interviewer turn.\n";
 
  // Give every configured provider one chance before spending calls on a
  // semantic repair. This also makes rate limits and outages fail over quickly.
@@ -898,7 +900,13 @@ class AIService
 
  $attempt++;
  try {
- $rawResponse = self::chatMessage($isRepair ? $repairPrompt : $prompt, [], $currentProvider, $systemPrompt, $chatRequestOptions);
+ $requestPrompt = $isRepair ? $repairPrompt : $prompt;
+ if ($isRepair && isset($rejectedReplies[$currentProvider])) {
+ $requestPrompt.= "\nUNUSABLE PREVIOUS OUTPUT (reference only; do not repeat): "
+ .json_encode(self::truncateText($rejectedReplies[$currentProvider], 320), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+ ."\nCorrect its answer anchor, target role, required question type, and repetition issues.\n";
+ }
+ $rawResponse = self::chatMessage($requestPrompt, [], $currentProvider, $systemPrompt, $chatRequestOptions);
  if ($rawResponse !== self::AI_FAILURE_MESSAGE) {
  $response = self::sanitizeInterviewerReply($rawResponse);
 
@@ -909,6 +917,7 @@ class AIService
  $usedProvider = $currentProvider;
  return $response;
  }
+ $rejectedReplies[$currentProvider] = $response;
  if (! $isRepair) {
  $rejectedProviders[] = $currentProvider;
  }
@@ -919,17 +928,24 @@ class AIService
  'phase' => $isRepair ? 'repair' : 'initial',
  ]);
  }
- } elseif (count($providers) === 1 && ! $isRepair) {
- // A sole provider may recover from a transient connection failure on the
- // remaining configured turns. A rate-limited provider is skipped by chatMessage.
- $rejectedProviders[] = $currentProvider;
+ } elseif (! $isRepair) {
+ // A transient provider failure can recover after the first sweep. Rate-limited
+ // providers are skipped by chatMessage until their retry window has elapsed.
+ $failedProviders[] = $currentProvider;
  }
  } catch (\Throwable $e) {
+ if (! $isRepair) {
+ $failedProviders[] = $currentProvider;
+ }
  Log::error('AI Chat Reply Error (Attempt '.$attempt.'): '.self::safeProviderErrorMessage($e));
  }
- if ($index === count($providers) - 1 && $repairBudget > 0 && $rejectedProviders !== []) {
+ if ($index === count($providers) - 1) {
+ $repairProviders = array_values(array_unique(array_merge($rejectedProviders, $failedProviders)));
+ if ($repairProviders === []) {
+ break;
+ }
  for ($repairIndex = 0; $repairIndex < $repairBudget; $repairIndex++) {
- $providerQueue[] = $rejectedProviders[$repairIndex % count($rejectedProviders)];
+ $providerQueue[] = $repairProviders[$repairIndex % count($repairProviders)];
  }
  }
  }

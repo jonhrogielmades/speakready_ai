@@ -1,4 +1,4 @@
-// AI feedback provider release: 2026-11-13.
+// Interview follow-up backup release: 2026-11-13.
 (function () {
     'use strict';
 

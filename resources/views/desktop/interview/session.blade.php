@@ -83,6 +83,7 @@
  <!-- Question Counter (Top Left) -->
  <div style="position:absolute; top:15px; left:15px; z-index:50;">
  <span class="badge bg-white text-dark shadow-sm" style="font-size:0.8rem;white-space:nowrap;padding: 6px 10px;" id="qCounter">{{ $initialQuestionCounter }}</span>
+ <span id="backupQuestionBadge" class="badge bg-warning text-dark shadow-sm" style="display:none;width:max-content;margin-top:6px;font-size:0.8rem;white-space:nowrap;padding:6px 10px;" title="A grounded backup question is keeping this interview moving while AI providers recover." hidden>Backup question</span>
  </div>
  <span class="badge interviewer-panel-badge" title="{{ $interviewerAvatarLabel }} AI interviewer"><i class="fa-solid fa-bolt me-1" aria-hidden="true"></i> {{ $interviewerAvatarLabel }}</span>
  @if($questionTimeLimitSeconds > 0)
@@ -5111,6 +5112,9 @@ return fallbackText;
  
  document.getElementById('aiQuestionText').innerText = '...';
  document.getElementById('qCounter').innerText = isOpeningQuestion(q)? 'Intro': Math.min(questionDisplayNumber(idx), targetQuestionCount) + '/' + targetQuestionCount;
+ const backupQuestionBadge = document.getElementById('backupQuestionBadge');
+ backupQuestionBadge.hidden = q.source_type !== 'local_question_fallback';
+ backupQuestionBadge.style.display = backupQuestionBadge.hidden ? 'none' : 'block';
 
  // Append AI question to chat log if it's the first time seeing it
  const questionDisplayKey = String(q.id || idx);

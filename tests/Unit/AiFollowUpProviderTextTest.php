@@ -277,4 +277,65 @@ class AiFollowUpProviderTextTest extends TestCase
         $this->assertSame('openai', $usedProvider);
         Http::assertSentCount(3);
     }
+
+    public function test_follow_up_repairs_rejected_questions_across_multiple_providers(): void
+    {
+        config([
+            'services.interview_follow_up.max_retries' => 2,
+            'services.interview_follow_up.max_providers' => 2,
+            'services.interview_follow_up.timeout' => 2,
+            'services.ai_providers.interview_provider_priority' => 'groq,openai',
+        ]);
+        foreach ([
+            ['OpenAI', 'https://api.openai.com/v1/chat/completions/'],
+            ['Groq', 'https://api.groq.com/openai/v1'],
+        ] as [$name, $endpoint]) {
+            AiProvider::create([
+                'name' => $name,
+                'api_endpoint' => $endpoint,
+                'api_key' => Crypt::encryptString('test-'.$name.'-key'),
+                'status' => 'active',
+            ]);
+        }
+
+        $invalid = 'What is your favorite color?';
+        $valid = 'How did your deployment checks improve reliability for the Developer role?';
+        $counts = ['openai' => 0, 'groq' => 0];
+        $prompts = ['openai' => [], 'groq' => []];
+        Http::fake([
+            'api.openai.com/*' => function ($request) use (&$counts, &$prompts, $invalid, $valid) {
+                $counts['openai']++;
+                $prompts['openai'][] = (string) data_get($request->data(), 'messages.1.content', '');
+
+                return Http::response(['choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => ['content' => $counts['openai'] === 1 ? $invalid : $valid],
+                ]]]);
+            },
+            'api.groq.com/*' => function ($request) use (&$counts, &$prompts, $invalid) {
+                $counts['groq']++;
+                $prompts['groq'][] = (string) data_get($request->data(), 'messages.1.content', '');
+
+                return Http::response(['choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => ['content' => $invalid],
+                ]]]);
+            },
+        ]);
+
+        $session = new InterviewSession(['target_position' => 'Developer', 'difficulty' => 'medium']);
+        $answer = 'I improved deployment checks so our software releases became more reliable.';
+        $usedProvider = null;
+        $this->assertSame($valid, AIService::generateChatReply(
+            $session, [['question' => 'Tell me about your work.', 'answer' => $answer]],
+            $answer, 'groq', false, null, [], null, 'Technical',
+            fn (string $candidate): bool => str_contains($candidate, 'deployment checks'),
+            $usedProvider
+        ));
+        $this->assertSame('openai', $usedProvider);
+        $this->assertSame(['openai' => 2, 'groq' => 2], $counts);
+        $this->assertStringContainsString('UNUSABLE PREVIOUS OUTPUT', $prompts['openai'][1]);
+        $this->assertStringContainsString('UNUSABLE PREVIOUS OUTPUT', $prompts['groq'][1]);
+        Http::assertSentCount(4);
+    }
 }
