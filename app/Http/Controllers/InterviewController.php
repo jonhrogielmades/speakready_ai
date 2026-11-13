@@ -1361,8 +1361,27 @@ return response()->json([
   }
 
   if ($session->status === 'completed') {
- if ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
+ if ($gameLevel && $this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
  $session->refresh()->load(['score', 'feedback']);
+ }
+ if (! $gameLevel) {
+ $reviewService = app(DetailedFeedbackReviewService::class);
+ if ($reviewService->shouldRefreshWithProvider($session)) {
+ $reviewLock = Cache::lock('feedback-review-running:'.$session->id, 145);
+ if (! $reviewLock->get()) {
+ return $request->expectsJson()? response()->json(['review_ready' => false, 'message' => 'AI feedback analysis is already in progress.', 'retry_after_ms' => 1500], 202): back()->with('success', 'AI feedback analysis is already in progress.');
+ }
+ try {
+ $reviewService->refreshWithProvidersIfNeeded($session);
+ } finally {
+ $reviewLock->release();
+ }
+ $session->refresh();
+ if ($reviewService->shouldRefreshWithProvider($session)) {
+ $message = 'Your answers are saved. AI feedback is still being prepared for every question. Please try the analysis again shortly.';
+ return $request->expectsJson()? response()->json(['review_ready' => false, 'message' => $message, 'retry_after_ms' => 1500], 503): back()->with('error', $message);
+ }
+ }
  }
 
   $this->syncScoredInterviewOnboarding($request, $session);
@@ -3732,7 +3751,7 @@ return response()->json([
  InterviewAnswer $answer,
  array $evidence,
  string $stage,?string $fallback = null
- ):?string {
+ ): string {
  try {
  $revision = $assessment->groundedRevisionTemplate($this->answerContentForAssessment($answer), $evidence);
  if (trim($revision)!== '') {
@@ -5134,7 +5153,7 @@ return response()->json([
  return false;
  }
 
- return ($hasNeutralAcknowledgement && $allowNeutralAcknowledgement)
+ return $hasNeutralAcknowledgement
  || ($hasEvidenceProbe && ($overlap > 0 || $mentionsPosition));
  }
 
@@ -5629,7 +5648,7 @@ return response()->json([
 
  $overall = (int) ($score->overall_readiness_score?? 0);
  $targetScore = min(100, max(60, $overall + 10));
- $weakestSkill = array_key_first($weakest)?: 'Fluency & Clarity';
+ $weakestSkill = array_key_first($weakest);
  $coachingPriorities = is_array($feedback->coaching_summary)? (array) ($feedback->coaching_summary['priority_actions']?? []): [];
  $topCoachingPriority = collect($coachingPriorities)->first(fn ($priority): bool => is_array($priority) && filled($priority['action']?? null));
  $headline = is_array($topCoachingPriority) && filled($topCoachingPriority['area']?? null)? 'Next focus: '.trim((string) $topCoachingPriority['area']): "Next focus: {$weakestSkill}";
@@ -6046,7 +6065,7 @@ return response()->json([
   ): array {
   try {
   $feedback = AIService::generateLocalFeedback($sessionData, $answersData);
-  if (! is_array($feedback) || ! is_array($feedback['per_question_feedback']?? null)
+  if (! is_array($feedback['per_question_feedback']?? null)
   || count($feedback['per_question_feedback']) !== count($answersData)) {
   throw new \RuntimeException('The local feedback fallback did not cover every saved answer.');
   }

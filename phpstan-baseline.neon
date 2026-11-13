@@ -685,9 +685,27 @@ parameters:
 			path: app/Http/Controllers/InterviewController.php
 
 		-
+			message: '#^Left side of && is always true\.$#'
+			identifier: booleanAnd.leftAlwaysTrue
+			count: 2
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 4
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Result of && is always false\.$#'
+			identifier: booleanAnd.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
 			message: '#^If condition is always true\.$#'
 			identifier: if.alwaysTrue
-			count: 1
+			count: 3
 			path: app/Http/Controllers/InterviewController.php
 
 		-
@@ -710,6 +728,24 @@ parameters:
 
 		-
 			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:localizedQuestionTexts\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:preloadInitialInterviewQuestion\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:candidateAskedInterviewerNameQuestion\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/InterviewController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InterviewController\:\:localInterviewFollowUpText\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
 			path: app/Http/Controllers/InterviewController.php
@@ -759,7 +795,7 @@ parameters:
 		-
 			message: '#^Property App\\Models\\Profile\:\:\$last_activity_date \(Carbon\\Carbon\|null\) does not accept string\.$#'
 			identifier: assign.propertyType
-			count: 1
+			count: 2
 			path: app/Http/Controllers/InterviewController.php
 
 		-
