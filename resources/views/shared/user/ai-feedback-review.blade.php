@@ -26,6 +26,44 @@
         : null;
     $scoreColor = $score === null ? '#64748b' : ($score >= 80 ? '#10b981' : ($score >= 60 ? '#3b82f6' : '#f59e0b'));
     $scoreBreakdown = is_array($report['category_breakdown'] ?? null) ? $report['category_breakdown'] : [];
+    $cameraFeedbackItems = $sessionRecord->answers
+        ->map(fn ($answer) => data_get($answer->coaching_feedback ?? [], 'camera_feedback'))
+        ->filter(fn ($camera): bool => is_array($camera)
+            && in_array((string) ($camera['status'] ?? ''), ['measured', 'insufficient_data'], true));
+    $camera = $cameraFeedbackItems->first(fn (array $item): bool => ($item['status'] ?? '') === 'measured')
+        ?? $cameraFeedbackItems->first();
+    $cameraSummary = null;
+    if (is_array($camera)) {
+        $cameraObservation = is_scalar($camera['observation'] ?? null)
+            ? trim((string) $camera['observation'])
+            : '';
+        if ($cameraObservation === '') {
+            $cameraObservation = 'Camera feedback was attempted, but there was not enough camera data for a full note.';
+        }
+        $cameraObservation = str_replace(
+            ['the head looked camera-facing', 'camera-facing'],
+            ['head direction looked toward the camera', 'toward the camera'],
+            $cameraObservation
+        );
+        $cameraObservation = trim(preg_replace(
+            '/(?:^|\s+)[^.!?]*(?:hand|hands|gesture|gestures)[^.!?]*[.!?]/iu',
+            ' ',
+            $cameraObservation
+        ) ?? $cameraObservation);
+        if ($cameraObservation === '') {
+            $cameraObservation = 'Camera notes describe the visible cues that could be measured in frame.';
+        }
+        $cameraTip = is_scalar($camera['tip'] ?? null)
+            ? trim((string) $camera['tip'])
+            : '';
+        if ($cameraTip === '' || preg_match('/\b(?:hand|hands|gesture|gestures)\b/iu', $cameraTip) === 1) {
+            $cameraTip = 'Use steady front light and keep your face and shoulders in the preview when possible.';
+        }
+        $cameraSummary = [
+            'observation' => \Illuminate\Support\Str::limit($cameraObservation, 240),
+            'tip' => \Illuminate\Support\Str::limit($cameraTip, 160),
+        ];
+    }
 @endphp
 
 @if($isProviderReport)
@@ -82,6 +120,14 @@
         <section class="review-quick-block review-quick-block-wide" aria-labelledby="ai-feedback-next-step-title">
             <div class="review-block-title" id="ai-feedback-next-step-title"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>What to practice next</span></div>
             <p>{{ $suggestions }}</p>
+        </section>
+        @endif
+
+        @if($cameraSummary !== null)
+        <section class="review-quick-block review-quick-block-wide review-camera-card" aria-labelledby="ai-feedback-camera-title">
+            <div class="review-block-title" id="ai-feedback-camera-title"><i class="fa-solid fa-video" aria-hidden="true"></i><span>Camera Coaching Note</span></div>
+            <p>{{ $cameraSummary['observation'] }}</p>
+            <p class="review-camera-note">{{ $cameraSummary['tip'] }} Browser estimate only. Not part of readiness score.</p>
         </section>
         @endif
     </div>
