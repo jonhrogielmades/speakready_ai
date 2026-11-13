@@ -1520,11 +1520,11 @@ class InterviewSecurityTest extends TestCase
 
     public function test_chat_reply_accepts_posted_session_id_when_session_key_is_missing(): void
     {
-        Setting::setVal('int_follow_up', false, 'interview', 'boolean');
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
 
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         $category = $this->category();
-        $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
+        $session = $this->sessionFor($user, $category, ['num_questions' => 1]);
         $question = $this->sessionQuestion($session, $category);
 
         $this->actingAs($user)

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\RefreshDetailedFeedbackReview;
 use App\Models\Feedback;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
@@ -96,7 +95,7 @@ class UserBackendIntegrityTest extends TestCase
         $this->assertContains('auth.session', $accountMiddleware);
     }
 
-    public function test_opening_a_completed_review_queues_refresh_work_once_per_cooldown(): void
+    public function test_opening_a_completed_review_only_reads_saved_provider_status(): void
     {
         Queue::fake();
         $user = User::factory()->create();
@@ -110,32 +109,22 @@ class UserBackendIntegrityTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.review', $session))
             ->assertOk()
-            ->assertSee('Background review refresh is pending.')
-            ->assertSee('Your saved report is available now.')
-            ->assertSee('You do not need to keep this page open.');
+            ->assertSee('data-review-status="failed"', false)
+            ->assertSee('The providers could not complete a validated review.')
+            ->assertSee('Retry AI review');
 
         $this->get(route('user.review', $session))
             ->assertOk()
-            ->assertDontSee('Background review refresh is pending.');
+            ->assertSee('data-review-status="failed"', false);
 
-        Queue::assertPushed(
-            RefreshDetailedFeedbackReview::class,
-            fn (RefreshDetailedFeedbackReview $job): bool => $job->sessionId === $session->id
-                && $job->userId === $user->id
-        );
-        Queue::assertPushedTimes(RefreshDetailedFeedbackReview::class, 1);
+        Queue::assertNothingPushed();
     }
 
-    public function test_sync_review_refresh_is_scheduled_after_the_response(): void
+    public function test_opening_a_completed_review_does_not_dispatch_work_with_a_sync_queue(): void
     {
         Queue::fake();
         config()->set('queue.default', 'sync');
         $this->app['env'] = 'local';
-        $checkedBeforeDeferredDispatch = false;
-        $this->app->terminating(function () use (&$checkedBeforeDeferredDispatch): void {
-            Queue::assertNotPushed(RefreshDetailedFeedbackReview::class);
-            $checkedBeforeDeferredDispatch = true;
-        });
 
         $user = User::factory()->create();
         $session = InterviewSession::create([
@@ -148,15 +137,9 @@ class UserBackendIntegrityTest extends TestCase
         $this->actingAs($user)
             ->get(route('user.review', $session))
             ->assertOk()
-            ->assertSee('Background review refresh is pending.');
+            ->assertSee('data-review-status="failed"', false);
 
-        $this->assertTrue($checkedBeforeDeferredDispatch);
-        Queue::assertPushed(
-            RefreshDetailedFeedbackReview::class,
-            fn (RefreshDetailedFeedbackReview $job): bool => $job->sessionId === $session->id
-                && $job->userId === $user->id
-        );
-        Queue::assertPushedTimes(RefreshDetailedFeedbackReview::class, 1);
+        Queue::assertNothingPushed();
     }
 
     private function completedSession(): InterviewSession
