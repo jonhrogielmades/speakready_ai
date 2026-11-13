@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ActivityLogger;
 use App\Jobs\GenerateDashboardBubbleMessages;
-use App\Jobs\RefreshDetailedFeedbackReview;
+use App\Jobs\GenerateInterviewFeedback;
 use App\Models\ActivityLog;
 use App\Models\Category;
 use App\Models\ChatbotConversation;
@@ -46,7 +46,6 @@ use App\Services\TrustworthyAssessmentService;
 use App\Support\AccountNotificationSchema;
 use App\Support\ChatbotSchema;
 use App\Support\FeedbackEvidencePresenter;
-use App\Support\DetailedReviewProgress;
 use App\Support\GameSchema;
 use App\Support\LearningModuleSchema;
 use App\Support\ModuleChapterGate;
@@ -897,73 +896,44 @@ class UserController extends Controller
  ])
  ->firstOrFail();
 
- $feedbackRefreshQueued = false;
  $sessionEndedEarly = $sessionRecord->status === 'ended'
  || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false);
 
- $refreshCooldownKey = 'feedback-review-refresh:'.$sessionRecord->id;
- $reviewNeedsRefresh = ! $sessionEndedEarly
-  && $sessionRecord->status === 'completed'
-  && $sessionRecord->answers->isNotEmpty()
-  && $reviewService->shouldRefreshWithProvider($sessionRecord);
-
- if ($reviewNeedsRefresh && $reviewService->hasConfiguredProvider()
- && Cache::add($refreshCooldownKey, true, now()->addMinutes(15))) {
- try {
- DetailedReviewProgress::mark((int) $sessionRecord->id, 'waiting');
- // A sync queue would otherwise run provider calls before this page renders.
- // Run the refresh when the response has been sent, while keeping the normal
- // queue dispatch in tests and installations with a background worker.
- if (config('queue.default') === 'sync' && ! app()->environment('testing')) {
- RefreshDetailedFeedbackReview::dispatchAfterResponse((int) $sessionRecord->id, (int) Auth::id());
- } else {
- RefreshDetailedFeedbackReview::dispatch((int) $sessionRecord->id, (int) Auth::id());
- }
- $feedbackRefreshQueued = true;
- } catch (\Throwable $exception) {
- Cache::forget($refreshCooldownKey);
- DetailedReviewProgress::mark((int) $sessionRecord->id, 'failed');
- Log::warning('Detailed feedback refresh could not be queued; rendering saved report data.', [
- 'session_id' => $sessionRecord->id,
- 'user_id' => Auth::id(),
- 'error_type' => $exception::class,
- ]);
- }
+ $providerReviewStatus = 'verified';
+ if (! $sessionEndedEarly && $sessionRecord->status === 'completed' && ! $sessionRecord->game_level_id) {
+ $savedStatus = strtolower(trim((string) $sessionRecord->feedback_status));
+ $providerReviewStatus = in_array($savedStatus, ['pending', 'processing', 'verified', 'failed'], true)
+ ? $savedStatus : 'failed';
+ // Older saved reports may not have a status, and a verified report may have
+ // become stale after an answer edit. The persisted provider evidence decides.
+ $needsReview = $reviewService->shouldRefreshWithProvider($sessionRecord);
+ $providerReviewStatus = $needsReview
+ ? ($providerReviewStatus === 'verified' ? 'failed' : $providerReviewStatus)
+ : 'verified';
  }
 
- if ($feedbackRefreshQueued) {
- $sessionRecord->refresh()->load([
- 'category',
- 'answers' => function ($query) {
- $query->whereNull('retry_of_answer_id')
- ->with(['question', 'retryAttempts']);
- },
- 'score',
- 'feedback',
- 'gameLevel',
- ]);
- }
-
- $comparisonRows = $this->comparisonRowsFor($sessionRecord);
- $reviewEvidence = FeedbackEvidencePresenter::forSession($sessionRecord);
  $providerReviewPending = ! $sessionEndedEarly && $sessionRecord->status === 'completed'
- && $sessionRecord->answers->isNotEmpty() && $reviewService->shouldRefreshWithProvider($sessionRecord);
- $providerReviewStatus = ! $providerReviewPending ? 'ready'
- : ($reviewService->hasConfiguredProvider() ? DetailedReviewProgress::status((int) $sessionRecord->id) : 'unavailable');
- $localFeedbackAvailable = $sessionRecord->answers->contains(
- fn ($answer): bool => (bool) data_get($answer->coaching_feedback ?? [], 'local_fallback', false)
- );
+ && ! $sessionRecord->game_level_id && $providerReviewStatus !== 'verified';
+ $comparisonRows = $providerReviewPending ? [] : $this->comparisonRowsFor($sessionRecord);
+ $reviewEvidence = $providerReviewPending ? null : FeedbackEvidencePresenter::forSession($sessionRecord);
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'feedbackRefreshQueued', 'providerReviewPending', 'providerReviewStatus', 'localFeedbackAvailable'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'providerReviewPending', 'providerReviewStatus'));
  }
 
  public function reviewStatus($id, DetailedFeedbackReviewService $reviewService)
  {
  $session = InterviewSession::where('user_id', Auth::id())->whereKey($id)->firstOrFail();
  abort_unless($session->status === 'completed' && ! (bool) data_get($session->action_plan ?? [], 'ended_early', false), 409);
- // Polling is read-only: it never schedules another provider call.
- $status = ! $reviewService->shouldRefreshWithProvider($session) ? 'ready'
- : ($reviewService->hasConfiguredProvider() ? DetailedReviewProgress::status((int) $session->id) : 'unavailable');
+ if ($session->game_level_id) {
+ return response()->json(['status' => 'verified', 'retry_after_ms' => 5000])
+ ->header('Cache-Control', 'no-store, private');
+ }
+ // Polling is read-only. The job records progress in the database.
+ $savedStatus = strtolower(trim((string) $session->feedback_status));
+ $status = in_array($savedStatus, ['pending', 'processing', 'verified', 'failed'], true)
+ ? $savedStatus : 'failed';
+ $needsReview = $reviewService->shouldRefreshWithProvider($session);
+ $status = $needsReview ? ($status === 'verified' ? 'failed' : $status) : 'verified';
  return response()->json(['status' => $status, 'retry_after_ms' => 5000])
  ->header('Cache-Control', 'no-store, private');
  }
@@ -972,27 +942,36 @@ class UserController extends Controller
  {
  $session = InterviewSession::where('user_id', Auth::id())->whereKey($id)->firstOrFail();
  abort_unless($session->status === 'completed' && ! (bool) data_get($session->action_plan ?? [], 'ended_early', false), 409);
+ if ($session->game_level_id) {
+ return redirect()->route('user.review', $session);
+ }
+ if (! SystemSettings::enabled('int_ai_eval', true)) {
+ return redirect()->route('user.review', $session)->with('error', 'AI interview evaluation is currently disabled by the administrator.');
+ }
  if (! $reviewService->hasConfiguredProvider()) {
  return redirect()->route('user.review', $session)->with('error', 'AI review is currently unavailable. Please try again when an AI provider is connected.');
  }
- abort_unless(Cache::add('feedback-review-manual-retry:'.$session->id, true, now()->addSeconds(60)), 429, 'Please wait a minute before retrying your AI review.');
- if (in_array(DetailedReviewProgress::status((int) $session->id), ['processing', 'waiting'], true)) {
+ if (! $reviewService->shouldRefreshWithProvider($session)) {
+ return redirect()->route('user.review', $session)->with('success', 'Your AI review is already ready.');
+ }
+ if ($session->feedback_status === 'processing') {
  return redirect()->route('user.review', $session)->with('success', 'Your AI review is already running. This page will update automatically.');
  }
- $plan = is_array($session->action_plan) ? $session->action_plan : [];
- unset($plan['_provider_refresh']['blocked_until']);
- $session->forceFill(['action_plan' => $plan])->save();
- Cache::put('feedback-review-refresh:'.$session->id, true, now()->addMinutes(15));
  try {
- DetailedReviewProgress::mark((int) $session->id, 'waiting');
- if (config('queue.default') === 'sync' && ! app()->environment('testing')) {
- RefreshDetailedFeedbackReview::dispatchAfterResponse((int) $session->id, (int) Auth::id());
- } else {
- RefreshDetailedFeedbackReview::dispatch((int) $session->id, (int) Auth::id());
+ $claimed = InterviewSession::query()->whereKey($session->id)
+ ->where('status', 'completed')
+ ->where('feedback_status', $session->feedback_status)
+ ->update([
+ 'feedback_status' => 'pending',
+ 'feedback_failure_code' => null,
+ ]);
+ if ($claimed !== 1) {
+ return redirect()->route('user.review', $session)->with('success', 'Your AI review changed while retrying. Reload this page for its current status.');
  }
+ GenerateInterviewFeedback::dispatch((int) $session->id, (int) Auth::id());
  } catch (\Throwable $error) {
- Cache::forget('feedback-review-refresh:'.$session->id);
- DetailedReviewProgress::mark((int) $session->id, 'failed');
+ InterviewSession::query()->whereKey($session->id)->where('feedback_status', 'pending')
+ ->update(['feedback_status' => 'failed', 'feedback_failure_code' => 'queue_dispatch_failed']);
  Log::warning('Manual AI review refresh could not be queued.', ['session_id' => $session->id, 'error_type' => $error::class]);
  return redirect()->route('user.review', $session)->with('error', 'The AI review could not be started. Please try again shortly.');
  }

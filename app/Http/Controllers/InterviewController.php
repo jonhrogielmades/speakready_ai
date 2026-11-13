@@ -6,6 +6,7 @@ use App\Exceptions\AiFeedbackProviderFailureException;
 use App\Exceptions\InterviewFollowUpProviderFailureException;
 use App\Exceptions\InterviewFeedbackLeaseLostException;
 use App\Helpers\ActivityLogger;
+use App\Jobs\GenerateInterviewFeedback;
 use App\Models\Category;
 use App\Models\Feedback;
 use App\Models\GameLevel;
@@ -1354,7 +1355,11 @@ return response()->json([
  ], 503): back()->with('error', $message);
  }
 
- if ($session->status === 'completed') {
+  if (! $gameLevel && $session->status === 'completed') {
+  return $this->completedProviderInterviewResponse($request, $session);
+  }
+
+  if ($session->status === 'completed') {
  if ($gameLevel && $this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
  $session->refresh()->load(['score', 'feedback']);
  }
@@ -1449,6 +1454,9 @@ return response()->json([
  }
 
  $session->refresh()->load('gameLevel');
+  if (! $gameLevel) {
+  return $this->queueProviderInterviewFeedback($request, $session, $processingToken);
+  }
  $reportTransactionStarted = false;
 
  try {
@@ -1891,7 +1899,133 @@ return response()->json([
  }
  }
 
- private function feedbackProcessingLeaseSeconds(): int
+  private function completedProviderInterviewResponse(Request $request, InterviewSession $session)
+  {
+  $verified = ! app(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider($session);
+  if ($verified && $session->feedback_status !== 'verified') {
+  $session->forceFill([
+  'feedback_status' => 'verified',
+  'feedback_failure_code' => null,
+  'feedback_completed_at' => now(),
+  ])->save();
+  }
+  $status = $verified ? 'verified' : (string) ($session->feedback_status ?: 'failed');
+  $redirectUrl = route('user.review', $session->id);
+
+  if ($request->expectsJson()) {
+  return response()->json([
+  'redirect_url' => $redirectUrl,
+  'review_ready' => $verified,
+  'feedback_status' => $status,
+  'retry_after_ms' => $verified ? null : 5000,
+  ], $verified ? 200 : 202);
+  }
+
+  return redirect()->to($redirectUrl);
+  }
+
+  private function queueProviderInterviewFeedback(Request $request, InterviewSession $session, string $processingToken)
+  {
+  try {
+  $answers = InterviewAnswer::with('question')
+  ->where('interview_session_id', $session->id)
+  ->whereNull('retry_of_answer_id')
+  ->orderBy('id')
+  ->get();
+  if ($answers->isEmpty()) {
+  throw new \RuntimeException('At least one saved answer is required before finishing the interview.');
+  }
+  $this->ensureVoiceAnswersHaveFeedbackEvidence($session, $answers);
+
+  DB::transaction(function () use ($session, $processingToken): void {
+  $lockedSession = InterviewSession::whereKey($session->id)->lockForUpdate()->firstOrFail();
+  if ($lockedSession->status !== 'processing'
+  || ! hash_equals($processingToken, (string) $lockedSession->feedback_processing_token)) {
+  throw new InterviewFeedbackLeaseLostException;
+  }
+
+  $profile = Profile::forUser((int) $lockedSession->user_id);
+  $profile = Profile::whereKey($profile->id)->lockForUpdate()->firstOrFail();
+  $badges = is_array($profile->badges_earned) ? $profile->badges_earned : [];
+  if ((int) $profile->total_sessions === 0 && ! in_array('First Interview', $badges, true)) {
+  $badges[] = 'First Interview';
+  }
+  $today = now()->format('Y-m-d');
+  if ($profile->last_activity_date?->format('Y-m-d') !== $today) {
+  $yesterday = now()->subDay()->format('Y-m-d');
+  $profile->current_streak = $profile->last_activity_date?->format('Y-m-d') === $yesterday
+  ? ((int) $profile->current_streak + 1) : 1;
+  $profile->last_activity_date = $today;
+  }
+  $profile->longest_streak = max((int) $profile->longest_streak, (int) $profile->current_streak);
+  $xpEarned = $profile->hasPerk('xp_boost') ? 60 : 50;
+  $profile->experience_points = (int) $profile->experience_points + $xpEarned;
+  $profile->player_level = max((int) $profile->player_level, (int) floor($profile->experience_points / 1000) + 1);
+  $profile->total_sessions = (int) $profile->total_sessions + 1;
+  $profile->badges_earned = $badges;
+  $profile->save();
+
+  $lockedSession->forceFill([
+  'status' => 'completed',
+  'feedback_status' => 'pending',
+  'feedback_failure_code' => null,
+  'feedback_attempts' => 0,
+  'feedback_started_at' => null,
+  'feedback_completed_at' => null,
+  'feedback_input_fingerprint' => null,
+  'feedback_processing_token' => null,
+  'feedback_processing_started_at' => null,
+  'current_question_index' => max(0, InterviewAnswer::where('interview_session_id', $session->id)->whereNull('retry_of_answer_id')->count() - 1),
+  'session_state' => null,
+  ])->save();
+  });
+
+  if (! SystemSettings::enabled('int_ai_eval', true)) {
+  InterviewSession::whereKey($session->id)->where('feedback_status', 'pending')->update([
+  'feedback_status' => 'failed',
+  'feedback_failure_code' => 'ai_evaluation_disabled',
+  ]);
+  } else {
+  try {
+  GenerateInterviewFeedback::dispatch((int) $session->id, (int) $session->user_id);
+  } catch (\Throwable $dispatchError) {
+  InterviewSession::whereKey($session->id)->where('feedback_status', 'pending')->update([
+  'feedback_status' => 'failed',
+  'feedback_failure_code' => 'queue_unavailable',
+  ]);
+  Log::error('Provider interview feedback could not be queued.', [
+  'session_id' => $session->id,
+  'error_type' => $dispatchError::class,
+  ]);
+  }
+  }
+
+  $session->refresh();
+  $this->forgetCompletedSessionState($session, null);
+  return $this->completedProviderInterviewResponse($request, $session);
+  } catch (\Throwable $error) {
+  InterviewSession::whereKey($session->id)
+  ->where('status', 'processing')
+  ->where('feedback_processing_token', $processingToken)
+  ->update([
+  'status' => 'in_progress',
+  'feedback_processing_token' => null,
+  'feedback_processing_started_at' => null,
+  ]);
+  Log::error('Interview completion could not save the provider review request.', [
+  'session_id' => $session->id,
+  'error_type' => $error::class,
+  ]);
+  $message = $error instanceof InterviewFeedbackLeaseLostException
+  ? 'Interview completion is already running in another request.'
+  : 'Your answers were saved, but the interview could not be completed. Please retry.';
+  return $request->expectsJson()
+  ? response()->json(['message' => $message], 503)
+  : back()->with('error', $message);
+  }
+  }
+
+  private function feedbackProcessingLeaseSeconds(): int
  {
  $configuredDeadline = (int) RuntimeConfiguration::get(
  'services.ai_feedback_finalization.deadline_seconds',

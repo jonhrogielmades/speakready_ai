@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\GenerateInterviewFeedback;
 use App\Models\AiProvider;
 use App\Models\Category;
 use App\Models\GameAnswer;
@@ -3367,7 +3368,7 @@ class UserSideHardeningTest extends TestCase
  'overall_summary' => 'Across the customer billing answer, the voice response gave action and follow-up details. The next focus is to add the final customer result.',
  'strengths' => 'The voice answer gave a clear customer support example.',
  'weaknesses' => 'The answer could add the final customer result.',
- 'improvement_suggestions' => 'Keep the action clear and add one true result.',
+ 'improvement_suggestions' => 'Keep the customer billing action and follow-up clear, then add one true customer result.',
  ],
  ]),
  ],
@@ -3417,7 +3418,8 @@ class UserSideHardeningTest extends TestCase
  'active_interview_feedback_provider' => 'openai',
  ])
  ->postJson(route('interview.finish'), ['session_id' => $session->id])
- ->assertOk()
+ ->assertStatus(202)
+ ->assertJsonPath('review_ready', false)
  ->assertJsonPath('redirect_url', route('user.review', $session));
 
  $savedAnswer = $answer->fresh();
@@ -3428,8 +3430,13 @@ class UserSideHardeningTest extends TestCase
  $this->assertSame(18, $savedAnswer->voice_duration);
  $this->assertGreaterThan(0, $savedAnswer->wpm);
  $this->assertSame(0, $savedAnswer->pause_count);
+ $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
+ $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+
+ $this->app->call([new GenerateInterviewFeedback($session->id, $user->id), 'handle']);
+
  $this->assertStringContainsString($typedAnswer, $feedbackPrompt);
- $this->assertStringContainsString($voiceTranscript, (string) $savedAnswer->ai_feedback);
+ $this->assertStringContainsString($voiceTranscript, (string) $savedAnswer->fresh()->ai_feedback);
  $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
  $this->assertDatabaseHas('scores', ['interview_session_id' => $session->id]);
  $this->assertDatabaseHas('feedback', ['interview_session_id' => $session->id]);

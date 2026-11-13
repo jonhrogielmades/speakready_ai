@@ -12,6 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        $schedule->command('feedback:requeue-stale')
+            ->everyMinute()
+            ->withoutOverlapping(10)
+            ->onOneServer();
+
         $schedule->command('privacy:prune --force')
             ->dailyAt((string) env('PRIVACY_PRUNE_TIME', '03:15'))
             ->withoutOverlapping(120)

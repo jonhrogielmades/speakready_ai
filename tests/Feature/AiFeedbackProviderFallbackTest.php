@@ -86,8 +86,124 @@ class AiFeedbackProviderFallbackTest extends TestCase
         $this->assertStringNotContainsString('YOUR PREVIOUS REVIEW FAILED VALIDATION', $requestPrompts[0]);
         $this->assertStringContainsString('YOUR PREVIOUS REVIEW FAILED VALIDATION', $requestPrompts[1]);
         $this->assertStringContainsString('does not cite its evidence excerpt verbatim', $requestPrompts[1]);
+        $this->assertStringContainsString('UNTRUSTED REJECTED DRAFT', $requestPrompts[1]);
         $this->assertTrue($feedback['_strict_validation_passed']);
         $this->assertFalse($feedback['_repair_applied']);
+    }
+
+    public function test_answer_only_provider_completion_keeps_a_valid_item_when_its_session_summary_is_invalid(): void
+    {
+        foreach ([
+            'OPENAI_API_KEY' => 'openai_test_token',
+            'OPENAI_API_URL' => 'https://api.openai.com/v1',
+            'OPENAI_FEEDBACK_MODEL' => 'gpt-4o-mini',
+            'AI_LIVE_TESTS' => 'false',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        $answer = [
+            'id' => 7002,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I inspected the query plan, compared row estimates, and verified index usage before changing the query.',
+        ];
+        $payload = $this->validFeedbackPayload($answer);
+        $payload['session_feedback'] = [
+            'overall_summary' => 'Generic note.',
+            'strengths' => 'Generic note.',
+            'weaknesses' => 'Generic note.',
+            'improvement_suggestions' => 'Generic note.',
+        ];
+        Http::fake(['api.openai.com/*' => Http::response([
+            'choices' => [[
+                'finish_reason' => 'stop',
+                'message' => ['content' => json_encode($payload)],
+            ]],
+        ])]);
+
+        $feedback = AIService::generateFeedback(
+            ['target_position' => 'Database Developer', 'difficulty' => 'Medium'],
+            [$answer],
+            'openai',
+            true,
+            false,
+            [
+                'require_provider_narratives' => true,
+                'answer_only_completion' => true,
+                'deadline_seconds' => 20,
+                'max_attempts' => 1,
+                'http_attempts' => 1,
+                'retry_delay_ms' => 0,
+            ]
+        );
+
+        $this->assertCount(1, Http::recorded());
+        $this->assertFalse($feedback['_provider_narratives_verified']);
+        $this->assertSame('ai_evidence_validated', $feedback['per_question_feedback'][0]['evaluation_source']);
+    }
+
+    public function test_provider_completion_merges_a_corrected_answer_despite_invalid_nested_summary(): void
+    {
+        foreach ([
+            'OPENAI_API_KEY' => 'openai_test_token',
+            'OPENAI_API_URL' => 'https://api.openai.com/v1',
+            'OPENAI_FEEDBACK_MODEL' => 'gpt-4o-mini',
+            'AI_LIVE_TESTS' => 'false',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        $answer = [
+            'id' => 7003,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I inspected the query plan, compared row estimates, and verified index usage before changing the query.',
+        ];
+        $initial = $this->validFeedbackPayload($answer);
+        $initial['per_question_feedback'][0]['better_sample_answer'] = 'I used Salesforce to inspect the database. I inspected the query plan and verified index usage.';
+        $corrected = $this->validFeedbackPayload($answer);
+        $corrected['session_feedback'] = [
+            'overall_summary' => 'Generic note.',
+            'strengths' => 'Generic note.',
+            'weaknesses' => 'Generic note.',
+            'improvement_suggestions' => 'Generic note.',
+        ];
+        $calls = 0;
+        Http::fake(function () use ($initial, $corrected, &$calls) {
+            $payload = $calls++ === 0 ? $initial : $corrected;
+
+            return Http::response([
+                'choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => ['content' => json_encode($payload)],
+                ]],
+            ]);
+        });
+
+        $feedback = AIService::generateFeedback(
+            ['target_position' => 'Database Developer', 'difficulty' => 'Medium'],
+            [$answer],
+            'openai',
+            true,
+            false,
+            [
+                'require_provider_narratives' => true,
+                'allow_provider_completion' => true,
+                'deadline_seconds' => 30,
+                'max_attempts' => 1,
+                'http_attempts' => 1,
+                'retry_delay_ms' => 0,
+            ]
+        );
+
+        $this->assertSame(2, $calls);
+        $this->assertTrue($feedback['_strict_validation_passed']);
+        $this->assertTrue($feedback['_provider_narratives_verified']);
+        $this->assertFalse($feedback['_repair_applied']);
+        $this->assertTrue($feedback['_provider_completion_applied']);
+        $this->assertSame('ai_evidence_validated', $feedback['per_question_feedback'][0]['evaluation_source']);
+        $this->assertSame($initial['session_feedback']['overall_summary'], $feedback['session_feedback']['overall_summary']);
     }
 
     public function test_detailed_feedback_accepts_a_distinctive_exact_subphrase_of_the_answer_quote(): void

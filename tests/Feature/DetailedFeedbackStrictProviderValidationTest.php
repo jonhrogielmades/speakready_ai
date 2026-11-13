@@ -429,16 +429,15 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
                 'possible_answer_provider' => 'openai',
             ]],
         ]);
+        $session->update(['feedback_status' => 'pending']);
 
         foreach (['Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148'] as $agent) {
             $this->actingAs($user)->withHeader('User-Agent', $agent)
                 ->get(route('user.review', $session))
                 ->assertOk()
-                ->assertSee('Overall Review')
-                ->assertSee('Possible Answer')
-                ->assertSee('AI feedback is not ready for this question yet.')
-                ->assertSee('An AI-generated possible answer is not available for this question yet.')
-                ->assertSee('documented missed approvals')
+                ->assertSee('Your AI answer reviews are being prepared.')
+                ->assertDontSee('Overall Review')
+                ->assertDontSee('Possible Answer')
                 ->assertDontSee('international award')
                 ->assertDontSee('90%');
         }
@@ -459,16 +458,18 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
             $this->app->make(DetailedFeedbackReviewService::class), $session, collect([$answer]), $feedback, 'openai', $validation
         );
         $answer->update(['answer_text' => 'I have not handled a support handoff. I only observed the team and do not know the result.']);
+        $session->update(['feedback_status' => 'pending']);
 
         foreach (['desktop', 'mobile'] as $layout) {
             $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout)
                 ->assertOk()
-                ->assertSee('<strong>Pending</strong>', false)
-                ->assertSee('I only observed the team')
-                ->assertSee('AI feedback is not ready for this question yet.')
+                ->assertSee('Your AI answer reviews are being prepared.')
+                ->assertDontSee('Overall Review')
+                ->assertDontSee('Possible Answer')
                 ->assertDontSee('I mapped the support handoff issue')
                 ->assertDontSee('<strong>84%</strong>', false);
         }
+        $this->assertStringContainsString('I only observed the team', $answer->fresh()->answer_text);
         $this->assertStringContainsString('I mapped the support handoff issue', $answer->fresh()->ai_feedback);
     }
 

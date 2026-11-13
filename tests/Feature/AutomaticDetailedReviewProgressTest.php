@@ -130,7 +130,10 @@ class AutomaticDetailedReviewProgressTest extends TestCase
     public function test_pending_status_get_is_read_only_and_never_schedules_provider_work(): void
     {
         $user = $this->user();
-        $session = $this->reviewSession($user, ['action_plan' => ['headline' => 'Keep the saved plan.']]);
+        $session = $this->reviewSession($user, [
+            'action_plan' => ['headline' => 'Keep the saved plan.'],
+            'feedback_status' => 'pending',
+        ]);
         $before = $session->fresh()->getAttributes();
         $this->mockStatusService(true, true);
         DetailedReviewProgress::mark($session->id, 'waiting');
@@ -138,7 +141,7 @@ class AutomaticDetailedReviewProgressTest extends TestCase
 
         $this->actingAs($user)->getJson(route('user.review.status', $session->id))
             ->assertOk()
-            ->assertExactJson(['status' => 'waiting', 'retry_after_ms' => 5000])
+            ->assertExactJson(['status' => 'pending', 'retry_after_ms' => 5000])
             ->assertHeader('Cache-Control', 'no-store, private');
 
         $this->assertSame($before, $session->fresh()->getAttributes());
@@ -148,7 +151,7 @@ class AutomaticDetailedReviewProgressTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_ready_status_requires_saved_review_validation_not_a_cached_ready_marker(): void
+    public function test_verified_status_requires_saved_review_validation_not_a_cached_ready_marker(): void
     {
         $user = $this->user();
         $session = $this->reviewSession($user);
@@ -160,24 +163,25 @@ class AutomaticDetailedReviewProgressTest extends TestCase
 
         $this->mockStatusService(false, false);
         $this->actingAs($user)->getJson(route('user.review.status', $session->id))
-            ->assertOk()->assertJsonPath('status', 'ready');
+            ->assertOk()->assertJsonPath('status', 'verified');
 
         Queue::assertNothingPushed();
         Http::assertNothingSent();
     }
 
-    public function test_status_get_distinguishes_failed_and_unavailable_provider_reviews(): void
+    public function test_status_get_uses_durable_failed_and_pending_states(): void
     {
         $user = $this->user();
-        $session = $this->reviewSession($user);
+        $session = $this->reviewSession($user, ['feedback_status' => 'failed']);
         DetailedReviewProgress::mark($session->id, 'failed');
         $this->mockStatusService(true, true);
         $this->actingAs($user)->getJson(route('user.review.status', $session->id))
             ->assertOk()->assertJsonPath('status', 'failed');
 
+        $session->forceFill(['feedback_status' => 'pending'])->save();
         $this->mockStatusService(true, false);
         $this->actingAs($user)->getJson(route('user.review.status', $session->id))
-            ->assertOk()->assertJsonPath('status', 'unavailable');
+            ->assertOk()->assertJsonPath('status', 'pending');
 
         Queue::assertNothingPushed();
         Http::assertNothingSent();
@@ -228,21 +232,21 @@ class AutomaticDetailedReviewProgressTest extends TestCase
         $user = $this->user();
         $this->mock(DetailedFeedbackReviewService::class, function (MockInterface $mock): void {
             $mock->shouldReceive('hasConfiguredProvider')->andReturn(true);
+            $mock->shouldReceive('shouldRefreshWithProvider')->andReturn(true);
             $mock->shouldNotReceive('refreshWithProvidersIfNeeded');
         });
 
-        foreach (['processing', 'waiting'] as $status) {
-            $session = $this->reviewSession($user, ['action_plan' => ['headline' => 'Preserved plan.']]);
-            DetailedReviewProgress::mark($session->id, $status);
-            $before = $session->fresh()->getAttributes();
+        $session = $this->reviewSession($user, [
+            'action_plan' => ['headline' => 'Preserved plan.'],
+            'feedback_status' => 'processing',
+        ]);
+        $before = $session->fresh()->getAttributes();
 
-            $this->actingAs($user)->post(route('user.review.refresh', $session->id))
-                ->assertRedirect(route('user.review', $session->id))
-                ->assertSessionHas('success');
+        $this->actingAs($user)->post(route('user.review.refresh', $session->id))
+            ->assertRedirect(route('user.review', $session->id))
+            ->assertSessionHas('success');
 
-            $this->assertSame($before, $session->fresh()->getAttributes());
-            $this->assertSame($status, DetailedReviewProgress::status($session->id));
-        }
+        $this->assertSame($before, $session->fresh()->getAttributes());
 
         Queue::assertNothingPushed();
         Http::assertNothingSent();

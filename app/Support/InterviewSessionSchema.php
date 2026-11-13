@@ -84,6 +84,12 @@ class InterviewSessionSchema
             $table->json('accommodation_profile')->nullable();
             $table->boolean('score_eligible')->default(false);
             $table->string('status')->default('pending');
+            $table->string('feedback_status', 24)->nullable();
+            $table->string('feedback_failure_code', 80)->nullable();
+            $table->unsignedInteger('feedback_attempts')->default(0);
+            $table->timestamp('feedback_started_at')->nullable();
+            $table->timestamp('feedback_completed_at')->nullable();
+            $table->string('feedback_input_fingerprint', 64)->nullable();
             $table->string('feedback_processing_token', 64)->nullable();
             $table->timestamp('feedback_processing_started_at')->nullable();
             $table->text('notes')->nullable();
@@ -176,6 +182,24 @@ class InterviewSessionSchema
         }
         if (self::isMissing($missing, 'status')) {
             $table->string('status')->default('pending');
+        }
+        if (self::isMissing($missing, 'feedback_status')) {
+            $table->string('feedback_status', 24)->nullable();
+        }
+        if (self::isMissing($missing, 'feedback_failure_code')) {
+            $table->string('feedback_failure_code', 80)->nullable();
+        }
+        if (self::isMissing($missing, 'feedback_attempts')) {
+            $table->unsignedInteger('feedback_attempts')->default(0);
+        }
+        if (self::isMissing($missing, 'feedback_started_at')) {
+            $table->timestamp('feedback_started_at')->nullable();
+        }
+        if (self::isMissing($missing, 'feedback_completed_at')) {
+            $table->timestamp('feedback_completed_at')->nullable();
+        }
+        if (self::isMissing($missing, 'feedback_input_fingerprint')) {
+            $table->string('feedback_input_fingerprint', 64)->nullable();
         }
         if (self::isMissing($missing, 'feedback_processing_token')) {
             $table->string('feedback_processing_token', 64)->nullable();
@@ -274,6 +298,12 @@ class InterviewSessionSchema
             'accommodation_profile',
             'score_eligible',
             'status',
+            'feedback_status',
+            'feedback_failure_code',
+            'feedback_attempts',
+            'feedback_started_at',
+            'feedback_completed_at',
+            'feedback_input_fingerprint',
             'feedback_processing_token',
             'feedback_processing_started_at',
             'notes',
@@ -306,6 +336,7 @@ class InterviewSessionSchema
             'assessment_mode' => 'legacy',
             'score_eligible' => false,
             'status' => 'pending',
+            'feedback_attempts' => 0,
             'duration_seconds' => 0,
             'current_question_index' => 0,
             'is_archived' => false,

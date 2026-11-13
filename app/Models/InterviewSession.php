@@ -39,6 +39,12 @@ class InterviewSession extends Model
         'accommodation_profile',
         'score_eligible',
         'status',
+        'feedback_status',
+        'feedback_failure_code',
+        'feedback_attempts',
+        'feedback_started_at',
+        'feedback_completed_at',
+        'feedback_input_fingerprint',
         'feedback_processing_token',
         'feedback_processing_started_at',
         'notes',
@@ -60,6 +66,9 @@ class InterviewSession extends Model
         'accommodation_profile' => 'array',
         'score_eligible' => 'boolean',
         'pressure_mode' => 'boolean',
+        'feedback_attempts' => 'integer',
+        'feedback_started_at' => 'datetime',
+        'feedback_completed_at' => 'datetime',
         'feedback_processing_started_at' => 'datetime',
     ];
 

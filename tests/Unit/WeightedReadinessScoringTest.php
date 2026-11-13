@@ -344,7 +344,7 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('Include a Result only when candidate_answer gives one', $rules);
         $this->assertStringContainsString('Put the missing detail in coaching.improve', $rules);
         $this->assertStringContainsString('spoken draft', $rules);
-        $this->assertStringContainsString('minimum of 3 sentences and a maximum of 6 sentences', $rules);
+        $this->assertStringContainsString('Use 2 to 6 sentences', $rules);
         $batchRules = $this->invokePrivate('aiCoachPossibleAnswerWritingRules', [null, true]);
         $this->assertStringContainsString('When the supplied star_applicable value is true, write one natural paragraph', $batchRules);
 
@@ -372,12 +372,16 @@ class WeightedReadinessScoringTest extends TestCase
             'answer' => 'I listened to an upset customer, checked the order status, and explained the next step clearly.',
         ];
         $grounded = 'I listened to an upset customer and checked the order status. I explained the next step clearly. I would add only the true customer result without inventing new facts.';
+        $groundedConcise = 'I listened to an upset customer and checked the order status. I explained the next step clearly.';
+        $inventedConcise = 'I listened to an upset customer and checked the order status. I closed a large sale for the company.';
         $inventedEmployer = 'I listened to an upset customer and checked the order status. At Northstar Retail, I explained the next step clearly. I would add only the true customer result.';
         $inventedTool = 'I listened to an upset customer and checked the order status. I tracked the case in Salesforce before explaining the next step. I would add only the true customer result.';
         $inventedOutcome = 'I listened to an upset customer and checked the order status. The customer renewed the contract and praised my service. I would keep the next step clear.';
         $inventedScope = 'I listened to an upset customer and checked the order status. I led a team of ten engineers across three countries and became their trusted adviser.';
 
         $this->assertTrue($this->invokePrivate('providerBetterSampleAnswerIsValid', [$grounded, $answer]));
+        $this->assertTrue($this->invokePrivate('providerBetterSampleAnswerIsValid', [$groundedConcise, $answer]));
+        $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$inventedConcise, $answer]));
         $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$inventedEmployer, $answer]));
         $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$inventedTool, $answer]));
         $this->assertFalse($this->invokePrivate('providerBetterSampleAnswerIsValid', [$inventedOutcome, $answer]));
@@ -463,6 +467,46 @@ class WeightedReadinessScoringTest extends TestCase
         ]));
         $this->assertTrue($this->invokePrivate('providerVisibleTextHasUnsupportedSpecificClaims', [
             'Describe the exact performance gain you measured after fixing the issue.',
+            $answer,
+        ]));
+    }
+
+    public function test_provider_meta_feedback_can_name_the_question_focus_without_claiming_new_experience(): void
+    {
+        $answer = [
+            'id' => 8002,
+            'question' => 'Tell me about a time you handled a difficult customer.',
+            'question_type' => 'Behavioral',
+            'answer' => 'I listened to an upset customer, checked the order status, and coordinated with our delivery team. The customer received the item the next day.',
+        ];
+
+        $this->assertFalse($this->invokePrivate('providerVisibleTextHasUnsupportedSpecificClaims', [
+            'You clearly described how you handled a difficult customer by saying, "I listened to an upset customer."',
+            $answer,
+        ]));
+        $this->assertFalse($this->invokePrivate('sessionFeedbackHasUnsupportedSpecificClaims', [
+            'You provided a strong answer that clearly addressed the question about handling a difficult customer.',
+            [$answer],
+        ]));
+        $this->assertTrue($this->invokePrivate('sessionFeedbackReferencesAnswers', [
+            'Focus on elaborating your role in the coordination process.',
+            [$answer],
+            1,
+        ]));
+        $this->assertTrue($this->invokePrivate('providerVisibleTextHasUnsupportedSpecificClaims', [
+            'You handled ten customers and earned a bonus.',
+            $answer,
+        ]));
+        $this->assertFalse($this->invokePrivate('providerVisibleTextHasUnsupportedSpecificClaims', [
+            'Include specific actions you took to resolve the issue.',
+            $answer,
+        ]));
+        $this->assertFalse($this->invokePrivate('providerVisibleTextHasUnsupportedSpecificClaims', [
+            'Describe any challenges you faced during coordination.',
+            $answer,
+        ]));
+        $this->assertTrue($this->invokePrivate('providerVisibleTextHasUnsupportedSpecificClaims', [
+            'You earned a bonus after handling the customer.',
             $answer,
         ]));
     }

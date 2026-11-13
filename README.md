@@ -485,7 +485,16 @@ AI Coach chat uses a low temperature for more consistent guidance, bounded provi
 
 Interview follow-ups use the latest saved answer and recent connected turns. Both hosted replies and local fallbacks check for repeated questions and already-supplied outcomes. Local probes quote a real answer detail, preserve uncertainty, and continue the same example while respecting the selected question type and role.
 
-Interview feedback tries OpenAI first, then Gemini, Groq, and Cohere in that order when credentials are configured. Each provider receives one protected share of the total deadline; retries may use only that provider's remaining share, so a slow primary cannot consume the time reserved for later providers. It accepts a hosted response only after strict structured-output, answer-coverage, score-plausibility, and exact-evidence checks pass. A semantically invalid response fails over to the next configured provider. Only a complete, strictly validated API response that did not need provider-recovery repair may replace a saved Detailed Review. Accepted responses are still normalized through deterministic evidence and score guards before persistence. If every provider fails, the interview remains safely uncompleted with the answers saved and returns a categorized retry message; the local model is not silently presented as provider-verified Detailed Review. Configure the `AI_FEEDBACK_FINALIZATION_*` values explicitly in Dokploy so the first report has enough time to finish.
+For ordinary interviews, finishing saves the answers and completes the interview before queuing the AI review. Detailed Review stays pending until a provider report passes the saved-answer checks and is persisted. The queue job tries the configured APIs in `AI_DETAILED_REVIEW_PROVIDER_PRIORITY` order (OpenAI, Gemini, Groq, Cohere by default); it retries transient failures and never publishes local feedback as a verified AI review. A failed job remains retryable, and `feedback:requeue-stale` recovers abandoned pending or processing jobs and retries failed jobs up to a bounded attempt count. Run a database or Redis queue worker and the Laravel scheduler in every deployment. A sync queue is routed to the database for this job, but a worker must still be running. Provider calls use `AI_FEEDBACK_REVIEW_REFRESH_*` limits, independent of the interview HTTP request.
+
+For local development, set `QUEUE_CONNECTION=database` and run these as separate long-running processes:
+
+```bash
+php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=180
+php artisan schedule:work
+```
+
+Run `php artisan ai:smoke-detailed-feedback` with configured provider keys to check strict provider response validation using a synthetic answer. `--provider=openai` tests one provider. The saved-answer persistence gate is covered by the review integration tests. A passing smoke check verifies the current API response only; provider quotas, network access, and response quality can change later.
 
 Local and hosted scoring share action/result checks: dates and team sizes do not establish an outcome, and a hypothetical plan is not a completed behavioral example. Qualitative and unsuccessful outcomes still count as reported evidence. Provider numeric claims must preserve quantities and units from the answer. Detailed Review refreshes compare a locked input fingerprint before saving, so an in-flight API response cannot overwrite feedback after its answer or question changed. Displayed evidence excerpts are also checked against the saved answer.
 
@@ -581,7 +590,7 @@ provenance, and a lightweight ensemble for larger datasets. The predictor
 remains compatible with older artifacts, but the runtime will not use an old
 or unvalidated artifact when the production validation gate is enabled.
 
-After training, the local model is used as the final interview feedback fallback when API providers fail. Keep hosted providers first so detailed reviews try API providers before the local model:
+The local model remains available for training and other explicitly local workflows. Ordinary completed interviews wait for a validated hosted provider review when APIs fail:
 
 ```env
 LOCAL_FEEDBACK_MODEL_ENABLED=true

@@ -6558,6 +6558,14 @@ startFinishReviewProgress();
  const payload = await parseResponsePayload(response);
  const data = payload.data || {};
 
+  if (response.status === 202 && data.redirect_url && data.review_ready === false) {
+  window.SpeakReadyInterviewSetupDraft?.clear();
+  clearFinishReviewProgressTimer();
+  await exitMobileFullscreen();
+  window.location.replace(data.redirect_url);
+  return true;
+  }
+
  if (response.status === 202 || response.status === 409) {
  if (!processingRetryDeadline) {
  processingRetryDeadline = Date.now() + finishReviewProcessingRetryWindowMs;

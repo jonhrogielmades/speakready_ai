@@ -209,6 +209,11 @@ run_as_app_user() {
 
 start_supervised_queue_worker() {
     connection="${QUEUE_CONNECTION:-database}"
+    if [ "$connection" = "sync" ] || [ "$connection" = "null" ]; then
+        # Provider reviews always use the database queue so interview finish
+        # never waits for a long API call or silently discards the job.
+        connection="database"
+    fi
     heartbeat_file="storage/${QUEUE_HEARTBEAT_FILE:-framework/operations/queue-worker.heartbeat}"
     max_time="${QUEUE_WORKER_MAX_TIME:-240}"
     timeout="${QUEUE_WORKER_TIMEOUT:-180}"
@@ -327,9 +332,7 @@ run_startup_maintenance() {
     run_optional php artisan route:cache
     run_optional php artisan view:cache
 
-    if [ "${QUEUE_CONNECTION:-database}" != "sync" ] && [ "${QUEUE_CONNECTION:-database}" != "null" ]; then
-        start_supervised_queue_worker
-    fi
+    start_supervised_queue_worker
 
     if env_bool RUN_SCHEDULER_ON_START true; then
         start_supervised_scheduler

@@ -2,7 +2,8 @@
 <div class="db-section active animate-fade-up{{ ($isMobile ?? false) ? ' review-shell' : '' }}">
  @php
  $sessionEndedEarly = isset($sessionEndedEarly)? (bool) $sessionEndedEarly: ($sessionRecord->status === 'ended' || (bool) data_get($sessionRecord->action_plan?? [], 'ended_early', false));
- $report = \App\Support\FeedbackReportPresenter::forSession($sessionRecord);
+ $providerReviewVerified = !($providerReviewPending ?? false);
+ $report = $providerReviewVerified ? \App\Support\FeedbackReportPresenter::forSession($sessionRecord) : [];
  $comparisonRows = $comparisonRows?? [];
  @endphp
  <!-- Feature 2 & 15: Header, Report Info, Export -->
@@ -48,43 +49,30 @@
 
  @if(!$sessionEndedEarly && ($providerReviewPending ?? false))
  @php
- $initialProviderReviewStatus = in_array($providerReviewStatus ?? null, ['processing', 'waiting', 'ready', 'unavailable', 'failed'], true) ? $providerReviewStatus : 'processing';
- $providerReviewCanContinue = ! in_array($initialProviderReviewStatus, ['unavailable', 'failed'], true);
- $hasLocalFeedbackFallback = (bool) ($localFeedbackAvailable ?? false);
+ $initialProviderReviewStatus = in_array($providerReviewStatus ?? null, ['pending', 'processing', 'failed'], true) ? $providerReviewStatus : 'pending';
+ $providerReviewCanContinue = $initialProviderReviewStatus !== 'failed';
  @endphp
- <div class="alert mb-4" data-detailed-review-status data-review-status-hidden="true" hidden aria-hidden="true" data-local-fallback="{{ $hasLocalFeedbackFallback ? 'true' : 'false' }}" data-review-status-url="{{ route('user.review.status', $sessionRecord) }}" data-review-status="{{ $initialProviderReviewStatus }}" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;overflow-wrap:anywhere;">
+ <div class="alert mb-4" data-detailed-review-status data-review-status-url="{{ route('user.review.status', $sessionRecord) }}" data-review-status="{{ $initialProviderReviewStatus }}" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;overflow-wrap:anywhere;">
  <div role="status" aria-live="polite" aria-atomic="true">
- <strong class="d-block mb-1" data-review-status-title>{{ $hasLocalFeedbackFallback ? 'Local answer feedback is ready.' : ($providerReviewCanContinue ? 'Your AI answer reviews are being prepared.' : 'Your AI answer reviews need another attempt.') }}</strong>
- <p class="mb-2" data-review-status-message>{{ $hasLocalFeedbackFallback ? 'Your report is based on temporary local saved-answer checks while the AI providers recover. You can read it now; a successful provider retry will replace it with richer provider-written notes.' : ($providerReviewCanContinue ? 'This page updates automatically when the reviews are ready. You can keep reading your saved responses below.' : 'Some questions are still waiting for a validated AI review. Your saved responses are available below.') }}</p>
+ <strong class="d-block mb-1" data-review-status-title>{{ $providerReviewCanContinue ? 'Your AI answer reviews are being prepared.' : 'Your AI answer reviews need another attempt.' }}</strong>
+ <p class="mb-2" data-review-status-message>{{ $providerReviewCanContinue ? 'Your interview is complete and your answers are saved. This page updates when a provider review passes validation.' : 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.' }}</p>
  </div>
  <form method="POST" action="{{ route('user.review.refresh', $sessionRecord) }}" data-review-retry @if($providerReviewCanContinue) hidden @endif>
  @csrf
  <button type="submit" class="btn btn-primary">Retry AI review</button>
  </form>
  <button type="button" class="btn btn-primary" data-review-reload hidden>Show completed review</button>
-  @if($providerReviewCanContinue && !$hasLocalFeedbackFallback)
+  @if($providerReviewCanContinue)
  <noscript>
- <p>Reload this page shortly to check your AI reviews, or request another attempt.</p>
- <form method="POST" action="{{ route('user.review.refresh', $sessionRecord) }}">
- @csrf
- <button type="submit" class="btn btn-primary">Retry AI review</button>
- </form>
+ <p>Reload this page shortly to check your AI review status.</p>
  </noscript>
  @endif
  </div>
  @once
  @push('scripts')
- <script src="{{ asset('js/detailed-review-status.js?v=2') }}" defer></script>
+ <script src="{{ asset('js/detailed-review-status.js?v=4') }}" defer></script>
  @endpush
  @endonce
- @elseif(!$sessionEndedEarly && ($feedbackRefreshQueued?? false) && !($localFeedbackAvailable ?? false))
- <div class="alert mb-4 d-flex align-items-start gap-3" role="status" aria-live="polite" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;">
- <i class="fa-solid fa-arrows-rotate text-info mt-1" aria-hidden="true"></i>
- <div>
- <strong class="d-block mb-1">Background review refresh is pending.</strong>
- <span style="color:var(--tx2);font-size:.9rem;line-height:1.55;">Your saved report is available now. SpeakReady is checking missing or outdated detail in the background; reload this page later to see any updated feedback. You do not need to keep this page open.</span>
- </div>
- </div>
  @endif
 
  @if(!$sessionEndedEarly)
@@ -95,10 +83,12 @@
  </div>
  @endif
 
+ @if($providerReviewVerified)
  @include('shared.partials.review-quick-summary', [
  'report' => $report,
  'sessionRecord' => $sessionRecord,
  ])
+ @endif
 
  @endif
 
@@ -126,6 +116,7 @@
  'answer' => $answer,
  'sessionRecord' => $sessionRecord,
  'sessionEndedEarly' => $sessionEndedEarly,
+ 'providerReviewVerified' => $providerReviewVerified,
  'reviewInputsStale' => (bool) ($report['is_stale'] ?? false),
  ])
 

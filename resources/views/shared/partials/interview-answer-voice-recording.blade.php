@@ -9,6 +9,7 @@
  ]));
  $hasTranscriptText = trim((string) ($answer->answer_text?? ''))!== '';
  $hasFeedbackVoiceEvidence = trim((string) ($answer->delivery_transcript?? ''))!== '';
+ $voiceReviewReady = (bool) ($providerReviewVerified ?? true) && ! (bool) ($reviewEndedEarly ?? false);
 @endphp
 
 @if($voiceRecordingUrl)
@@ -21,7 +22,7 @@
  </div>
  <audio controls preload="metadata" src="{{ $voiceRecordingUrl }}" style="width:100%;display:block;"></audio>
  @if(!$hasTranscriptText)
- <p style="color:var(--tx3);font-size:.84rem;line-height:1.45;margin:10px 0 0;">{{ $hasFeedbackVoiceEvidence? 'AI feedback is based on this saved voice session. Voice Mode keeps the text transcript hidden.': 'Transcript unavailable. Your voice recording was still saved for playback and review.' }}</p>
+ <p style="color:var(--tx3);font-size:.84rem;line-height:1.45;margin:10px 0 0;">{{ $hasFeedbackVoiceEvidence ? ($voiceReviewReady ? 'AI feedback is based on this saved voice session. Voice Mode keeps the text transcript hidden.' : 'This voice session was saved. Voice Mode keeps the text transcript hidden.') : 'Transcript unavailable. Your voice recording was still saved for playback and review.' }}</p>
  @endif
  </div>
 @endif

@@ -2,16 +2,16 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\RefreshDetailedFeedbackReview;
+use App\Jobs\GenerateInterviewFeedback;
 use App\Models\Category;
 use App\Models\Feedback;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\Score;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\DetailedFeedbackReviewService;
-use App\Services\AiProviderEvaluationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -60,130 +60,113 @@ class InitialProviderReviewReadinessTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_missing_question_review_is_completed_before_finish_reports_ready(): void
+    public function test_finish_saves_the_interview_and_queues_provider_review_without_waiting_for_an_api(): void
     {
-        [$user, $session, $first] = $this->fixture();
-        $second = InterviewAnswer::create([
-            'interview_session_id' => $session->id, 'question_id' => $first->question_id,
-            'answer_text' => 'I checked the database server load, reviewed query latency, and inspected the execution plan before changing the index.',
-            'response_mode' => 'text',
-        ]);
-        $partial = $this->payload($first);
-        $secondPayload = $this->payload($second);
-        $hosts = [];
-        Http::fake(function ($request) use ($session, $partial, $secondPayload, &$hosts) {
-            $hosts[] = parse_url($request->url(), PHP_URL_HOST);
-            $this->assertSame('processing', $session->fresh()->status);
-            $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
-            if (count($hosts) === 2) {
-                return Http::response($this->geminiResponse($partial));
-            }
-            return Http::response($this->openAiResponse(count($hosts) === 1 ? $partial : $secondPayload));
-        });
+        [$user, $session] = $this->fixture();
 
         $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
-            ->assertOk()->assertJsonPath('review_ready', true)
+            ->assertStatus(202)->assertJsonPath('review_ready', false)
             ->assertJsonPath('redirect_url', route('user.review', $session));
 
-        $this->assertSame(['api.openai.com', 'generativelanguage.googleapis.com', 'api.openai.com'], $hosts);
         $this->assertSame('completed', $session->fresh()->status);
-        $service = $this->app->make(DetailedFeedbackReviewService::class);
-        $this->assertFalse($service->shouldRefreshWithProvider($session->fresh()));
-        foreach ([$first->fresh(), $second->fresh()] as $answer) {
-            $state = $service->answerReviewProviderState($answer);
-            $this->assertTrue($state['feedback_ready']);
-            $this->assertTrue($state['possible_answer_ready']);
+        $this->assertSame('pending', $session->fresh()->feedback_status);
+        $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+        Queue::assertPushed(GenerateInterviewFeedback::class, 1);
+        Http::assertNothingSent();
+    }
+
+    public function test_queued_provider_review_persists_only_after_saved_answer_validation(): void
+    {
+        [$user, $session, $answer] = $this->fixture();
+        $payload = $this->payload($answer);
+        $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertStatus(202)->assertJsonPath('review_ready', false);
+        Http::fake(Http::response($this->openAiResponse($payload)));
+        $this->app->call([new GenerateInterviewFeedback($session->id, $user->id), 'handle']);
+
+        $this->assertSame('verified', $session->fresh()->feedback_status);
+        $this->assertSame('openai', $answer->fresh()->ai_provider);
+        $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
+        $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider($session->fresh()));
+        Http::assertSentCount(1);
+    }
+
+    public function test_provider_outage_never_publishes_local_feedback_as_a_ready_ai_review(): void
+    {
+        [$user, $session, $answer] = $this->fixture();
+        $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertStatus(202)->assertJsonPath('review_ready', false)
+            ->assertJsonPath('redirect_url', route('user.review', $session));
+        Http::fake(Http::response(['error' => ['message' => 'Too many requests']], 429));
+        $job = new GenerateInterviewFeedback($session->id, $user->id);
+        try {
+            $this->app->call([$job, 'handle']);
+        } catch (\Throwable $error) {
+            $job->failed($error);
         }
-        foreach (['desktop', 'mobile'] as $layout) {
-            $this->get(route('user.review', $session).'?sr_layout='.$layout)
-                ->assertOk()->assertViewIs($layout.'.user.review')->assertSee($first->fresh()->ai_feedback)
-                ->assertSee($second->fresh()->better_sample_answer)
-                ->assertDontSee('AI feedback is not ready for this question yet.');
-        }
-        Http::assertSentCount(3);
-        Queue::assertNotPushed(RefreshDetailedFeedbackReview::class);
+
+        $this->assertSame('completed', $session->fresh()->status);
+        $savedAnswer = $answer->fresh();
+        $this->assertSame($answer->answer_text, $savedAnswer->answer_text);
+        $this->assertNotSame('verified', $session->fresh()->feedback_status);
+        $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+        $this->assertContains($savedAnswer->ai_provider, [null, '']);
+        $this->assertEmpty($savedAnswer->ai_feedback);
+        $this->assertFalse((bool) data_get($savedAnswer->coaching_feedback, 'local_fallback'));
+    }
+
+    public function test_repeated_finish_does_not_dispatch_a_duplicate_provider_review(): void
+    {
+        [$user, $session] = $this->fixture();
+        $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertStatus(202)->assertJsonPath('review_ready', false);
+        $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertStatus(202)->assertJsonPath('review_ready', false);
+        Queue::assertPushed(GenerateInterviewFeedback::class, 1);
+        Http::assertNothingSent();
     }
 
     public function test_changed_answer_is_not_certified_with_stale_provider_output(): void
     {
         [$user, $session, $answer] = $this->fixture();
         $payload = $this->payload($answer);
-        $changed = 'I observed the database query investigation but did not inspect the execution plan myself.';
-        Http::fake(function () use ($answer, $changed, $payload) {
-            InterviewAnswer::whereKey($answer->id)->update(['answer_text' => $changed]);
-            return Http::response($this->openAiResponse($payload));
-        });
-
         $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
-            ->assertStatus(503)->assertJsonMissingPath('redirect_url');
+            ->assertStatus(202);
+        $changed = 'I observed the database query investigation but did not inspect the execution plan myself.';
+        InterviewAnswer::whereKey($answer->id)->update(['answer_text' => $changed]);
+        Http::fake(Http::response($this->openAiResponse($payload)));
+        try {
+            $this->app->call([new GenerateInterviewFeedback($session->id, $user->id), 'handle']);
+        } catch (\Throwable) {
+            // An outdated provider response must leave the review unverified.
+        }
 
-        $this->assertSame('in_progress', $session->fresh()->status);
-        $this->assertSame($changed, $answer->fresh()->answer_text);
+        $this->assertNotSame('verified', $session->fresh()->feedback_status);
         $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
         $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
-        $this->assertFalse((bool) data_get($answer->fresh()->coaching_feedback, 'provider_narrative.verified'));
-        Http::assertSentCount(1);
     }
 
-    public function test_provider_failure_completes_with_local_feedback_fallback(): void
+    public function test_disabled_ai_evaluation_saves_answers_without_dispatching_or_exposing_a_review(): void
     {
-        [$user, $session, $answer] = $this->fixture();
-        Http::fake(Http::response(['error' => ['message' => 'Too many requests']], 429));
+        Setting::updateOrCreate(['key' => 'int_ai_eval'], [
+            'value' => '0', 'type' => 'boolean', 'group' => 'interview',
+        ]);
+        [$user, $session] = $this->fixture();
 
         $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
-            ->assertOk()->assertJsonPath('review_ready', true)
-            ->assertJsonPath('redirect_url', route('user.review', $session));
+            ->assertStatus(202)->assertJsonPath('review_ready', false)
+            ->assertJsonPath('feedback_status', 'failed');
 
         $this->assertSame('completed', $session->fresh()->status);
-        $savedAnswer = $answer->fresh();
-        $this->assertSame($answer->answer_text, $savedAnswer->answer_text);
-        $this->assertSame(1, Score::where('interview_session_id', $session->id)->count());
-        $this->assertSame(1, Feedback::where('interview_session_id', $session->id)->count());
-        $this->assertContains($savedAnswer->ai_provider, ['local', 'localmodel']);
-        $this->assertNotEmpty($savedAnswer->ai_feedback);
-        $this->assertTrue((bool) data_get($savedAnswer->coaching_feedback, 'local_fallback'));
-        foreach (['desktop', 'mobile'] as $layout) {
-            $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout)
-                ->assertOk()->assertViewIs($layout.'.user.review')
-                ->assertSee('Local answer feedback is ready.')
-                ->assertSee('temporary local saved-answer checks')
-                ->assertSee('Retry AI review')
-                ->assertDontSee('AI feedback is not ready for this question yet.');
-        }
-        Queue::assertPushed(RefreshDetailedFeedbackReview::class, 1);
-        Http::assertSentCount(2);
-    }
-
-    public function test_existing_completed_report_is_verified_before_finish_returns_ready(): void
-    {
-        [$user, $session, $answer] = $this->fixture();
-        $session->update(['status' => 'completed']);
-        Http::fake(Http::response($this->openAiResponse($this->payload($answer))));
-
-        $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
-            ->assertOk()->assertJsonPath('review_ready', true);
-
-        $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider($session->fresh()));
-        $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
-            ->assertOk()->assertJsonPath('review_ready', true);
-        Http::assertSentCount(1);
-    }
-
-    public function test_old_provider_ranking_cannot_block_the_configured_strict_review_cascade(): void
-    {
-        [$user, $session, $answer] = $this->fixture();
-        $this->mock(AiProviderEvaluationService::class, function ($mock): void {
-            $mock->shouldReceive('bestProviderKeyForInterviewTask')->andReturn(null);
-            $mock->shouldReceive('hasProviderEvidenceForInterviewTask')->andReturn(true);
-        });
-        Http::fake(Http::response($this->openAiResponse($this->payload($answer))));
-
-        $this->actingAs($user)->withSession(['active_interview_feedback_provider' => 'local'])
-            ->postJson(route('interview.finish'), ['session_id' => $session->id])
-            ->assertOk()->assertJsonPath('review_ready', true);
-
-        $this->assertSame('openai', $answer->fresh()->ai_provider);
-        Http::assertSentCount(1);
+        $this->assertSame('ai_evaluation_disabled', $session->fresh()->feedback_failure_code);
+        Queue::assertNotPushed(GenerateInterviewFeedback::class);
+        $this->app->call([new GenerateInterviewFeedback($session->id, $user->id), 'handle']);
+        $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
+        $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
+        Http::assertNothingSent();
     }
 
     private function fixture(): array

@@ -27,7 +27,7 @@ class DetailedFeedbackReviewService
  ) {
  }
 
- public function refreshWithProvidersIfNeeded(InterviewSession $session,?string $preferredProvider = null, ?int $deadlineSeconds = null): bool
+ public function refreshWithProvidersIfNeeded(InterviewSession $session,?string $preferredProvider = null, ?int $deadlineSeconds = null, bool $throwOnFailure = false): bool
  {
  // Start from persisted inputs, including database defaults and the latest
  // transcript, rather than relationships cached by an earlier request.
@@ -72,7 +72,14 @@ class DetailedFeedbackReviewService
  'provider' => $provider,
  'provider_count' => $error->providerCount(),
  'providers_attempted' => $error->attemptedProviders(),
+  'failure_code' => $error->failureCode(),
+  'failure_reasons' => $error->failureReasons(),
+  'validation_errors' => $error->validationErrors(),
+  'http_statuses' => $error->httpStatuses(),
  ]);
+  if ($throwOnFailure) {
+  throw $error;
+  }
 
  return false;
  } catch (\Throwable $error) {
@@ -83,6 +90,9 @@ class DetailedFeedbackReviewService
  'error_type' => $error::class,
  'message' => Str::limit($error->getMessage(), 300),
  ]);
+  if ($throwOnFailure) {
+  throw $error;
+  }
 
  return false;
  }
@@ -109,6 +119,9 @@ class DetailedFeedbackReviewService
  ->filter()
  ->all(),
  ]);
+  if ($throwOnFailure) {
+  throw new \RuntimeException('Provider review failed the final saved-answer validation.');
+  }
 
  return false;
  }
@@ -123,6 +136,9 @@ class DetailedFeedbackReviewService
  'error_type' => $error::class,
  'message' => Str::limit($error->getMessage(), 300),
  ]);
+  if ($throwOnFailure) {
+  throw $error;
+  }
 
  return false;
  }

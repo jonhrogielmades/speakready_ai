@@ -5,8 +5,6 @@
         var panel = document.querySelector('[data-detailed-review-status]');
         if (!panel || panel.dataset.reviewStatusBound === 'true') return;
         panel.dataset.reviewStatusBound = 'true';
-        var localFallback = panel.dataset.localFallback === 'true';
-        var hideStatusPanel = panel.dataset.reviewStatusHidden === 'true';
 
         var title = panel.querySelector('[data-review-status-title]');
         var message = panel.querySelector('[data-review-status-message]');
@@ -20,8 +18,8 @@
         var attempts = 0;
         var failures = 0;
         var startedAt = Date.now();
-        var maximumWait = 300000;
-        var maximumAttempts = 60;
+        var maximumWait = 600000;
+        var maximumAttempts = 120;
         var nextDelay = 5000;
 
         function setText(heading, detail) {
@@ -30,10 +28,6 @@
         }
 
         function showPanel() {
-            if (hideStatusPanel) {
-                hidePanel();
-                return;
-            }
             panel.hidden = false;
             panel.setAttribute('aria-hidden', 'false');
         }
@@ -65,18 +59,31 @@
             stop();
             showPanel();
             setText(
-                heading || (localFallback ? 'Local answer feedback is ready.' : 'Your AI answer reviews need another attempt.'),
-                detail || (localFallback ? 'Your saved-answer report is available now. You can retry later for provider-written detail.' : 'Some questions are still waiting for a validated AI review.')
+                heading || 'Your AI answer reviews need another attempt.',
+                detail || 'The providers could not complete a validated review. Your answers remain saved.'
             );
-            if (retry) retry.hidden = hideStatusPanel;
+            if (retry) retry.hidden = false;
             if (reload) reload.hidden = true;
         }
+
+        function offerReload(detail) {
+            stop();
+            showPanel();
+            setText('Your AI review is still being checked.', detail);
+            if (retry) retry.hidden = true;
+            if (reload) {
+                reload.textContent = 'Check review status';
+                reload.hidden = false;
+            }
+        }
+
+        if (reload) reload.addEventListener('click', function () { window.location.reload(); });
 
         try {
             statusUrl = new URL(panel.dataset.reviewStatusUrl, window.location.href);
             if (statusUrl.origin !== window.location.origin) throw new Error('Invalid status URL');
         } catch (_) {
-            offerRetry('Automatic updates are unavailable. You can request another attempt below.');
+            offerReload('Automatic updates are unavailable. Reload to check your saved review.');
             return;
         }
 
@@ -86,9 +93,7 @@
 
         function exhausted() {
             if (Date.now() - startedAt < maximumWait && attempts < maximumAttempts) return false;
-            offerRetry(localFallback
-                ? 'Your saved-answer report is available now. You can request a provider retry below when the service is ready.'
-                : 'Your reviews are taking longer than expected. Your responses are saved; you can request another attempt below.');
+            offerReload('Your responses are saved. Reload to check the latest provider review status.');
             return true;
         }
 
@@ -128,7 +133,7 @@
             if (seen || !persisted) {
                 showPanel();
                 setText('Your AI reviews are ready.', 'Reload this page to display the latest saved report.');
-                if (reload) reload.hidden = hideStatusPanel;
+                if (reload) reload.hidden = false;
                 return;
             }
             hidePanel();
@@ -137,20 +142,18 @@
         }
 
         function applyStatus(result) {
-            if (!result || !['processing', 'waiting', 'ready', 'unavailable', 'failed'].includes(result.status)) {
+            if (!result || !['pending', 'processing', 'verified', 'failed'].includes(result.status)) {
                 throw new Error('Invalid review status');
             }
             failures = 0;
             var detail = typeof result.message === 'string' ? result.message.trim().slice(0, 500) : '';
-            if (result.status === 'ready') {
+            if (result.status === 'verified') {
                 reloadReadyReview();
-            } else if (result.status === 'failed' || result.status === 'unavailable') {
-                offerRetry(localFallback
-                    ? 'Your saved-answer report is available now. You can request a provider retry below.'
-                    : (detail || 'Some questions are still waiting for a validated AI review. You can request another attempt below.'));
+            } else if (result.status === 'failed') {
+                offerRetry(detail || 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.');
             } else {
                 showPanel();
-                setText('Your AI answer reviews are being prepared.', detail || 'This page updates automatically when the reviews are ready. You can keep reading your saved responses below.');
+                setText('Your AI answer reviews are being prepared.', detail || 'Your interview is complete. This page updates when provider feedback passes validation.');
                 var delay = Number(result.retry_after_ms);
                 nextDelay = Number.isFinite(delay) ? Math.max(2000, Math.min(15000, delay)) : 5000;
             }
@@ -179,7 +182,7 @@
                 if (currentGeneration !== generation || !canPoll()) return;
                 failures += 1;
                 if (failures >= 3) {
-                    offerRetry('We could not check your AI reviews automatically. Your responses are saved; you can request another attempt below.');
+                    offerReload('We could not check automatically. Your responses are saved; reload to check the review status.');
                 } else {
                     nextDelay = 5000 * failures;
                     setText('Checking your AI reviews…', 'The connection was interrupted. Automatic checking will try again shortly.');
@@ -203,15 +206,12 @@
             schedule(0);
         }
 
-        if (['failed', 'unavailable'].includes(panel.dataset.reviewStatus)) {
-            offerRetry(localFallback
-                ? 'Your saved-answer report is available now. You can request a provider retry below.'
-                : 'Some questions are still waiting for a validated AI review. You can request another attempt below.');
+        if (panel.dataset.reviewStatus === 'failed') {
+            offerRetry('The providers could not complete a validated review. Your answers remain saved; request another attempt below.');
             return;
         }
         showPanel();
         if (retry) retry.hidden = true;
-        if (reload) reload.addEventListener('click', function () { window.location.reload(); });
         document.addEventListener('visibilitychange', resume);
         window.addEventListener('online', resume);
         window.addEventListener('offline', resume);

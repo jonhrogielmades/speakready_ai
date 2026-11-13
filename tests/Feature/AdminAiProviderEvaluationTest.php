@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Jobs\GenerateInterviewFeedback;
 use App\Models\AiProvider;
 use App\Models\AiProviderEvaluationResult;
 use App\Models\AiProviderEvaluationRun;
@@ -517,9 +518,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSee('Ranked User-Requested Generated Questions and Feedback by AI Provider')
  ->assertSee('3 with output')
  ->assertSee('How would you handle a customer complaint as a Customer Service Representative?')
- ->assertSee('OpenAI says the answer')
- ->assertSee('Groq says the answer')
- ->assertSee('Cohere says the answer')
+ ->assertSee('detail from the saved answer supports this response')
  ->assertSee('User request comparison')
  ->assertSee('Rank #1')
  ->assertSee('Rank #2')
@@ -793,7 +792,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  Http::assertSent(fn ($request) => str_contains($request->url(), 'api.openai.com'));
  }
 
- public function test_interview_finish_uses_ranked_feedback_provider(): void
+ public function test_queued_interview_review_uses_configured_feedback_provider_priority(): void
  {
  $this->clearProviderEnv();
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
@@ -856,10 +855,13 @@ class AdminAiProviderEvaluationTest extends TestCase
  'session_id' => $session->id,
  'duration_seconds' => 90,
  ])
- ->assertOk();
+ ->assertStatus(202)
+ ->assertJsonPath('review_ready', false);
 
- $this->assertSame('cohere', $answer->fresh()->ai_provider);
- $this->assertTrue(collect($requestedUrls)->contains(fn (string $url): bool => str_contains($url, 'cohere')));
+ $this->app->call([new GenerateInterviewFeedback($session->id, $user->id), 'handle']);
+
+ $this->assertSame('openai', $answer->fresh()->ai_provider);
+ $this->assertTrue(collect($requestedUrls)->contains(fn (string $url): bool => str_contains($url, 'api.openai.com')));
  }
 
  private function rankedEvaluationRun(AiProvider $openAi, AiProvider $groq, AiProvider $cohere): AiProviderEvaluationRun
@@ -1129,7 +1131,9 @@ class AdminAiProviderEvaluationTest extends TestCase
  $evidenceQuote = $this->benchmarkEvidenceQuote($answerText);
  $remainingDetail = trim((string) preg_replace('/\s+/', ' ', str_replace($evidenceQuote, '', $answerText)));
  $remainingDetail = trim($remainingDetail, " \t\n\r\0\x0B.,;:");
- $specificDetail = $remainingDetail!== ''? $remainingDetail: 'customer issue';
+ preg_match_all('/[a-z][a-z0-9]+/i', $remainingDetail, $detailWords);
+ $specificDetail = collect($detailWords[0]?? [])->first(fn (string $word): bool => strlen($word) > 3
+ && ! in_array(strtolower($word), ['checked', 'confirmed', 'coordinated', 'explained', 'restored', 'listened', 'within', 'minutes', 'with', 'that', 'this', 'then'], true))?? 'customer';
  $sampleAnswer = rtrim($answerText, ".!? \t\n\r\0\x0B").'. I would keep those same saved details clear. I would add only a true final result if it is missing.';
 
  return [
@@ -1149,7 +1153,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  'question_focus' => $questionFocus,
  'answer_alignment' => 'directly_addressed',
  'missing_criteria' => [],
- 'ai_feedback' => "For {$questionFocus}, {$providerLabel} says the answer directly addressed the question because it used \"{$evidenceQuote}\". It also mentions {$specificDetail}, so the next step is to add the final result or effect if that detail is still missing.",
+ 'ai_feedback' => "For \"{$questionFocus}\", you stated \"{$evidenceQuote}\". The {$specificDetail} detail from the saved answer supports this response; add the true final effect if it is missing.",
  'better_sample_answer' => $sampleAnswer,
  'follow_up_question' => 'What final result or effect came after the action in this answer?',
  'coaching' => [

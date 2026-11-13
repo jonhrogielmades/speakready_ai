@@ -77,6 +77,7 @@ class FeedbackSchema
         Schema::create('feedback', function (Blueprint $table): void {
             $table->id();
             self::foreignId($table, 'interview_session_id', 'interview_sessions');
+            $table->unique('interview_session_id', 'feedback_interview_session_id_unique');
             $table->text('strengths')->nullable();
             $table->text('weaknesses')->nullable();
             $table->text('improvement_suggestions')->nullable();

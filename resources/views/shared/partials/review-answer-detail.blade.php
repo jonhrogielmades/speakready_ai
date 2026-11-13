@@ -5,15 +5,16 @@
  $hasVoiceEvidence = trim((string) ($answer->delivery_transcript ?? '')) !== '';
  $isVoiceModeAnswer = strtolower((string) ($answer->response_mode ?? '')) === 'voice' && $hasVoiceRecording;
  $isVoiceOnlyAnswer = $isVoiceModeAnswer && $answerText === '';
+ $reviewEndedEarly = (bool) ($sessionEndedEarly ?? false);
+ $providerReviewVerified = (bool) ($providerReviewVerified ?? true);
 
  $answerDisplay = $answerText !== ''
  ? $answerText
  : ($isVoiceOnlyAnswer && $hasVoiceEvidence
- ? 'Voice answer saved. Feedback is based on the saved voice session.'
+ ? ($reviewEndedEarly ? 'Voice answer saved.' : ($providerReviewVerified ? 'Voice answer saved. Feedback is based on the saved voice session.' : 'Voice answer saved for AI review.'))
  : ($hasVoiceRecording ? 'Transcript unavailable for the saved voice answer.' : 'No answer text was saved.'));
 
- $reviewEndedEarly = (bool) ($sessionEndedEarly ?? false);
- $providerReview = $reviewEndedEarly ? [] : app(\App\Services\DetailedFeedbackReviewService::class)
+ $providerReview = ($reviewEndedEarly || ! $providerReviewVerified) ? [] : app(\App\Services\DetailedFeedbackReviewService::class)
  ->answerReviewProviderState($answer, (bool) ($reviewInputsStale ?? false));
  $feedbackReady = (bool) ($providerReview['feedback_ready'] ?? false);
  $possibleAnswerReady = (bool) ($providerReview['possible_answer_ready'] ?? false);
@@ -51,10 +52,10 @@
 @endphp
 
 <div class="review-answer-simple review-answer-minimal">
- @if($reviewEndedEarly)
+ @if($reviewEndedEarly || ! $providerReviewVerified)
  <div class="early-ended-answer-note" role="note">
  <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
- <span>This answer was saved, but it was not assessed because the interview ended early.</span>
+ <span>{{ $reviewEndedEarly ? 'This answer was saved, but it was not assessed because the interview ended early.' : 'This answer was saved. Provider feedback will appear after the AI review passes validation.' }}</span>
  </div>
  <div class="review-answer-example-grid">
  <section class="review-answer-section-wide">
