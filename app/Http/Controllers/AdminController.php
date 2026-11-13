@@ -632,7 +632,7 @@ class AdminController extends Controller
   ]
  );
 
-  $generatedText = trim((string) (($generation['questions']?? [])[0]?? ''));
+  $generatedText = trim((string) ($generation['questions'][0]?? ''));
  if ($generatedText!== '') {
  $questionRecord['question_text'] = $generatedText;
  $source = 'ai';
@@ -646,7 +646,7 @@ class AdminController extends Controller
    'error_code' => 'ai_question_generation_unavailable',
    'source' => 'ai_unavailable',
    'ai_provider' => null,
-   'attempted_providers' => $generation['attempted_providers']?? [],
+   'attempted_providers' => $generation['attempted_providers'],
   ], 503);
  }
  }

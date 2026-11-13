@@ -197,10 +197,6 @@ class AiFeedbackProviderFailureException extends RuntimeException
             $values = is_array($providerErrors) ? $providerErrors : [$providerErrors];
             $messages = [];
             foreach (array_slice($values, 0, 8) as $value) {
-                if (! is_string($value)) {
-                    continue;
-                }
-
                 $message = trim(preg_replace('/\s+/u', ' ', $value) ?? '');
                 if ($message !== '') {
                     $messages[] = mb_substr($message, 0, 200);
@@ -230,7 +226,7 @@ class AiFeedbackProviderFailureException extends RuntimeException
 
             $values = is_array($providerStatuses) ? $providerStatuses : [$providerStatuses];
             $codes = array_values(array_unique(array_filter(
-                array_map(static fn ($status): int => is_numeric($status) ? (int) $status : 0, array_slice($values, 0, 8)),
+                array_map(static fn ($status): int => (int) $status, array_slice($values, 0, 8)),
                 static fn (int $status): bool => $status >= 100 && $status <= 599
             )));
             if ($codes !== []) {

@@ -810,7 +810,7 @@ class InterviewController extends Controller
  }
 
  try {
- return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $requiredQuestionType, $interviewerInputText, $history, $isFinal) {
+ return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $requiredQuestionType) {
  $lockedSession = InterviewSession::with('category')
  ->where('user_id', Auth::id())
  ->where('status', 'in_progress')
@@ -1361,27 +1361,8 @@ return response()->json([
   }
 
   if ($session->status === 'completed') {
- if ($gameLevel && $this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
+ if ($this->ensureCompletedSessionFeedbackIsCurrent($session, $gameLevel)) {
  $session->refresh()->load(['score', 'feedback']);
- }
- if (! $gameLevel) {
- $reviewService = app(DetailedFeedbackReviewService::class);
- if ($reviewService->shouldRefreshWithProvider($session)) {
- $reviewLock = Cache::lock('feedback-review-running:'.$session->id, 145);
- if (! $reviewLock->get()) {
- return $request->expectsJson()? response()->json(['review_ready' => false, 'message' => 'AI feedback analysis is already in progress.', 'retry_after_ms' => 1500], 202): back()->with('success', 'AI feedback analysis is already in progress.');
- }
- try {
- $reviewService->refreshWithProvidersIfNeeded($session);
- } finally {
- $reviewLock->release();
- }
- $session->refresh();
- if ($reviewService->shouldRefreshWithProvider($session)) {
- $message = 'Your answers are saved. AI feedback is still being prepared for every question. Please try the analysis again shortly.';
- return $request->expectsJson()? response()->json(['review_ready' => false, 'message' => $message, 'retry_after_ms' => 1500], 503): back()->with('error', $message);
- }
- }
  }
 
   $this->syncScoredInterviewOnboarding($request, $session);
