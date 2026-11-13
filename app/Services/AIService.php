@@ -6610,8 +6610,8 @@ PROMPT;
  ) ?? $personalClaimText;
  $personalClaimText = preg_replace('/\bfollowed that with\b/iu', 'then', $personalClaimText) ?? $personalClaimText;
  $personalClaimText = preg_replace(
- '/\bdescrib(?:ing|ed) how (?:they|you|the candidate) handled\b/iu',
- 'describing the answer to',
+ '/\bdescrib(ing|ed) how (?:they|you|the candidate) handled\b/iu',
+ 'describ$1 the answer to',
  $personalClaimText
  ) ?? $personalClaimText;
  $hypotheticalQuestion = str_contains($sentence, '?')

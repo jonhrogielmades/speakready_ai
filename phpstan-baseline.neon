@@ -1189,6 +1189,24 @@ parameters:
 			path: app/Jobs/GenerateInterviewFeedback.php
 
 		-
+			message: '#^Access to an undefined property App\\Models\\InterviewSession\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/PreparedAnswerReviewService.php
+
+		-
+			message: '#^Relation ''question'' is not found in App\\Models\\InterviewAnswer model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Services/PreparedAnswerReviewService.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\InterviewSession model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/PreparedAnswerReviewService.php
+
+		-
 			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
 			identifier: larastan.noEnvCallsOutsideOfConfig
 			count: 8
@@ -1293,7 +1311,7 @@ parameters:
 		-
 			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
 			identifier: nullCoalesce.offset
-			count: 6
+			count: 5
 			path: app/Services/AIService.php
 
 		-
@@ -1375,6 +1393,12 @@ parameters:
 			path: app/Services/AIService.php
 
 		-
+			message: '#^Static method App\\Services\\AIService\:\:fallbackInterviewOpeningIntro\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/AIService.php
+
+		-
 			message: '#^Static method App\\Services\\AIService\:\:feedbackIsGroundedInAnswer\(\) is unused\.$#'
 			identifier: method.unused
 			count: 1
@@ -1401,7 +1425,31 @@ parameters:
 		-
 			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Client\\Response\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
-			count: 2
+			count: 8
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 5
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 1 on array\{0\: string, 1\: string, 2\: string, 3\: non\-empty\-string, object\: string, 4\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset 2 on array\{0\: string, 1\: string, 2\: string, 3\: non\-empty\-string, object\: string, 4\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/AIService.php
+
+		-
+			message: '#^Offset ''object'' on array\{0\: string, 1\: string, 2\: string, 3\: non\-empty\-string, object\: string, 4\: string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
 			path: app/Services/AIService.php
 
 		-
@@ -1557,13 +1605,13 @@ parameters:
 		-
 			message: '#^Relation ''answers'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
-			count: 1
+			count: 2
 			path: app/Services/DetailedFeedbackReviewService.php
 
 		-
 			message: '#^Relation ''feedback'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
-			count: 1
+			count: 2
 			path: app/Services/DetailedFeedbackReviewService.php
 
 		-
@@ -1575,6 +1623,12 @@ parameters:
 		-
 			message: '#^Relation ''user'' is not found in App\\Models\\InterviewSession model\.$#'
 			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/DetailedFeedbackReviewService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>coaching_summary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/DetailedFeedbackReviewService.php
 
@@ -1615,9 +1669,9 @@ parameters:
 			path: app/Services/EvidenceBasedCoachingService.php
 
 		-
-			message: '#^Strict comparison using \!\=\= between non\-empty\-list\<float\> and array\{\} will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 2
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
 			path: app/Services/EvidenceBasedCoachingService.php
 
 		-
@@ -1837,12 +1891,6 @@ parameters:
 			path: app/Services/TrustworthyAssessmentService.php
 
 		-
-			message: '#^Offset 0 on array\{list\<string\>\} on left side of \?\? always exists and is not nullable\.$#'
-			identifier: nullCoalesce.offset
-			count: 2
-			path: app/Services/TrustworthyAssessmentService.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
@@ -1989,7 +2037,7 @@ parameters:
 		-
 			message: '#^Using nullsafe property access "\?\-\>coaching_summary" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
-			count: 1
+			count: 2
 			path: app/Support/FeedbackReportPresenter.php
 
 		-
