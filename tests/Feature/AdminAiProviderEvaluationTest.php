@@ -114,7 +114,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSessionHas('ai_provider_smoke_results.0.api_status', 'Rate limited')
  ->assertSessionHas('ai_provider_smoke_results.0.json_status', 'Not checked')
  ->assertSessionHas('ai_provider_smoke_results.0.strict_schema_status', 'Not checked')
- ->assertSessionHas('ai_provider_smoke_results.0.repair_status', 'No')
+ ->assertSessionHas('ai_provider_smoke_results.0.repair_status', 'No local fallback')
  ->assertSessionHas('ai_provider_smoke_results.0.final_usable', false)
  ->assertSessionHas('ai_provider_smoke_results.0.failure_reasons', ['rate_limited'])
  ->assertSessionHas('ai_provider_smoke_results.0.http_statuses', [429]);
@@ -151,19 +151,87 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSessionHas('ai_provider_smoke_results.0.api_status', 'OK')
  ->assertSessionHas('ai_provider_smoke_results.0.json_status', 'OK')
  ->assertSessionHas('ai_provider_smoke_results.0.strict_schema_status', 'Failed')
- ->assertSessionHas('ai_provider_smoke_results.0.repair_status', 'No')
+ ->assertSessionHas('ai_provider_smoke_results.0.repair_status', 'No local fallback')
  ->assertSessionHas('ai_provider_smoke_results.0.final_usable', false)
  ->assertSessionHas('ai_provider_smoke_results.0.failure_reasons',
  fn ($reasons): bool => is_array($reasons) && in_array('validation', $reasons, true))
  ->assertSessionHas('ai_provider_smoke_results.0.validation_errors',
- fn ($errors): bool => is_array($errors) && in_array('session_feedback must be an object.', $errors, true));
+ fn ($errors): bool => is_array($errors) && in_array('The response did not contain exactly one item for every expected answer.', $errors, true))
+ ->assertSessionHas('ai_provider_smoke_summary.status', 'not_tested');
 
  $this->actingAs($admin)
  ->get(route('admin.ai.evaluation'))
  ->assertOk()
  ->assertSee('Parsed JSON failed the saved-answer checks')
- ->assertSee('session_feedback must be an object.')
+ ->assertSee('The response did not contain exactly one item for every expected answer.')
+ ->assertSee('Final session summary:')
+ ->assertSee('This is a shorter diagnostic: each answer provider has up to 45 seconds')
+ ->assertSee('No verified answer review was available')
  ->assertDontSee('Repaired');
+
+ Http::assertSentCount(2);
+ Http::assertSent(fn ($request): bool =>
+ data_get($request->data(), 'response_format.json_schema.name') === 'interview_answer_feedback'
+ && ! array_key_exists('session_feedback', (array) data_get($request->data(), 'response_format.json_schema.schema.properties', [])));
+ }
+
+ public function test_live_smoke_test_checks_prepared_answer_and_final_summary_separately(): void
+ {
+ $this->clearProviderEnv();
+ $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+ $this->configuredProvider();
+ $question = 'Tell me about a time you handled a difficult customer.';
+ $quote = 'I listened to an upset customer';
+ $answerReview = ['per_question_feedback' => [[
+ 'id' => 1, 'score' => 86, 'clarity_score' => 84,
+ 'relevance_score' => 90, 'grammar_score' => 88, 'professionalism_score' => 88,
+ 'star_applicable' => true, 'star_method_score' => 100,
+ 'evidence_quotes' => [$quote], 'question_focus' => $question,
+ 'answer_alignment' => 'directly_addressed', 'missing_criteria' => [],
+ 'insufficient_data' => false, 'confidence_level' => 'high',
+ 'ai_feedback' => 'This directly answers the difficult customer question. The saved answer says "'.$quote.'" and "checked the order status". The answer also says the customer received the item the next day and thanked us for the quick update. In your next answer, explain the words in the quick update.',
+ 'better_sample_answer' => 'In my previous role, I listened to an upset customer and apologized for the delay. I checked the order status and coordinated with our delivery team. The customer received the item the next day and thanked us for the quick update.',
+ 'follow_up_question' => 'What did you tell the upset customer in the quick update after checking the order status?',
+ 'coaching' => [
+ 'keep' => 'Keep the order status check and delivery team coordination in your difficult customer answer.',
+ 'improve' => 'Explain what you told the upset customer after checking the order status.',
+ 'impact' => 'That detail helps the interviewer judge what information was in the quick update about the delay.',
+ 'next_try' => 'In your next difficult customer answer, connect the order status check with the quick update.',
+ 'next_attempt_steps' => [
+ 'Describe the delay and upset customer briefly.',
+ 'State that you listened, apologized, and checked the order status.',
+ 'Finish with the next-day receipt and the customer thanking us.',
+ ],
+ 'success_check' => 'The next answer links the order status check to the quick update.',
+ ],
+ ]]];
+ $summary = ['session_feedback' => [
+ 'overall_summary' => 'The difficult customer answer described listening to an upset customer, apologizing for a delay, checking the order status, and coordinating with the delivery team. The customer received the item the next day and thanked us for the quick update.',
+ 'strengths' => 'The answer included "'.$quote.'" and an order status check, which gives a specific action for the difficult customer question.',
+ 'weaknesses' => 'The answer does not explain what the quick update told the upset customer after the order status check.',
+ 'improvement_suggestions' => 'In your next difficult customer answer, explain what you said in the quick update after checking the order status.',
+ ]];
+ Http::fakeSequence()
+ ->push($this->providerJsonResponse('OpenAI', $answerReview))
+ ->push($this->providerJsonResponse('OpenAI', $summary));
+
+ $response = $this->actingAs($admin)->post(route('admin.ai.evaluation.smoke'));
+ $response
+ ->assertRedirect(route('admin.ai.evaluation'))
+ ->assertSessionHas('ai_provider_smoke_results.0.final_usable', true)
+ ->assertSessionHas('ai_provider_smoke_results.0.strict_schema_status', 'OK')
+ ->assertSessionHas('ai_provider_smoke_summary.status', 'ok')
+ ->assertSessionHas('ai_provider_smoke_summary.provider', 'openai');
+
+ $this->actingAs($admin)
+ ->get(route('admin.ai.evaluation'))
+ ->assertOk()
+ ->assertSee('Final session summary:')
+ ->assertSee('The final session summary passed the saved-answer checks.');
+
+ Http::assertSentCount(2);
+ Http::assertSent(fn ($request): bool =>
+ data_get($request->data(), 'response_format.json_schema.name') === 'interview_session_feedback');
  }
 
  public function test_admin_provider_dashboard_omits_openai_process_connections(): void

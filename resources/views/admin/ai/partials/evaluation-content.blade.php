@@ -59,7 +59,7 @@
     @if(session('ai_provider_smoke_results'))
         <div class="alert alert-info mb-4" role="alert">
             <strong>Live Provider Smoke Test</strong>
-            <p class="mb-0 mt-2">This test sends one sample answer to each provider. Full reports apply additional checks to saved interview answers.</p>
+            <p class="mb-0 mt-2">This test runs the provider-only answer review used after each saved answer, then checks a final session summary using one verified answer. The summary may use a different provider. This is a shorter diagnostic: each answer provider has up to {{ session('ai_provider_smoke_budget_seconds', 45) }} seconds; the production queue worker can run longer.</p>
             <div class="table-responsive mt-3">
                 <table class="table table-sm align-middle mb-0">
                     <thead>
@@ -68,8 +68,8 @@
                             <th>API</th>
                             <th>JSON</th>
                             <th>Schema &amp; Answer Checks</th>
-                            <th>Repair</th>
-                            <th>Sample Feedback</th>
+                            <th>Review Path</th>
+                            <th>Answer Review</th>
                             <th>Score</th>
                             <th>Latency</th>
                             <th>Note</th>
@@ -101,6 +101,17 @@
                     </tbody>
                 </table>
             </div>
+            @php $summaryResult = (array) session('ai_provider_smoke_summary', []); @endphp
+            @if($summaryResult)
+                <p class="mb-0 mt-3">
+                    <strong>Final session summary:</strong>
+                    {{ ($summaryResult['status'] ?? '') === 'ok' ? 'Usable' : (($summaryResult['status'] ?? '') === 'not_tested' ? 'Not tested' : 'Failed') }}.
+                    @if(!empty($summaryResult['provider']))
+                        Provider: {{ strtoupper($summaryResult['provider']) }}.
+                    @endif
+                    {{ $summaryResult['note'] ?? '' }}
+                </p>
+            @endif
         </div>
     @endif
 

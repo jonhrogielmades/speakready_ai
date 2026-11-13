@@ -35,6 +35,12 @@ return [
         'failed_job_window_minutes' => max(1, (int) env('QUEUE_FAILED_JOB_WINDOW_MINUTES', 60)),
     ],
 
+    'review_answer_queue' => [
+        'heartbeat_required' => (bool) env('QUEUE_REVIEW_ANSWER_HEALTHCHECK_ENABLED', false),
+        'heartbeat_file' => env('QUEUE_REVIEW_ANSWER_HEARTBEAT_FILE', 'framework/operations/review-answer-worker.heartbeat'),
+        'max_age_seconds' => max(60, (int) env('QUEUE_REVIEW_ANSWER_HEARTBEAT_MAX_AGE_SECONDS', 420)),
+    ],
+
     'scheduler' => [
         'enabled' => (bool) env('RUN_SCHEDULER_ON_START', true),
         'heartbeat_required' => (bool) env('SCHEDULER_HEALTHCHECK_ENABLED', false),

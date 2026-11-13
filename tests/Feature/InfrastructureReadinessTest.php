@@ -180,6 +180,7 @@ class InfrastructureReadinessTest extends TestCase
                     'startup_maintenance' => true,
                     'storage' => true,
                     'queue_worker' => true,
+                    'review_answer_worker' => true,
                     'scheduler' => true,
                     'queue_backlog' => true,
                     'failed_jobs' => true,
@@ -251,6 +252,37 @@ class InfrastructureReadinessTest extends TestCase
                 ->assertJsonPath('checks.queue_worker', false);
         } finally {
             File::delete($heartbeat);
+        }
+    }
+
+    public function test_readiness_endpoint_requires_a_separate_review_answer_worker_heartbeat(): void
+    {
+        $queueHeartbeat = storage_path('framework/operations/test-default-queue.heartbeat');
+        $reviewHeartbeat = storage_path('framework/operations/test-review-answer-queue.heartbeat');
+        File::ensureDirectoryExists(dirname($queueHeartbeat));
+        File::put($queueHeartbeat, 'fresh');
+        File::put($reviewHeartbeat, 'stale');
+        touch($reviewHeartbeat, time() - 600);
+
+        config()->set('queue.default', 'database');
+        config()->set('operations.queue.heartbeat_required', true);
+        config()->set('operations.queue.heartbeat_file', 'framework/operations/test-default-queue.heartbeat');
+        config()->set('operations.review_answer_queue.heartbeat_required', true);
+        config()->set('operations.review_answer_queue.heartbeat_file', 'framework/operations/test-review-answer-queue.heartbeat');
+        config()->set('operations.review_answer_queue.max_age_seconds', 60);
+
+        DB::shouldReceive('selectOne')
+            ->once()
+            ->with('SELECT 1 AS ready')
+            ->andReturn((object) ['ready' => 1]);
+
+        try {
+            $this->getJson('/up')
+                ->assertServiceUnavailable()
+                ->assertJsonPath('checks.queue_worker', true)
+                ->assertJsonPath('checks.review_answer_worker', false);
+        } finally {
+            File::delete([$queueHeartbeat, $reviewHeartbeat]);
         }
     }
 }

@@ -216,7 +216,11 @@ start_supervised_queue_worker() {
         # never waits for a long API call or silently discards the job.
         connection="database"
     fi
-    heartbeat_file="storage/${QUEUE_HEARTBEAT_FILE:-framework/operations/queue-worker.heartbeat}"
+    if [ "$worker_queue" = "review-answers" ]; then
+        heartbeat_file="storage/${QUEUE_REVIEW_ANSWER_HEARTBEAT_FILE:-framework/operations/review-answer-worker.heartbeat}"
+    else
+        heartbeat_file="storage/${QUEUE_HEARTBEAT_FILE:-framework/operations/queue-worker.heartbeat}"
+    fi
     max_time="${QUEUE_WORKER_MAX_TIME:-240}"
     timeout="${QUEUE_WORKER_TIMEOUT:-180}"
     restart_delay="${PROCESS_RESTART_DELAY_SECONDS:-5}"

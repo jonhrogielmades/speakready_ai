@@ -188,35 +188,55 @@ class AdminAiController extends Controller
  $runtimeOptions = [
  'timeout_seconds' => (int) RuntimeConfiguration::get('services.ai_providers.smoke_timeout_seconds', 'AI_PROVIDER_SMOKE_TIMEOUT', 20),
  'deadline_seconds' => (int) RuntimeConfiguration::get('services.ai_providers.smoke_deadline_seconds', 'AI_PROVIDER_SMOKE_DEADLINE_SECONDS', 45),
- 'max_attempts' => 1,
+ 'max_attempts' => 2,
  'http_attempts' => 1,
  'retry_delay_ms' => 0,
+ 'require_provider_narratives' => true,
+ 'answer_only_completion' => true,
+ 'allow_provider_completion' => false,
  ];
 
- $results = $providers->map(function (string $provider) use ($sessionData, $answersData, $runtimeOptions): array {
+ $preparedItem = null;
+ $results = $providers->map(function (string $provider) use ($sessionData, $answersData, $runtimeOptions, &$preparedItem): array {
  $startedAt = microtime(true);
 
  try {
- $feedback = AIService::generateFeedback($sessionData, $answersData, $provider, true, true, $runtimeOptions);
+ $feedback = AIService::generateFeedback($sessionData, $answersData, $provider, true, false, $runtimeOptions);
  $item = $feedback['per_question_feedback'][0]?? [];
- $quality = $feedback['feedback_quality']?? [];
+ $quality = is_array($item) ? (array) ($item['feedback_quality']?? []) : [];
+ $failedChecks = array_keys(array_filter((array) ($quality['checks']?? []), fn ($passed): bool => $passed !== true));
+ $usable = is_array($item)
+ && (string) ($item['id']?? '') === (string) $answersData[0]['id']
+ && ($item['evaluation_source']?? null) === 'ai_evidence_validated'
+ && ($item['answer_review_source']?? null) === 'ai_provider'
+ && ($item['provider_narratives_verified']?? null) === true
+ && ($quality['status']?? null) === 'verified'
+ && (int) ($quality['completeness_percent']?? 0) === 100
+ && AIService::normalizeProviderKey($feedback['_provider_key']?? null) === $provider;
+ if ($usable && $preparedItem === null) {
+ $preparedItem = $item;
+ $preparedItem['_prepared_provider_key'] = $provider;
+ }
 
  return [
  'provider' => $provider,
- 'status' => 'ok',
+ 'status' => $usable ? 'ok' : 'failed',
  'api_reachable' => true,
  'json_parse_passed' => true,
- 'strict_schema_passed' => (bool) ($feedback['_strict_validation_passed']?? false),
- 'repair_applied' => (bool) ($feedback['_repair_applied']?? false),
+ 'strict_schema_passed' => $usable,
+ 'repair_applied' => (bool) ($feedback['_per_answer_provider_retry']?? false),
  'api_status' => 'OK',
  'json_status' => 'OK',
- 'strict_schema_status' => !empty($feedback['_strict_validation_passed']) ? 'OK' : 'Failed',
- 'repair_status' => !empty($feedback['_repair_applied']) ? 'Used' : 'No',
- 'final_usable' => (($item['evaluation_source']?? '') === 'ai_evidence_validated'),
+ 'strict_schema_status' => $usable ? 'OK' : 'Failed',
+ 'repair_status' => !empty($feedback['_per_answer_provider_retry']) ? 'Provider retry' : 'No local fallback',
+ 'final_usable' => $usable,
  'score' => $item['score']?? null,
  'quality' => $quality['completeness_percent']?? null,
  'latency_ms' => (int) round((microtime(true) - $startedAt) * 1000),
- 'errors' => array_values((array) ($feedback['_validation_errors']?? [])),
+ 'errors' => $usable ? [] : array_merge(
+ ['Provider answer review did not pass the saved-answer checks.'],
+ $failedChecks === [] ? [] : ['Failed checks: '.implode(', ', $failedChecks).'.']
+ ),
  ];
  } catch (\Throwable $error) {
  $failureReasons = $error instanceof AiFeedbackProviderFailureException
@@ -268,7 +288,7 @@ class AdminAiController extends Controller
  'api_status' => $apiStatus,
  'json_status' => $parsedJson ? 'OK' : ($invalidResponse ? 'Failed' : 'Not checked'),
  'strict_schema_status' => $parsedJson ? 'Failed' : 'Not checked',
- 'repair_status' => 'No',
+ 'repair_status' => 'No local fallback',
  'failure_reasons' => $failureReasons,
  'validation_errors' => $validationDetails,
  'http_statuses' => $httpStatuses,
@@ -281,12 +301,39 @@ class AdminAiController extends Controller
  }
  })->values()->all();
 
+ $summaryResult = ['status' => 'not_tested', 'note' => 'No verified answer review was available for the final summary test.'];
+ if (is_array($preparedItem)) {
+ try {
+ $summary = AIService::generatePreparedReviewSummary($sessionData, $answersData, [$preparedItem], 45);
+ $summaryProvider = AIService::normalizeProviderKey($summary['_provider_key']?? null);
+ $summaryUsable = $summaryProvider !== ''
+ && ($summary['_provider_narratives_verified']?? null) === true
+ && AIService::visibleSessionFeedbackIsProviderUsable(
+ (array) ($summary['session_feedback']?? []), $answersData
+ );
+ $summaryResult = [
+ 'status' => $summaryUsable ? 'ok' : 'failed',
+ 'provider' => $summaryProvider,
+ 'note' => $summaryUsable
+ ? 'The final session summary passed the saved-answer checks.'
+ : 'The final session summary did not pass the saved-answer checks.',
+ ];
+ } catch (\Throwable) {
+ $summaryResult = [
+ 'status' => 'failed',
+ 'note' => 'The final session summary could not be generated by a provider.',
+ ];
+ }
+ }
+
  $usable = collect($results)->where('final_usable', true)->count();
 
  return redirect()
  ->route('admin.ai.evaluation')
- ->with('message', sprintf('AI provider live feedback smoke test completed: %d/%d provider(s) produced usable feedback.', $usable, count($results)))
- ->with('ai_provider_smoke_results', $results);
+ ->with('message', sprintf('AI provider live answer-review smoke test completed: %d/%d provider(s) produced usable feedback.', $usable, count($results)))
+ ->with('ai_provider_smoke_results', $results)
+ ->with('ai_provider_smoke_budget_seconds', $runtimeOptions['deadline_seconds'])
+ ->with('ai_provider_smoke_summary', $summaryResult);
  }
 
  public function exportEvaluation(Request $request, AiProviderEvaluationService $evaluationService)

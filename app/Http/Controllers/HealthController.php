@@ -18,6 +18,7 @@ final class HealthController extends Controller
             'startup_maintenance' => $this->startupMaintenanceCompleted(),
             'storage' => $this->storageIsWritable(),
             'queue_worker' => $this->heartbeatIsFresh('queue'),
+            'review_answer_worker' => $this->heartbeatIsFresh('review_answer_queue'),
             'scheduler' => $this->heartbeatIsFresh('scheduler'),
             'queue_backlog' => true,
             'failed_jobs' => true,
@@ -51,6 +52,7 @@ final class HealthController extends Controller
             $checks['startup_maintenance'],
             $checks['storage'],
             $checks['queue_worker'],
+            $checks['review_answer_worker'],
             $checks['scheduler'],
             $checks['database'],
         ], true);
