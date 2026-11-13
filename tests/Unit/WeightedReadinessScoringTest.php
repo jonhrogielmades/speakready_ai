@@ -1044,6 +1044,40 @@ class WeightedReadinessScoringTest extends TestCase
         $this->assertStringContainsString('query plan', $normalized['session_feedback']['strengths']);
     }
 
+    public function test_session_summary_allows_exact_quote_to_explain_question_focus_without_allowing_invented_follow_up(): void
+    {
+        $answer = [
+            'id' => 1,
+            'question_type' => 'behavioral',
+            'question' => 'Tell me about a time you handled a difficult customer.',
+            'expected_guide' => 'Explain the situation, your action, and result.',
+            'answer' => 'I listened to an upset customer, apologized for the delivery delay, checked the order status, and coordinated with our delivery team. The customer received the item the next day and thanked us for the update.',
+        ];
+
+        foreach ([
+            'The excerpt “I listened to an upset customer” directly shows the candidate’s initial action in handling a difficult customer, fulfilling the behavioral question.',
+            'Excerpt "I listened to an upset customer" shows the candidate\'s approach to handling a difficult customer, directly answering the question.',
+        ] as $groundedStrength) {
+            $this->assertFalse($this->invokePrivate('sessionFeedbackHasUnsupportedSpecificClaims', [$groundedStrength, [$answer]]));
+        }
+
+        $this->assertSame([], $this->invokePrivate('sessionFeedbackValidationErrors', [[
+            'overall_summary' => 'The candidate listened to an upset customer, apologized for the delivery delay, checked the order status, and the customer received the item the next day and thanked us.',
+            'strengths' => 'The excerpt “I listened to an upset customer” directly shows the candidate’s initial action in handling a difficult customer, fulfilling the behavioral question.',
+            'weaknesses' => 'The answer does not describe the customer\'s reaction beyond thanking us, leaving an optional detail about whether the issue was fully resolved.',
+            'improvement_suggestions' => 'In your next answer, explain whether you followed up after the customer thanked you.',
+        ], [$answer]]));
+
+        $this->assertTrue($this->invokePrivate('sessionFeedbackHasUnsupportedSpecificClaims', [
+            'In your next answer, explain any follow-up actions you took after the customer thanked you, such as confirming satisfaction.',
+            [$answer],
+        ]));
+        $this->assertTrue($this->invokePrivate('sessionFeedbackHasUnsupportedSpecificClaims', [
+            'The excerpt “I listened to an upset customer” shows the candidate’s Salesforce expertise in handling the customer.',
+            [$answer],
+        ]));
+    }
+
     public function test_strict_normalization_preserves_grounded_provider_session_fields_and_never_silently_replaces_them(): void
     {
         $answer = [

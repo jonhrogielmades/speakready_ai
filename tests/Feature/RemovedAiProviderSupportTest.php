@@ -326,6 +326,83 @@ class RemovedAiProviderSupportTest extends TestCase
  $this->assertSame('json_object', data_get($requests[1]->data(), 'response_format.type'));
  }
 
+ public function test_feedback_openai_recovers_from_schema_rejection_even_when_general_fallback_is_disabled(): void
+ {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('OPENAI_JSON_MODE_FALLBACK', 'false');
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ Http::fakeSequence()
+ ->push(['error' => ['message' => 'response_format json_schema is unsupported']], 400)
+ ->push($this->openAiCompatibleResponse('openai'), 200);
+
+ $result = $providerMethod->invoke(null, 'openai', 'Return JSON.', [
+ 'module' => 'feedback_generation',
+ 'attempts' => 1,
+ 'response_format' => $this->providerContractSchema(),
+ ]);
+
+ $this->assertSame('openai', $result['provider']);
+ $requests = collect(Http::recorded())->map(fn (array $entry) => $entry[0])->values();
+ $this->assertCount(2, $requests);
+ $this->assertSame('json_schema', data_get($requests[0]->data(), 'response_format.type'));
+ $this->assertSame('json_object', data_get($requests[1]->data(), 'response_format.type'));
+ }
+
+ public function test_feedback_cohere_recovers_from_unsupported_schema(): void
+ {
+ $this->setEnvValue('COHERE_API_KEY', 'cohere_test_token');
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ Http::fakeSequence()
+ ->push(['message' => 'response_format schema is not supported by this model'], 400)
+ ->push([
+ 'finish_reason' => 'COMPLETE',
+ 'message' => ['content' => [['type' => 'text', 'text' => '{"provider":"cohere"}']]],
+ ], 200);
+
+ $result = $providerMethod->invoke(null, 'cohere', 'Return JSON.', [
+ 'module' => 'feedback_generation',
+ 'attempts' => 1,
+ 'response_format' => $this->providerContractSchema(),
+ ]);
+
+ $this->assertSame('cohere', $result['provider']);
+ $requests = collect(Http::recorded())->map(fn (array $entry) => $entry[0])->values();
+ $this->assertCount(2, $requests);
+ $this->assertSame('json_object', data_get($requests[0]->data(), 'response_format.type'));
+ $this->assertIsArray(data_get($requests[0]->data(), 'response_format.schema'));
+ $this->assertSame(['type' => 'json_object'], data_get($requests[1]->data(), 'response_format'));
+ }
+
+ public function test_feedback_schema_fallback_does_not_retry_unrelated_client_errors(): void
+ {
+ $providerMethod = new \ReflectionMethod(AIService::class, 'callStructuredProvider');
+ $providerMethod->setAccessible(true);
+
+ foreach (['openai' => 'OPENAI_API_KEY', 'cohere' => 'COHERE_API_KEY'] as $provider => $envKey) {
+ $this->setEnvValue($envKey, $provider.'_test_token');
+ Http::fakeSequence()
+ ->push(['error' => ['message' => 'The configured model does not exist']], 400)
+ ->push($this->openAiCompatibleResponse($provider), 200);
+
+ try {
+ $providerMethod->invoke(null, $provider, 'Return JSON.', [
+ 'module' => 'feedback_generation',
+ 'attempts' => 1,
+ 'response_format' => $this->providerContractSchema(),
+ ]);
+ $this->fail('Expected an unrelated HTTP 400 response to fail without fallback.');
+ } catch (\Throwable $exception) {
+ $this->assertNotInstanceOf(\PHPUnit\Framework\AssertionFailedError::class, $exception);
+ }
+
+ $this->assertCount(1, Http::recorded());
+ }
+ }
+
  public function test_openai_does_not_use_json_fallback_for_an_unrecognised_client_error(): void
  {
  $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');

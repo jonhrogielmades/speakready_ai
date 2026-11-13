@@ -157,9 +157,8 @@ jobs:
 
   deploy:
     needs: [quality, schema-mariadb]
-    # Dokploy already auto-deploys pushes from main. Keep this trigger manual so
-    # one push cannot start a second rollout through the API/webhook path.
-    if: github.event_name == 'workflow_dispatch'
+    # Deploy main after the quality and schema checks; pull requests only test.
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -281,6 +280,11 @@ jobs:
           health_url="${DEPLOY_HEALTHCHECK_URL:-https://speakreadyai.online/up}"
           asset_url="${DEPLOY_ASSET_URL:-https://speakreadyai.online/js/detailed-review-status.js}"
           asset_file="${RUNNER_TEMP}/speakready-deployed-review-status.js"
+          expected_asset_sha="$(sha256sum public/js/detailed-review-status.js | cut -d ' ' -f 1)"
+          asset_query_separator='?'
+          if [[ "${asset_url}" == *\?* ]]; then
+            asset_query_separator='&'
+          fi
           echo "Waiting for the deployment to cycle before checking ${health_url} and the review asset."
           sleep 45
 
@@ -300,8 +304,14 @@ jobs:
           raise SystemExit(0 if payload.get("status") == "ok" else 1)
           PY
             then
-              if curl --silent --show-error --fail --location --connect-timeout 5 --max-time 10 \
-                  --output "${asset_file}" "${asset_url}?deployment=${GITHUB_SHA}" 2>/dev/null \
+              # Use a fresh URL on every probe. A CDN can keep serving the
+              # previous asset when the same deployment query is reused.
+              asset_probe_url="${asset_url}${asset_query_separator}deployment=${GITHUB_SHA}&verify_run=${GITHUB_RUN_ID}&attempt=${attempt}"
+              asset_http_status="$(curl --silent --show-error --location \
+                  --header 'Cache-Control: no-cache' --header 'Pragma: no-cache' \
+                  --connect-timeout 5 --max-time 10 --write-out '%{http_code}' \
+                  --output "${asset_file}" "${asset_probe_url}" 2>/dev/null)" || asset_http_status='000'
+              if [ "${asset_http_status}" = '200' ] \
                   && cmp -s public/js/detailed-review-status.js "${asset_file}"; then
                 consecutive_successes=$((consecutive_successes + 1))
                 echo "Health check ${attempt}: healthy with current review asset (${consecutive_successes}/3 consecutive)."
@@ -310,7 +320,12 @@ jobs:
                 fi
               else
                 consecutive_successes=0
-                echo "Health check ${attempt}: review asset has not reached the current build."
+                if [ "${asset_http_status}" = '200' ]; then
+                  actual_asset_sha="$(sha256sum "${asset_file}" | cut -d ' ' -f 1)"
+                  echo "Health check ${attempt}: review asset mismatch (expected SHA-256 ${expected_asset_sha}, received ${actual_asset_sha})."
+                else
+                  echo "Health check ${attempt}: review asset fetch returned HTTP ${asset_http_status}."
+                fi
               fi
             else
               consecutive_successes=0
