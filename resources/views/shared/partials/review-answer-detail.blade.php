@@ -7,15 +7,25 @@
  $isVoiceOnlyAnswer = $isVoiceModeAnswer && $answerText === '';
  $reviewEndedEarly = (bool) ($sessionEndedEarly ?? false);
  $providerReviewVerified = (bool) ($providerReviewVerified ?? true);
+ $preparedProviderReview = ! $reviewEndedEarly && ! $providerReviewVerified && is_array($preparedProviderReview ?? null)
+ ? $preparedProviderReview : null;
+ $preparedReviewReady = $preparedProviderReview !== null;
 
  $answerDisplay = $answerText !== ''
  ? $answerText
  : ($isVoiceOnlyAnswer && $hasVoiceEvidence
- ? ($reviewEndedEarly ? 'Voice answer saved.' : ($providerReviewVerified ? 'Voice answer saved. Feedback is based on the saved voice session.' : 'Voice answer saved for AI review.'))
+ ? ($reviewEndedEarly ? 'Voice answer saved.' : (($providerReviewVerified || $preparedReviewReady) ? 'Voice answer saved. Feedback is based on the saved voice session.' : 'Voice answer saved for AI review.'))
  : ($hasVoiceRecording ? 'Transcript unavailable for the saved voice answer.' : 'No answer text was saved.'));
 
- $providerReview = ($reviewEndedEarly || ! $providerReviewVerified) ? [] : app(\App\Services\DetailedFeedbackReviewService::class)
- ->answerReviewProviderState($answer, (bool) ($reviewInputsStale ?? false));
+ $providerReview = $preparedReviewReady ? [
+ 'feedback_ready' => true,
+ 'feedback' => $preparedProviderReview['feedback'],
+ 'possible_answer_ready' => trim((string) $preparedProviderReview['possible_answer']) !== '',
+ 'possible_answer' => $preparedProviderReview['possible_answer'],
+ 'skipped' => (bool) $preparedProviderReview['is_skipped'],
+ 'insufficient' => (bool) $preparedProviderReview['insufficient'] || (bool) $preparedProviderReview['is_too_short'],
+ ] : (($reviewEndedEarly || ! $providerReviewVerified) ? [] : app(\App\Services\DetailedFeedbackReviewService::class)
+ ->answerReviewProviderState($answer, (bool) ($reviewInputsStale ?? false)));
  $feedbackReady = (bool) ($providerReview['feedback_ready'] ?? false);
  $possibleAnswerReady = (bool) ($providerReview['possible_answer_ready'] ?? false);
  $answerWasSkipped = (bool) ($providerReview['skipped'] ?? false);
@@ -52,7 +62,7 @@
 @endphp
 
 <div class="review-answer-simple review-answer-minimal">
- @if($reviewEndedEarly || ! $providerReviewVerified)
+ @if($reviewEndedEarly || (! $providerReviewVerified && ! $preparedReviewReady))
  <div class="early-ended-answer-note" role="note">
  <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
  <span>{{ $reviewEndedEarly ? 'This answer was saved, but it was not assessed because the interview ended early.' : 'This answer was saved. Provider feedback will appear after the AI review passes validation.' }}</span>
@@ -61,13 +71,16 @@
  <section class="review-answer-section-wide">
  <span>Your Answer</span>
  @if($isVoiceModeAnswer)
- @include('shared.partials.interview-answer-voice-recording', ['answer' => $answer])
+ @include('shared.partials.interview-answer-voice-recording', ['answer' => $answer, 'providerReviewVerified' => $providerReviewVerified || $preparedReviewReady])
  @else
  <p>{{ $answerDisplay }}</p>
  @endif
  </section>
  </div>
  @else
+ @if($preparedReviewReady)
+ <p class="mb-3" role="status" style="color:var(--tx3);font-size:.88rem;">AI feedback for this answer is ready. The full interview summary is not ready yet.</p>
+ @endif
  <div class="review-answer-tabs" data-answer-review-tabs>
  <div class="review-answer-tab-list" role="tablist" aria-label="Answer review sections">
  <button type="button" class="review-answer-tab is-active" id="{{ $answerTabKey }}-feedback-tab" role="tab" aria-selected="true" aria-controls="{{ $answerTabKey }}-feedback-panel" data-review-tab="feedback" title="Show feedback" tabindex="0">
@@ -97,7 +110,7 @@
  </section>
  <section class="review-answer-section review-answer-tab-panel" id="{{ $answerTabKey }}-answer-panel" role="tabpanel" aria-labelledby="{{ $answerTabKey }}-answer-tab" data-review-panel="answer" aria-hidden="true" tabindex="0" hidden>
  @if($isVoiceModeAnswer)
- @include('shared.partials.interview-answer-voice-recording', ['answer' => $answer])
+ @include('shared.partials.interview-answer-voice-recording', ['answer' => $answer, 'providerReviewVerified' => $providerReviewVerified || $preparedReviewReady])
  @else
  <p>{{ $answerDisplay }}</p>
  @endif

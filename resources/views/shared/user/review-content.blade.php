@@ -5,6 +5,8 @@
  $providerReviewVerified = !($providerReviewPending ?? false);
  $report = $providerReviewVerified ? \App\Support\FeedbackReportPresenter::forSession($sessionRecord) : [];
  $comparisonRows = $comparisonRows?? [];
+ $preparedAnswerReviews = is_array($preparedAnswerReviews ?? null) ? $preparedAnswerReviews : [];
+ $preparedAnswerCount = count($preparedAnswerReviews);
  @endphp
  <!-- Feature 2 & 15: Header, Report Info, Export -->
  <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -54,8 +56,12 @@
  @endphp
  <div class="alert mb-4" data-detailed-review-status data-review-status-url="{{ route('user.review.status', $sessionRecord) }}" data-review-status="{{ $initialProviderReviewStatus }}" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;overflow-wrap:anywhere;">
  <div role="status" aria-live="polite" aria-atomic="true">
- <strong class="d-block mb-1" data-review-status-title>{{ $providerReviewCanContinue ? 'Your AI answer reviews are being prepared.' : 'Your AI answer reviews need another attempt.' }}</strong>
- <p class="mb-2" data-review-status-message>{{ $providerReviewCanContinue ? 'Your interview is complete and your answers are saved. This page updates when a provider review passes validation.' : 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.' }}</p>
+ <strong class="d-block mb-1" data-review-status-title>{{ $preparedAnswerCount > 0
+ ? ($providerReviewCanContinue ? 'Your final AI review is being prepared.' : 'Your final AI review needs another attempt.')
+ : ($providerReviewCanContinue ? 'Your AI answer reviews are being prepared.' : 'Your AI answer reviews need another attempt.') }}</strong>
+ <p class="mb-2" data-review-status-message>{{ $providerReviewCanContinue
+ ? ($preparedAnswerCount > 0 ? "Provider AI feedback is available below for {$preparedAnswerCount} of {$sessionRecord->answers->count()} answers. The final summary is still being prepared." : 'Your interview is complete and your answers are saved. This page updates when provider feedback passes validation.')
+ : ($preparedAnswerCount > 0 ? 'Provider AI feedback is available below. The final session summary could not be validated; retry it below.' : 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.') }}</p>
  </div>
  <form method="POST" action="{{ route('user.review.refresh', $sessionRecord) }}" data-review-retry @if($providerReviewCanContinue) hidden @endif>
  @csrf
@@ -70,7 +76,7 @@
  </div>
  @once
  @push('scripts')
- <script src="{{ asset('js/detailed-review-status.js?v=4') }}" defer></script>
+ <script src="{{ asset('js/detailed-review-status.js?v=6') }}" defer></script>
  @endpush
  @endonce
  @endif
@@ -117,6 +123,7 @@
  'sessionRecord' => $sessionRecord,
  'sessionEndedEarly' => $sessionEndedEarly,
  'providerReviewVerified' => $providerReviewVerified,
+ 'preparedProviderReview' => $preparedAnswerReviews[(int) $answer->id] ?? null,
  'reviewInputsStale' => (bool) ($report['is_stale'] ?? false),
  ])
 

@@ -208,6 +208,8 @@ run_as_app_user() {
 }
 
 start_supervised_queue_worker() {
+    worker_number="${1:-1}"
+    worker_queue="${2:-default}"
     connection="${QUEUE_CONNECTION:-database}"
     if [ "$connection" = "sync" ] || [ "$connection" = "null" ]; then
         # Provider reviews always use the database queue so interview finish
@@ -219,12 +221,13 @@ start_supervised_queue_worker() {
     timeout="${QUEUE_WORKER_TIMEOUT:-180}"
     restart_delay="${PROCESS_RESTART_DELAY_SECONDS:-5}"
 
-    echo "Starting supervised queue worker loop for ${connection}." >&2
+    echo "Starting supervised ${worker_queue} queue worker ${worker_number} for ${connection}." >&2
     (
         while true; do
             write_process_heartbeat "$heartbeat_file"
 
             if run_as_app_user php artisan queue:work "$connection" \
+                --queue="$worker_queue" \
                 --sleep=3 \
                 --tries=3 \
                 --timeout="$timeout" \
@@ -236,7 +239,7 @@ start_supervised_queue_worker() {
             fi
 
             write_process_heartbeat "$heartbeat_file"
-            echo "Queue worker exited with status ${status}; restarting in ${restart_delay}s." >&2
+            echo "${worker_queue} queue worker ${worker_number} exited with status ${status}; restarting in ${restart_delay}s." >&2
             sleep "$restart_delay"
         done
     ) &
@@ -332,7 +335,29 @@ run_startup_maintenance() {
     run_optional php artisan route:cache
     run_optional php artisan view:cache
 
-    start_supervised_queue_worker
+    worker_count="${QUEUE_WORKER_COUNT:-1}"
+    case "$worker_count" in
+        ''|*[!0-9]*) worker_count=1 ;;
+    esac
+    if [ "$worker_count" -lt 1 ]; then worker_count=1; fi
+    if [ "$worker_count" -gt 8 ]; then worker_count=8; fi
+    worker_number=1
+    while [ "$worker_number" -le "$worker_count" ]; do
+        start_supervised_queue_worker "$worker_number" default
+        worker_number=$((worker_number + 1))
+    done
+
+    answer_worker_count="${QUEUE_REVIEW_ANSWER_WORKERS:-2}"
+    case "$answer_worker_count" in
+        ''|*[!0-9]*) answer_worker_count=2 ;;
+    esac
+    if [ "$answer_worker_count" -lt 1 ]; then answer_worker_count=1; fi
+    if [ "$answer_worker_count" -gt 8 ]; then answer_worker_count=8; fi
+    worker_number=1
+    while [ "$worker_number" -le "$answer_worker_count" ]; do
+        start_supervised_queue_worker "$worker_number" review-answers
+        worker_number=$((worker_number + 1))
+    done
 
     if env_bool RUN_SCHEDULER_ON_START true; then
         start_supervised_scheduler

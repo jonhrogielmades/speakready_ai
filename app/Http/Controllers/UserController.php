@@ -34,6 +34,7 @@ use App\Services\CoachLanguageService;
 use App\Services\CoachRequestAlignmentService;
 use App\Services\CoachReliabilityService;
 use App\Services\DetailedFeedbackReviewService;
+use App\Services\PreparedAnswerReviewService;
 use App\Services\LearningChallengeGenerationService;
 use App\Services\LearningModuleGenerationService;
 use App\Services\LearningRecommendationService;
@@ -879,7 +880,8 @@ class UserController extends Controller
 
  public function review(
  $id,
- DetailedFeedbackReviewService $reviewService
+ DetailedFeedbackReviewService $reviewService,
+ PreparedAnswerReviewService $preparedReviewService
  )
  {
  $sessionRecord = InterviewSession::where('user_id', Auth::id())
@@ -914,13 +916,16 @@ class UserController extends Controller
 
  $providerReviewPending = ! $sessionEndedEarly && $sessionRecord->status === 'completed'
  && ! $sessionRecord->game_level_id && $providerReviewStatus !== 'verified';
+ $preparedAnswerReviews = $providerReviewPending
+ ? $preparedReviewService->currentVisibleReviewsForSession($sessionRecord)
+ : [];
  $comparisonRows = $providerReviewPending ? [] : $this->comparisonRowsFor($sessionRecord);
  $reviewEvidence = $providerReviewPending ? null : FeedbackEvidencePresenter::forSession($sessionRecord);
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'providerReviewPending', 'providerReviewStatus'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'providerReviewPending', 'providerReviewStatus', 'preparedAnswerReviews'));
  }
 
- public function reviewStatus($id, DetailedFeedbackReviewService $reviewService)
+ public function reviewStatus($id, DetailedFeedbackReviewService $reviewService, PreparedAnswerReviewService $preparedReviewService)
  {
  $session = InterviewSession::where('user_id', Auth::id())->whereKey($id)->firstOrFail();
  abort_unless($session->status === 'completed' && ! (bool) data_get($session->action_plan ?? [], 'ended_early', false), 409);
@@ -934,7 +939,18 @@ class UserController extends Controller
  ? $savedStatus : 'failed';
  $needsReview = $reviewService->shouldRefreshWithProvider($session);
  $status = $needsReview ? ($status === 'verified' ? 'failed' : $status) : 'verified';
- return response()->json(['status' => $status, 'retry_after_ms' => 5000])
+ $response = ['status' => $status, 'retry_after_ms' => 2000];
+ if (in_array($status, ['pending', 'processing', 'failed'], true)) {
+ $progress = $preparedReviewService->progressForSession($session);
+ if ($progress['total'] > 0 && ($progress['verified'] > 0 || $progress['processing'] > 0)) {
+ $response['message'] = $status === 'failed' && $progress['verified'] > 0
+ ? "Provider AI feedback for {$progress['verified']} of {$progress['total']} answers is available below. Retry the final AI summary."
+ : ($progress['verified'] === $progress['total']
+ ? 'All answer reviews are ready. Preparing your final AI review.'
+ : "AI feedback prepared for {$progress['verified']} of {$progress['total']} answers. Reviewing the rest now.");
+ }
+ }
+ return response()->json($response)
  ->header('Cache-Control', 'no-store, private');
  }
 

@@ -19,8 +19,8 @@
         var failures = 0;
         var startedAt = Date.now();
         var maximumWait = 600000;
-        var maximumAttempts = 120;
-        var nextDelay = 5000;
+        var maximumAttempts = 300;
+        var nextDelay = 2000;
 
         function setText(heading, detail) {
             if (title) title.textContent = heading;
@@ -155,7 +155,7 @@
                 showPanel();
                 setText('Your AI answer reviews are being prepared.', detail || 'Your interview is complete. This page updates when provider feedback passes validation.');
                 var delay = Number(result.retry_after_ms);
-                nextDelay = Number.isFinite(delay) ? Math.max(2000, Math.min(15000, delay)) : 5000;
+                nextDelay = Number.isFinite(delay) ? Math.max(2000, Math.min(15000, delay)) : 2000;
             }
         }
 
@@ -207,7 +207,8 @@
         }
 
         if (panel.dataset.reviewStatus === 'failed') {
-            offerRetry('The providers could not complete a validated review. Your answers remain saved; request another attempt below.');
+            var initialDetail = message ? message.textContent.trim() : '';
+            offerRetry(initialDetail || 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.');
             return;
         }
         showPanel();

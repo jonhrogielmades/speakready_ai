@@ -6,13 +6,19 @@ use App\Models\Category;
 use App\Models\GameLevel;
 use App\Models\Score;
 use App\Models\InterviewAnswer;
+use App\Models\InterviewAnswerProviderReview;
 use App\Models\InterviewSession;
 use App\Models\Question;
 use App\Models\User;
 use App\Jobs\RefreshDetailedFeedbackReview;
+use App\Jobs\GenerateAnswerProviderFeedback;
 use App\Services\AIService;
 use App\Services\DetailedFeedbackReviewService;
+use App\Services\PreparedAnswerReviewService;
+use App\Support\FeedbackCoachingRepair;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use ReflectionMethod;
 use Tests\TestCase;
 
@@ -187,6 +193,183 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->assertTrue($state['feedback_ready']);
         $this->assertSame($feedback['per_question_feedback'][0]['ai_feedback'], $state['feedback']);
         $this->assertSame('openai', $savedAnswer->fresh()->ai_provider);
+    }
+
+    public function test_prepared_answer_keeps_its_provider_when_another_provider_writes_the_session_summary(): void
+    {
+        $answer = $this->answer();
+        $secondAnswer = InterviewAnswer::create([
+            'interview_session_id' => $answer->interview_session_id,
+            'question_id' => $answer->question_id,
+            'answer_text' => $answer->answer_text,
+            'response_mode' => 'text',
+        ])->load('question');
+        $feedback = $this->validProviderFeedback($answer);
+        $feedback['per_question_feedback'][0]['_prepared_provider_key'] = 'groq';
+        $feedback['per_question_feedback'][0]['better_sample_answer_provider'] = 'groq';
+        $secondItem = $feedback['per_question_feedback'][0];
+        $secondItem['id'] = $secondAnswer->id;
+        $secondItem['_prepared_provider_key'] = 'cohere';
+        $secondItem['better_sample_answer_provider'] = 'cohere';
+        $feedback['per_question_feedback'][] = $secondItem;
+        $feedback['review_context']['coverage'] = ['answer_count' => 2, 'provider_validated_count' => 2];
+
+        $validation = $this->validateProviderFeedback($answer, $feedback, [$secondAnswer]);
+        $this->assertSame('verified', $validation['status'], json_encode($validation['reasons']));
+
+        $mismatched = $feedback;
+        $mismatched['per_question_feedback'][0]['better_sample_answer_provider'] = 'openai';
+        $rejected = $this->validateProviderFeedback($answer, $mismatched, [$secondAnswer]);
+        $this->assertSame('rejected', $rejected['status']);
+        $this->assertFalse($rejected['answer_checks'][(string) $answer->id]['prepared_provider_provenance']);
+        $local = $feedback;
+        $local['per_question_feedback'][0]['_prepared_provider_key'] = 'local';
+        $this->assertSame('rejected', $this->validateProviderFeedback($answer, $local, [$secondAnswer])['status']);
+
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        (new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback'))->invoke(
+            $this->app->make(DetailedFeedbackReviewService::class), $session, collect([$answer, $secondAnswer]), $feedback, 'openai', $validation
+        );
+
+        $this->assertSame('groq', $answer->fresh()->ai_provider);
+        $this->assertSame('cohere', $secondAnswer->fresh()->ai_provider);
+        $this->assertSame('openai', data_get($session->fresh('feedback')->feedback->coaching_summary, 'review_context.provider_key'));
+        $this->assertSame('groq', data_get($session->fresh('feedback')->feedback->coaching_summary, 'review_context.answer_provider_keys.'.$answer->id));
+        $this->assertSame('cohere', data_get($session->fresh('feedback')->feedback->coaching_summary, 'review_context.answer_provider_keys.'.$secondAnswer->id));
+        $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)
+            ->shouldRefreshWithProvider($session->fresh(['answers.question', 'feedback', 'score'])));
+    }
+
+    public function test_complete_prepared_answers_finalize_with_only_a_provider_session_summary_call(): void
+    {
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $feedback = $this->validProviderFeedback($answer);
+        $item = $feedback['per_question_feedback'][0];
+        $item['provider_narratives_verified'] = true;
+        $item['better_sample_answer_provider'] = 'groq';
+
+        InterviewAnswerProviderReview::create([
+            'interview_session_id' => $session->id,
+            'interview_answer_id' => $answer->id,
+            'status' => 'verified',
+            'input_fingerprint' => $this->app->make(PreparedAnswerReviewService::class)
+                ->inputFingerprint($session, $answer),
+            'provider_key' => 'groq',
+            'payload' => $item,
+        ]);
+        config()->set('services.openai.api_key', 'test-openai-key');
+        config()->set('services.ai_feedback_review.provider_priority', 'openai');
+        config()->set('services.ai_feedback_review.max_providers', 1);
+        Http::fake(['api.openai.com/*' => Http::response([
+            'choices' => [[
+                'finish_reason' => 'stop',
+                'message' => ['content' => json_encode(['session_feedback' => $feedback['session_feedback']])],
+            ]],
+        ])]);
+
+        $this->assertTrue($this->app->make(DetailedFeedbackReviewService::class)
+            ->finalizeFromPreparedAnswers($session, true));
+        Http::assertSentCount(1);
+        $this->assertSame('groq', $answer->fresh()->ai_provider);
+        $this->assertSame('openai', data_get($session->fresh('feedback')->feedback->coaching_summary, 'review_context.provider_key'));
+        $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)
+            ->shouldRefreshWithProvider($session->fresh(['answers.question', 'feedback', 'score'])));
+    }
+
+    public function test_provider_review_suppresses_invalid_optional_narratives_without_local_coaching_repair(): void
+    {
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $feedback = $this->validProviderFeedback($answer);
+        $feedback['per_question_feedback'][0]['follow_up_question'] = '';
+        $feedback['per_question_feedback'][0]['provider_coaching'] = [];
+        $feedback['per_question_feedback'][0]['provider_optional_narratives_suppressed'] = [
+            'follow_up_question', 'provider_coaching',
+        ];
+        $validation = $this->validateProviderFeedback($answer, $feedback);
+        $this->assertSame('verified', $validation['status'], json_encode($validation['reasons']));
+
+        $unsafe = $feedback;
+        $unsafe['per_question_feedback'][0]['follow_up_question'] = 'Unsupported question?';
+        $this->assertSame('rejected', $this->validateProviderFeedback($answer, $unsafe)['status']);
+
+        (new ReflectionMethod(DetailedFeedbackReviewService::class, 'persistProviderFeedback'))->invoke(
+            $this->app->make(DetailedFeedbackReviewService::class), $session, collect([$answer]), $feedback, 'openai', $validation
+        );
+        $saved = $answer->fresh('question');
+        $coaching = $saved->coaching_feedback;
+        $this->assertSame('', $saved->follow_up_question);
+        $this->assertSame(['follow_up_question', 'provider_coaching'],
+            data_get($coaching, 'provider_narrative.optional_narratives_suppressed'));
+        $this->assertSame([], $coaching['priority_actions']);
+        $this->assertSame('', data_get($coaching, 'content_alignment.action', ''));
+
+        $repair = $this->app->make(FeedbackCoachingRepair::class);
+        $this->assertFalse($repair->answerCoachingNeedsRepair($coaching));
+        $this->assertSame($coaching, $repair->buildAnswerCoaching($saved, $session));
+        foreach (['desktop', 'mobile'] as $layout) {
+            $html = view($layout.'.partials.interview-answer-coaching', [
+                'answer' => $saved,
+                'sessionRecord' => $session,
+            ])->render();
+            $this->assertStringNotContainsString('aria-label="Answer coaching"', $html);
+        }
+        $state = $this->app->make(DetailedFeedbackReviewService::class)->answerReviewProviderState($saved);
+        $this->assertTrue($state['feedback_ready']);
+        $this->assertTrue($state['possible_answer_ready']);
+        $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)
+            ->shouldRefreshWithProvider($session->fresh(['answers.question', 'feedback', 'score'])));
+    }
+
+    public function test_suppressed_optional_api_answer_completes_a_provider_only_final_review(): void
+    {
+        Queue::fake();
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $payload = $this->validProviderFeedback($answer);
+        $payload['per_question_feedback'][0]['missing_criteria'] = [];
+        $payload['per_question_feedback'][0]['follow_up_question'] = 'How did you resolve the support handoff?';
+        $payload['per_question_feedback'][0]['coaching'] = [
+            'keep' => 'You mapped the support handoff issue and documented missed approvals.',
+            'improve' => 'Add the true effect of the checklist update on the team.',
+            'impact' => 'You resolved the handoff and improved the whole support team.',
+            'next_try' => 'Explain the support handoff result in your next answer.',
+            'next_attempt_steps' => [
+                'Describe the missed approvals in the support handoff.',
+                'Explain how you coordinated the checklist update.',
+            ],
+            'success_check' => 'The next answer links the checklist update to a true effect.',
+        ];
+        $correction = [
+            'follow_up_question' => $payload['per_question_feedback'][0]['follow_up_question'],
+            'coaching' => $payload['per_question_feedback'][0]['coaching'],
+        ];
+        config()->set('services.openai.api_key', 'test-openai-key');
+        config()->set('services.ai_feedback_review.provider_priority', 'openai');
+        config()->set('services.ai_feedback_review.max_providers', 1);
+        Http::fakeSequence()
+            ->push(['choices' => [['finish_reason' => 'stop', 'message' => ['content' => json_encode($payload)]]]])
+            ->push(['choices' => [['finish_reason' => 'stop', 'message' => ['content' => json_encode($correction)]]]])
+            ->push(['choices' => [['finish_reason' => 'stop', 'message' => [
+                'content' => json_encode(['session_feedback' => $payload['session_feedback']]),
+            ]]]]);
+
+        $this->app->call([new GenerateAnswerProviderFeedback($session->id, $answer->id), 'handle']);
+        $prepared = InterviewAnswerProviderReview::where('interview_answer_id', $answer->id)->firstOrFail();
+        $this->assertSame('verified', $prepared->status);
+        $this->assertSame(['follow_up_question', 'provider_coaching'],
+            $prepared->payload['provider_optional_narratives_suppressed']);
+        $this->assertTrue($this->app->make(DetailedFeedbackReviewService::class)
+            ->finalizeFromPreparedAnswers($session, true));
+        Http::assertSentCount(3);
+        $saved = $answer->fresh('question');
+        $this->assertSame('', $saved->follow_up_question);
+        $this->assertSame([], $saved->coaching_feedback['priority_actions']);
+        $this->assertTrue($this->app->make(DetailedFeedbackReviewService::class)
+            ->answerReviewProviderState($saved)['feedback_ready']);
+        $this->assertFalse($this->app->make(DetailedFeedbackReviewService::class)
+            ->shouldRefreshWithProvider($session->fresh(['answers.question', 'feedback', 'score'])));
     }
 
     public function test_final_gate_still_rejects_invalid_reliability_metadata_and_failed_safeguards(): void
@@ -445,6 +628,45 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->assertStringContainsString('international award', $answer->fresh()->ai_feedback);
     }
 
+    public function test_completed_review_shows_current_prepared_provider_answer_while_summary_failed(): void
+    {
+        Http::preventStrayRequests();
+        $answer = $this->answer();
+        $session = InterviewSession::findOrFail($answer->interview_session_id);
+        $user = User::findOrFail($session->user_id);
+        $user->forceFill(['is_admin' => false])->save();
+        $feedback = $this->validProviderFeedback($answer);
+        $item = $feedback['per_question_feedback'][0];
+        $item['provider_narratives_verified'] = true;
+        $item['better_sample_answer_provider'] = 'openai';
+        InterviewAnswerProviderReview::create([
+            'interview_session_id' => $session->id,
+            'interview_answer_id' => $answer->id,
+            'status' => 'verified',
+            'input_fingerprint' => $this->app->make(PreparedAnswerReviewService::class)
+                ->inputFingerprint($session, $answer),
+            'provider_key' => 'openai',
+            'payload' => $item,
+        ]);
+        $session->update(['feedback_status' => 'failed']);
+
+        foreach (['desktop', 'mobile'] as $layout) {
+            $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout)
+                ->assertOk()
+                ->assertSee('Provider AI feedback is available below.')
+                ->assertSeeText($item['ai_feedback'])
+                ->assertSeeText($item['better_sample_answer'])
+                ->assertDontSee('Overall Review');
+        }
+        Http::assertNothingSent();
+
+        $answer->update(['answer_text' => 'I did not work on the support handoff and do not know the result.']);
+        $this->actingAs($user)->get(route('user.review', $session).'?sr_layout=desktop')
+            ->assertOk()
+            ->assertDontSee($item['better_sample_answer'])
+            ->assertSee('Provider feedback will appear after the AI review passes validation.');
+    }
+
     public function test_changed_answers_show_pending_provider_review_and_score_until_refresh(): void
     {
         \Illuminate\Support\Facades\Queue::fake();
@@ -517,14 +739,14 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->assertTrue($state['possible_answer_ready']);
     }
 
-    private function validateProviderFeedback(InterviewAnswer $answer, array $feedback): array
+    private function validateProviderFeedback(InterviewAnswer $answer, array $feedback, array $additionalAnswers = []): array
     {
         $method = new ReflectionMethod(DetailedFeedbackReviewService::class, 'providerFeedbackValidation');
         $method->setAccessible(true);
 
         return $method->invoke(
             $this->app->make(DetailedFeedbackReviewService::class),
-            collect([$answer]),
+            collect(array_merge([$answer], $additionalAnswers)),
             $feedback,
             'openai'
         );

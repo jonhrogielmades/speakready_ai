@@ -27,6 +27,66 @@ class DetailedFeedbackReviewService
  ) {
  }
 
+ /**
+  * Finish a report from the provider reviews prepared while answers arrived.
+  * A missing or stale answer leaves the full provider cascade available to the
+  * queued finalization job; no partial report is published.
+  */
+ public function finalizeFromPreparedAnswers(InterviewSession $session, bool $throwOnFailure = false): bool
+ {
+ if ($session->exists) {
+ $session->refresh();
+ }
+ if (! $this->shouldRefreshWithProvider($session)) {
+ return false;
+ }
+
+ $answers = $this->originalAnswers($session);
+ if ($answers->isEmpty()) {
+ return false;
+ }
+
+ try {
+ $preparedItems = app(PreparedAnswerReviewService::class)->preparedReviewsForSession($session);
+ if ($preparedItems === null || count($preparedItems) !== $answers->count()) {
+ return false;
+ }
+
+ $feedback = AIService::generatePreparedReviewSummary(
+ $this->sessionData($session),
+ $this->answersData($answers),
+ $preparedItems,
+ 45,
+ fn (array $candidate, string $candidateProvider): bool =>
+ ($this->providerFeedbackValidation($answers, $candidate, $candidateProvider)['status'] ?? null) === 'verified'
+ );
+ $providerKey = AIService::normalizeProviderKey($feedback['_provider_key'] ?? null);
+ $validation = $this->providerFeedbackValidation($answers, $feedback, $providerKey);
+ if (($validation['status'] ?? null) !== 'verified') {
+ throw new \RuntimeException('Prepared provider review failed the final saved-answer safeguards.');
+ }
+
+ $this->persistProviderFeedback($session, $answers, $feedback, $providerKey, $validation);
+ if ($this->shouldRefreshWithProvider($session->fresh())) {
+ throw new \RuntimeException('The prepared provider review did not save a complete report.');
+ }
+
+ return true;
+ } catch (\Throwable $error) {
+ Log::warning('Prepared provider interview review could not be finalized.', [
+ 'session_id' => $session->id,
+ 'user_id' => $session->user_id,
+ 'error_type' => $error::class,
+ 'failure_code' => $error instanceof AiFeedbackProviderFailureException ? $error->failureCode() : 'prepared_review_failed',
+ ]);
+ if ($throwOnFailure) {
+ throw $error;
+ }
+
+ return false;
+ }
+ }
+
  public function refreshWithProvidersIfNeeded(InterviewSession $session,?string $preferredProvider = null, ?int $deadlineSeconds = null, bool $throwOnFailure = false): bool
  {
  // Start from persisted inputs, including database defaults and the latest
@@ -301,6 +361,14 @@ class DetailedFeedbackReviewService
  if (! is_array($item)) {
  throw new \RuntimeException("Validated feedback item {$answer->id} disappeared before persistence.");
  }
+ $preparedProvider = AIService::normalizeProviderKey($item['_prepared_provider_key'] ?? null);
+ if (array_key_exists('_prepared_provider_key', $item) && ! $this->isApiProviderKey($preparedProvider)) {
+ throw new \RuntimeException("Prepared feedback item {$answer->id} has invalid provider provenance.");
+ }
+ $answerProviderKey = $preparedProvider !== '' ? $preparedProvider : $providerKey;
+ if (! $this->isApiProviderKey($answerProviderKey)) {
+ throw new \RuntimeException("Validated feedback item {$answer->id} has no API provider provenance.");
+ }
 
  $clarity = $this->scoreValue($item['clarity_score']?? 0);
  $relevance = $this->scoreValue($item['relevance_score']?? 0);
@@ -327,10 +395,14 @@ class DetailedFeedbackReviewService
  );
  $coachingFeedback = $this->withPossibleAnswerProviderMetadata(
  $coachingFeedback,
- $providerKey,
+ $answerProviderKey,
  is_scalar($item['better_sample_answer_source']?? null)? (string) $item['better_sample_answer_source']: null,
  is_scalar($item['better_sample_answer_provider']?? null)? (string) $item['better_sample_answer_provider']: null
  );
+ $suppressedOptionalNarratives = array_values((array) ($item['provider_optional_narratives_suppressed'] ?? []));
+ if (in_array('provider_coaching', $suppressedOptionalNarratives, true)) {
+ $coachingFeedback = $this->suppressLocalAnswerCoaching($coachingFeedback);
+ }
   // A verified provider refresh replaces any earlier local recovery result.
   // Do not let its marker force the refreshed AI narrative back through the
   // local display path on a later request.
@@ -340,6 +412,7 @@ class DetailedFeedbackReviewService
  'input_fingerprint' => $this->answerInputFingerprint($answer),
  'feedback_hash' => hash('sha256', trim((string) ($item['ai_feedback'] ?? ''))),
  'possible_answer_hash' => hash('sha256', trim((string) ($item['better_sample_answer'] ?? ''))),
+ 'optional_narratives_suppressed' => $suppressedOptionalNarratives,
  ];
  if (data_get($coachingFeedback, 'feedback_quality.status') !== 'verified'
  || (int) data_get($coachingFeedback, 'feedback_quality.completeness_percent', 0) !== 100) {
@@ -351,7 +424,7 @@ class DetailedFeedbackReviewService
  'better_sample_answer' => trim((string) ($item['better_sample_answer']?? '')),
  'follow_up_question' => trim((string) ($item['follow_up_question']?? '')),
  'coaching_feedback' => $coachingFeedback,
- 'ai_provider' => $providerKey,
+ 'ai_provider' => $answerProviderKey,
  ];
  if ($preserveScores || (int) ($session->game_level_id ?? 0) > 0) {
  // Game results use their own rubric. A review refresh updates prose only.
@@ -383,12 +456,17 @@ class DetailedFeedbackReviewService
 
  $evaluatedAnswers = $this->originalAnswers($session->fresh(['answers.question']) ?? $session);
  $sessionFeedback = is_array($feedback['session_feedback']?? null)? $feedback['session_feedback']: [];
+ $reviewContext = is_array($feedback['review_context'] ?? null) ? $feedback['review_context'] : [];
+ $reviewContext['answer_provider_keys'] = $feedbackById->mapWithKeys(function (array $item, $id) use ($providerKey): array {
+ $preparedProvider = AIService::normalizeProviderKey($item['_prepared_provider_key'] ?? null);
+ return [$id => $preparedProvider !== '' ? $preparedProvider : $providerKey];
+ })->all();
  if ($preserveScores || (int) ($session->game_level_id ?? 0) > 0) {
  Feedback::updateOrCreate(['interview_session_id' => $session->id], [
  'strengths' => trim((string) ($sessionFeedback['strengths'] ?? '')),
  'weaknesses' => trim((string) ($sessionFeedback['weaknesses'] ?? '')),
  'improvement_suggestions' => trim((string) ($sessionFeedback['improvement_suggestions'] ?? '')),
- 'coaching_summary' => $this->sessionCoachingSummary($evaluatedAnswers, $sessionFeedback, (array) ($feedback['review_context'] ?? []), $validation),
+ 'coaching_summary' => $this->sessionCoachingSummary($evaluatedAnswers, $sessionFeedback, $reviewContext, $validation),
  ]);
  return;
  }
@@ -432,7 +510,7 @@ class DetailedFeedbackReviewService
  'coaching_summary' => $this->sessionCoachingSummary(
  $evaluatedAnswers,
  $sessionFeedback,
- is_array($feedback['review_context']?? null)? $feedback['review_context']: [],
+ $reviewContext,
  $validation
  ),
  ]);
@@ -470,6 +548,8 @@ class DetailedFeedbackReviewService
  'score_version' => (int) ($reviewContext['score_version']?? TrustworthyAssessmentService::SCORE_VERSION),
  'coaching_version' => (int) ($reviewContext['coaching_version']?? EvidenceBasedCoachingService::VERSION),
  'provider_key' => AIService::normalizeProviderKey($reviewContext['provider_key']?? null),
+ 'answer_provider_keys' => is_array($reviewContext['answer_provider_keys'] ?? null)
+ ? $reviewContext['answer_provider_keys'] : [],
  'provider_source' => trim((string) ($reviewContext['provider_source']?? 'ai_provider')),
  'session_feedback_source' => trim((string) ($reviewContext['session_feedback_source']?? 'ai_provider')),
  'session_feedback_repaired_fields' => array_values((array) ($reviewContext['session_feedback_repaired_fields']?? [])),
@@ -536,6 +616,25 @@ class DetailedFeedbackReviewService
 
  $quality = is_array($item['feedback_quality']?? null)? $item['feedback_quality']: [];
  $qualityChecks = is_array($quality['checks']?? null)? $quality['checks']: [];
+ $suppressedOptionalNarratives = $item['provider_optional_narratives_suppressed'] ?? [];
+ $optionalSuppressionValid = ! array_key_exists('provider_optional_narratives_suppressed', $item) || (
+ is_array($suppressedOptionalNarratives)
+ && array_is_list($suppressedOptionalNarratives)
+ && collect($suppressedOptionalNarratives)->every(
+ fn ($field): bool => is_string($field) && in_array($field, ['follow_up_question', 'provider_coaching'], true)
+ )
+ && count($suppressedOptionalNarratives) === count(array_unique($suppressedOptionalNarratives))
+ && (! in_array('follow_up_question', $suppressedOptionalNarratives, true)
+ || trim((string) ($item['follow_up_question'] ?? '')) === '')
+ && (! in_array('provider_coaching', $suppressedOptionalNarratives, true)
+ || ($item['provider_coaching'] ?? []) === [])
+ );
+ $preparedProvider = AIService::normalizeProviderKey($item['_prepared_provider_key'] ?? null);
+ $preparedProviderValid = ! array_key_exists('_prepared_provider_key', $item) || (
+ $this->isApiProviderKey($preparedProvider)
+ && (trim((string) ($item['better_sample_answer'] ?? '')) === ''
+ || AIService::normalizeProviderKey($item['better_sample_answer_provider'] ?? null) === $preparedProvider)
+ );
  $answerData = $this->answerData($answer);
  $eligibility = AIService::feedbackAnswerEligibility($answerData);
  $isSkipped = $eligibility['is_skipped'];
@@ -591,6 +690,8 @@ class DetailedFeedbackReviewService
  $answerChecks[$id] = [
  'complete' => true,
  'provider_evidence_validated' => ($item['evaluation_source']?? null) === 'ai_evidence_validated',
+ 'optional_narratives_safely_suppressed' => $optionalSuppressionValid,
+ 'prepared_provider_provenance' => $preparedProviderValid,
  'provider_narrative_source' => ($item['answer_review_source'] ?? null) === 'ai_provider'
  && ($isSkipped || trim((string) ($item['better_sample_answer'] ?? '')) === '' || ($item['better_sample_answer_source'] ?? null) === 'ai_provider'),
  'all_safeguards_passed' => $qualityVerified,
@@ -1054,6 +1155,24 @@ class DetailedFeedbackReviewService
  'is_skipped' => (bool) ($feedback['is_skipped']?? $answer->is_skipped?? false),
  'is_too_short' => (bool) ($feedback['is_too_short']?? false),
  ];
+ }
+
+ /** Keep scoring provenance while withholding locally generated optional prose. */
+ private function suppressLocalAnswerCoaching(array $coachingFeedback): array
+ {
+ foreach ([
+ 'observation', 'what_worked', 'improvement_focus', 'impact', 'action',
+ 'next_attempt_steps', 'success_check', 'limitation', 'missing_points',
+ 'missing_points_source',
+ ] as $field) {
+ unset($coachingFeedback['content_alignment'][$field]);
+ }
+ $coachingFeedback['priority_actions'] = [];
+ $coachingFeedback['question'] = [];
+ $coachingFeedback['question_tip'] = [];
+ $coachingFeedback['transparency_note'] = '';
+
+ return $coachingFeedback;
  }
 
  private function answerContent(InterviewAnswer $answer): string

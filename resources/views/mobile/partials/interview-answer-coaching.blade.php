@@ -1,7 +1,8 @@
 @php
  $coachingFeedback = is_array($answer->coaching_feedback?? null)? $answer->coaching_feedback: [];
  $coachingRepair = app(\App\Support\FeedbackCoachingRepair::class);
- if ($coachingRepair->answerCoachingNeedsRepair($coachingFeedback)) {
+ $providerCoachingSuppressed = $coachingRepair->providerCoachingSuppressed($coachingFeedback);
+ if (! $providerCoachingSuppressed && $coachingRepair->answerCoachingNeedsRepair($coachingFeedback)) {
  $coachingFeedback = $coachingRepair->buildAnswerCoaching(
  $answer,
  (isset($sessionRecord) && $sessionRecord instanceof \App\Models\InterviewSession)? $sessionRecord: null
@@ -314,7 +315,7 @@
  || $cameraLimitation!== '');
 @endphp
 
-@if($hasStructuredCoaching)
+@if($hasStructuredCoaching && ! $providerCoachingSuppressed)
  <section class="mb-4 p-4" style="background:rgba(14,165,233,.045);border:1px solid rgba(14,165,233,.22);border-radius:14px;" aria-label="Answer coaching">
  <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
  <div>

@@ -7,6 +7,7 @@ use App\Exceptions\InterviewFollowUpProviderFailureException;
 use App\Exceptions\InterviewFeedbackLeaseLostException;
 use App\Helpers\ActivityLogger;
 use App\Jobs\GenerateInterviewFeedback;
+use App\Jobs\GenerateAnswerProviderFeedback;
 use App\Models\Category;
 use App\Models\Feedback;
 use App\Models\GameLevel;
@@ -2601,7 +2602,24 @@ return response()->json([
  $this->deleteVoiceRecordingReference($previousRecording, 'superseded_recording_cleanup');
  }
 
- return $saved['answer']->refresh();
+ $persistedAnswer = $saved['answer']->refresh();
+ if (in_array('in_progress', $allowedSessionStatuses, true) && ! $session->game_level_id) {
+  try {
+   if (SystemSettings::enabled('int_ai_eval', true)) {
+    GenerateAnswerProviderFeedback::dispatch((int) $session->id, (int) $persistedAnswer->id);
+   }
+  } catch (\Throwable $error) {
+   // The answer is already durable. Final review will recover a missing
+   // preparation if the queue is temporarily unavailable.
+   Log::warning('Saved interview answer could not queue provider preparation.', [
+    'session_id' => $session->id,
+    'answer_id' => $persistedAnswer->id,
+    'error_type' => $error::class,
+   ]);
+  }
+ }
+
+ return $persistedAnswer;
  }
 
  private function voiceRecordingUploadRules(): array

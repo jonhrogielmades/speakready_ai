@@ -141,7 +141,7 @@ class AutomaticDetailedReviewProgressTest extends TestCase
 
         $this->actingAs($user)->getJson(route('user.review.status', $session->id))
             ->assertOk()
-            ->assertExactJson(['status' => 'pending', 'retry_after_ms' => 5000])
+            ->assertExactJson(['status' => 'pending', 'retry_after_ms' => 2000])
             ->assertHeader('Cache-Control', 'no-store, private');
 
         $this->assertSame($before, $session->fresh()->getAttributes());

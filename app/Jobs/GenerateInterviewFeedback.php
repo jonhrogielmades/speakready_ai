@@ -7,6 +7,7 @@ use App\Helpers\ActivityLogger;
 use App\Models\InterviewSession;
 use App\Models\UserOnboardingProgress;
 use App\Services\DetailedFeedbackReviewService;
+use App\Services\PreparedAnswerReviewService;
 use App\Support\SystemSettings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -26,7 +27,7 @@ class GenerateInterviewFeedback implements ShouldQueue
 
     public int $tries = 3;
 
-    public int $timeout = 160;
+    public int $timeout = 190;
 
     public string $runToken;
 
@@ -80,7 +81,7 @@ class GenerateInterviewFeedback implements ShouldQueue
             return;
         }
 
-        $lock = Cache::lock('feedback-generation:'.$this->sessionId, 170);
+        $lock = Cache::lock('feedback-generation:'.$this->sessionId, 200);
         if (! $lock->get()) {
             // Another worker owns this review. Keep this attempt available if it crashes.
             $this->release(15);
@@ -91,6 +92,20 @@ class GenerateInterviewFeedback implements ShouldQueue
             $session->refresh();
             if (! $reviewService->shouldRefreshWithProvider($session)) {
                 $this->markVerified($session);
+                return;
+            }
+
+            $prepared = app(PreparedAnswerReviewService::class);
+            $progress = $prepared->progressForSession($session);
+            if ($prepared->preparedReviewsForSession($session) === null
+                && ($progress['verified'] > 0 || $progress['processing'] > 0)
+                && $prepared->hasPendingPreparationsForSession($session)
+                && (int) $session->feedback_attempts === 0
+                && $session->updated_at?->gte(now()->subSeconds(90))) {
+                // Let in-flight answer reviews finish before requesting a full
+                // interview review. A delayed attempt recovers if they stall.
+                self::dispatch($this->sessionId, $this->userId)
+                    ->delay(now()->addSeconds(10));
                 return;
             }
 
@@ -112,9 +127,22 @@ class GenerateInterviewFeedback implements ShouldQueue
                 return;
             }
 
-            // The service validates every answer against the saved input and writes
-            // score, feedback, and provider provenance in one transaction.
-            $reviewService->refreshWithProvidersIfNeeded($session, null, 120, true);
+            // Use provider-verified answer reviews when all current answers are
+            // ready. A full provider request remains the recovery route.
+            $completedFromAnswers = false;
+            if ($prepared->preparedReviewsForSession($session) !== null) {
+                try {
+                    $completedFromAnswers = $reviewService->finalizeFromPreparedAnswers($session, true);
+                } catch (Throwable $preparedError) {
+                    Log::warning('Prepared answer summary failed; trying full provider review.', [
+                        'session_id' => $this->sessionId,
+                        'error_type' => $preparedError::class,
+                    ]);
+                }
+            }
+            if (! $completedFromAnswers) {
+                $reviewService->refreshWithProvidersIfNeeded($session, null, 120, true);
+            }
             $session->refresh()->load(['score', 'feedback']);
             if ($reviewService->shouldRefreshWithProvider($session)
                 || ! $session->score || ! $session->feedback) {

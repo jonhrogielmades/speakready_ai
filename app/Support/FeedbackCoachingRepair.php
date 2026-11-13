@@ -45,6 +45,9 @@ class FeedbackCoachingRepair
 
  public function answerCoachingNeedsRepair(mixed $coachingFeedback): bool
  {
+ if ($this->providerCoachingSuppressed($coachingFeedback)) {
+ return false;
+ }
  if (! is_array($coachingFeedback) || $coachingFeedback === []) {
  return true;
  }
@@ -61,6 +64,15 @@ class FeedbackCoachingRepair
  && empty($coachingFeedback['question_tip']?? []);
  }
 
+ public function providerCoachingSuppressed(mixed $coachingFeedback): bool
+ {
+ return is_array($coachingFeedback)
+ && data_get($coachingFeedback, 'provider_narrative.verified') === true
+ && in_array('provider_coaching', (array) data_get(
+ $coachingFeedback, 'provider_narrative.optional_narratives_suppressed', []
+ ), true);
+ }
+
  public function buildSummaryFromAnswers(Collection $answers): array
  {
  return $this->coaching->sessionSummary($answers->values());
@@ -68,6 +80,9 @@ class FeedbackCoachingRepair
 
  public function buildAnswerCoaching(InterviewAnswer $answer,?InterviewSession $session = null): array
  {
+ if ($this->providerCoachingSuppressed($answer->coaching_feedback)) {
+ return $answer->coaching_feedback;
+ }
  $observationData = is_array($answer->observation_data?? null)? $answer->observation_data: [];
  $answerText = $this->answerContent($answer);
  $evidenceMap = is_array($answer->evidence_map?? null)? $answer->evidence_map: [];
