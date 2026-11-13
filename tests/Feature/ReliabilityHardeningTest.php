@@ -1510,7 +1510,7 @@ class ReliabilityHardeningTest extends TestCase
   $this->runQueuedFeedback($session);
   $this->fail('An assessment failure must not publish an unverified report.');
   } catch (\RuntimeException $error) {
-  $this->assertSame('No complete provider-verified interview report was saved.', $error->getMessage());
+  $this->assertSame('Evidence assessment unavailable.', $error->getMessage());
   }
 
  $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
