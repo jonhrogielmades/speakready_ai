@@ -7355,6 +7355,7 @@ PROMPT;
  static fn (string $error): bool => str_starts_with($error, 'session_feedback.')
  || $error === 'session_feedback must be an object.'
  || preg_match('/^Feedback ID .+ has invalid visible coaching text\.$/', $error) === 1
+ || preg_match('/^Feedback ID .+ coaching\.[a-z_]+ /', $error) === 1
  );
  }
 
