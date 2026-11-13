@@ -550,6 +550,7 @@ class ReliabilityHardeningTest extends TestCase
 
  public function test_user_ai_follow_up_question_is_saved_to_admin_question_bank(): void
  {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Software Engineering']);
  $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
@@ -565,6 +566,7 @@ class ReliabilityHardeningTest extends TestCase
  return Http::response([
  'choices' => [
  [
+ 'finish_reason' => 'stop',
  'message' => [
  'content' => $followUpText,
  ],
@@ -1508,7 +1510,7 @@ class ReliabilityHardeningTest extends TestCase
   $this->runQueuedFeedback($session);
   $this->fail('An assessment failure must not publish an unverified report.');
   } catch (\RuntimeException $error) {
-  $this->assertSame('Evidence assessment unavailable.', $error->getMessage());
+  $this->assertSame('No complete provider-verified interview report was saved.', $error->getMessage());
   }
 
  $this->assertDatabaseHas('interview_sessions', ['id' => $session->id, 'status' => 'completed']);
@@ -1533,7 +1535,7 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  $this->fakeOpenAiFeedback([$answer]);
  $session->timestamps = false;
- $session->updated_at = now()->subMinutes(3);
+ $session->updated_at = now()->subMinutes(5);
  $session->save();
 
  $this->actingAs($user)
@@ -3052,6 +3054,9 @@ class ReliabilityHardeningTest extends TestCase
 
  private function fakeOpenAiFeedback(array $answers = []): void
  {
+ $this->setEnvValue('OPENAI_API_KEY', 'openai_test_token');
+ $this->setEnvValue('AI_DETAILED_REVIEW_PROVIDER_PRIORITY', 'openai');
+ $this->setEnvValue('AI_DETAILED_REVIEW_MAX_PROVIDERS', '1');
  Http::fake([
  'api.openai.com/*' => function ($request) use ($answers) {
  $transcript = $answers!== []? $this->feedbackTranscriptFromAnswers($answers): $this->feedbackTranscriptFromPrompt((string) collect(data_get($request->data(), 'messages', []))
