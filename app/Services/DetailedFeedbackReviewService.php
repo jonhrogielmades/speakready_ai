@@ -265,6 +265,9 @@ class DetailedFeedbackReviewService
  }
 
  $state = $this->answerReviewProviderState($answer);
+ if (! $session->game_level_id && ($state['source'] ?? null) === 'local_fallback') {
+ return true;
+ }
  if (! $state['skipped'] && (! $state['feedback_ready'] || (! $state['insufficient'] && ! $state['possible_answer_ready']))) {
  return true;
  }
@@ -956,6 +959,13 @@ class DetailedFeedbackReviewService
  $summary = is_array($session->feedback->coaching_summary?? null)? $session->feedback->coaching_summary: [];
  $providerSource = trim((string) data_get($summary, 'review_context.provider_source', ''));
  $providerKey = AIService::normalizeProviderKey(data_get($summary, 'review_context.provider_key', null));
+ $sessionFeedbackSource = trim((string) data_get($summary, 'review_context.session_feedback_source', ''));
+
+ if (! $session->game_level_id && ($providerSource !== 'ai_provider'
+ || $sessionFeedbackSource !== 'ai_provider'
+ || ! $this->isApiProviderKey($providerKey))) {
+ return true;
+ }
 
  if ($providerSource !== '' && $providerSource !== 'ai_provider') {
  return true;

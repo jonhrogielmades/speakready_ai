@@ -491,6 +491,7 @@ For local development, set `QUEUE_CONNECTION=database` and run these as separate
 
 ```bash
 php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=180
+php artisan queue:work database --queue=review-answers --sleep=3 --tries=3 --timeout=180
 php artisan schedule:work
 ```
 

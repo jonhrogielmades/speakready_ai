@@ -176,7 +176,7 @@ class GenerateInterviewFeedback implements ShouldQueue
 
     public function failed(?Throwable $error): void
     {
-        InterviewSession::query()
+        $markedFailed = InterviewSession::query()
             ->whereKey($this->sessionId)
             ->where('user_id', $this->userId)
             ->where('status', 'completed')
@@ -190,6 +190,35 @@ class GenerateInterviewFeedback implements ShouldQueue
                     ? $error->failureCode()
                     : 'provider_review_failed',
             ]);
+
+        if ($markedFailed !== 1 || ! $error instanceof AiFeedbackProviderFailureException
+            || ! SystemSettings::enabled('int_ai_eval', true)) {
+            return;
+        }
+
+        // A full provider response can fail validation while the smaller
+        // provider-only answer path still succeeds. Prepare only missing
+        // answers; the last verified answer queues a fresh session summary.
+        try {
+            $session = InterviewSession::query()->whereKey($this->sessionId)
+                ->where('user_id', $this->userId)
+                ->where('status', 'completed')
+                ->whereNull('game_level_id')
+                ->first();
+            if (! $session || (bool) data_get($session->action_plan ?? [], 'ended_early', false)) {
+                return;
+            }
+
+            $missingAnswerIds = app(PreparedAnswerReviewService::class)->missingAnswerIdsForSession($session);
+            foreach ($missingAnswerIds as $answerId) {
+                GenerateAnswerProviderFeedback::dispatch((int) $session->id, (int) $answerId);
+            }
+        } catch (Throwable $recoveryError) {
+            Log::warning('Provider-only answer recovery could not be queued.', [
+                'session_id' => $this->sessionId,
+                'error_type' => $recoveryError::class,
+            ]);
+        }
     }
 
     private function markVerified(InterviewSession $session): void

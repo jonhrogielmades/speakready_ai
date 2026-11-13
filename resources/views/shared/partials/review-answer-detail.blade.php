@@ -26,6 +26,9 @@
  'insufficient' => (bool) $preparedProviderReview['insufficient'] || (bool) $preparedProviderReview['is_too_short'],
  ] : (($reviewEndedEarly || ! $providerReviewVerified) ? [] : app(\App\Services\DetailedFeedbackReviewService::class)
  ->answerReviewProviderState($answer, (bool) ($reviewInputsStale ?? false)));
+ if (($providerOnlyReview ?? false) && ($providerReview['source'] ?? null) === 'local_fallback') {
+     $providerReview = [];
+ }
  $feedbackReady = (bool) ($providerReview['feedback_ready'] ?? false);
  $possibleAnswerReady = (bool) ($providerReview['possible_answer_ready'] ?? false);
  $answerWasSkipped = (bool) ($providerReview['skipped'] ?? false);

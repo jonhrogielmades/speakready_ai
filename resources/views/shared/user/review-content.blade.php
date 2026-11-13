@@ -90,10 +90,14 @@
  @endif
 
  @if($providerReviewVerified)
+ @if($sessionRecord->status === 'completed' && ! $sessionRecord->game_level_id)
+ @include('shared.user.ai-feedback-review', ['report' => $report, 'sessionRecord' => $sessionRecord])
+ @else
  @include('shared.partials.review-quick-summary', [
  'report' => $report,
  'sessionRecord' => $sessionRecord,
  ])
+ @endif
  @endif
 
  @endif
@@ -125,6 +129,7 @@
  'providerReviewVerified' => $providerReviewVerified,
  'preparedProviderReview' => $preparedAnswerReviews[(int) $answer->id] ?? null,
  'reviewInputsStale' => (bool) ($report['is_stale'] ?? false),
+ 'providerOnlyReview' => $sessionRecord->status === 'completed' && ! $sessionRecord->game_level_id,
  ])
 
 
