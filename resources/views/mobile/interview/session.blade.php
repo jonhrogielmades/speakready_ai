@@ -49,6 +49,16 @@
   $interviewerAvatarWebpImage = \App\Support\InterviewerAvatar::image($interviewerAvatarKey);
   $interviewerAvatarImage = preg_replace('/\.webp$/', '.png', $interviewerAvatarWebpImage);
   $interviewerPanelBackgroundImage = \App\Support\InterviewerAvatar::background($interviewerAvatarKey);
+ $currentQuestionForRetry = $questions->values()->get(max(0, (int) ($sessionRecord->current_question_index ?? 0)));
+ $sessionQuestionLimit = max(1, (int) ($sessionRecord->num_questions ?? 1))
+     + ($questions->contains(fn ($item) => $item->source_type === 'real_interview_opening') ? 1 : 0);
+ $savedFollowUpRetryQuestionId = $currentQuestionForRetry
+     && (int) ($sessionRecord->current_question_index ?? 0) < $sessionQuestionLimit - 1
+     && \App\Models\InterviewAnswer::where('interview_session_id', $sessionRecord->id)
+         ->where('question_id', $currentQuestionForRetry->id)
+         ->whereNull('retry_of_answer_id')
+         ->exists()
+     ? (int) $currentQuestionForRetry->id : null;
   @endphp
  @push('styles')
  <link rel="preload" as="image" href="{{ asset($interviewerAvatarWebpImage) }}" type="image/webp" fetchpriority="high">
@@ -162,7 +172,7 @@
  <i class="fa-solid fa-expand"></i>
  </button>
  <button type="button" class="next-btn-class send-answer-btn response-send-answer-btn btn-shine" disabled aria-disabled="true" title="Start the interview to answer">
- Send Answer <i class="fa-solid fa-paper-plane"></i>
+ <span class="send-answer-label">Send Answer</span> <i class="fa-solid fa-paper-plane"></i>
  </button>
  </div>
  </div>
@@ -484,6 +494,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let isSubmittingAnswer = false;
  let pendingTimedOutSubmission = false;
  let finalAnswerSubmitted = false;
+ let pendingSavedAnswerRetry = @json($savedFollowUpRetryQuestionId) ? { questionId: @json($savedFollowUpRetryQuestionId) } : null;
  let answerInputEnabled = false;
  let feedbackSubmissionInFlight = false;
  const pendingFetchControllers = new Set();
@@ -3474,9 +3485,10 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  function updateSendAnswerButtonState() {
  const hasSubmittableVoiceRecording = Boolean(submittableVoiceSessionRecording(currentQIdx));
- const hybridNeedsTranscript = isHybridTranscriptionMode() &&!hybridModeHasTranscriptText() &&!hasSubmittableVoiceRecording;
- const disabled =!answerInputEnabled || hybridNeedsTranscript || isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted;
- const title = hybridNeedsTranscript && answerInputEnabled
+ const retryingSavedAnswer = pendingSavedAnswerRetry && String(pendingSavedAnswerRetry.questionId) === String(questions[currentQIdx]?.id);
+ const hybridNeedsTranscript = !retryingSavedAnswer && isHybridTranscriptionMode() &&!hybridModeHasTranscriptText() &&!hasSubmittableVoiceRecording;
+ const disabled = (!answerInputEnabled && !retryingSavedAnswer) || hybridNeedsTranscript || isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted;
+ const title = retryingSavedAnswer ? 'Retry next AI question using your saved answer' : hybridNeedsTranscript && answerInputEnabled
  ? 'Add transcript text or record an answer before sending in Hybrid Mode'
  : (answerInputEnabled? 'Send answer': 'Start the interview to answer');
 
@@ -3485,6 +3497,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  button.setAttribute('aria-disabled', String(disabled));
  button.classList.toggle('is-awaiting-transcript', hybridNeedsTranscript && answerInputEnabled);
  button.setAttribute('title', title);
+ const label = button.querySelector('.send-answer-label');
+ if (label) label.textContent = retryingSavedAnswer ? 'Retry AI Question' : 'Send Answer';
  });
  }
 
@@ -4976,6 +4990,13 @@ return fallbackText;
  phase: 'question',
  speechText: q.question_text
  });
+ if (pendingSavedAnswerRetry && String(pendingSavedAnswerRetry.questionId) === String(q.id)) {
+ document.getElementById('aiQuestionText').innerText = q.question_text;
+ stopQuestionTimer();
+ showSessionNotice('Your answer is saved. Retry the next AI question when you are ready.', 'warning');
+ updateSendAnswerButtonState();
+ return;
+ }
  await speakQuestion(q.question_text, { startTimerAfterSpeech: true, questionId: q.id });
  if (interviewTerminated || interviewEnding || loadToken!== questionLoadToken) return;
  setAnswerInputEnabled(true);
@@ -5833,8 +5854,61 @@ return fallbackText;
  return nextQuestionIndex;
  }
 
+ async function retrySavedNextQuestion() {
+ const questionId = pendingSavedAnswerRetry?.questionId;
+ if (!questionId || isSubmittingAnswer || interviewEnding || interviewTerminated) return;
+ isSubmittingAnswer = true;
+ updateSendAnswerButtonState();
+ showSessionNotice('Your answer is saved. Preparing the next AI question...', 'warning');
+
+ const formData = new FormData();
+ formData.append('_token', '{{ csrf_token() }}');
+ formData.append('session_id', interviewSessionId);
+ formData.append('question_id', questionId);
+ formData.append('resume_saved_answer', '1');
+
+ try {
+ const data = await postFormJsonWithRetry('{{ route("interview.chatReply") }}', formData, {
+ attempts: 2,
+ timeoutMs: 200000,
+ fallbackMessage: 'The next AI question could not be prepared. Please retry.'
+ });
+ if (!data.success || (!data.interview_completed && (!data.next_question_id || !String(data.next_question_text || '').trim()))) {
+ throw new Error(data.error || 'The next AI question could not be prepared. Please retry.');
+ }
+ pendingSavedAnswerRetry = null;
+ if (data.interview_completed) {
+ finalAnswerSubmitted = true;
+ isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
+ await concludeAndFinishInterview();
+ return;
+ }
+
+ currentQIdx = placeNextQuestion({
+ id: data.next_question_id,
+ question_text: data.next_question_text,
+ source_type: data.source_type || ''
+ });
+ isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
+ await loadQuestion(currentQIdx);
+ } catch (error) {
+ isSubmittingAnswer = false;
+ updateSendAnswerButtonState();
+ console.error('Saved-answer follow-up retry failed:', error);
+ if (!interviewTerminated && !interviewEnding) {
+ showSessionNotice(error.message || 'The next AI question could not be prepared. Please retry.', 'warning');
+ }
+ }
+ }
+
  async function submitAnswer(options = {}) {
  if (isSubmittingAnswer || interviewEnding || interviewTerminated || finalAnswerSubmitted) return;
+ if (pendingSavedAnswerRetry && String(pendingSavedAnswerRetry.questionId) === String(questions[currentQIdx]?.id)) {
+ await retrySavedNextQuestion();
+ return;
+ }
  isSubmittingAnswer = true;
  stopQuestionTimer();
  updateSendAnswerButtonState();
@@ -5979,13 +6053,16 @@ return fallbackText;
  try {
  const data = await postFormJsonWithRetry('{{ route("interview.chatReply") }}', formData, {
  attempts: 2,
+ timeoutMs: 200000,
  fallbackMessage: 'We could not send your answer. Please try again.'
  });
  const tb = document.getElementById('thinkingBubble');
  if(tb) tb.remove();
 
  if (!data.success) {
- throw new Error(data.error || 'An error occurred.');
+ const error = new Error(data.error || 'An error occurred.');
+ error.payload = data;
+ throw error;
  }
  answerCommitted = true;
  pendingTimedOutSubmission = false;
@@ -5996,6 +6073,11 @@ return fallbackText;
  updateSendAnswerButtonState();
  await concludeAndFinishInterview();
  return;
+ }
+ if (!data.next_question_id || !String(data.next_question_text || '').trim()) {
+ const error = new Error('Your answer was saved, but the next AI question was incomplete. Please retry.');
+ error.payload = { answer_saved: true };
+ throw error;
  }
 
  const newQ = {
@@ -6015,7 +6097,12 @@ return fallbackText;
  updateSendAnswerButtonState();
  console.error(err);
  if (!interviewTerminated && !interviewEnding) {
- if (answerCommitted) {
+ if (err.payload?.answer_saved === true) {
+ pendingSavedAnswerRetry = { questionId: questions[currentQIdx].id };
+ setAnswerInputEnabled(false);
+ showSessionNotice(err.message || 'Your answer was saved. Retry the next AI question.', 'warning');
+ scheduleStateSave();
+ } else if (answerCommitted) {
  setAnswerInputEnabled(false);
  showSessionNotice('Your answer was saved, but the next question could not load. Refresh to resume.');
  } else {

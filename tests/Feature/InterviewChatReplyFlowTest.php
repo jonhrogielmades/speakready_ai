@@ -241,7 +241,9 @@ class InterviewChatReplyFlowTest extends TestCase
         ]);
         $generated = 'What interests you about improving reliability as a Developer?';
         $replies = ['What is your favorite color?', $generated];
-        Http::fake(['api.openai.com/*' => function () use (&$replies) {
+        $prompts = [];
+        Http::fake(['api.openai.com/*' => function ($request) use (&$replies, &$prompts) {
+            $prompts[] = (string) data_get($request->data(), 'messages.1.content', '');
             return Http::response([
                 'choices' => [['finish_reason' => 'stop', 'message' => ['content' => array_shift($replies)]]],
             ]);
@@ -260,6 +262,9 @@ class InterviewChatReplyFlowTest extends TestCase
             ->assertJsonPath('next_question_text', $generated);
 
         Http::assertSentCount(2);
+        $this->assertCount(2, $prompts);
+        $this->assertStringContainsString('include one meaningful detail from the latest candidate answer in the QUESTION itself', $prompts[1]);
+        $this->assertStringContainsString('do not invent candidate history or repeat an earlier question', $prompts[1]);
         $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
     }
 
@@ -444,6 +449,90 @@ class InterviewChatReplyFlowTest extends TestCase
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
         ]);
+    }
+
+    public function test_saved_answer_can_resume_question_generation_without_being_overwritten(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        config(['services.interview_follow_up.max_retries' => 1]);
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+        $providerAvailable = false;
+        $generated = 'What interests you about improving reliability as a Developer?';
+        Http::fake(['api.openai.com/*' => function () use (&$providerAvailable, $generated) {
+            return $providerAvailable
+                ? Http::response(['choices' => [['finish_reason' => 'stop', 'message' => ['content' => $generated]]]])
+                : Http::response(['error' => ['message' => 'rate limited']], 429);
+        }]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+        $answerText = 'I build small web services and want to make them more reliable.';
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => $answerText,
+            ])->assertStatus(503)
+            ->assertJsonPath('answer_saved', true);
+
+        $saved = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
+        $savedId = $saved->id;
+        $saved->forceFill(['voice_recording_path' => 'interviews/keep-this-recording.webm'])->save();
+
+        $providerAvailable = true;
+
+        $firstNext = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'resume_saved_answer' => true,
+                'answer_text' => 'This new text must not replace the saved answer.',
+            ])->assertOk()
+            ->assertJsonPath('next_question_text', $generated);
+
+        $providerAvailable = false;
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'resume_saved_answer' => true,
+            ])->assertOk()
+            ->assertJsonPath('next_question_id', $firstNext->json('next_question_id'));
+
+        $saved->refresh();
+        $this->assertSame($savedId, $saved->id);
+        $this->assertSame($answerText, $saved->answer_text);
+        $this->assertSame('interviews/keep-this-recording.webm', $saved->voice_recording_path);
+        $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+    }
+
+    public function test_resume_requires_a_saved_answer(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'resume_saved_answer' => true,
+            ])->assertStatus(409);
+
+        $this->assertSame(0, InterviewAnswer::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
     }
 
     public function test_repeated_provider_failures_do_not_create_local_questions(): void

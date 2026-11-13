@@ -749,11 +749,11 @@ class AIService
  if ($roleGuidance !== '') {
  $prompt.= $roleGuidance.' ';
  }
- $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. For a substantive latest answer, the next question must reuse at least one concrete detail from that answer, such as a task, tool, stakeholder, constraint, decision, or outcome; do not ask a generic fit question when the answer provides a concrete topic. ';
+ $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. For a substantive latest answer, put at least one concrete detail from that answer in the QUESTION itself, such as the actual task, tool, stakeholder, constraint, decision, or outcome. A detail in the acknowledgement alone is insufficient. Do not ask a generic fit question when the answer provides a concrete topic. ';
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
  $prompt.= 'Base the next interviewer turn on the candidate answer, the target role, and the earlier conversation. Dataset examples are optional inspiration, never a limit on what you may ask. Use the supplied source dataset when it contains a relevant topic, competency, or representative question pattern, but do not require an exact dataset match. If no dataset example fits, create a fresh role-specific question through the AI provider instead of stopping or returning an error. ';
- $prompt.= 'Do not use the phrases "You mentioned", "You said", "You shared", or "Thinking about what you shared". Do not repeat or quote the candidate answer. Use a short natural transition only when necessary, then ask the one focused question. ';
+ $prompt.= 'Do not use the phrases "You mentioned", "You said", "You shared", or "Thinking about what you shared". Do not repeat or quote the full candidate answer; refer to one concrete detail naturally in the question. Use a short natural transition only when necessary, then ask the one focused question. ';
  $prompt.= 'Read the earlier turns before choosing what to ask: do not ask again for an action, result, reason, or constraint already explained. Ask one narrow unanswered detail about the same example, or explicitly bridge from that detail when the required question type changes. Preserve negation and uncertainty; a plan is not a past achievement. Do not presume success, a problem, a tool, or a tradeoff the candidate never mentioned. ';
  $prompt.= $liveFeedbackMode === 'real_interview'
  ? 'Acknowledge the answer briefly and neutrally before the question. Do not assess or coach the candidate mid-interview. '
@@ -836,9 +836,9 @@ class AIService
  $prompt.= self::truncateText($latestAnswer, 1200)."\n";
 
  if ($isFinal) {
- $prompt.= "\nYour task: This is the FINAL question of the interview. Briefly acknowledge the candidate's latest answer in a warm, encouraging sentence without evaluating it. If they asked a brief rapport or logistics question, answer it first in one short clause. Explicitly mention that this is the final question, and ask ONE concluding interview question that a real interviewer would ask. Prefer a question about strongest fit, remaining evidence, motivation, or what the candidate wants the interviewer to remember. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+ $prompt.= "\nYour task: This is the FINAL question of the interview. Briefly acknowledge the candidate's latest answer in a warm, encouraging sentence without evaluating it. If they asked a brief rapport or logistics question, answer it first in one short clause. Explicitly mention that this is the final question, and ask ONE concluding interview question that a real interviewer would ask. When the latest answer contains a concrete detail, include that detail in the question and probe its significance for the target role. If no answer content is available, ask for role-related evidence without inventing a past achievement. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
  } else {
- $prompt.= "\nYour task: Briefly acknowledge the candidate's latest answer in one warm, encouraging sentence, then ask exactly ONE relevant follow-up question based on that answer. If they asked a brief rapport or logistics question, answer it first in one short clause before the interview question. If the answer was vague, keep the tone inviting while asking for a specific example, their personal role, measurable result, or decision process. If the answer was strong, probe deeper into tradeoffs, constraints, stakeholder impact, or how they would apply it in this role. Do not jump to an unrelated prewritten question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
+ $prompt.= "\nYour task: Briefly acknowledge the candidate's latest answer in one warm, encouraging sentence, then ask exactly ONE relevant follow-up question based on that answer. Put a concrete detail from a substantive answer in the question itself. If they asked a brief rapport or logistics question, answer it first in one short clause before the interview question. If the answer was vague, keep the tone inviting while asking for a specific example, their personal role, measurable result, or decision process. If the answer was strong, probe deeper into tradeoffs, constraints, stakeholder impact, or how they would apply it in this role. Do not jump to an unrelated prewritten question. Do not include markdown formatting or labels like 'Interviewer:'. Just output the spoken text.";
  }
  if (in_array($requiredQuestionType, ['Behavioral', 'Situational', 'Technical', 'Personal'], true)) {
  $prompt.= " The required {$requiredQuestionType} type takes priority over generic example or final-fit wording above. Do not switch to another question type.";
@@ -851,36 +851,86 @@ class AIService
  }
  $maxProviders = max(1, min(count($providers), (int) config('services.interview_follow_up.max_providers', 1)));
  $providers = array_slice($providers, 0, $maxProviders);
- $maxRetries = max(1, min(4, (int) config('services.interview_follow_up.max_retries', 4)));
+ $configuredRetries = max(1, min(4, (int) config('services.interview_follow_up.max_retries', 4)));
+ $timeoutSeconds = max(2, min(20, (int) config('services.interview_follow_up.timeout', 20)));
+ // A failed HTTP request should move to another provider promptly. When only
+ // one provider is configured, its own HTTP retry setting can still help.
+ $httpAttempts = count($providers) > 1
+ ? 1
+ : max(1, min(2, (int) config('services.interview_follow_up.http_attempts', 1)));
  $chatRequestOptions = [
- 'timeout_seconds' => max(2, min(20, (int) config('services.interview_follow_up.timeout', 20))),
- 'attempts' => max(1, min(2, (int) config('services.interview_follow_up.http_attempts', 1))),
+ 'timeout_seconds' => $timeoutSeconds,
+ 'attempts' => $httpAttempts,
  'max_providers' => 1,
  ];
+ // The controller holds the per-question lock for 180 seconds and the browser
+ // waits for 200. Leave enough time for answer persistence and question save.
+ $deadlineAt = microtime(true) + 140;
  $attempt = 0;
+ $rejectedProviders = [];
+ $repairBudget = $configuredRetries > 1
+ ? max(1, $configuredRetries - count($providers))
+ : 0;
+ $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation and target role; dataset examples are optional context. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. Never say "You mentioned", "You said", or "You shared"; avoid restating the full answer, but include one actual detail in the question. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $repairTypeRule = match ($requiredQuestionType) {
+ 'Behavioral' => 'keep it Behavioral: ask about a real past situation, the candidate\'s own action, and what happened; ',
+ 'Situational' => 'keep it Situational: present one plausible hypothetical work situation and ask what the candidate would do; ',
+ 'Technical' => 'keep it Technical: ask for a concrete method, tool, diagnosis, tradeoff, or verification step in the question itself; ',
+ 'Personal' => 'keep it Personal: ask about motivation, strength, work style, or career goals for the target role; ',
+ default => '',
+ };
+ $hasSubstantiveAnswer = self::wordCount((string) $latestAnswer) >= 8
+ && preg_match('/^(?:\[User skipped|\[Voice answer saved|\(Skipped or no answer|\(No answer before)/i', trim((string) $latestAnswer)) !== 1;
+ $answerRepairRule = $hasSubstantiveAnswer
+ ? 'include one meaningful detail from the latest candidate answer in the QUESTION itself; connect that detail to the target role; '
+ : 'do not infer any unspoken candidate experience; ask for specific role-related evidence; ';
+ $repairPrompt = $prompt."\nThe previous response could not be used. Write a DIFFERENT question that passes these checks: ask exactly ONE question with one question mark; {$answerRepairRule}keep it specific to the {$targetPosition} role; {$repairTypeRule}ask for an unanswered action, decision, result, or next step; do not invent candidate history or repeat an earlier question. Output only the spoken interviewer turn.\n";
 
- while ($attempt < $maxRetries) {
+ // Give every configured provider one chance before spending calls on a
+ // semantic repair. This also makes rate limits and outages fail over quickly.
+ $providerQueue = $providers;
+ for ($index = 0; $index < count($providerQueue); $index++) {
+ $currentProvider = $providerQueue[$index];
+ $isRepair = $index >= count($providers);
+ if (($deadlineAt - microtime(true)) <= ($timeoutSeconds * $httpAttempts + 3)) {
+ break;
+ }
+
+ $attempt++;
  try {
- $currentProvider = $providers[$attempt % count($providers)]?? $provider;
- $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation and target role; dataset examples are optional context. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. Never say "You mentioned", "You said", "You shared", or restate the candidate answer. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $rawResponse = self::chatMessage($isRepair ? $repairPrompt : $prompt, [], $currentProvider, $systemPrompt, $chatRequestOptions);
+ if ($rawResponse !== self::AI_FAILURE_MESSAGE) {
+ $response = self::sanitizeInterviewerReply($rawResponse);
 
- $response = self::chatMessage($prompt, [], $currentProvider, $systemPrompt, $chatRequestOptions);
- $response = self::sanitizeInterviewerReply($response);
-
- if (! empty($response) && $response!== self::AI_FAILURE_MESSAGE
+ if ($response !== ''
  && preg_match('/\b(?:you\s+(?:mentioned|said|shared)|thinking\s+about\s+what\s+you\s+shared)\b/iu', $response) !== 1
  && app(InterviewConversationService::class)->isCoherentFollowUp($response, (string) $latestAnswer, $history)
  && ($acceptQuestion === null || $acceptQuestion($response))) {
  $usedProvider = $currentProvider;
  return $response;
  }
-  } catch (\Throwable $e) {
- Log::error('AI Chat Reply Error (Attempt '.($attempt + 1).'): '.self::safeProviderErrorMessage($e));
+ if (! $isRepair) {
+ $rejectedProviders[] = $currentProvider;
  }
-
- $attempt++;
- if ($attempt < $maxRetries) {
- $prompt.= "\nThe previous response could not be used. Write a DIFFERENT, single role-relevant question of the required type. Use the candidate answer for context, but you may introduce a new topic that fits the role even if the dataset has no example. Avoid repeating an earlier question.\n";
+ if (! self::externalAiDisabledForTests()) {
+ Log::warning('AI interview follow-up reply did not pass question validation.', [
+ 'provider' => $currentProvider,
+ 'attempt' => $attempt,
+ 'phase' => $isRepair ? 'repair' : 'initial',
+ ]);
+ }
+ } elseif (count($providers) === 1 && ! $isRepair) {
+ // A sole provider may recover from a transient connection failure on the
+ // remaining configured turns. A rate-limited provider is skipped by chatMessage.
+ $rejectedProviders[] = $currentProvider;
+ }
+ } catch (\Throwable $e) {
+ Log::error('AI Chat Reply Error (Attempt '.$attempt.'): '.self::safeProviderErrorMessage($e));
+ }
+ if ($index === count($providers) - 1 && $repairBudget > 0 && $rejectedProviders !== []) {
+ for ($repairIndex = 0; $repairIndex < $repairBudget; $repairIndex++) {
+ $providerQueue[] = $rejectedProviders[$repairIndex % count($rejectedProviders)];
+ }
  }
  }
 
@@ -5258,7 +5308,7 @@ PROMPT;
  $attempts = array_key_exists('attempts', $requestOptions)? max(1, (int) $requestOptions['attempts']): null;
 
  foreach ($providers as $currentProvider) {
- if (! self::shouldAttemptProvider($currentProvider)) {
+ if (! self::shouldAttemptProvider($currentProvider) || self::chatProviderRateLimited($currentProvider)) {
  continue;
  }
 
@@ -5283,6 +5333,9 @@ PROMPT;
 
  return $response;
  } catch (\Throwable $e) {
+ if ($e instanceof RequestException && $e->response->status() === 429) {
+ self::cooldownRateLimitedChatProvider($currentProvider, $e->response);
+ }
  if (! self::externalAiDisabledForTests()) {
  Log::error("AI Chat Error ({$currentProvider}): ".self::safeProviderErrorMessage($e));
  }
@@ -5290,6 +5343,37 @@ PROMPT;
  }
 
  return self::AI_FAILURE_MESSAGE;
+ }
+
+ private static function chatProviderRateLimited(string $provider): bool
+ {
+ if (app()->environment('testing')
+ && ! filter_var(config('services.ai_providers.rate_limit_cooldown_in_tests', false), FILTER_VALIDATE_BOOLEAN)) {
+ return false;
+ }
+
+ return rescue(fn (): bool => Cache::has('ai:chat:rate-limit:'.$provider), false, false);
+ }
+
+ private static function cooldownRateLimitedChatProvider(string $provider, $response): void
+ {
+ $retryAfter = self::retryAfterSecondsFromResponse($response);
+ $details = $response->json('error.details', []);
+ if (is_array($details)) {
+ foreach ($details as $detail) {
+ if (! is_array($detail)
+ || ! str_ends_with((string) ($detail['@type']?? ''), 'google.rpc.RetryInfo')) {
+ continue;
+ }
+ $delay = trim((string) ($detail['retryDelay']?? ''));
+ if (preg_match('/^(\d+)(?:\.\d+)?s$/', $delay, $match) === 1) {
+ $retryAfter = max($retryAfter?? 0, (int) $match[1]);
+ }
+ }
+ }
+
+ $seconds = max(60, min(7200, $retryAfter?? 120));
+ rescue(fn () => Cache::put('ai:chat:rate-limit:'.$provider, time() + $seconds, $seconds), null, false);
  }
 
  public static function extractTextFromAttachment(string $path, string $mimeType, string $extension = '', $provider = 'openai'): string
@@ -10978,6 +11062,30 @@ PROMPT;
  return $content;
  }
 
+ private static function chatTextBlocks(mixed $content): string
+ {
+ if (is_string($content)) {
+ return $content;
+ }
+
+ if (! is_array($content) || ! array_is_list($content)) {
+ return '';
+ }
+
+ $text = [];
+ foreach ($content as $block) {
+ if (! is_array($block)
+ || ($block['thought']?? false) === true
+ || ! in_array($block['type']?? 'text', ['text', 'output_text'], true)
+ || ! is_string($block['text']?? null)) {
+ continue;
+ }
+ $text[] = $block['text'];
+ }
+
+ return implode('', $text);
+ }
+
  private static function formatHistoryForGemini($message, $history)
  {
  $contents = [];
@@ -11021,12 +11129,15 @@ PROMPT;
  return self::providerTextResponse(
  'gemini',
  $response,
- $response->json('candidates.0.content.parts.0.text')
+ self::chatTextBlocks($response->json('candidates.0.content.parts'))
  );
+ }
+ if ($response->status() === 429) {
+ self::cooldownRateLimitedChatProvider('gemini', $response);
  }
  Log::error('Gemini Chat Error: '.self::safeProviderResponseBody($response));
 
- return 'Sorry, I am having trouble connecting to my brain right now.';
+ return self::AI_FAILURE_MESSAGE;
  }
 
  private static function formatHistoryForStandard($message, $history, $systemPrompt = null)
@@ -11069,12 +11180,15 @@ PROMPT;
  return self::providerTextResponse(
  'openai',
  $response,
- $response->json('choices.0.message.content')
+ self::chatTextBlocks($response->json('choices.0.message.content'))
  );
+ }
+ if ($response->status() === 429) {
+ self::cooldownRateLimitedChatProvider('openai', $response);
  }
  Log::error('OpenAI Chat Error: '.self::safeProviderResponseBody($response));
 
- return 'Sorry, I am having trouble connecting to my brain right now.';
+ return self::AI_FAILURE_MESSAGE;
  }
 
  private static function chatCohere($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
@@ -11096,9 +11210,12 @@ PROMPT;
  if ($response->successful()) {
  return self::providerTextResponse('cohere', $response, self::cohereTextFromResponse($response));
  }
+ if ($response->status() === 429) {
+ self::cooldownRateLimitedChatProvider('cohere', $response);
+ }
  Log::error('Cohere Chat Error: '.self::safeProviderResponseBody($response));
 
- return 'Sorry, I am having trouble connecting to my brain right now.';
+ return self::AI_FAILURE_MESSAGE;
  }
 
  private static function chatGroq($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
@@ -11122,13 +11239,17 @@ PROMPT;
  return self::providerTextResponse(
  $provider,
  $response,
- $response->json('choices.0.message.content', '')
+ self::chatTextBlocks($response->json('choices.0.message.content', ''))
  );
+ }
+
+ if ($response->status() === 429) {
+ self::cooldownRateLimitedChatProvider($provider, $response);
  }
 
  Log::error(self::PROVIDER_LABELS[$provider].' Chat Error: '.self::safeProviderResponseBody($response));
 
- return 'Sorry, I am having trouble connecting to my brain right now.';
+ return self::AI_FAILURE_MESSAGE;
  }
 
  private static function chatTemperature(): float

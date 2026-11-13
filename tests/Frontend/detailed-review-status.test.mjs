@@ -41,7 +41,6 @@ function harness(options = {}) {
         hidden: false,
         dataset: {
             reviewStatus: options.status || 'processing',
-            reviewStatusHidden: options.hidePanel ? 'true' : 'false',
             reviewStatusUrl: options.url || '/session/42/review/status',
         },
         setAttribute() {},
@@ -114,14 +113,14 @@ function harness(options = {}) {
     return { window, document, panel, heading, detail, retry, reload, requests, storage, advance, settle, timers, get reloads() { return reloads; } };
 }
 
-test('desktop and mobile use the shared pending-only poller and preserve the manual POST fallback', () => {
+test('desktop and mobile show shared review progress and preserve the manual POST fallback', () => {
     const view = readFileSync(join(root, 'resources/views/shared/user/review-content.blade.php'), 'utf8');
     assert.match(view, /@if\(!\$sessionEndedEarly && \(\$providerReviewPending \?\? false\)\)/);
     assert.match(view, /route\('user\.review\.status', \$sessionRecord\)/);
-    assert.match(view, /data-review-status-hidden="true" hidden aria-hidden="true"/);
+    assert.match(view, /data-detailed-review-status data-review-status-url=/);
     assert.match(view, /method="POST" action="{{ route\('user\.review\.refresh', \$sessionRecord\) }}" data-review-retry @if\(\$providerReviewCanContinue\) hidden @endif/);
     assert.match(view, /role="status" aria-live="polite" aria-atomic="true"/);
-    assert.match(view, /detailed-review-status\.js\?v=2/);
+    assert.match(view, /detailed-review-status\.js\?v=6/);
     for (const layout of ['desktop', 'mobile']) {
         const wrapper = readFileSync(join(root, `resources/views/${layout}/user/review.blade.php`), 'utf8');
         assert.match(wrapper, /@include\('shared\.user\.review-content'/);
@@ -134,25 +133,25 @@ test('does nothing when there are no pending provider reviews', async () => {
     assert.equal(ui.requests.length, 0);
 });
 
-test('keeps the Detailed Review status and retry card hidden while polling', async () => {
-    const ui = harness({ hidePanel: true, responses: [{ status: 'processing' }, { status: 'unavailable' }] });
+test('shows progress while polling and reveals retry only for a failed review', async () => {
+    const ui = harness({ responses: [{ status: 'processing' }, { status: 'failed' }] });
     await ui.advance(0);
-    assert.equal(ui.panel.hidden, true);
+    assert.equal(ui.panel.hidden, false);
     assert.equal(ui.retry.hidden, true);
-    await ui.advance(5000);
-    assert.equal(ui.panel.hidden, true);
-    assert.equal(ui.retry.hidden, true);
+    await ui.advance(2000);
+    assert.equal(ui.panel.hidden, false);
+    assert.equal(ui.retry.hidden, false);
 });
 
-test('reads status without mutations and refreshes automatically after processing and waiting', async () => {
-    const ui = harness({ responses: [{ status: 'processing' }, { status: 'waiting', retry_after_ms: 7000 }, { status: 'ready' }] });
+test('reads status without mutations and refreshes automatically after processing and pending', async () => {
+    const ui = harness({ responses: [{ status: 'processing' }, { status: 'pending', retry_after_ms: 7000 }, { status: 'verified' }] });
     await ui.advance(0);
     assert.equal(ui.requests.length, 1);
     assert.equal(ui.retry.hidden, true);
     assert.equal(ui.requests[0].init.method, 'GET');
     assert.equal(ui.requests[0].init.credentials, 'same-origin');
     assert.equal(ui.requests[0].init.cache, 'no-store');
-    await ui.advance(5000);
+    await ui.advance(2000);
     await ui.advance(7000);
     assert.equal(ui.reloads, 1);
     assert.equal(ui.panel.hidden, true);
@@ -162,10 +161,10 @@ test('reads status without mutations and refreshes automatically after processin
 
 test('a stale page cannot enter an automatic reload loop', async () => {
     const storage = new Map();
-    const first = harness({ storage, responses: [{ status: 'ready' }] });
+    const first = harness({ storage, responses: [{ status: 'verified' }] });
     await first.advance(0);
     assert.equal(first.reloads, 1);
-    const second = harness({ storage, responses: [{ status: 'ready' }] });
+    const second = harness({ storage, responses: [{ status: 'verified' }] });
     await second.advance(0);
     assert.equal(second.reloads, 0);
     assert.equal(second.panel.hidden, false);
@@ -176,9 +175,9 @@ test('a stale page cannot enter an automatic reload loop', async () => {
 });
 
 test('history state prevents reload loops if session storage is unavailable', async () => {
-    const first = harness({ storageUnavailable: true, responses: [{ status: 'ready' }] });
+    const first = harness({ storageUnavailable: true, responses: [{ status: 'verified' }] });
     await first.advance(0);
-    const second = harness({ storageUnavailable: true, historyState: first.window.history.state, responses: [{ status: 'ready' }] });
+    const second = harness({ storageUnavailable: true, historyState: first.window.history.state, responses: [{ status: 'verified' }] });
     await second.advance(0);
     assert.equal(first.reloads, 1);
     assert.equal(second.reloads, 0);
@@ -186,28 +185,26 @@ test('history state prevents reload loops if session storage is unavailable', as
 });
 
 test('falls back to an explicit reload if persistent guards are unavailable', async () => {
-    const ui = harness({ storageUnavailable: true, historyUnavailable: true, responses: [{ status: 'ready' }] });
+    const ui = harness({ storageUnavailable: true, historyUnavailable: true, responses: [{ status: 'verified' }] });
     await ui.advance(0);
     assert.equal(ui.reloads, 0);
     assert.equal(ui.reload.hidden, false);
 });
 
-for (const status of ['failed', 'unavailable']) {
-    test(`${status} shows recovery immediately and does not poll`, async () => {
-        const ui = harness({ status });
-        await ui.advance(180000);
-        assert.equal(ui.requests.length, 0);
-        assert.equal(ui.retry.hidden, false);
-    });
+test('an initial failed review shows manual retry without polling', async () => {
+    const ui = harness({ status: 'failed' });
+    await ui.advance(180000);
+    assert.equal(ui.requests.length, 0);
+    assert.equal(ui.retry.hidden, false);
+});
 
-    test(`a ${status} result ends automatic polling and uses plain text messages`, async () => {
-        const ui = harness({ responses: [{ status, message: '<img src=x onerror=alert(1)>' }] });
-        await ui.advance(180000);
-        assert.equal(ui.requests.length, 1);
-        assert.equal(ui.retry.hidden, false);
-        assert.equal(ui.detail.textContent, '<img src=x onerror=alert(1)>');
-    });
-}
+test('a failed result ends polling and shows the message as plain text', async () => {
+    const ui = harness({ responses: [{ status: 'failed', message: '<img src=x onerror=alert(1)>' }] });
+    await ui.advance(180000);
+    assert.equal(ui.requests.length, 1);
+    assert.equal(ui.retry.hidden, false);
+    assert.equal(ui.detail.textContent, '<img src=x onerror=alert(1)>');
+});
 
 test('pauses on hidden pages and offline, resumes when visible and online', async () => {
     const ui = harness({ hidden: true });
@@ -240,22 +237,23 @@ test('pagehide cancels in-flight work and ignores its late ready result', async 
     assert.equal(ui.requests.length, 1);
 });
 
-test('repeated network or invalid status failures reveal recovery instead of polling forever', async () => {
+test('repeated network or invalid status failures offer a manual status reload', async () => {
     const ui = harness({ responses: [new Error('Network'), { unexpected: 'shape' }, new Error('Network')] });
     await ui.advance(180000);
     assert.equal(ui.requests.length, 3);
-    assert.equal(ui.retry.hidden, false);
+    assert.equal(ui.retry.hidden, true);
+    assert.equal(ui.reload.hidden, false);
 });
 
 test('a successful status clears transient connection failures', async () => {
-    const ui = harness({ responses: [new Error('Network'), { status: 'processing' }, new Error('Network'), { status: 'ready' }] });
+    const ui = harness({ responses: [new Error('Network'), { status: 'processing' }, new Error('Network'), { status: 'verified' }] });
     await ui.advance(30000);
     assert.equal(ui.reloads, 1);
     assert.equal(ui.retry.hidden, true);
 });
 
 test('bounds delays and total polling duration', async () => {
-    const ui = harness({ responses: [{ status: 'processing', retry_after_ms: -1 }, { status: 'waiting', retry_after_ms: 9999999 }] });
+    const ui = harness({ responses: [{ status: 'processing', retry_after_ms: -1 }, { status: 'pending', retry_after_ms: 9999999 }] });
     await ui.advance(1999);
     assert.equal(ui.requests.length, 1);
     await ui.advance(1);
@@ -264,20 +262,22 @@ test('bounds delays and total polling duration', async () => {
     assert.equal(ui.requests.length, 2);
     await ui.advance(1);
     assert.equal(ui.requests.length, 3);
-    await ui.advance(300000);
-    assert.equal(ui.retry.hidden, false);
-    assert.ok(ui.requests.length <= 60);
+    await ui.advance(600000);
+    assert.equal(ui.retry.hidden, true);
+    assert.equal(ui.reload.hidden, false);
+    assert.ok(ui.requests.length <= 300);
     assert.equal(ui.timers.size, 0);
 });
 
-test('allows a second queued provider attempt to finish before the five-minute polling limit', async () => {
+test('allows queued provider attempts to finish before the ten-minute polling limit', async () => {
     const ui = harness();
-    await ui.advance(240000);
+    await ui.advance(540000);
     assert.equal(ui.retry.hidden, true);
-    assert.ok(ui.requests.length > 36);
+    assert.equal(ui.reload.hidden, true);
+    assert.ok(ui.requests.length > 60);
     await ui.advance(60000);
-    assert.equal(ui.retry.hidden, false);
-    assert.equal(ui.requests.length, 60);
+    assert.equal(ui.reload.hidden, false);
+    assert.ok(ui.requests.length <= 300);
 });
 
 test('times out stalled requests without allowing overlapping polls', async () => {
@@ -291,12 +291,14 @@ test('times out stalled requests without allowing overlapping polls', async () =
     assert.equal(ui.requests[0].init.signal.aborted, true);
     await ui.advance(180000);
     assert.equal(ui.requests.length, 3);
-    assert.equal(ui.retry.hidden, false);
+    assert.equal(ui.retry.hidden, true);
+    assert.equal(ui.reload.hidden, false);
 });
 
 test('refuses cross-origin status requests', async () => {
     const ui = harness({ url: 'https://other.test/review/status' });
     await ui.advance(180000);
     assert.equal(ui.requests.length, 0);
-    assert.equal(ui.retry.hidden, false);
+    assert.equal(ui.retry.hidden, true);
+    assert.equal(ui.reload.hidden, false);
 });

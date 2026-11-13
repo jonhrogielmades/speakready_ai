@@ -590,6 +590,7 @@ class InterviewController extends Controller
  'paste_event_count' => 'nullable|integer|min:0|max:500',
  'pasted_character_count' => 'nullable|integer|min:0|max:20000',
  'question_id' => 'required|exists:questions,id',
+ 'resume_saved_answer' => 'nullable|boolean',
  'response_mode' => ['nullable', Rule::in(self::ACCEPTED_RESPONSE_MODES)],
  'is_skipped' => 'nullable',
  'timed_out' => 'nullable',
@@ -630,7 +631,17 @@ class InterviewController extends Controller
  try {
  $chatReplyLock->block(30);
  } catch (LockTimeoutException) {
- return response()->json(['error' => 'The next question is still being prepared. Please try again shortly.'], 409);
+ $answerSaved = InterviewAnswer::where('interview_session_id', $session->id)
+ ->where('question_id', $question->id)
+ ->whereNull('retry_of_answer_id')
+ ->exists();
+
+ return response()->json([
+ 'success' => false,
+ 'answer_saved' => $answerSaved,
+ 'error_code' => 'ai_interview_follow_up_preparing',
+ 'error' => 'The next question is still being prepared. Please try again shortly.',
+ ], 409);
  }
 
  try {
@@ -639,9 +650,17 @@ class InterviewController extends Controller
  return response()->json(['error' => 'Interview session is no longer active.'], 409);
  }
 
+ $resumeSavedAnswer = (bool) ($validated['resume_saved_answer']?? false);
  $validated['response_mode'] = $this->normalizeResponseMode($session->response_mode?? 'text');
  $answerText = $this->cleanTranscribedAnswer($validated['answer_text']?? '');
- if (! $this->answerSubmissionHasContent($validated, $answerText)) {
+ $previousAnswer = InterviewAnswer::where('interview_session_id', $session->id)
+ ->where('question_id', $question->id)
+ ->whereNull('retry_of_answer_id')
+ ->first();
+ if ($resumeSavedAnswer && ! $previousAnswer) {
+ return response()->json(['error' => 'No saved answer was found for this question. Please submit your answer.'], 409);
+ }
+ if (! $resumeSavedAnswer && ! $this->answerSubmissionHasContent($validated, $answerText)) {
  return response()->json([
  'message' => 'Please record, transcribe, type, skip, or wait for the timer before submitting this answer.',
  'errors' => [
@@ -649,15 +668,13 @@ class InterviewController extends Controller
  ],
  ], 422);
  }
- $previousAnswer = InterviewAnswer::where('interview_session_id', $session->id)
- ->where('question_id', $question->id)
- ->whereNull('retry_of_answer_id')
- ->first();
  $previousAnswerSignature = $previousAnswer? $this->interviewAnswerTurnSignature($previousAnswer): null;
 
  // 1. Save User's Answer
  try {
- $answer = $this->persistInterviewAnswer($session, $question, $validated, $answerText);
+ $answer = $resumeSavedAnswer
+ ? $previousAnswer
+ : $this->persistInterviewAnswer($session, $question, $validated, $answerText);
  } catch (\Throwable $error) {
  Log::error('Interview chat answer save failed.', [
  'session_id' => $session->id,
@@ -772,9 +789,23 @@ class InterviewController extends Controller
  $usedProvider = null;
  $followUpText = AIService::generateChatReply(
  $session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType,
-  fn (string $reply): bool => $this->isReliableInterviewFollowUpText($reply, $session, $interviewerInputText, $history, false, true)
- && ($requiredQuestionType === null || $this->questionMatchesSelectedType($reply, $requiredQuestionType))
- && ! in_array($this->normalizedQuestionText($reply), $spokenQuestionTexts, true),
+  function (string $reply) use ($session, $interviewerInputText, $history, $requiredQuestionType, $spokenQuestionTexts): bool {
+  $rejectionGate = null;
+  if (! $this->isReliableInterviewFollowUpText($reply, $session, $interviewerInputText, $history, false, true, $rejectionGate)) {
+  Log::warning('AI interview follow-up candidate rejected.', ['session_id' => $session->id, 'gate' => $rejectionGate?? 'reliability']);
+  return false;
+  }
+  if ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($reply, $requiredQuestionType)) {
+  Log::warning('AI interview follow-up candidate rejected.', ['session_id' => $session->id, 'gate' => 'question_type']);
+  return false;
+  }
+  if (in_array($this->normalizedQuestionText($reply), $spokenQuestionTexts, true)) {
+  Log::warning('AI interview follow-up candidate rejected.', ['session_id' => $session->id, 'gate' => 'duplicate']);
+  return false;
+  }
+
+  return true;
+  },
  $usedProvider
  );
  $provider = $usedProvider?? $provider;
@@ -5091,9 +5122,11 @@ return response()->json([
  string $latestAnswer,
  array $history = [],
  bool $allowNeutralAcknowledgement = false,
- bool $requireAnswerAnchor = false
+ bool $requireAnswerAnchor = false,
+ ?string &$rejectionGate = null
  ): bool
  {
+ $rejectionGate = null;
  $questionText = trim(preg_replace('/\s+/u', ' ', strip_tags($questionText))?? '');
 
  if ($questionText === ''
@@ -5101,24 +5134,31 @@ return response()->json([
  || TranscriptService::wordCount($questionText) < 5
  || TranscriptService::wordCount($questionText) > 75
  || preg_match('/\b(?:score|scored|grade|graded|rubric|feedback|markdown|json|api key|system prompt|question count|how many questions|as an ai)\b/i', $questionText)) {
+ $rejectionGate = 'format';
  return false;
  }
 
  if (! app(InterviewConversationService::class)->isCoherentFollowUp($questionText, $latestAnswer, $history)) {
+ $rejectionGate = 'conversation';
  return false;
  }
 
  $position = trim((string) $session->target_position);
  if ($position === '') {
+ $rejectionGate = 'target_role';
  return false;
  }
 
  $hasNeutralAcknowledgement = $allowNeutralAcknowledgement
  && preg_match('/^(?:thanks|thank you) for sharing that[.!]?\s+/i', $questionText) === 1;
  $alignment = app(InterviewQuestionAlignmentService::class);
- if ((! $alignment->isRoleRelevant($questionText, $position, (string) ($session->job_description?? ''))
- && ! $hasNeutralAcknowledgement)
- || ! $alignment->isAnswerGrounded($questionText, $latestAnswer, $position)) {
+ if (! $alignment->isRoleRelevant($questionText, $position, (string) ($session->job_description?? ''))
+ && ! $hasNeutralAcknowledgement) {
+ $rejectionGate = 'role_relevance';
+ return false;
+ }
+ if (! $alignment->isAnswerGrounded($questionText, $latestAnswer, $position)) {
+ $rejectionGate = 'answer_grounding';
  return false;
  }
 
@@ -5126,12 +5166,13 @@ return response()->json([
  $answerTokens = $this->interviewGroundingTokens($latestAnswer, $position);
  $questionTokens = $this->interviewGroundingTokens($questionText, $position);
  $overlap = $this->interviewGroundingTokenOverlap($answerTokens, $questionTokens);
- $hasEvidenceProbe = preg_match('/\b(?:specific|example|situation|experience|result|outcome|impact|decision|action|responsib\w*|role|tradeoff|constraint|stakeholder|tool|process|metric|lesson|learn\w*|improv\w*|verif\w*|risk|priorit\w*|challenge|handle|apply|evidence|fit|strength|motivat\w*|weakness|ownership|personally|describe|walk|explain|tell|detail|approach|choose|check|happened|difficult|part|interests|skill|prepare|support)\b/i', $questionText) === 1;
+ $hasEvidenceProbe = preg_match('/\b(?:specific|example|situation|experience|result|outcome|impact|decision|action|responsib\w*|role|tradeoff|constraint|stakeholder|tool|process|metric|lesson|learn\w*|improv\w*|verif\w*|validat\w*|implement\w*|measur\w*|monitor\w*|diagnos\w*|debug\w*|troubleshoot\w*|logic|mechanism|method|risk|priorit\w*|challenge|handle|apply|evidence|fit|strength|motivat\w*|weakness|ownership|personally|describe|walk|explain|tell|detail|approach|choose|check|happened|difficult|part|interests|skill|prepare|support)\b/i', $questionText) === 1;
 
  if ($requireAnswerAnchor
  && ! $this->unavailableInterviewAnswerText($latestAnswer)
  && TranscriptService::wordCount($latestAnswer) >= 8
  && $overlap === 0) {
+ $rejectionGate = 'answer_anchor';
  return false;
  }
 
@@ -5139,22 +5180,32 @@ return response()->json([
  // Ask for evidence in the target role instead of treating a generic probe as
  // proof that an unrelated generated question follows the conversation.
  if ($this->unavailableInterviewAnswerText($latestAnswer)) {
- return $mentionsPosition && $hasEvidenceProbe;
+ $accepted = $mentionsPosition && $hasEvidenceProbe;
+ $rejectionGate = $accepted ? null : 'unavailable_answer_probe';
+
+ return $accepted;
  }
 
  if (count($answerTokens) < 4) {
- return $hasEvidenceProbe && ($mentionsPosition || ($overlap > 0 && str_contains($questionText, '“')) || $hasNeutralAcknowledgement);
+ $accepted = $hasEvidenceProbe && ($mentionsPosition || ($overlap > 0 && str_contains($questionText, '“')) || $hasNeutralAcknowledgement);
+ $rejectionGate = $accepted ? null : 'short_answer_probe';
+
+ return $accepted;
  }
 
  // A role title does not justify assuming the candidate performed a new task.
  if (! $hasNeutralAcknowledgement
  && $overlap === 0
  && preg_match('/\b(?:did you|you did|you made|you handled|your (?:decision|action|result|tradeoff) in)\b/i', $questionText)) {
+ $rejectionGate = 'unsupported_premise';
  return false;
  }
 
- return $hasNeutralAcknowledgement
+ $accepted = $hasNeutralAcknowledgement
  || ($hasEvidenceProbe && ($overlap > 0 || $mentionsPosition));
+ $rejectionGate = $accepted ? null : 'evidence_probe';
+
+ return $accepted;
  }
 
  private function unavailableInterviewAnswerText(string $answerText): bool
@@ -5502,14 +5553,15 @@ return response()->json([
 
  $clauses = preg_split('/[.!;]\s+/u', $beforeQuestionMark)?: [];
  $question = trim((string) end($clauses));
- $personal = preg_match('/\b(?:yourself|strengths?|weakness(?:es)?|motivat\w*|interests?|career|goals?|values?|work style|bring to)\b|\bwhy (?:do|did|would|are) you\b.*\b(?:want|interested|apply|applying|pursue)\b|\b(?:tell me about|describe|walk me through)\s+your background\b|\b(?:what|why|how|which)\b.*\bfit\b/i', $question) === 1;
- $behavioral = preg_match('/\b(?:tell me about|describe|share|give (?:me )?an example|walk me through)\b.*\b(?:time|experience|project|incident|challenge|problem|decision|situation|case|work)\b|\bgive (?:me )?an example of how you\b|\b(?:what|how|why|which)\b.*\b(?:did you|have you|was your|you handled|you learned)\b/i', $question) === 1
+ $personal = preg_match('/\b(?:yourself|strengths?|weakness(?:es)?|motivat\w*|interests?|career|goals?|values?|work style|working style|work preferences?|(?:preferred )?way of working|bring to)\b|\bwhy (?:do|did|would|are) you\b.*\b(?:want|interested|apply|applying|pursue)\b|\b(?:tell me about|describe|walk me through)\s+your background\b|\b(?:what|why|how|which)\b.*\bfit\b/i', $question) === 1;
+ $behavioral = (preg_match('/\b(?:tell me about|describe|share|give (?:me )?an example|walk me through)\b.*\b(?:time|experience|project|incident|challenge|problem|decision|situation|case|work)\b|\bgive (?:me )?an example of how you\b|\b(?:what|how|why|which)\b.*\b(?:did you|have you|was your|you handled|you learned)\b/i', $question) === 1
+ || preg_match('/\b(?:walk me through|describe|tell me about|share|explain)\b.*\b(?:you|your team)\s+(?:personally\s+)?(?:[a-z]+ed|built|made|chose|led|ran|found|took|saw)\b/i', $question) === 1)
  && preg_match('/\b(?:would you|might you|suppose|imagine)\b/i', $question) !== 1;
- $technical = preg_match('/\b(?:technical|tools?|systems?|software|code|database|api|diagnos\w*|debug\w*|design|test\w*|verif\w*|troubleshoot\w*|deploy\w*|architecture|algorithm|procedure|protocol)\b/i', $question) === 1
+ $technical = preg_match('/\b(?:technical|tools?|systems?|software|code|database|api|diagnos\w*|debug\w*|design|test\w*|verif\w*|validat\w*|implement\w*|monitor\w*|logic|mechanism|metrics?|troubleshoot\w*|deploy\w*|architecture|algorithm\w*|procedure|protocol)\b/i', $question) === 1
  || (preg_match('/\b(?:process|workflow|method|steps?)\b/i', $question) === 1
  && preg_match('/\b(?:solve|check|measure|implement|investigate|improve)\b/i', $question) === 1);
  $situational = preg_match('/\b(?:if|suppose|imagine|scenario|would you|might you|how would|what would|how do you (?:handle|respond|approach|prioritize|adapt|confirm)|what do you do when)\b/i', $question) === 1;
- $technicalMethod = preg_match('/\b(?:diagnos\w*|debug\w*|troubleshoot\w*|design|code|test\w*|verif\w*|implement\w*|configur\w*|architect\w*)\b/i', $question) === 1;
+ $technicalMethod = preg_match('/\b(?:diagnos\w*|debug\w*|troubleshoot\w*|design|code|test\w*|verif\w*|validat\w*|implement\w*|monitor\w*|configur\w*|architect\w*)\b/i', $question) === 1;
 
  return match ($requiredType) {
  'Personal' => $personal,

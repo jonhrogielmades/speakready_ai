@@ -22,8 +22,8 @@ function functionSource(source, name) {
     assert.fail(`${name} has no closing brace`);
 }
 
-function submissionHarness(source, mode, { final = false, failures = 1, abort = false, closingFails = false } = {}) {
-    const calls = { forms: [], renderedAtRequest: [], notices: [], timerStarts: 0, loaded: [], finish: 0 };
+function submissionHarness(source, mode, { final = false, failures = 1, abort = false, closingFails = false, savedFailure = false } = {}) {
+    const calls = { forms: [], renderedAtRequest: [], notices: [], inputStates: [], timerStarts: 0, loaded: [], finish: 0 };
     const renderedMessages = [];
     const previousHistory = [{ role: 'interviewer', text: 'Tell me about your experience.' }];
     const chatContainer = { style: {}, appendChild() {} };
@@ -43,6 +43,7 @@ function submissionHarness(source, mode, { final = false, failures = 1, abort = 
         interviewEnding: false,
         interviewTerminated: false,
         finalAnswerSubmitted: false,
+        pendingSavedAnswerRetry: null,
         voiceSessionRecordings: new Map(mode === 'voice' ? [['q1', { blob: { size: 256 }, transcriptionVerified: true, durationSeconds: 8 }]] : []),
         voiceSessionTranscriptionMaxBytes: 25600 * 1024,
         interviewSessionId: 10,
@@ -61,7 +62,7 @@ function submissionHarness(source, mode, { final = false, failures = 1, abort = 
         isVoiceOnlyMode() { return mode === 'voice'; },
         voiceSessionKeyFor() { return 'q1'; },
         submittableVoiceSessionRecording() { return mode === 'voice'; },
-        setAnswerInputEnabled() {},
+        setAnswerInputEnabled(enabled) { calls.inputStates.push(enabled); },
         appendChatMessage(role, text) { renderedMessages.push({ role, text }); context.interviewChatHistory.push({ role, text }); },
         clearSubmittedAnswerInput() { context.answerText = ''; renderedMessages.length = 0; },
         restoreSubmittedAnswerInput(value) { context.answerText = value; },
@@ -83,6 +84,10 @@ function submissionHarness(source, mode, { final = false, failures = 1, abort = 
             if (requestCount <= failures) {
                 const error = new Error('Request failed');
                 if (abort) error.name = 'AbortError';
+                if (savedFailure) {
+                    error.status = 503;
+                    error.payload = { answer_saved: true, error_code: 'ai_interview_follow_up_unavailable' };
+                }
                 throw error;
             }
             return { success: true, next_question_id: 2, next_question_text: 'What did you do next?' };
@@ -99,6 +104,7 @@ function submissionHarness(source, mode, { final = false, failures = 1, abort = 
     vm.createContext(context);
     vm.runInContext([
         functionSource(source, 'restoreFailedAnswerSubmission'),
+        functionSource(source, 'retrySavedNextQuestion'),
         functionSource(source, 'submitAnswer'),
     ].join('\n'), context);
     return { context, calls, previousHistory, renderedMessages };
@@ -119,6 +125,25 @@ for (const layout of ['desktop', 'mobile']) {
 
             await context.submitAnswer();
             assert.equal(context.interviewChatHistory.filter(message => message.role === 'user').length, 1);
+            assert.deepEqual(calls.loaded, [1]);
+        });
+
+        test(`${layout} ${mode} retries question generation without resending a saved answer`, async () => {
+            const { context, calls, previousHistory } = submissionHarness(source, mode, { savedFailure: true });
+            await context.submitAnswer();
+            assert.equal(context.pendingSavedAnswerRetry.questionId, 1);
+            assert.equal(context.answerText, '');
+            assert.equal(context.interviewChatHistory.length, previousHistory.length + 1);
+            assert.equal(calls.timerStarts, 0);
+            assert.equal(calls.inputStates.at(-1), false);
+
+            await context.submitAnswer();
+            assert.equal(calls.forms[1].get('resume_saved_answer'), '1');
+            assert.equal(calls.forms[1].get('question_id'), '1');
+            assert.equal(calls.forms[1].has('answer_text'), false);
+            assert.equal(calls.forms[1].has('voice_audio'), false);
+            assert.equal(context.interviewChatHistory.filter(message => message.role === 'user').length, 1);
+            assert.equal(context.pendingSavedAnswerRetry, null);
             assert.deepEqual(calls.loaded, [1]);
         });
     }
