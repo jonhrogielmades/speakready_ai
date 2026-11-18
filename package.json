@@ -5,6 +5,7 @@
         "start": "vite",
         "dev": "vite",
         "build": "vite build && node scripts/minify-public-css.mjs",
+        "audit:ci": "node scripts/audit-npm.mjs",
         "check:css": "node scripts/minify-public-css.mjs --check",
         "check:frontend": "node scripts/check-frontend.mjs",
         "test:service-worker-cache": "node --test tests/Frontend/service-worker-cache.test.mjs",
