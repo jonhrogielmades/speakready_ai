@@ -155,6 +155,90 @@ class AiFollowUpProviderTextTest extends TestCase
         Http::assertSentCount(4);
     }
 
+    public function test_live_follow_up_caps_output_and_reserves_time_for_each_provider(): void
+    {
+        config([
+            'services.ai_chat.max_tokens' => 1000,
+            'services.openai.model' => 'gpt-4o-mini',
+            'services.gemini.model' => 'gemini-2.0-flash',
+            'services.interview_follow_up.max_retries' => 1,
+            'services.interview_follow_up.max_providers' => 4,
+            'services.interview_follow_up.timeout' => 20,
+            'services.interview_follow_up.deadline_seconds' => 60,
+            'services.ai_providers.interview_provider_priority' => 'openai,gemini,groq,cohere',
+        ]);
+
+        foreach ([
+            ['OpenAI', 'https://api.openai.com/v1/chat/completions/'],
+            ['Gemini', 'https://generativelanguage.googleapis.com/v1beta'],
+            ['Groq', 'https://api.groq.com/openai/v1'],
+            ['Cohere', 'https://api.cohere.com/v2/chat'],
+        ] as [$name, $endpoint]) {
+            AiProvider::create([
+                'name' => $name,
+                'api_endpoint' => $endpoint,
+                'api_key' => Crypt::encryptString('test-'.$name.'-key'),
+                'status' => 'active',
+            ]);
+        }
+
+        $requests = [];
+        $recordFailure = function (string $provider) use (&$requests) {
+            return function ($request, array $options) use (&$requests, $provider) {
+                $requests[$provider] = ['body' => $request->data(), 'timeout' => $options['timeout'] ?? null];
+
+                return Http::response(['error' => 'temporarily unavailable'], 503);
+            };
+        };
+        $question = 'How did your deployment checks improve reliability for the Developer role?';
+        Http::fake([
+            'api.openai.com/*' => $recordFailure('openai'),
+            'generativelanguage.googleapis.com/*' => $recordFailure('gemini'),
+            'api.groq.com/*' => $recordFailure('groq'),
+            'api.cohere.com/*' => function ($request, array $options) use (&$requests, $question) {
+                $requests['cohere'] = ['body' => $request->data(), 'timeout' => $options['timeout'] ?? null];
+
+                return Http::response([
+                    'finish_reason' => 'COMPLETE',
+                    'message' => ['content' => [['type' => 'text', 'text' => $question]]],
+                ]);
+            },
+        ]);
+
+        $answer = 'I improved deployment checks so our software releases became more reliable.';
+        $usedProvider = null;
+        $previousOpenAiModel = getenv('OPENAI_MODEL');
+        $previousGeminiModel = getenv('GEMINI_MODEL');
+        putenv('OPENAI_MODEL');
+        putenv('GEMINI_MODEL');
+        try {
+            $reply = AIService::generateChatReply(
+                new InterviewSession(['target_position' => 'Developer', 'difficulty' => 'medium']),
+                [['question' => 'Tell me about your work.', 'answer' => $answer]],
+                $answer, 'openai', false, null, [], null, null,
+                fn (string $candidate): bool => str_contains($candidate, 'deployment checks'),
+                $usedProvider
+            );
+        } finally {
+            putenv($previousOpenAiModel === false ? 'OPENAI_MODEL' : 'OPENAI_MODEL='.$previousOpenAiModel);
+            putenv($previousGeminiModel === false ? 'GEMINI_MODEL' : 'GEMINI_MODEL='.$previousGeminiModel);
+        }
+        $this->assertSame($question, $reply);
+        $this->assertSame('cohere', $usedProvider);
+        $this->assertSame(['openai', 'gemini', 'groq', 'cohere'], array_keys($requests));
+        $this->assertLessThanOrEqual(14, $requests['openai']['timeout']);
+        foreach ($requests as $provider => $sent) {
+            $this->assertGreaterThanOrEqual(2, $sent['timeout'], $provider);
+            $this->assertLessThanOrEqual(20, $sent['timeout'], $provider);
+            $this->assertSame(384, match ($provider) {
+                'gemini' => data_get($sent['body'], 'generationConfig.maxOutputTokens'),
+                'openai' => $sent['body']['max_tokens'] ?? $sent['body']['max_completion_tokens'] ?? null,
+                default => $sent['body']['max_tokens'] ?? null,
+            }, $provider);
+        }
+        Http::assertSentCount(4);
+    }
+
     public function test_follow_up_repairs_an_invalid_question_after_provider_sweep(): void
     {
         config([

@@ -326,8 +326,7 @@ class InterviewController extends Controller
   $openingIntro = AIService::generateInterviewOpeningIntro(
    $openingSession,
    $openingProvider,
-   $this->currentLanguageConfig(),
-   $this->datasetForSession($openingSession)
+   $this->currentLanguageConfig()
   );
  } catch (InterviewFollowUpProviderFailureException $error) {
   return back()->withErrors(['ai_provider' => $error->getMessage()])->withInput();
@@ -712,10 +711,11 @@ class InterviewController extends Controller
  // A retried request can arrive after its first response was lost. Reuse the
  // question already generated for the same saved answer, keeping its ID valid.
  // Once the next question has an answer, its wording is part of the record.
- if ($nextQuestionAlreadyAnswered
+ if (($nextQuestionAlreadyAnswered
  || ($previousAnswerSignature !== null
  && hash_equals($previousAnswerSignature, $this->interviewAnswerTurnSignature($answer))
- && (int) ($session->current_question_index?? 0) > $currentQuestionIndex)) {
+ && (int) ($session->current_question_index?? 0) > $currentQuestionIndex))
+ && ($existingNextQuestion->source_type !== 'local_question_fallback' || $nextQuestionAlreadyAnswered)) {
  return $this->nextQuestionResponse($existingNextQuestion);
  }
  }
@@ -766,7 +766,7 @@ class InterviewController extends Controller
  session('active_interview_provider', AIService::defaultProviderKey())
  );
  // Give configured APIs a fresh chance even if historical evaluation has no
- // current passing provider; the built-in question is only the last resort.
+ // current passing provider.
  if ($provider === 'local' || ! AIService::providerIsSupported($provider)) {
  $provider = AIService::defaultProviderKey();
  }
@@ -774,19 +774,6 @@ class InterviewController extends Controller
  $isFinal = $currentQuestionIndex >= $targetQuestionCount - 2;
  $requiredQuestionType = $this->selectedQuestionTypeForIndex($session, $currentQuestionIndex + 1);
 
- try {
- $dataset = $this->datasetForSession($session);
- if (! is_array($dataset) || empty($dataset['questions'])) {
- // A missing or empty dataset must never block live AI question generation.
- $dataset = null;
- }
- } catch (\Throwable $error) {
- Log::warning('Interview question dataset lookup failed; continuing with provider generation.', [
- 'session_id' => $session->id,
- 'error_type' => $error::class,
- ]);
- $dataset = null;
- }
  $spokenQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))->all();
  $followUpText = '';
@@ -794,7 +781,7 @@ class InterviewController extends Controller
  // Persisted questions and answers are the authoritative conversation.
  $usedProvider = null;
  $followUpText = AIService::generateChatReply(
- $session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], $dataset, $requiredQuestionType,
+ $session, $history, $interviewerInputText, $provider, $isFinal, $this->currentLanguageConfig(), [], null, $requiredQuestionType,
   function (string $reply) use ($session, $interviewerInputText, $history, $requiredQuestionType, $spokenQuestionTexts): bool {
   $rejectionGate = null;
   if (! $this->isReliableInterviewFollowUpText($reply, $session, $interviewerInputText, $history, false, true, $rejectionGate)) {
@@ -833,19 +820,8 @@ class InterviewController extends Controller
  }
 
  $followUpText = trim((string) $followUpText);
- if ($followUpText === '') {
- $provider = 'local';
- $followUpText = $this->localInterviewFollowUpText(
- $session, $history, $interviewerInputText, $isFinal, $requiredQuestionType, $spokenQuestionTexts
- );
- if ($followUpText === '') {
+ if ($followUpText === '' || ! $usedProvider || ! AIService::providerIsConfigured($usedProvider)) {
  return $this->aiInterviewFollowUpUnavailableResponse();
- }
- Log::warning('Using a grounded built-in interview question after AI providers failed.', [
- 'session_id' => $session->id,
- 'question_id' => $question->id,
- 'question_type' => $requiredQuestionType,
- ]);
  }
 
  try {
@@ -878,8 +854,7 @@ class InterviewController extends Controller
  ]);
  }
 
- // 4. Save the next question. Unanswered future drafts are replaced below;
- // spoken questions must stay unique even when local recovery is used.
+ // 4. Save the AI next question. Unanswered future drafts are replaced below.
  $existingQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))->all();
  $safeFollowUpText = $followUpText;
@@ -891,14 +866,7 @@ class InterviewController extends Controller
  $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
  $this->deleteUnansweredFutureQuestions($lockedSession, $question);
 
-  $questionMetadata = $provider === 'local'
-  ? [
-  'source_name' => 'Built-in backup interview question',
-  'source_url' => null,
-  'source_type' => 'local_question_fallback',
-  'ai_provider' => null,
-  ]
-  : $this->aiGeneratedQuestionSourceMetadata($provider);
+ $questionMetadata = $this->aiGeneratedQuestionSourceMetadata($provider);
  if ($requiredQuestionType !== null) {
  $questionMetadata['question_type'] = $requiredQuestionType;
  }
@@ -910,7 +878,7 @@ class InterviewController extends Controller
  $this->decodeQuestionTypes($lockedSession->question_types),
  $nextQuestionIndex,
  $questionMetadata,
- $provider!== 'local'
+ true
  );
 
  if (! $newQuestion) {
@@ -5648,422 +5616,6 @@ return response()->json([
  'Situational' => ! $personal && ! $behavioral && $situational && ! $technicalMethod,
  default => false,
  };
- }
-
- private function localInterviewFollowUpText(
- InterviewSession $session,
- array $history,
- string $latestAnswer,
- bool $isFinal,
-?string $requiredQuestionType,
- array $spokenQuestionTexts = []
- ): string {
- $position = trim((string) $session->target_position);
- $answerTokens = $this->interviewGroundingTokens($latestAnswer, $position);
- $hasAnswerDetail = ! $this->unavailableInterviewAnswerText($latestAnswer)
- && $this->groundedBackupAnswerExcerpt($latestAnswer) !== ''
- && preg_match('/\b(?:never|not yet|no experience|have not|has not|had not|did not|haven.t|hasn.t|hadn.t|didn.t)\b/iu', $latestAnswer) !== 1
- && ! $this->backupAnswerNeedsTransferBridge($latestAnswer, $position)
- && $answerTokens !== [];
- $spokenCanonical = array_map(
- fn (string $text): string => preg_replace('/^for my final question\s+/i', '', $text) ?? $text,
- $spokenQuestionTexts
- );
- $isAccepted = function (string $candidate) use ($session, $latestAnswer, $history, $requiredQuestionType, $spokenCanonical, $position, $answerTokens, $hasAnswerDetail): bool {
- $candidate = trim($candidate);
- $questionTokens = $this->interviewGroundingTokens($this->interviewQuestionClause($candidate), $position);
- $canonicalCandidate = preg_replace('/^for my final question\s+/i', '', $this->normalizedQuestionText($candidate)) ?? '';
-
- return $candidate !== ''
- && (! $hasAnswerDetail || $this->interviewGroundingTokenOverlap($answerTokens, $questionTokens) > 0)
- && $this->isReliableInterviewFollowUpText($candidate, $session, $latestAnswer, $history, true, $hasAnswerDetail)
- && ($requiredQuestionType === null || $this->questionMatchesSelectedType($candidate, $requiredQuestionType))
- && ! in_array($canonicalCandidate, $spokenCanonical, true);
- };
-
- $hasGroundedExcerpt = $this->groundedBackupAnswerExcerpt($latestAnswer) !== '';
- foreach ($this->groundedBackupQuestionCandidates($session, $latestAnswer, $isFinal, $requiredQuestionType) as $candidate) {
- if ($isAccepted($candidate)) {
- return $candidate;
- }
- }
-
- if ($hasGroundedExcerpt || $this->unavailableInterviewAnswerText($latestAnswer)) {
- try {
- $candidate = trim(AIService::fallbackInterviewReply(
- $session,
- $history,
- $latestAnswer,
- $isFinal,
- $requiredQuestionType
- ));
- } catch (\Throwable $error) {
- $candidate = '';
- }
-
- if ($isAccepted($candidate)) {
- return $candidate;
- }
- }
-
- $fallbackType = $requiredQuestionType ?: 'Behavioral';
- try {
- $candidate = trim($this->fallbackQuestionForSelectedType($session, $fallbackType, $latestAnswer, $isFinal));
- } catch (\Throwable $error) {
- $candidate = '';
- }
-
- if ($isAccepted($candidate)) {
- return $candidate;
- }
-
- // Try the existing type-specific alternatives when the conversational
- // question was already asked or did not pass the role and evidence checks.
- $alternativesSeen = $spokenQuestionTexts;
- $seed = $spokenQuestionTexts[0]?? $candidate;
- for ($attempt = 0; $attempt < 4 && $seed !== ''; $attempt++) {
- $alternative = $this->uniqueQuestionTextForSession(
- $session,
- $seed,
- $alternativesSeen,
- $requiredQuestionType,
- $latestAnswer
- );
- if ($isAccepted($alternative)) {
- return $alternative;
- }
-
- $normalizedAlternative = $this->normalizedQuestionText($alternative);
- if ($normalizedAlternative === '' || in_array($normalizedAlternative, $alternativesSeen, true)) {
- break;
- }
- $alternativesSeen[] = $normalizedAlternative;
- }
-
- $position = trim((string) ($session->target_position?? 'this position'))?: 'this position';
-
- $candidate = $isFinal
- ? "For my final question, what specific evidence best proves your fit for the {$position} role?"
- : "What specific example, decision, or result best shows how you would succeed in the {$position} role?";
-
- return $isAccepted($candidate)? $candidate: '';
- }
-
- private function groundedBackupQuestionCandidates(
- InterviewSession $session,
- string $latestAnswer,
- bool $isFinal,
- ?string $requiredQuestionType
- ): array {
- $excerpt = $this->groundedBackupAnswerExcerpt($latestAnswer);
- $position = trim((string) $session->target_position);
- if ($position === '') {
- return [];
- }
-
- $maritime = $this->isMaritimeBackupRole($position);
- $transferBridge = $this->backupAnswerNeedsTransferBridge($latestAnswer, $position);
- if ($transferBridge) {
- $excerpt = '';
- }
- $quote = '‘'.$excerpt.'’';
- $lead = $isFinal ? 'For my final question, ' : '';
- $deniedExperience = preg_match('/\b(?:never|not yet|no experience|have not|has not|had not|did not|haven.t|hasn.t|hadn.t|didn.t)\b/iu', $latestAnswer) === 1;
- $questions = $excerpt === '' || $deniedExperience ? [] : match ($requiredQuestionType) {
- 'Personal' => [
- "thinking about {$quote}, which strength would help you in the {$position} role?",
- "thinking about {$quote}, what work style would help you in the {$position} role?",
- "thinking about {$quote}, what motivates you to work in the {$position} role?",
- "thinking about {$quote}, which career goal would related work support in the {$position} role?",
- ],
- 'Technical' => [
- "thinking about {$quote}, what method or checks would you use for a related task in the {$position} role?",
- "thinking about {$quote}, how would you verify a related task in the {$position} role?",
- "thinking about {$quote}, which tool would you choose for a related task in the {$position} role?",
- "thinking about {$quote}, how would you troubleshoot a related task if it failed in the {$position} role?",
- ],
- 'Situational' => [
- "if a similar situation to {$quote} arose in the {$position} role, what would you do first?",
- "suppose a task related to {$quote} changed unexpectedly in the {$position} role, how would you respond?",
- "if a teammate faced a situation related to {$quote} in the {$position} role, what would you prioritize?",
- "if information about {$quote} was incomplete in the {$position} role, how would you respond?",
- ],
- 'Behavioral' => [
- "thinking about {$quote}, can you describe a specific time relevant to the {$position} role and what you personally did?",
- "thinking about {$quote}, can you walk me through a specific work example relevant to the {$position} role?",
- "thinking about {$quote}, can you describe an experience relevant to the {$position} role and explain what happened next?",
- "thinking about {$quote}, can you share a work situation relevant to the {$position} role and explain your own part?",
- ],
- default => [
- "thinking about {$quote}, what specific example would help you in the {$position} role?",
- ],
- };
-
- // Keep enough distinct, role-grounded probes for a 30-question interview,
- // even when an outage lasts through the session or an answer is repeated.
- $contexts = $maritime ? [
- 'a vessel deck inspection for damaged fittings',
- 'a bridge lookout during reduced visibility',
- 'mooring line preparation before berthing',
- 'lifeboat safety equipment readiness',
- 'cargo lashing before departure',
- 'anchor equipment checks at a port',
- 'fire drill crew communication',
- 'a watch handover with incomplete notes',
- 'a slippery deck hazard report',
- 'rough weather deck task planning',
- 'missing protective gear before deck maintenance',
- 'vessel emergency muster coordination',
- 'deck equipment inspection after maintenance',
- 'bridge watch fatigue concerns',
- 'crew communication across shipboard shifts',
- 'berthing rope handling under time pressure',
- 'cargo loading checklist review',
- 'port arrival deck preparation',
- 'a navigation lookout report to the bridge',
- 'a vessel safety inspection record',
- 'liferaft preparation during an emergency drill',
- 'deck maintenance tool checks',
- 'mooring station hazard assessment',
- 'a captain safety instruction needing clarification',
- 'storm warning crew handover',
- 'a shipboard incident log review',
- 'anchoring deck zone awareness',
- 'cargo seal inspection before loading',
- 'boarding gangway safety checks',
- 'an emergency radio message to the vessel crew',
- 'a vessel deck lighting concern',
- 'a bridge lookout handover at dusk',
- 'a mooring line inspection before departure',
- 'a deck drainage hazard after heavy rain',
- 'a lifeboat inventory review during training',
- 'a cargo securing concern in rough seas',
- 'a vessel gangway handrail concern',
- 'a lookout observation during port approach',
- 'an emergency muster attendance discrepancy',
- 'a deck work permit needing clarification',
- 'a shipboard safety notice for the crew',
- 'an anchoring equipment handover',
- 'a vessel fire drill equipment review',
- 'a berthing station communication delay',
- 'a deck maintenance checklist omission',
- 'a bridge watch log with missing details',
- 'a cargo deck access restriction',
- 'a vessel inspection finding before sailing',
- ] : [
- 'an unclear task priority',
- 'a delayed handoff between teammates',
- 'an unexpected deadline change',
- 'a missing piece of information',
- 'a quality concern before delivery',
- 'a difficult stakeholder request',
- 'a new teammate needing guidance',
- 'a process step that caused confusion',
- 'a decision with limited time',
- 'a customer need that changed',
- 'a mistake discovered early',
- 'a result that needed explanation',
- 'a task shared across teams',
- 'a tool that was unavailable',
- 'a disagreement about priorities',
- 'a new rule affecting the work',
- 'a handoff with incomplete notes',
- 'a request for clearer evidence',
- 'a problem with several possible causes',
- 'a change in available resources',
- 'a task requiring careful review',
- 'a colleague asking for support',
- 'a recurring issue needing follow-up',
- 'a choice between speed and accuracy',
- 'a plan that needed adjustment',
- 'an outcome that surprised the team',
- 'a requirement that was misunderstood',
- 'a decision affecting another group',
- 'a risk identified during preparation',
- 'a lesson from an earlier attempt',
- 'a last-minute request from a manager',
- 'an improvement that needed evidence',
- 'a schedule with competing commitments',
- 'an instruction that needed clarification',
- 'a record with missing details',
- 'a new partner joining the task',
- 'a plan affected by an outside delay',
- 'a concern raised during a meeting',
- 'a handover across different shifts',
- 'a request with conflicting expectations',
- 'an error found in the final review',
- 'a recurring question from colleagues',
- 'a change that affected several people',
- 'a decision requiring written notes',
- 'a task with unclear ownership',
- 'an urgent issue during a busy period',
- 'a suggestion that required testing',
- 'a follow-up after a missed milestone',
- 'a budget limit affecting a proposed change',
- 'a document returned for corrections',
- 'a training need discovered mid-project',
- 'an external dependency arriving late',
- 'a request that lacked an owner',
- 'a measurement that differed from expectations',
- 'a recurring delay in a shared workflow',
- 'an important detail missing from a brief',
- 'a teammate taking unexpected leave',
- 'a proposal needing approval from another group',
- 'an unclear success measure for a task',
- 'a final deliverable requiring sign-off',
- 'a meeting decision needing a written record',
- 'an early warning about a possible delay',
- 'a handoff involving an unfamiliar colleague',
- 'a request to explain a complex result simply',
- ];
-
- if (! $maritime) {
- $roleContexts = match (true) {
- preg_match('/\b(?:administrative assistant|office assistant|executive assistant|secretary)\b/i', $position) === 1 => [
- 'an appointment request during a calendar conflict',
- 'a meeting agenda needing last-minute updates',
- 'confidential visitor records needing careful review',
- 'a manager handoff before a busy office day',
- ],
- preg_match('/\b(?:nurse|nursing)\b/i', $position) === 1 => [
- 'a patient handover with missing observations',
- 'a medication safety check before administration',
- 'a change in patient vital signs during a shift',
- 'a care note needing clear communication',
- ],
- preg_match('/\b(?:accountant|accounting|bookkeeper)\b/i', $position) === 1 => [
- 'a ledger reconciliation with missing entries',
- 'an invoice review before a reporting deadline',
- 'an audit request with incomplete records',
- 'a payroll variance needing explanation',
- ],
- preg_match('/\b(?:developer|software engineer|programmer)\b/i', $position) === 1 => [
- 'a release validation step before deployment',
- 'a code review with an unclear requirement',
- 'a service alert after a production change',
- 'an automated test that failed unexpectedly',
- ],
- default => [],
- };
- $contexts = array_merge($roleContexts, $contexts);
- }
-
- $transferAction = $transferBridge ? $this->backupTransferableActionWord($latestAnswer) : '';
- $answerBridge = $deniedExperience
- ? (preg_match('/\blearn\w*\b/i', $latestAnswer) === 1
- ? 'with your wish to learn in mind, '
- : 'with your stated lack of direct role experience in mind, ')
- : ($excerpt !== '' ? "thinking about {$quote}, " : ($transferAction !== ''
- ? "thinking about ‘{$transferAction}’ in your answer, "
- : ($transferBridge ? 'considering your response, ' : '')));
- foreach ($contexts as $contextIndex => $context) {
- $deniedBehavioralQuestions = [
- "can you describe any school or daily-life experience that could help with {$context} as a {$position}, including your part and result?",
- "can you share a training or volunteer experience related to {$context} for the {$position} role, including your action and what followed?",
- "can you walk me through a project outside this role that might prepare you for {$context} as a {$position}, including your contribution and outcome?",
- "can you describe a challenge from everyday life that taught you a skill useful for {$context} in the {$position} role, including what you tried and learned?",
- ];
- $questions[] = match ($requiredQuestionType) {
- 'Personal' => "{$answerBridge}which transferable strength would help you handle {$context} in the {$position} role?",
- 'Technical' => "{$answerBridge}what method or checks would you use for {$context} in the {$position} role?",
- 'Situational' => "{$answerBridge}if you encountered {$context} in the {$position} role, what approach would you take first?",
- 'Behavioral' => $deniedExperience
- ? $answerBridge.$deniedBehavioralQuestions[$contextIndex % count($deniedBehavioralQuestions)]
- : ($transferBridge && $transferAction === ''
- ? "{$answerBridge}can you describe a specific experience that could prepare you for {$context} in the {$position} role, including your part and what happened next?"
- : "{$answerBridge}can you describe a specific experience that could prepare you for {$context} in the {$position} role, including what you personally did and what happened?"),
- default => "{$answerBridge}what relevant experience or training could help you with {$context} in the {$position} role?",
- };
- }
-
- return array_map(
- fn (string $question): string => $lead !== '' ? $lead.$question : ucfirst($question),
- $questions
- );
- }
-
- private function isMaritimeBackupRole(string $position): bool
- {
- return preg_match('/\b(?:seaman|seafarer|sailor|deck\s*(?:hand|crew|cadet|officer|rating)|bosun|boatswain|mate|ship(?:board)?\s+crew)\b/i', $position) === 1;
- }
-
- private function backupAnswerNeedsTransferBridge(string $latestAnswer, string $position): bool
- {
- $excerpt = $this->groundedBackupAnswerExcerpt($latestAnswer);
- if ($excerpt === '') {
- return false;
- }
-
- $roleContext = $this->isMaritimeBackupRole($position)
- ? "during a vessel deck inspection as a {$position}"
- : "in the {$position} role";
- $probe = "How would you apply ‘{$excerpt}’ {$roleContext}?";
-
- return ! app(InterviewQuestionAlignmentService::class)->isRoleRelevant($probe, $position);
- }
-
- private function backupTransferableActionWord(string $latestAnswer): string
- {
- foreach ([
- '/\b(?:coordinat\w*|organiz\w*|plann?\w*|check\w*|review\w*|report\w*|communicat\w*|track\w*|resolv\w*|assess\w*|monitor\w*|maintain\w*|manag\w*|support\w*|help\w*|learn\w*|identif\w*|improv\w*|document\w*|test\w*|prepar\w*|reconcil\w*|audit\w*|verif\w*|record\w*|calculat\w*|follow\w*|train\w*|prioritiz\w*|schedul\w*|delegat\w*|solv\w*)\b/i',
- '/\b(?:built|deploy\w*|diagnos\w*|repair\w*|administer\w*|process\w*|used|led)\b/i',
- ] as $pattern) {
- if (preg_match($pattern, $latestAnswer, $match) === 1) {
- return $match[0];
- }
- }
-
- return '';
- }
-
- private function groundedBackupAnswerExcerpt(string $latestAnswer): string
- {
- if ($this->unavailableInterviewAnswerText($latestAnswer)) {
- return '';
- }
-
- $answer = trim(preg_replace('/\s+/u', ' ', strip_tags($latestAnswer)) ?? '');
- foreach (preg_split('/(?<=[.!?])\s+|[;?]\s*/u', $answer) ?: [] as $clause) {
- $clause = trim($clause);
- $clause = preg_replace('/^(?:(?:well|uh|um|honestly|actually|basically|you know|i think|i guess|maybe)\b[,\s]*)+/iu', '', $clause) ?? $clause;
- $clause = str_replace([chr(34), '“', '”'], '', $clause);
- if ($clause === '') {
- continue;
- }
-
- $words = preg_split('/\s+/u', $clause) ?: [];
- $excerpt = trim(implode(' ', array_slice($words, 0, 9)), " \t\n\r\0\x0B,.;:!?'");
- $excerpt = preg_replace('/(?:\s+(?:and|or|but|while|with|because|for|to|in|on|at|by|before|after|when|where|which))+$/iu', '', $excerpt) ?? $excerpt;
- $contentTokens = array_diff($this->interviewContentTokens($excerpt), [
- 'think', 'guess', 'maybe', 'really', 'honestly', 'basically', 'thing', 'things', 'know',
- ]);
- if (TranscriptService::wordCount($excerpt) >= 3 && $contentTokens !== []) {
- return $excerpt;
- }
- }
-
- return '';
- }
-
- private function fallbackQuestionForSelectedType(InterviewSession $session, string $requiredType, string $latestAnswer, bool $isFinal): string
- {
- $position = trim((string) $session->target_position)?: 'this position';
- $roleQuestion = app(InterviewQuestionAlignmentService::class)->fallbackQuestion($position, $requiredType, $latestAnswer, $isFinal);
- if ($roleQuestion !== null) {
- return $roleQuestion;
- }
- $hasAnswer = ! $this->unavailableInterviewAnswerText($latestAnswer);
- $lead = $isFinal? 'For my final question, ': ($hasAnswer? 'Thanks for sharing that. ': '');
-
- $question = match ($requiredType) {
- 'Behavioral' => "can you describe a specific time you handled a work challenge relevant to the {$position} role and what you personally did?",
- 'Situational' => "if an important task changed suddenly in the {$position} role, what would you do first?",
- 'Technical' => "what tools and technical steps would you use to solve a realistic problem in the {$position} role?",
- 'Personal' => "which strength from your background would help you most in the {$position} role?",
- default => "what specific evidence best shows your fit for the {$position} role?",
- };
-
- return $lead === '' ? ucfirst($question) : $lead.($isFinal ? $question : ucfirst($question));
  }
 
  private function buildActionPlan(InterviewSession $session, Score $score, Feedback $feedback, $answers): array

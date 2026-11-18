@@ -15,9 +15,16 @@
  ->find(session('active_interview_id'));
  if ($sessionRecord) {
  $num = $sessionRecord->num_questions?? 5;
- $questions = \App\Models\Question::where('interview_session_id', $sessionRecord->id)
+ $answeredQuestionIds = \App\Models\InterviewAnswer::where('interview_session_id', $sessionRecord->id)
+ ->whereNull('retry_of_answer_id')->pluck('question_id')->map(fn ($id) => (int) $id)->all();
+ $allQuestions = \App\Models\Question::where('interview_session_id', $sessionRecord->id)
  ->orderBy('id')
  ->get();
+ $excludedLegacyQuestions = $allQuestions->filter(fn ($item) => $item->source_type === 'local_question_fallback'
+     && ! in_array((int) $item->id, $answeredQuestionIds, true));
+ $excludedLegacyQuestionTexts = $excludedLegacyQuestions->pluck('question_text')->all();
+ $questions = $allQuestions->reject(fn ($item) => $excludedLegacyQuestions->contains('id', $item->id))->values();
+ $legacyBackupRestartRequired = $questions->isEmpty() && $excludedLegacyQuestions->isNotEmpty();
  $scenarioLabel = 'Job Interviews';
  } else {
  $questions = collect([]);
@@ -34,7 +41,7 @@
  $questionTimeLimitSeconds = max(0, (int) ($sessionRecord->time_limit?? 0) * 60);
  $initialQuestionTimerSeconds = $questionTimeLimitSeconds;
  if ($questionTimeLimitSeconds > 0 && $hasSavedInterviewState) {
- $savedQuestionIndex = max(0, (int) ($savedStateForUi['currentQIdx']?? $sessionRecord->current_question_index?? 0));
+ $savedQuestionIndex = min(max(0, (int) ($savedStateForUi['currentQIdx']?? $sessionRecord->current_question_index?? 0)), max(0, $questions->count() - 1));
  $savedAnswersForUi = is_array($savedStateForUi['answersData']?? null)? $savedStateForUi['answersData']: [];
  $savedElapsedSeconds = max(0, (int) data_get($savedAnswersForUi, "{$savedQuestionIndex}.elapsed_seconds", 0));
  $initialQuestionTimerSeconds = max(0, $questionTimeLimitSeconds - $savedElapsedSeconds);
@@ -49,11 +56,15 @@
   $interviewerAvatarWebpImage = \App\Support\InterviewerAvatar::image($interviewerAvatarKey);
   $interviewerAvatarImage = preg_replace('/\.webp$/', '.png', $interviewerAvatarWebpImage);
   $interviewerPanelBackgroundImage = \App\Support\InterviewerAvatar::background($interviewerAvatarKey);
- $currentQuestionForRetry = $questions->values()->get(max(0, (int) ($sessionRecord->current_question_index ?? 0)));
+ $currentQuestionForRetryIndex = min(
+     max(0, (int) ($sessionRecord->current_question_index ?? 0)),
+     max(0, $questions->count() - 1)
+ );
+ $currentQuestionForRetry = $questions->values()->get($currentQuestionForRetryIndex);
  $sessionQuestionLimit = max(1, (int) ($sessionRecord->num_questions ?? 1))
      + ($questions->contains(fn ($item) => $item->source_type === 'real_interview_opening') ? 1 : 0);
  $savedFollowUpRetryQuestionId = $currentQuestionForRetry
-     && (int) ($sessionRecord->current_question_index ?? 0) < $sessionQuestionLimit - 1
+     && $currentQuestionForRetryIndex < $sessionQuestionLimit - 1
      && \App\Models\InterviewAnswer::where('interview_session_id', $sessionRecord->id)
          ->where('question_id', $currentQuestionForRetry->id)
          ->whereNull('retry_of_answer_id')
@@ -437,6 +448,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  'source_type' => $question->source_type,
  ])->all();
  $clientSavedStateForUi = is_array($savedStateForUi?? null)? $savedStateForUi: [];
+ $allowedQuestionIds = $questions->pluck('id')->map(fn ($id) => (int) $id)->all();
  if (isset($clientSavedStateForUi['questions']) && is_array($clientSavedStateForUi['questions'])) {
  $clientSavedStateForUi['questions'] = collect($clientSavedStateForUi['questions'])
  ->map(fn ($question) => [
@@ -444,9 +456,21 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  'question_text' => (string) ($question['question_text']?? ''),
  'source_type' => $question['source_type']?? null,
  ])
- ->filter(fn ($question) => $question['id'] > 0 && $question['question_text']!== '')
+ ->filter(fn ($question) => in_array($question['id'], $allowedQuestionIds, true) && $question['question_text']!== '')
  ->values()
  ->all();
+ }
+ if (isset($clientSavedStateForUi['chatHistory']) && is_array($clientSavedStateForUi['chatHistory'])) {
+ $clientSavedStateForUi['chatHistory'] = collect($clientSavedStateForUi['chatHistory'])
+ ->reject(fn ($item) => is_array($item) && ($item['role']?? null) === 'interviewer'
+     && in_array((string) ($item['text']?? ''), $excludedLegacyQuestionTexts, true))
+ ->values()->all();
+ }
+ if (isset($clientSavedStateForUi['answersData']) && is_array($clientSavedStateForUi['answersData'])) {
+ $clientSavedStateForUi['answersData'] = array_slice($clientSavedStateForUi['answersData'], 0, $questions->count());
+ }
+ if (isset($clientSavedStateForUi['currentQIdx'])) {
+ $clientSavedStateForUi['currentQIdx'] = min(max(0, (int) $clientSavedStateForUi['currentQIdx']), max(0, $questions->count() - 1));
  }
  @endphp
  <script>
@@ -456,8 +480,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  <script>
  const savedSessionState = @json($clientSavedStateForUi);
  const initialQuestions = @json($clientQuestionsForUi);
- const savedQuestionSequence = Array.isArray(savedSessionState.questions)? savedSessionState.questions.filter(question => question && question.id && question.question_text): [];
- let questions = savedQuestionSequence.length > 0? savedQuestionSequence: initialQuestions;
+ let questions = initialQuestions;
  const interviewSessionId = {{ (int) $sessionRecord->id }};
  const targetQuestionCount = Math.max({{ $num }}, 1);
  const sessionTargetPosition = @json($sessionRecord->target_position?? 'this role');
@@ -5873,8 +5896,8 @@ return fallbackText;
 
  try {
  const data = await postFormJsonWithRetry('{{ route("interview.chatReply") }}', formData, {
- attempts: 2,
- timeoutMs: 200000,
+ attempts: 1,
+ timeoutMs: 75000,
  fallbackMessage: 'The next AI question could not be prepared. Please retry.'
  });
  if (!data.success || (!data.interview_completed && (!data.next_question_id || !String(data.next_question_text || '').trim()))) {
@@ -6056,8 +6079,8 @@ return fallbackText;
  let answerCommitted = false;
  try {
  const data = await postFormJsonWithRetry('{{ route("interview.chatReply") }}', formData, {
- attempts: 2,
- timeoutMs: 200000,
+ attempts: 1,
+ timeoutMs: 75000,
  fallbackMessage: 'We could not send your answer. Please try again.'
  });
  const tb = document.getElementById('thinkingBubble');
@@ -6816,10 +6839,15 @@ setFinishViewReviewReady(false);
  </script>
  @else
  <div class="panel interview-empty-panel">
+ @if(!empty($legacyBackupRestartRequired))
+ <h5><i class="fa-solid fa-circle-exclamation me-2"></i>Start a new AI interview</h5>
+ <p style="color:var(--tx3)">This older session has no AI-generated question to resume. Start a new interview to continue with AI questions.</p>
+ @else
  <h5><i class="fa-solid fa-circle-exclamation me-2"></i>No questions found</h5>
  <p style="color:var(--tx3)">No questions are available for this setup yet.</p>
+ @endif
  <a href="{{ route('interview.setup') }}" class="interview-start-button begin">
- Back to setup <i class="fa-solid fa-arrow-right"></i>
+ Start new interview <i class="fa-solid fa-arrow-right"></i>
  </a>
  </div>
  @endif

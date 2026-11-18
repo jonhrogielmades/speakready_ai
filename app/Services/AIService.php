@@ -753,7 +753,7 @@ class AIService
  $prompt.= 'Use the candidate answer as evidence only for details they actually gave. If an answer drifts to another occupation, connect back to this target position instead of pursuing the unrelated topic. Do not assume a rank, credential, employer, or experience from the job title alone. For a substantive latest answer, put at least one concrete detail from that answer in the QUESTION itself, such as the actual task, tool, stakeholder, constraint, decision, or outcome. Reuse a distinctive noun or action word from the answer exactly as written so the question is visibly connected to it. A detail in the acknowledgement alone is insufficient. Do not ask a generic fit question when the answer provides a concrete topic. ';
  $prompt.= 'Do not reintroduce yourself by a personal name during normal interview questions; the opening already introduced you as the AI interviewer. ';
  $prompt.= 'Ask natural follow-up questions that test evidence, ownership, judgment, tradeoffs, impact, and role fit. ';
- $prompt.= 'Base the next interviewer turn on the candidate answer, the target role, and the earlier conversation. Dataset examples are optional inspiration, never a limit on what you may ask. Use the supplied source dataset when it contains a relevant topic, competency, or representative question pattern, but do not require an exact dataset match. If no dataset example fits, create a fresh role-specific question through the AI provider instead of stopping or returning an error. ';
+ $prompt.= 'Base the next interviewer turn on the candidate answer, the target role, and the earlier conversation. Create a fresh role-specific question. ';
  $prompt.= 'Do not use the phrases "You mentioned", "You said", "You shared", or "Thinking about what you shared". Do not repeat or quote the full candidate answer; refer to one concrete detail naturally in the question. Use a short natural transition only when necessary, then ask the one focused question. ';
  $prompt.= 'Read the earlier turns before choosing what to ask: do not ask again for an action, result, reason, or constraint already explained. Ask one narrow unanswered detail about the same example, or explicitly bridge from that detail when the required question type changes. Preserve negation and uncertainty; a plan is not a past achievement. Do not presume success, a problem, a tool, or a tradeoff the candidate never mentioned. If probing an unstated technical method or safeguard, ask whether or how it was considered; do not claim the candidate chose, used, or ensured it. ';
  $prompt.= $liveFeedbackMode === 'real_interview'
@@ -793,13 +793,6 @@ class AIService
 
  if (! empty($session->job_description)) {
  $prompt.= "The target job description is: '".substr(trim(preg_replace('/\s+/', ' ', $session->job_description)), 0, 1000)."'. Ensure questions assess these specific requirements. ";
- }
-
- if (! empty($datasetContext)) {
- $contextText = is_array($datasetContext)? QuestionDatasetProvider::promptContext($datasetContext): (string) $datasetContext;
-
- $prompt.= "\nOptional interview dataset context for relevant topics and skills:\n{$contextText}\n";
- $prompt.= 'Use these examples as optional grounding. Dataset examples are optional inspiration; you may ask a provider-generated question outside these examples when it better fits the candidate answer and role. Do not fabricate source claims, leaked questions, or protected exam items. ';
  }
 
  $conversation = array_map(static function (array $interaction): array {
@@ -853,7 +846,7 @@ class AIService
  $maxProviders = max(1, min(count($providers), (int) config('services.interview_follow_up.max_providers', 1)));
  $providers = array_slice($providers, 0, $maxProviders);
  $configuredRetries = max(1, min(4, (int) config('services.interview_follow_up.max_retries', 4)));
- $timeoutSeconds = max(2, min(30, (int) config('services.interview_follow_up.timeout', 30)));
+ $timeoutSeconds = max(2, min(20, (int) config('services.interview_follow_up.timeout', 18)));
  // A failed HTTP request should move to another provider promptly. When only
  // one provider is configured, its own HTTP retry setting can still help.
  $httpAttempts = count($providers) > 1
@@ -863,18 +856,20 @@ class AIService
  'timeout_seconds' => $timeoutSeconds,
  'attempts' => $httpAttempts,
  'max_providers' => 1,
+ 'max_tokens' => 384,
  ];
- // Try all four providers even at the 30-second request limit, while leaving
- // time for the grounded backup question, persistence, and the browser reply.
- $deadlineAt = microtime(true) + 130;
+ // Bound the provider sweep so a failed question does not leave the browser
+ // waiting for multiple long provider attempts.
+ $deadlineSeconds = max(20, min(90, (int) config('services.interview_follow_up.deadline_seconds', 60)));
+ $startedAt = microtime(true);
+ $deadlineAt = $startedAt + $deadlineSeconds;
  $attempt = 0;
  $rejectedProviders = [];
  $failedProviders = [];
  $rejectedReplies = [];
- // The first sweep is provider failover; these are additional semantic repair
- // attempts. A four-provider sweep must not leave just one provider a repair.
+ // After provider failover, use any remaining time for semantic repair.
  $repairBudget = $configuredRetries;
- $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation and target role; dataset examples are optional context. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. Never say "You mentioned", "You said", or "You shared"; avoid restating the full answer, but include one actual detail in the question. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
+ $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation and target role. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. Never say "You mentioned", "You said", or "You shared"; avoid restating the full answer, but include one actual detail in the question. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
  $repairTypeRule = match ($requiredQuestionType) {
  'Behavioral' => 'keep it Behavioral: ask about a real past situation, the candidate\'s own action, and what happened; ',
  'Situational' => 'keep it Situational: present one plausible hypothetical work situation and ask what the candidate would do; ',
@@ -895,9 +890,13 @@ class AIService
  for ($index = 0; $index < count($providerQueue); $index++) {
  $currentProvider = $providerQueue[$index];
  $isRepair = $index >= count($providers);
- if (($deadlineAt - microtime(true)) <= ($timeoutSeconds * $httpAttempts + 3)) {
+ $remainingSeconds = $deadlineAt - microtime(true);
+ $initialProvidersRemaining = max(1, count($providers) - $index);
+ $attemptTimeout = min($timeoutSeconds, (int) floor(($remainingSeconds - 2) / ($initialProvidersRemaining * $httpAttempts)));
+ if ($attemptTimeout < 2) {
  break;
  }
+ $chatRequestOptions['timeout_seconds'] = $attemptTimeout;
 
  $attempt++;
  try {
@@ -954,6 +953,16 @@ class AIService
  $providerQueue[] = $repairProviders[$repairIndex % count($repairProviders)];
  }
  }
+ }
+
+ if (! self::externalAiDisabledForTests()) {
+ Log::warning('AI interview follow-up exhausted without an accepted provider question.', [
+ 'providers' => $providers,
+ 'attempts' => $attempt,
+ 'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+ 'rejected_providers' => array_values(array_unique($rejectedProviders)),
+ 'failed_providers' => array_values(array_unique($failedProviders)),
+ ]);
  }
 
  throw new InterviewFollowUpProviderFailureException;
@@ -1070,7 +1079,7 @@ class AIService
  return rtrim($text, " \t\n\r\0\x0B,;:");
  }
 
- public static function generateInterviewOpeningIntro($session, $provider = 'openai', $targetLanguage = null, $datasetContext = null): array
+ public static function generateInterviewOpeningIntro($session, $provider = 'openai', $targetLanguage = null): array
  {
  $requestedProvider = self::normalizeProviderName($provider);
  if (in_array($requestedProvider, ['local', 'localmodel'], true)) {
@@ -1095,7 +1104,7 @@ class AIService
  $prompt.= self::assistanceLevelInstruction($session->ai_assistance_level?? 'standard');
  $prompt.= self::liveFeedbackModeInstruction($liveFeedbackMode);
 
- $sessionContext = strtolower($focus.' '.(is_array($datasetContext)? ($datasetContext['country']?? '').' '.($datasetContext['name']?? ''): (string) $datasetContext));
+ $sessionContext = strtolower($focus);
  if (str_contains($sessionContext, 'philipp') || str_contains($sessionContext, 'filipino')) {
  $prompt.= self::localHiringContextInstruction();
  }
@@ -1117,9 +1126,10 @@ class AIService
  $maxProviders = max(1, min(count(self::activeProviderKeys()), (int) env('AI_INTERVIEW_OPENING_MAX_PROVIDERS', 2)));
  $providers = array_slice($providers, 0, $maxProviders);
  $requestOptions = [
- 'timeout_seconds' => max(2, min(20, (int) env('AI_INTERVIEW_OPENING_TIMEOUT', 6))),
+ 'timeout_seconds' => max(2, min(20, (int) env('AI_INTERVIEW_OPENING_TIMEOUT', 10))),
  'attempts' => max(1, min(2, (int) env('AI_INTERVIEW_OPENING_HTTP_ATTEMPTS', 1))),
  'max_providers' => 1,
+ 'max_tokens' => 256,
  ];
 
  foreach ($providers as $currentProvider) {
@@ -5438,19 +5448,26 @@ PROMPT;
  $providers = array_slice($providers, 0, $maxProviders);
  $timeoutSeconds = array_key_exists('timeout_seconds', $requestOptions)? max(1, (int) $requestOptions['timeout_seconds']): null;
  $attempts = array_key_exists('attempts', $requestOptions)? max(1, (int) $requestOptions['attempts']): null;
+ $maxTokens = array_key_exists('max_tokens', $requestOptions)? max(128, min(4000, (int) $requestOptions['max_tokens'])): null;
 
  foreach ($providers as $currentProvider) {
- if (! self::shouldAttemptProvider($currentProvider) || self::chatProviderRateLimited($currentProvider)) {
+ if (! self::shouldAttemptProvider($currentProvider)) {
+ continue;
+ }
+ if (self::chatProviderRateLimited($currentProvider)) {
+ if (! self::externalAiDisabledForTests()) {
+ Log::warning('AI chat provider skipped during rate-limit cooldown.', ['provider' => $currentProvider]);
+ }
  continue;
  }
 
  try {
- $response = self::recordProviderAttempt($currentProvider, 'chat', function () use ($currentProvider, $message, $history, $systemPrompt, $timeoutSeconds, $attempts) {
+ $response = self::recordProviderAttempt($currentProvider, 'chat', function () use ($currentProvider, $message, $history, $systemPrompt, $timeoutSeconds, $attempts, $maxTokens) {
  $candidate = match ($currentProvider) {
- 'openai' => self::chatOpenAI($message, $history, $systemPrompt, $timeoutSeconds, $attempts),
- 'gemini' => self::chatGemini($message, $history, $systemPrompt, $timeoutSeconds, $attempts),
- 'cohere' => self::chatCohere($message, $history, $systemPrompt, $timeoutSeconds, $attempts),
- 'groq' => self::chatGroq($message, $history, $systemPrompt, $timeoutSeconds, $attempts),
+ 'openai' => self::chatOpenAI($message, $history, $systemPrompt, $timeoutSeconds, $attempts, $maxTokens),
+ 'gemini' => self::chatGemini($message, $history, $systemPrompt, $timeoutSeconds, $attempts, $maxTokens),
+ 'cohere' => self::chatCohere($message, $history, $systemPrompt, $timeoutSeconds, $attempts, $maxTokens),
+ 'groq' => self::chatGroq($message, $history, $systemPrompt, $timeoutSeconds, $attempts, $maxTokens),
  default => null,
  };
 
@@ -11299,7 +11316,7 @@ PROMPT;
  return $contents;
  }
 
- private static function chatGemini($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
+ private static function chatGemini($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null,?int $maxTokens = null)
  {
  $credentials = self::providerCredentials('gemini');
  $url = self::geminiGenerateContentEndpoint($credentials['endpoint'], $credentials['model'], $credentials['api_key']);
@@ -11308,7 +11325,7 @@ PROMPT;
 
  $generationConfig = self::geminiGenerationConfig(
  $credentials['model'],
- self::chatMaxTokens(),
+ $maxTokens?? self::chatMaxTokens(),
  self::chatTemperature(),
  true
  );
@@ -11356,7 +11373,7 @@ PROMPT;
  return $messages;
  }
 
- private static function chatOpenAI($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
+ private static function chatOpenAI($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null,?int $maxTokens = null)
  {
  $credentials = self::providerCredentials('openai');
 
@@ -11368,7 +11385,7 @@ PROMPT;
  'messages' => self::formatHistoryForStandard($message, $history, $systemPrompt),
  ], self::openAiGenerationParameters(
  $credentials['model'],
- self::chatMaxTokens(),
+ $maxTokens?? self::chatMaxTokens(),
  self::chatTemperature()
  )));
 
@@ -11387,7 +11404,7 @@ PROMPT;
  return self::AI_FAILURE_MESSAGE;
  }
 
- private static function chatCohere($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
+ private static function chatCohere($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null,?int $maxTokens = null)
  {
  $credentials = self::providerCredentials('cohere');
  $sysMsg = $systemPrompt?? 'You are a dedicated AI Interview Coach for SpeakReady AI focused on interview preparation. Provide concise, helpful, and encouraging responses for local interview practice, resumes, and career coaching only. If the user asks about any other unrelated topic, politely decline and steer the conversation back to role-focused interview preparation.';
@@ -11400,7 +11417,7 @@ PROMPT;
  'model' => $credentials['model'],
  'messages' => $messages,
  'temperature' => self::chatTemperature(),
- 'max_tokens' => self::chatMaxTokens(),
+ 'max_tokens' => $maxTokens?? self::chatMaxTokens(),
  ]);
 
  if ($response->successful()) {
@@ -11414,12 +11431,12 @@ PROMPT;
  return self::AI_FAILURE_MESSAGE;
  }
 
- private static function chatGroq($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null)
+ private static function chatGroq($message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null,?int $maxTokens = null)
  {
- return self::chatOpenAiCompatibleProvider('groq', $message, $history, $systemPrompt, $timeoutSeconds, $attempts);
+ return self::chatOpenAiCompatibleProvider('groq', $message, $history, $systemPrompt, $timeoutSeconds, $attempts, $maxTokens);
  }
 
- private static function chatOpenAiCompatibleProvider(string $provider, $message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null): string
+ private static function chatOpenAiCompatibleProvider(string $provider, $message, $history, $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null,?int $maxTokens = null): string
  {
  $credentials = self::providerCredentials($provider);
 
@@ -11427,7 +11444,7 @@ PROMPT;
  ])->post(self::providerChatEndpoint($provider, $credentials['endpoint']), [
  'model' => $credentials['model'],
  'temperature' => self::chatTemperature(),
- 'max_tokens' => self::chatMaxTokens(),
+ 'max_tokens' => $maxTokens?? self::chatMaxTokens(),
  'messages' => self::formatHistoryForStandard($message, $history, $systemPrompt),
  ]);
 

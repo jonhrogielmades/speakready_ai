@@ -108,43 +108,12 @@ class InterviewQuestionTypeSelectionTest extends TestCase
         ));
     }
 
-    public function test_type_specific_fallbacks_match_each_selected_type(): void
-    {
-        [$session] = $this->makeSession(['Behavioral', 'Situational', 'Technical', 'Personal']);
-
-        foreach (['Behavioral', 'Situational', 'Technical', 'Personal'] as $type) {
-            $text = $this->invoke('fallbackQuestionForSelectedType', $session, $type, 'I improved the approval queue.', false);
-            $this->assertTrue($this->invoke('questionMatchesSelectedType', $text, $type), "Wrong wording for {$type}: {$text}");
-            $this->assertStringContainsString('Developer', $text);
-            $this->assertSame(1, substr_count($text, '?'));
-        }
-    }
-
-    public function test_seaman_fallbacks_use_maritime_situations_and_keep_the_selected_type(): void
-    {
-        [$session] = $this->makeSession(['Behavioral', 'Situational', 'Technical', 'Personal']);
-        $session->target_position = 'Seaman';
-        $answer = 'I inspected lifeboat equipment before departure and reported expired flares to the captain.';
-
-        foreach (['Behavioral', 'Situational', 'Technical', 'Personal'] as $type) {
-            $text = $this->invoke('fallbackQuestionForSelectedType', $session, $type, $answer, false);
-
-            $this->assertMatchesRegularExpression(
-                '/\b(?:vessel|ship|deck|watchkeeping|navigation|maritime|lifeboat|cargo|bridge|port|crew|safety|emergency)\b/i',
-                $text,
-                "Fallback lacks a maritime situation for {$type}: {$text}"
-            );
-            $this->assertTrue($this->invoke('questionMatchesSelectedType', $text, $type), "Wrong wording for {$type}: {$text}");
-            $this->assertSame(1, substr_count($text, '?'));
-        }
-    }
-
     public function test_duplicate_seaman_question_stays_maritime_and_keeps_its_type(): void
     {
         [$session] = $this->makeSession(['Technical']);
         $session->target_position = 'Seaman';
         $answer = 'I inspected the lifeboat equipment and reported expired flares to the captain.';
-        $original = $this->invoke('fallbackQuestionForSelectedType', $session, 'Technical', $answer, false);
+        $original = 'What procedure did you use to inspect the lifeboat equipment before vessel departure?';
 
         $alternative = $this->invoke('uniqueQuestionTextForSession', $session, $original, [$original], 'Technical', $answer);
 

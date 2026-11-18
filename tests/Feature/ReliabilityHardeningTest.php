@@ -555,7 +555,6 @@ class ReliabilityHardeningTest extends TestCase
  $category = $this->category(['title' => 'Software Engineering']);
  $session = $this->sessionFor($user, $category, ['num_questions' => 2]);
  $question = $this->question($category, ['interview_session_id' => $session->id]);
- $questionBankVersion = data_get(QuestionDatasetProvider::forCategory($category), 'storage_question_bank.version');
  $followUpText = 'What tradeoff would you make differently in that release if you handled it again?';
  $capturedPrompt = '';
 
@@ -601,9 +600,8 @@ class ReliabilityHardeningTest extends TestCase
  $this->assertStringContainsString('I coordinated the release, found the issue, and shipped a fix.', $capturedPrompt);
  $this->assertStringNotContainsString('I coordinated QA with the deployment team before launch.', $capturedPrompt);
  $this->assertStringContainsString('LATEST CANDIDATE ANSWER TO RESPOND TO', $capturedPrompt);
- $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', (string) $questionBankVersion);
- $this->assertStringContainsString("Reliable question-bank version: {$questionBankVersion}", $capturedPrompt);
- $this->assertStringContainsString('Job Interview Questions', $capturedPrompt);
+ $this->assertStringNotContainsString('Reliable question-bank version:', $capturedPrompt);
+ $this->assertStringNotContainsString('Job Interview Questions', $capturedPrompt);
 
  $this->assertDatabaseHas('questions', [
  'interview_session_id' => $session->id,
@@ -621,7 +619,7 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  }
 
- public function test_unrelated_provider_follow_up_uses_grounded_backup(): void
+ public function test_unrelated_provider_follow_up_does_not_create_a_local_backup(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Software Engineering']);
@@ -652,17 +650,15 @@ class ReliabilityHardeningTest extends TestCase
  'response_mode' => 'text',
  'ai_provider' => 'openai',
  ])
-  ->assertOk()
-  ->assertJsonPath('success', true)
-  ->assertJsonPath('source_type', 'local_question_fallback')
-  ->assertJsonPath('ai_provider', null);
+  ->assertStatus(503)
+  ->assertJsonPath('success', false)
+  ->assertJsonPath('answer_saved', true)
+  ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable')
+  ->assertJsonMissingPath('next_question_id');
 
-  $backup = Question::where('interview_session_id', $session->id)
-  ->where('source_type', 'local_question_fallback')->firstOrFail();
-  $this->assertStringContainsString('release', strtolower($backup->question_text));
-  $this->assertStringContainsString('Developer', $backup->question_text);
-  $this->assertNull($backup->ai_provider);
-  $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+  $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
+  $this->assertSame(0, Question::where('interview_session_id', $session->id)
+  ->where('source_type', 'local_question_fallback')->count());
   $this->assertDatabaseHas('interview_answers', [
   'interview_session_id' => $session->id,
   'question_id' => $question->id,

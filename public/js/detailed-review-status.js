@@ -1,4 +1,4 @@
-// Interview follow-up backup release: 2026-11-13.
+// AI-only interview follow-up release: 2026-11-18.
 (function () {
     'use strict';
 
