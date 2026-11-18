@@ -916,13 +916,15 @@ class UserController extends Controller
 
  $providerReviewPending = ! $sessionEndedEarly && $sessionRecord->status === 'completed'
  && ! $sessionRecord->game_level_id && $providerReviewStatus !== 'verified';
+ $providerReviewFailureMessage = $providerReviewStatus === 'failed'
+ ? $this->reviewFailureMessage($sessionRecord->feedback_failure_code) : null;
  $preparedAnswerReviews = $providerReviewPending
  ? $preparedReviewService->currentVisibleReviewsForSession($sessionRecord)
  : [];
  $comparisonRows = $providerReviewPending ? [] : $this->comparisonRowsFor($sessionRecord);
  $reviewEvidence = $providerReviewPending ? null : FeedbackEvidencePresenter::forSession($sessionRecord);
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'providerReviewPending', 'providerReviewStatus', 'preparedAnswerReviews'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'providerReviewPending', 'providerReviewStatus', 'providerReviewFailureMessage', 'preparedAnswerReviews'));
  }
 
  public function reviewStatus($id, DetailedFeedbackReviewService $reviewService, PreparedAnswerReviewService $preparedReviewService)
@@ -940,9 +942,15 @@ class UserController extends Controller
  $needsReview = $reviewService->shouldRefreshWithProvider($session);
  $status = $needsReview ? ($status === 'verified' ? 'failed' : $status) : 'verified';
  $response = ['status' => $status, 'retry_after_ms' => 2000];
+ if ($status === 'failed') {
+ $failureMessage = $this->reviewFailureMessage($session->feedback_failure_code);
+ if ($failureMessage !== null) {
+ $response['message'] = $failureMessage;
+ }
+ }
  if (in_array($status, ['pending', 'processing', 'failed'], true)) {
  $progress = $preparedReviewService->progressForSession($session);
- if ($progress['total'] > 0 && ($progress['verified'] > 0 || $progress['processing'] > 0)) {
+ if (! isset($response['message']) && $progress['total'] > 0 && ($progress['verified'] > 0 || $progress['processing'] > 0)) {
  $response['message'] = $status === 'failed' && $progress['verified'] > 0
  ? "Provider AI feedback for {$progress['verified']} of {$progress['total']} answers is available below. Retry the final AI summary."
  : ($progress['verified'] === $progress['total']
@@ -952,6 +960,18 @@ class UserController extends Controller
  }
  return response()->json($response)
  ->header('Cache-Control', 'no-store, private');
+ }
+
+ private function reviewFailureMessage(?string $failureCode): ?string
+ {
+ return match ($failureCode) {
+ 'no_provider_credentials' => 'AI review is waiting for a provider to be connected. Your answers are saved, and the report will retry automatically after setup.',
+ 'provider_authentication' => 'The AI provider rejected its credentials. Your answers are saved; the report can be retried after the connection is fixed.',
+ 'provider_model' => 'The AI provider could not use its configured model. Your answers are saved; the report can be retried after the model is fixed.',
+ 'provider_rate_limit', 'provider_circuit_open' => 'The AI provider is temporarily busy. Your answers are saved; please try the review again shortly.',
+ 'provider_timeout', 'provider_network', 'provider_server_error' => 'The AI provider did not complete the review. Your answers are saved; please try the review again.',
+ default => null,
+ };
  }
 
  public function refreshReview($id, DetailedFeedbackReviewService $reviewService)

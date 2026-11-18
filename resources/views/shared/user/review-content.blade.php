@@ -61,7 +61,7 @@
  : ($providerReviewCanContinue ? 'Your AI answer reviews are being prepared.' : 'Your AI answer reviews need another attempt.') }}</strong>
  <p class="mb-2" data-review-status-message>{{ $providerReviewCanContinue
  ? ($preparedAnswerCount > 0 ? "Provider AI feedback is available below for {$preparedAnswerCount} of {$sessionRecord->answers->count()} answers. The final summary is still being prepared." : 'Your interview is complete and your answers are saved. This page updates when provider feedback passes validation.')
- : ($preparedAnswerCount > 0 ? 'Provider AI feedback is available below. The final session summary could not be validated; retry it below.' : 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.') }}</p>
+ : ($providerReviewFailureMessage ?? ($preparedAnswerCount > 0 ? 'Provider AI feedback is available below. The final session summary could not be validated; retry it below.' : 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.')) }}</p>
  </div>
  <form method="POST" action="{{ route('user.review.refresh', $sessionRecord) }}" data-review-retry @if($providerReviewCanContinue) hidden @endif>
  @csrf

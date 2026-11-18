@@ -115,7 +115,7 @@ services:
       OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
       OPENAI_API_URL: "${OPENAI_API_URL:-https://api.openai.com/v1}"
       OPENAI_MODEL: "${OPENAI_MODEL:-gpt-4o-mini}"
-      OPENAI_FEEDBACK_MODEL: "${OPENAI_FEEDBACK_MODEL:-gpt-6-astra}"
+      OPENAI_FEEDBACK_MODEL: "${OPENAI_FEEDBACK_MODEL:-}"
       OPENAI_JSON_MODE_FALLBACK: "${OPENAI_JSON_MODE_FALLBACK:-true}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       GEMINI_API_URL: "${GEMINI_API_URL:-https://generativelanguage.googleapis.com/v1beta}"

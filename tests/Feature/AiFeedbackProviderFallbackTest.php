@@ -91,11 +91,111 @@ class AiFeedbackProviderFallbackTest extends TestCase
         $this->assertSame('ai_provider', $feedback['per_question_feedback'][0]['answer_review_source']);
     }
 
+    public function test_unavailable_feedback_model_retries_once_with_the_general_openai_model(): void
+    {
+        foreach ([
+            'OPENAI_API_KEY' => 'openai_test_token',
+            'OPENAI_API_URL' => 'https://api.openai.com/v1',
+            'OPENAI_MODEL' => 'gpt-4o-mini',
+            'OPENAI_FEEDBACK_MODEL' => 'unavailable-feedback-model',
+            'AI_LIVE_TESTS' => 'false',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        $answer = [
+            'id' => 7013,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I inspected the query plan, compared row estimates, and verified index usage before changing the query.',
+        ];
+        $payload = $this->validFeedbackPayload($answer);
+        $sent = 0;
+        Http::fake(function () use ($payload, &$sent) {
+            $sent++;
+            return $sent === 1
+                ? Http::response(['error' => ['code' => 'model_not_found', 'param' => 'model']], 404)
+                : Http::response(['choices' => [[
+                    'finish_reason' => 'stop',
+                    'message' => ['content' => json_encode($payload)],
+                ]]]);
+        });
+
+        $feedback = AIService::generateFeedback(
+            ['target_position' => 'Database Developer', 'difficulty' => 'Medium'],
+            [$answer],
+            'openai',
+            true,
+            false,
+            [
+                'require_provider_narratives' => true,
+                'answer_only_completion' => true,
+                'allow_provider_completion' => false,
+                'deadline_seconds' => 20,
+                'max_attempts' => 1,
+                'http_attempts' => 1,
+            ]
+        );
+
+        $requests = collect(Http::recorded())->map(fn (array $entry) => $entry[0])->values();
+        $this->assertSame(['unavailable-feedback-model', 'gpt-4o-mini'],
+            $requests->map(fn ($request) => data_get($request->data(), 'model'))->all());
+        $this->assertSame('openai', $feedback['_provider_key']);
+        $this->assertSame('verified', data_get($feedback, 'per_question_feedback.0.feedback_quality.status'));
+    }
+
+    public function test_authentication_failure_does_not_retry_with_another_openai_model(): void
+    {
+        foreach ([
+            'OPENAI_API_KEY' => 'openai_test_token',
+            'OPENAI_API_URL' => 'https://api.openai.com/v1',
+            'OPENAI_MODEL' => 'gpt-4o-mini',
+            'OPENAI_FEEDBACK_MODEL' => 'unavailable-feedback-model',
+            'AI_LIVE_TESTS' => 'false',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        Http::fake(['api.openai.com/*' => Http::response(['error' => [
+            'code' => 'invalid_api_key',
+            'message' => 'The API key is invalid.',
+        ]], 401)]);
+
+        try {
+            AIService::generateFeedback(
+                ['target_position' => 'Database Developer', 'difficulty' => 'Medium'],
+                [[
+                    'id' => 7014,
+                    'question_type' => 'Technical',
+                    'question' => 'How would you diagnose a slow database query?',
+                    'answer' => 'I inspected the query plan before changing the query.',
+                ]],
+                'openai',
+                true,
+                false,
+                [
+                    'require_provider_narratives' => true,
+                    'answer_only_completion' => true,
+                    'allow_provider_completion' => false,
+                    'deadline_seconds' => 20,
+                    'max_attempts' => 1,
+                    'http_attempts' => 1,
+                ]
+            );
+            $this->fail('Invalid credentials must fail without another model request.');
+        } catch (AiFeedbackProviderFailureException $error) {
+            $this->assertSame('provider_authentication', $error->failureCode());
+        }
+
+        Http::assertSentCount(1);
+    }
+
     public function test_openai_feedback_does_not_retry_an_unrelated_bad_request_as_a_token_error(): void
     {
         foreach ([
             'OPENAI_API_KEY' => 'openai_test_token',
             'OPENAI_API_URL' => 'https://api.openai.com/v1',
+            'OPENAI_MODEL' => 'gpt-4o-mini',
             'OPENAI_FEEDBACK_MODEL' => 'gpt-4o-mini',
             'AI_LIVE_TESTS' => 'false',
         ] as $key => $value) {

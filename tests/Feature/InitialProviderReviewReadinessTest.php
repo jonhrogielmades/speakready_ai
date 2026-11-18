@@ -118,6 +118,43 @@ class InitialProviderReviewReadinessTest extends TestCase
         $this->assertFalse((bool) data_get($savedAnswer->coaching_feedback, 'local_fallback'));
     }
 
+    public function test_missing_credentials_fail_without_using_retries_and_requeue_after_configuration(): void
+    {
+        [$user, $session] = $this->fixture();
+        foreach (['OPENAI_API_KEY', 'GEMINI_API_KEY', 'GROQ_API_KEY', 'COHERE_API_KEY'] as $key) {
+            putenv("{$key}=");
+            $_ENV[$key] = $_SERVER[$key] = '';
+        }
+
+        $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertStatus(202);
+        $this->app->call([new GenerateInterviewFeedback($session->id, $user->id), 'handle']);
+
+        $this->assertSame('failed', $session->fresh()->feedback_status);
+        $this->assertSame('no_provider_credentials', $session->fresh()->feedback_failure_code);
+        $this->assertSame(0, (int) $session->fresh()->feedback_attempts);
+        $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
+        Http::assertNothingSent();
+        $this->actingAs($user)->getJson(route('user.review.status', $session))
+            ->assertOk()
+            ->assertJsonPath('status', 'failed')
+            ->assertJsonPath('message', 'AI review is waiting for a provider to be connected. Your answers are saved, and the report will retry automatically after setup.');
+        $this->actingAs($user)->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('AI review is waiting for a provider to be connected.');
+
+        putenv('OPENAI_API_KEY=openai_test_token');
+        $_ENV['OPENAI_API_KEY'] = $_SERVER['OPENAI_API_KEY'] = 'openai_test_token';
+        $session->timestamps = false;
+        $session->forceFill(['updated_at' => now()->subMinutes(16)])->save();
+        $session->timestamps = true;
+
+        $this->artisan('feedback:requeue-stale')->assertSuccessful()
+            ->expectsOutput('Requeued 1 provider feedback reviews.');
+        $this->assertSame('pending', $session->fresh()->feedback_status);
+        Queue::assertPushed(GenerateInterviewFeedback::class, 2);
+    }
+
     public function test_repeated_finish_does_not_dispatch_a_duplicate_provider_review(): void
     {
         [$user, $session] = $this->fixture();

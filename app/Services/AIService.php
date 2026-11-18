@@ -1692,6 +1692,59 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  $prompt,
  $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null,?array $responseFormat = null,?string $modelOverride = null,?int $maxOutputTokens = null, bool $requireFinishReason = false,?float $requestDeadlineAt = null, bool $feedbackSchemaFallback = false
  ) {
+ try {
+ return self::callOpenAIWithModel(
+ $prompt, $systemPrompt, $timeoutSeconds, $attempts, $responseFormat,
+ $modelOverride, $maxOutputTokens, $requireFinishReason, $requestDeadlineAt,
+ $feedbackSchemaFallback
+ );
+ } catch (RequestException $error) {
+ if (! $feedbackSchemaFallback || ! self::openAiFeedbackModelUnavailable($error->response)) {
+ throw $error;
+ }
+
+ $requestedModel = self::providerCredentials('openai', $modelOverride)['model'];
+ $fallbackModel = trim((string) RuntimeConfiguration::get(
+ 'services.openai.model', 'OPENAI_MODEL', self::PROVIDER_DEFAULT_MODELS['openai']
+ ));
+ if ($fallbackModel === '' || strcasecmp($requestedModel, $fallbackModel) === 0
+ || ($requestDeadlineAt !== null && $requestDeadlineAt - microtime(true) < 2)) {
+ throw $error;
+ }
+
+ Log::warning('OpenAI feedback model is unavailable; retrying with the configured general model.', [
+ 'requested_model' => $requestedModel,
+ 'fallback_model' => $fallbackModel,
+ 'status' => $error->response?->status(),
+ ]);
+
+ return self::callOpenAIWithModel(
+ $prompt, $systemPrompt, $timeoutSeconds, $attempts, $responseFormat,
+ $fallbackModel, $maxOutputTokens, $requireFinishReason, $requestDeadlineAt,
+ $feedbackSchemaFallback
+ );
+ }
+ }
+
+ private static function openAiFeedbackModelUnavailable($response): bool
+ {
+ if ($response === null || ! in_array($response->status(), [400, 403, 404, 422], true)) {
+ return false;
+ }
+
+ $parameter = strtolower(trim((string) $response->json('error.param', '')));
+ $code = strtolower(trim((string) $response->json('error.code', '')));
+
+ return $parameter === 'model' || in_array($code, [
+ 'model_not_found', 'model_not_available', 'model_not_supported',
+ 'unsupported_model', 'invalid_model', 'model_access_denied',
+ ], true);
+ }
+
+ private static function callOpenAIWithModel(
+ $prompt,
+ $systemPrompt = null,?int $timeoutSeconds = null,?int $attempts = null,?array $responseFormat = null,?string $modelOverride = null,?int $maxOutputTokens = null, bool $requireFinishReason = false,?float $requestDeadlineAt = null, bool $feedbackSchemaFallback = false
+ ) {
  $credentials = self::providerCredentials('openai', $modelOverride);
  $apiKey = $credentials['api_key'];
  $endpoint = self::openAiChatEndpoint($credentials['endpoint']);

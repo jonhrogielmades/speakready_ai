@@ -171,6 +171,24 @@ class GenerateInterviewFeedback implements ShouldQueue
             $failureCode = $error instanceof AiFeedbackProviderFailureException
                 ? $error->failureCode()
                 : 'provider_review_failed';
+            if ($failureCode === 'no_provider_credentials') {
+                // Wait for Dokploy credentials to be added. This is not a
+                // provider attempt and must not exhaust automatic recovery.
+                InterviewSession::query()
+                    ->whereKey($this->sessionId)
+                    ->where('feedback_status', 'processing')
+                    ->where('feedback_processing_token', $this->runToken)
+                    ->update([
+                        'feedback_status' => 'failed',
+                        'feedback_failure_code' => $failureCode,
+                        'feedback_attempts' => 0,
+                        'feedback_processing_token' => null,
+                    ]);
+                Log::warning('Queued provider interview feedback is waiting for credentials.', [
+                    'session_id' => $this->sessionId,
+                ]);
+                return;
+            }
             InterviewSession::query()
                 ->whereKey($this->sessionId)
                 ->where('feedback_status', 'processing')

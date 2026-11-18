@@ -96,6 +96,42 @@ class AiDeploymentConfigurationTest extends TestCase
         }
     }
 
+    public function test_dokploy_feedback_model_inherits_the_general_openai_model(): void
+    {
+        $previous = [];
+        foreach (['OPENAI_MODEL', 'OPENAI_FEEDBACK_MODEL'] as $key) {
+            $previous[$key] = getenv($key);
+        }
+
+        try {
+            putenv('OPENAI_MODEL=gpt-4o-mini');
+            $_ENV['OPENAI_MODEL'] = $_SERVER['OPENAI_MODEL'] = 'gpt-4o-mini';
+            putenv('OPENAI_FEEDBACK_MODEL=');
+            $_ENV['OPENAI_FEEDBACK_MODEL'] = $_SERVER['OPENAI_FEEDBACK_MODEL'] = '';
+
+            $services = require base_path('config/services.php');
+            $this->assertSame('gpt-4o-mini', $services['openai']['feedback_model']);
+            $this->assertStringContainsString(
+                'OPENAI_FEEDBACK_MODEL: "${OPENAI_FEEDBACK_MODEL:-}"',
+                (string) file_get_contents(base_path('docker-compose.yml'))
+            );
+            $this->assertMatchesRegularExpression(
+                '/^OPENAI_FEEDBACK_MODEL=$/m',
+                (string) file_get_contents(base_path('dokploy.env.example'))
+            );
+        } finally {
+            foreach ($previous as $key => $value) {
+                if ($value === false) {
+                    putenv($key);
+                    unset($_ENV[$key], $_SERVER[$key]);
+                } else {
+                    putenv("{$key}={$value}");
+                    $_ENV[$key] = $_SERVER[$key] = $value;
+                }
+            }
+        }
+    }
+
     public function test_transcription_rate_limiter_reads_cached_configuration(): void
     {
         $previous = config('services.ai_transcription.rate_limit_per_minute');

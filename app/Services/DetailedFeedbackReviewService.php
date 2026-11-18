@@ -100,6 +100,9 @@ class DetailedFeedbackReviewService
 
  $provider = $this->configuredProvider($preferredProvider);
  if ($provider === null) {
+ if ($throwOnFailure) {
+ throw new AiFeedbackProviderFailureException([], [], null, null, ['system' => ['not_configured']]);
+ }
  return false;
  }
 
