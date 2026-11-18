@@ -175,6 +175,74 @@ class InterviewChatReplyFlowTest extends TestCase
         Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
     }
 
+    public function test_grounded_provider_questions_with_natural_wording_and_job_terms_are_not_backups(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+
+        $cases = [
+            [
+                'answer' => 'I coordinated the handoff with the finance team while building a new release workflow.',
+                'question' => 'How did you coordinate the handoff with the finance team as a Developer?',
+            ],
+            [
+                'answer' => 'I designed a support workflow after customers gave feedback about slow handoffs.',
+                'question' => 'What customer feedback shaped the support workflow you designed as a Developer?',
+            ],
+            [
+                'answer' => 'I designed the release workflow and stored a JSON API key in a secure vault.',
+                'question' => 'How did you protect the JSON API key in the release workflow you designed as a Developer?',
+            ],
+            [
+                'answer' => 'I tested the deployment checks and verified the release workflow before customers used it.',
+                'question' => 'How did you test the deployment checks in the Developer role?',
+                'type' => 'Technical',
+            ],
+            [
+                'answer' => 'Nagdisenyo ako ng deployment checklist at sinuri ang release bago ito inilunsad.',
+                'question' => 'Paano mo sinuri ang deployment checklist para sa Developer role?',
+                'type' => 'Technical',
+            ],
+        ];
+        $replies = array_column($cases, 'question');
+        Http::fake(['api.openai.com/*' => function () use (&$replies) {
+            return Http::response([
+                'choices' => [['finish_reason' => 'stop', 'message' => ['content' => array_shift($replies)]]],
+            ]);
+        }]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        foreach ($cases as $case) {
+            [$session, $question] = $this->interview($user, $category, 'text');
+            if (isset($case['type'])) {
+                $session->forceFill(['question_types' => json_encode([$case['type']])])->save();
+            }
+            $this->actingAs($user)
+                ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+                ->postJson(route('interview.chatReply'), [
+                    'session_id' => $session->id,
+                    'question_id' => $question->id,
+                    'answer_text' => $case['answer'],
+                ])
+                ->assertOk()
+                ->assertJsonPath('next_question_text', $case['question'])
+                ->assertJsonPath('source_type', 'ai_generated')
+                ->assertJsonPath('ai_provider', 'openai');
+
+            $this->assertSame(0, Question::where('interview_session_id', $session->id)
+                ->where('source_type', 'local_question_fallback')->count());
+        }
+
+        Http::assertSentCount(count($cases));
+    }
+
     public function test_provider_generates_a_follow_up_without_dataset_context(): void
     {
         AiProvider::create([

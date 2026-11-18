@@ -319,7 +319,7 @@ return [
  ],
 
  'interview_follow_up' => [
- 'timeout' => env('AI_INTERVIEW_FOLLOW_UP_TIMEOUT', 20),
+ 'timeout' => env('AI_INTERVIEW_FOLLOW_UP_TIMEOUT', 30),
  'http_attempts' => env('AI_INTERVIEW_FOLLOW_UP_HTTP_ATTEMPTS', 1),
  'max_retries' => env('AI_INTERVIEW_FOLLOW_UP_RETRIES', 4),
  'max_providers' => env('AI_INTERVIEW_FOLLOW_UP_MAX_PROVIDERS', 4),

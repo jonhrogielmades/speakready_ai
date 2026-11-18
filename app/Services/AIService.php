@@ -853,7 +853,7 @@ class AIService
  $maxProviders = max(1, min(count($providers), (int) config('services.interview_follow_up.max_providers', 1)));
  $providers = array_slice($providers, 0, $maxProviders);
  $configuredRetries = max(1, min(4, (int) config('services.interview_follow_up.max_retries', 4)));
- $timeoutSeconds = max(2, min(20, (int) config('services.interview_follow_up.timeout', 20)));
+ $timeoutSeconds = max(2, min(30, (int) config('services.interview_follow_up.timeout', 30)));
  // A failed HTTP request should move to another provider promptly. When only
  // one provider is configured, its own HTTP retry setting can still help.
  $httpAttempts = count($providers) > 1
@@ -864,9 +864,9 @@ class AIService
  'attempts' => $httpAttempts,
  'max_providers' => 1,
  ];
- // Try all four providers even at the 20-second request limit, while leaving
+ // Try all four providers even at the 30-second request limit, while leaving
  // time for the grounded backup question, persistence, and the browser reply.
- $deadlineAt = microtime(true) + 110;
+ $deadlineAt = microtime(true) + 130;
  $attempt = 0;
  $rejectedProviders = [];
  $failedProviders = [];
@@ -910,11 +910,15 @@ class AIService
  $rawResponse = self::chatMessage($requestPrompt, [], $currentProvider, $systemPrompt, $chatRequestOptions);
  if ($rawResponse !== self::AI_FAILURE_MESSAGE) {
  $response = self::sanitizeInterviewerReply($rawResponse);
+ $rejectionGate = match (true) {
+  $response === '' => 'sanitizer',
+  preg_match('/\b(?:you\s+(?:mentioned|said|shared)|thinking\s+about\s+what\s+you\s+shared)\b/iu', $response) === 1 => 'banned_reference',
+  ! app(InterviewConversationService::class)->isCoherentFollowUp($response, (string) $latestAnswer, $history) => 'conversation',
+  $acceptQuestion !== null && ! $acceptQuestion($response) => 'question_validation',
+  default => null,
+ };
 
- if ($response !== ''
- && preg_match('/\b(?:you\s+(?:mentioned|said|shared)|thinking\s+about\s+what\s+you\s+shared)\b/iu', $response) !== 1
- && app(InterviewConversationService::class)->isCoherentFollowUp($response, (string) $latestAnswer, $history)
- && ($acceptQuestion === null || $acceptQuestion($response))) {
+ if ($rejectionGate === null) {
  $usedProvider = $currentProvider;
  return $response;
  }
@@ -927,6 +931,7 @@ class AIService
  'provider' => $currentProvider,
  'attempt' => $attempt,
  'phase' => $isRepair ? 'repair' : 'initial',
+ 'gate' => $rejectionGate,
  ]);
  }
  } elseif (! $isRepair) {
@@ -1563,8 +1568,7 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  return '';
  }
 
- if (preg_match('/\b(score|scored|grade|rubric|better sample|coaching tip|as an ai|markdown)\b/i', $reply)
- || preg_match('/\b(?:give|provide|offer)\s+you\s+feedback\b/i', $reply)) {
+ if (app(InterviewConversationService::class)->hasInterviewerMetaCommentary($reply)) {
  return '';
  }
 
@@ -1715,7 +1719,7 @@ return $topic!== ''? self::excerpt($topic, 90): '';
  Log::warning('OpenAI feedback model is unavailable; retrying with the configured general model.', [
  'requested_model' => $requestedModel,
  'fallback_model' => $fallbackModel,
- 'status' => $error->response?->status(),
+ 'status' => $error->response->status(),
  ]);
 
  return self::callOpenAIWithModel(

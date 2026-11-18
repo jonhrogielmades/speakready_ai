@@ -7,6 +7,30 @@ use App\Support\InterviewerAvatar;
 /** Keeps local and provider interviewer turns attached to the saved conversation. */
 class InterviewConversationService
 {
+    public function hasInterviewerMetaCommentary(string $reply): bool
+    {
+        // These refer to grading the candidate's current answer. Words such as
+        // "feedback", "score", "rubric", "JSON", and "API key" can also be the
+        // subject of a legitimate job interview question.
+        $patterns = [
+            '/\bas an ai\b/iu',
+            '/\b(?:better sample(?: answer)?|coaching tip)\b/iu',
+            '/\b(?:i|we)\s+(?:(?:would|will|can)\s+)?(?:score|grade|rate|evaluate|assess)\s+(?:your|this)\s+(?:answer|response)\b/iu',
+            '/\b(?:your|this)\s+answer\s+(?:scores?|grades?|rates?)\b/iu',
+            '/\b(?:i|we)\s+(?:(?:would|will|can)\s+)?(?:give|provide|offer)\s+you\s+(?:feedback|a score|a grade)\b/iu',
+            '/\b(?:i|we)\s+(?:(?:would|will|can)\s+)?(?:give|provide|offer)\s+(?:your|this)\s+(?:answer|response)\s+(?:a\s+)?(?:score|grade|rating)\b/iu',
+            '/\b(?:my|here(?: is|.s))\s+(?:feedback|assessment|evaluation)\s+(?:on|of|for)\s+(?:your|this)\s+(?:answer|response)\b/iu',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $reply) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function fallbackReply($session, array $history, string $latestAnswer, bool $isFinal = false, ?string $requiredType = null): string
     {
         $position = trim((string) data_get($session, 'target_position', 'this role')) ?: 'this role';

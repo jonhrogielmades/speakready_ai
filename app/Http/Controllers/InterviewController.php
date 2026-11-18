@@ -5148,7 +5148,7 @@ return response()->json([
  || substr_count($questionText, '?') !== 1
  || TranscriptService::wordCount($questionText) < 5
  || TranscriptService::wordCount($questionText) > 75
- || preg_match('/\b(?:score|scored|grade|graded|rubric|feedback|markdown|json|api key|system prompt|question count|how many questions|as an ai)\b/i', $questionText)) {
+ || app(InterviewConversationService::class)->hasInterviewerMetaCommentary($questionText)) {
  $rejectionGate = 'format';
  return false;
  }
@@ -5190,6 +5190,8 @@ return response()->json([
  $questionTokens = $this->interviewGroundingTokens($questionClause, $position);
  $overlap = $this->interviewGroundingTokenOverlap($answerTokens, $questionTokens);
  $hasEvidenceProbe = preg_match('/\b(?:specific|example|situation|experience|result|outcome|impact|decision|action|responsib\w*|role|tradeoff|constraint|stakeholder|tool|process|metric|lesson|learn\w*|improv\w*|verif\w*|validat\w*|implement\w*|measur\w*|monitor\w*|diagnos\w*|debug\w*|troubleshoot\w*|logic|mechanism|method|risk|priorit\w*|challenge|handle|apply|evidence|fit|strength|motivat\w*|weakness|ownership|personally|describe|walk|explain|tell|detail|approach|choose|check\w*|consider\w*|happened|difficult|part|interests|skill|prepare|support)\b/i', $questionClause) === 1;
+ $hasEvidenceProbe = $hasEvidenceProbe
+ || preg_match('/\b(?:paano|ano|alin|bakit|kailan|saan|ikuwento|ikwento|ilarawan|magbigay|unsa|unsaon|ngano|kanus-a|asa|isaysay|ihulagway)\b/iu', $questionClause) === 1;
 
  if ($requireAnswerAnchor
  && ! $this->unavailableInterviewAnswerText($latestAnswer)
@@ -5224,7 +5226,11 @@ return response()->json([
  return false;
  }
 
+ // Two concrete answer details in the question are stronger evidence of a
+ // follow-up than membership in a short probe-word list. One shared generic
+ // word such as "team" is not enough on its own.
  $accepted = $hasNeutralAcknowledgement
+ || $overlap >= 2
  || ($hasEvidenceProbe && ($overlap > 0 || $mentionsPosition));
  $rejectionGate = $accepted ? null : 'evidence_probe';
 
@@ -5622,11 +5628,23 @@ return response()->json([
  && preg_match('/\b(?:solve|check|measure|implement|investigate|improve)\b/i', $questionIntent) === 1);
  $situational = preg_match('/\b(?:if|suppose|imagine|scenario|would you|might you|how would|what would|how do you (?:handle|respond|approach|prioritize|adapt|confirm)|what do you do when)\b/i', $questionIntent) === 1;
  $technicalMethod = preg_match('/\b(?:diagnos\w*|debug\w*|troubleshoot\w*|design|code|test\w*|verif\w*|validat\w*|implement\w*|monitor\w*|configur\w*|architect\w*)\b/i', $questionIntent) === 1;
+ $technicalPastMethodProbe = preg_match('/\b(?:how|what|which)\b.{0,80}\b(?:did|do|would|could)\s+you\b.{0,80}\b(?:diagnos\w*|debug\w*|troubleshoot\w*|design|cod\w*|test\w*|verif\w*|validat\w*|implement\w*|monitor\w*|configur\w*|architect\w*|secur\w*|protect\w*)\b/i', $questionIntent) === 1;
+
+ // Interviewer replies can be in Filipino, Tagalog, or Cebuano. Recognize
+ // their question intent as well as English so the chosen type is not rejected
+ // solely because the provider followed the requested output language.
+ $personal = $personal || preg_match('/\b(?:lakas|kahinaan|motibasyon|interes|hilig|layunin|pangarap|karera|katangian|kusog|kaluyahon|tinguha|ganahan|pangandoy)\b/iu', $questionIntent) === 1;
+ $situational = $situational || preg_match('/\b(?:kung|kapag|sakaling|ipagpalagay|kon|pananglit|gagawin mo|buhaton nimo)\b/iu', $questionIntent) === 1;
+ $behavioral = $behavioral || (! $situational
+ && preg_match('/\b(?:ikuwento|ikwento|magkuwento|ilarawan|magbigay\s+ng\s+halimbawa|naranasan|karanasan|nangyari|isaysay|ihulagway|pananglitan|kasinatian|nahitabo|gibuhat\s+nimo)\b/iu', $questionIntent) === 1);
+ $technical = $technical || preg_match('/\b(?:pamamaraan|paraan|hakbang|proseso|sistema|kasangkapan|sinuri|susuriin|pagsusuri|patunayan|pamaagi|lakang|susihon|gisusi|kumpirma)\b/iu', $questionIntent) === 1;
+ $technicalMethod = $technicalMethod || preg_match('/\b(?:sinuri|susuriin|pagsusuri|patunayan|susihon|gisusi|kumpirma)\b/iu', $questionIntent) === 1;
+ $technicalPastMethodProbe = $technicalPastMethodProbe || preg_match('/\b(?:paano|unsaon|unsa)\b.{0,80}\b(?:sinuri|susuriin|pagsusuri|patunayan|susihon|gisusi|kumpirma)\b/iu', $questionIntent) === 1;
 
  return match ($requiredType) {
  'Personal' => $personal,
  'Behavioral' => ! $personal && $behavioral,
- 'Technical' => ! $personal && ! $behavioral && $technical,
+ 'Technical' => ! $personal && $technical && (! $behavioral || $technicalPastMethodProbe),
  'Situational' => ! $personal && ! $behavioral && $situational && ! $technicalMethod,
  default => false,
  };

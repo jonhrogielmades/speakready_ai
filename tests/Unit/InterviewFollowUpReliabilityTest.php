@@ -4,11 +4,38 @@ namespace Tests\Unit;
 
 use App\Http\Controllers\InterviewController;
 use App\Models\InterviewSession;
+use App\Services\InterviewConversationService;
 use ReflectionMethod;
 use Tests\TestCase;
 
 class InterviewFollowUpReliabilityTest extends TestCase
 {
+    public function test_interviewer_meta_filter_preserves_job_terms_but_rejects_answer_grading(): void
+    {
+        $conversation = app(InterviewConversationService::class);
+
+        foreach ([
+            'What customer feedback shaped the support workflow?',
+            'How did you score the risk using that rubric?',
+            'How did you protect the JSON API key?',
+            'How did you assess your performance during the shift?',
+            'How did your response rate improve?',
+            'Did the manager offer you feedback?',
+            'What did you do when your rating was below target?',
+        ] as $question) {
+            $this->assertFalse($conversation->hasInterviewerMetaCommentary($question), $question);
+        }
+
+        foreach ([
+            'I would score your answer 90. What happened next?',
+            'Your answer scores 90. What happened next?',
+            'I can give you feedback. What happened next?',
+            'Here is my coaching tip. What happened next?',
+        ] as $reply) {
+            $this->assertTrue($conversation->hasInterviewerMetaCommentary($reply), $reply);
+        }
+    }
+
     public function test_a_follow_up_can_reference_a_saved_answer_without_repeating_the_job_title(): void
     {
         $answer = 'I coordinated a billing migration with the finance team, resolved duplicate invoices, and reduced reconciliation time by 30 percent.';
@@ -41,6 +68,16 @@ class InterviewFollowUpReliabilityTest extends TestCase
             'What evidence best shows your fit for the Billing Specialist role?',
             $answer,
             'Billing Specialist',
+            true
+        ));
+    }
+
+    public function test_one_shared_generic_word_does_not_validate_an_unrelated_follow_up(): void
+    {
+        $this->assertFalse($this->isReliable(
+            'What is your favorite way to work with a team?',
+            'I helped the finance team resolve duplicate invoices.',
+            'Developer',
             true
         ));
     }
@@ -313,6 +350,20 @@ class InterviewFollowUpReliabilityTest extends TestCase
         $this->assertTrue($this->isReliable($question, $answer, 'Software Developer', true));
         $this->assertTrue($this->matchesSelectedType($question, 'Technical'));
         $this->assertFalse($this->matchesSelectedType($question, 'Situational'));
+        $this->assertTrue($this->matchesSelectedType(
+            'How did you test the deployment checks in the Developer role?',
+            'Technical'
+        ));
+    }
+
+    public function test_selected_question_types_accept_filipino_and_cebuano_wording(): void
+    {
+        $this->assertTrue($this->matchesSelectedType('Ikuwento ang isang karanasan mo sa deployment checklist?', 'Behavioral'));
+        $this->assertTrue($this->matchesSelectedType('Kung pumalya ang deployment checklist, ano ang gagawin mo?', 'Situational'));
+        $this->assertTrue($this->matchesSelectedType('Kung nangyari ulit ang deployment failure, ano ang gagawin mo?', 'Situational'));
+        $this->assertTrue($this->matchesSelectedType('Paano mo sinuri ang deployment checklist?', 'Technical'));
+        $this->assertTrue($this->matchesSelectedType('Aling lakas mo ang makakatulong sa Developer role?', 'Personal'));
+        $this->assertTrue($this->matchesSelectedType('Unsa nga pamaagi imong gigamit sa deployment checklist?', 'Technical'));
     }
 
     public function test_short_or_unavailable_answers_require_a_role_grounded_evidence_prompt(): void
@@ -324,6 +375,18 @@ class InterviewFollowUpReliabilityTest extends TestCase
         $this->assertFalse($this->isReliable(
             'Since you migrated AWS, what happened next?',
             '(Skipped or no answer)'
+        ));
+        $this->assertTrue($this->isReliable(
+            'Paano mo inayos ang talaan para sa Nurse role?',
+            'Inayos ko ang talaan.',
+            'Nurse',
+            true
+        ));
+        $this->assertTrue($this->isReliable(
+            'Kung may bagong talaan sa Nurse role, ano ang gagawin mo?',
+            '(Skipped or no answer)',
+            'Nurse',
+            true
         ));
     }
 
