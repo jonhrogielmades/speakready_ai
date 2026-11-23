@@ -538,12 +538,109 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertRedirect();
 
  $this->assertDatabaseHas('ai_provider_evaluation_runs', [
- 'benchmark_version' => 'user-request-provider-comparison-v1',
+ 'benchmark_version' => 'user-request-provider-comparison-v2',
  'status' => 'completed',
  'provider_count' => 0,
  'case_count' => 0,
  ]);
  }
+
+  public function test_user_request_question_comparison_uses_supported_saved_session_size(): void
+  {
+  $this->seedProductionProviderOutputs();
+  $session = InterviewSession::latest('id')->firstOrFail();
+  $method = new \ReflectionMethod(AiProviderEvaluationService::class, 'userRequestComparisonCases');
+  $method->setAccessible(true);
+  $evaluation = app(AiProviderEvaluationService::class);
+
+  foreach ([1, 3, 5, 10] as $count) {
+  $session->update(['num_questions' => $count]);
+  $cases = $method->invoke($evaluation);
+  $this->assertSame($count, $cases[0]['num_questions']);
+  }
+
+  $session->update(['num_questions' => 20]);
+  $cases = $method->invoke($evaluation);
+  $this->assertSame(10, $cases[0]['num_questions']);
+  }
+
+  public function test_question_comparison_does_not_credit_a_failed_provider_with_another_providers_output(): void
+  {
+  $this->clearProviderEnv();
+  $admin = User::factory()->create(['is_admin' => true, 'status' => 'active']);
+  $openAi = $this->configuredProvider('OpenAI', true);
+  $this->configuredProvider('Groq', false);
+  $this->configuredProvider('Cohere', false);
+  $this->seedProductionProviderOutputs();
+  $answer = InterviewAnswer::with('question')->latest('id')->firstOrFail();
+
+  config()->set('services.ai_providers.circuit_breaker_in_tests', true);
+  config()->set('services.ai_providers.circuit_breaker_enabled', true);
+  foreach (range(1, 3) as $index) {
+  AiProviderLog::create([
+  'provider_id' => $openAi->id,
+  'module' => 'question_generation',
+  'endpoint' => 'openai',
+  'response_time_ms' => 100,
+  'status' => 'failed',
+  ]);
+  }
+  $groqQuestionCalls = 0;
+
+  Http::fake(function ($request) use ($answer, &$groqQuestionCalls) {
+  $prompt = (string) (
+  data_get($request->data(), 'messages.1.content')?? data_get($request->data(), 'messages.0.content')?? ''
+  );
+  $url = (string) $request->url();
+  $providerLabel = match (true) {
+  str_contains($url, 'groq') => 'Groq',
+  str_contains($url, 'cohere') => 'Cohere',
+  default => 'OpenAI',
+  };
+
+  if (str_contains($prompt, 'mock interview questions')) {
+  if ($providerLabel === 'OpenAI') {
+  return Http::response([], 503);
+  }
+
+  if ($providerLabel === 'Groq') {
+  $groqQuestionCalls++;
+  }
+
+  return Http::response($this->providerJsonResponse($providerLabel, [
+  'questions' => [
+  'How would you handle a customer complaint as a Customer Service Representative?',
+  'How would you explain an account delay to a customer during a service call?',
+  'What follow-up steps would you take after checking a customer account?',
+  ],
+  ]), 200);
+  }
+
+  return Http::response($this->providerJsonResponse($providerLabel, $this->validFeedbackBenchmarkResponse(
+  $providerLabel,
+  $answer->id,
+  $answer->question?->question_text,
+  false,
+  $answer->answer_text
+  )), 200);
+  });
+
+  $this->actingAs($admin)
+  ->post(route('admin.ai.evaluation.run'))
+  ->assertRedirect();
+
+  $this->assertDatabaseHas('ai_provider_evaluation_results', [
+  'provider_key' => 'openai',
+  'task_type' => 'question_generation',
+  'status' => 'failed',
+  ]);
+  $this->assertDatabaseHas('ai_provider_evaluation_results', [
+  'provider_key' => 'groq',
+  'task_type' => 'question_generation',
+  'status' => 'success',
+  ]);
+  $this->assertSame(1, $groqQuestionCalls, 'A cooling down OpenAI case must not call Groq as its fallback.');
+  }
 
  public function test_admin_comparison_requires_three_or_more_active_ai_apis(): void
  {
@@ -561,7 +658,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSessionHas('message');
 
  $run = AiProviderEvaluationRun::firstOrFail();
- $this->assertSame('user-request-provider-comparison-v1', $run->benchmark_version);
+ $this->assertSame('user-request-provider-comparison-v2', $run->benchmark_version);
  $this->assertSame(2, $run->provider_count);
  $this->assertSame(0, $run->case_count);
  $this->assertStringContainsString('at least 3 active configured AI APIs', $run->summary['note']?? '');
@@ -619,7 +716,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertRedirect();
 
  $this->assertDatabaseHas('ai_provider_evaluation_runs', [
- 'benchmark_version' => 'user-request-provider-comparison-v1',
+ 'benchmark_version' => 'user-request-provider-comparison-v2',
  'status' => 'completed',
  'provider_count' => 3,
  'case_count' => 6,

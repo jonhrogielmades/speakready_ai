@@ -8,12 +8,75 @@ use Tests\TestCase;
 
 class AiProviderEvaluationBenchmarkTest extends TestCase
 {
+    public function test_question_benchmark_covers_every_supported_interview_size(): void
+    {
+        $questionCases = collect($this->invokePrivate('benchmarkCases'))
+            ->where('task_type', 'question_generation')
+            ->values();
+
+        $this->assertSame([1, 3, 5, 10], $questionCases->pluck('num_questions')->all());
+        $this->assertCount(4, $questionCases->pluck('case_key')->unique());
+    }
+
+    public function test_question_score_passes_one_relevant_question_and_rejects_generic_or_missing_questions(): void
+    {
+        $cases = collect($this->invokePrivate('benchmarkCases'))->where('task_type', 'question_generation');
+        $oneQuestionCase = $cases->firstWhere('num_questions', 1);
+        $relevantQuestion = 'How would you handle a customer complaint as a Customer Service Representative?';
+
+        $valid = $this->invokePrivate('scoreQuestionGeneration', [[$relevantQuestion], $oneQuestionCase]);
+        $this->assertSame(100, $valid['schema_score']);
+        $this->assertSame(100, $valid['accuracy_score']);
+        $this->assertSame(1, $valid['evidence']['role_relevant_count']);
+
+        $generic = $this->invokePrivate('scoreQuestionGeneration', [['What motivates you in this role and how do you prepare?'], $oneQuestionCase]);
+        $this->assertSame(0, $generic['accuracy_score']);
+
+        $fiveQuestionCase = $cases->firstWhere('num_questions', 5);
+        $short = $this->invokePrivate('scoreQuestionGeneration', [array_fill(0, 3, $relevantQuestion), $fiveQuestionCase]);
+        $this->assertSame(60, $short['schema_score']);
+        $this->assertLessThan(95, $short['accuracy_score']);
+    }
+
+    public function test_question_generation_latency_budget_scales_with_requested_count(): void
+    {
+        $this->assertLessThan(95, $this->invokePrivate('questionGenerationLatencyScore', [6000, 1]));
+        $this->assertSame(100, $this->invokePrivate('questionGenerationLatencyScore', [6000, 10]));
+    }
+
+    public function test_question_score_accepts_role_duty_paraphrases_but_rejects_generic_short_title_questions(): void
+    {
+        $softwareCase = [
+            'case_key' => 'user_request_questions_session_1',
+            'num_questions' => 1,
+            'target_position' => 'Software Engineer',
+            'focus' => 'General interview readiness',
+            'expected_terms' => ['unrelated', 'answer', 'words'],
+        ];
+        $softwareScore = $this->invokePrivate('scoreQuestionGeneration', [[
+            'How would you debug an API outage during a production release?',
+        ], $softwareCase]);
+        $this->assertSame(100, $softwareScore['accuracy_score']);
+
+        $itCase = [
+            'case_key' => 'user_request_questions_session_2',
+            'num_questions' => 1,
+            'target_position' => 'IT',
+            'focus' => 'General interview readiness',
+            'expected_terms' => ['motivates'],
+        ];
+        $genericScore = $this->invokePrivate('scoreQuestionGeneration', [[
+            'What motivates you in this role and how do you prepare?',
+        ], $itCase]);
+        $this->assertSame(0, $genericScore['accuracy_score']);
+    }
+
     public function test_feedback_benchmark_covers_strong_short_irrelevant_multilingual_and_skipped_answers(): void
     {
         $cases = collect($this->invokePrivate('benchmarkCases'));
         $feedbackCases = $cases->where('task_type', 'feedback_generation')->values();
 
-        $this->assertSame('panelist-evidence-v2', AiProviderEvaluationService::BENCHMARK_VERSION);
+        $this->assertSame('panelist-evidence-v3', AiProviderEvaluationService::BENCHMARK_VERSION);
         $this->assertCount(6, $feedbackCases);
         $this->assertContains('ceb', $feedbackCases->pluck('session_data.target_language')->all());
 

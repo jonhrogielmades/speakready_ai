@@ -17,8 +17,8 @@ use Illuminate\Support\Facades\Schema;
 
 class AiProviderEvaluationService
 {
-    public const BENCHMARK_VERSION = 'panelist-evidence-v2';
-    public const USER_REQUEST_COMPARISON_VERSION = 'user-request-provider-comparison-v1';
+    public const BENCHMARK_VERSION = 'panelist-evidence-v3';
+    public const USER_REQUEST_COMPARISON_VERSION = 'user-request-provider-comparison-v2';
     public const PANELIST_MIN_PROVIDER_COUNT = 3;
 
     private const INTERVIEW_RANKING_TASKS = ['question_generation', 'feedback_generation'];
@@ -455,7 +455,15 @@ class AiProviderEvaluationService
             return [];
         }
 
-        $questionCount = max(3, min(10, (int) ($session->num_questions ?: 3)));
+        $savedQuestionCount = (int) ($session->num_questions ?: 3);
+        // Older sessions may predate the current choices. Compare the smallest
+        // supported size that still covers the saved interview request.
+        $questionCount = match (true) {
+            $savedQuestionCount <= 1 => 1,
+            $savedQuestionCount <= 3 => 3,
+            $savedQuestionCount <= 5 => 5,
+            default => 10,
+        };
 
         return [
             [
@@ -661,7 +669,8 @@ class AiProviderEvaluationService
 
         try {
             if ($case['task_type'] === 'question_generation') {
-                $questions = AIService::generateQuestions(
+                $roleTerms = $this->questionRoleTerms($case);
+                $generation = AIService::generateQuestionsWithProvider(
                     $case['num_questions'],
                     $case['target_position'],
                     $case['difficulty'],
@@ -677,10 +686,25 @@ class AiProviderEvaluationService
                     [
                         'timeout_seconds' => max(5, min(20, (int) env('AI_PROVIDER_EVALUATION_TIMEOUT', 10))),
                         'attempts' => 1,
+                        // A short first response gets one repair request for missing slots.
+                        'generation_attempts' => 2,
+                        // A comparison result must belong to the provider being tested.
+                        'max_providers' => 1,
+                        'only_requested_provider' => true,
+                        // A full count of generic or malformed questions is not a pass.
+                        // Reject those items before the generator decides it is done.
+                        'question_validator' => fn (string $question): bool => $this->isQuestionLike($question)
+                            && $this->isQuestionRoleRelevant($question, $case, $roleTerms),
                     ]
                 );
+                $providerUsed = $generation['provider'] ?? null;
+                $questions = $providerUsed === $provider['provider_key']
+                    ? (array) ($generation['questions'] ?? [])
+                    : [];
 
                 $score = $this->scoreQuestionGeneration($questions, $case);
+                $score['evidence']['attempted_providers'] = $generation['attempted_providers'] ?? [];
+                $score['evidence']['provider_used'] = $providerUsed;
                 $output = json_encode(['questions' => $questions], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             } else {
                 $feedback = AIService::generateFeedback(
@@ -696,7 +720,9 @@ class AiProviderEvaluationService
             }
 
             $responseTime = (int) round((microtime(true) - $startedAt) * 1000);
-            $score['reliability_score'] = $this->latencyScore($responseTime);
+            $score['reliability_score'] = $case['task_type'] === 'question_generation'
+                ? $this->questionGenerationLatencyScore($responseTime, (int) $case['num_questions'])
+                : $this->latencyScore($responseTime);
             $qualityGate = $this->reliabilityPolicy()->evaluate([
                 ...$score,
                 'result_success_rate' => 100,
@@ -982,16 +1008,24 @@ class AiProviderEvaluationService
             $questions
         )));
         $expectedCount = max(1, (int) $case['num_questions']);
-        $schemaScore = min(100, (int) round((count($questions) / $expectedCount) * 100));
+        $actualCount = count($questions);
+        $schemaScore = $actualCount === $expectedCount
+            ? 100
+            : $this->scoreValue((min($actualCount, $expectedCount) / max($actualCount, $expectedCount)) * 100);
         $uniqueCount = count(array_unique(array_map('mb_strtolower', $questions)));
-        $termHits = $this->termHits(implode(' ', $questions), $case['expected_terms']);
-        $questionLike = collect($questions)->filter(
-            fn (string $question): bool => str_ends_with(trim($question), '?') && str_word_count($question) >= 6
+        $expectedTerms = (array) ($case['expected_terms'] ?? []);
+        $termHits = $this->termHits(implode(' ', $questions), $expectedTerms);
+        $roleTerms = $this->questionRoleTerms($case);
+        $roleRelevantCount = collect($questions)->filter(
+            fn (string $question): bool => $this->isQuestionRoleRelevant($question, $case, $roleTerms)
         )->count();
-        $roleScore = min(100, count($termHits) * 18);
+        $questionLike = collect($questions)->filter(fn (string $question): bool => $this->isQuestionLike($question))->count();
+        $roleScore = $actualCount === 0 ? 0 : $this->scoreValue(($roleRelevantCount / $actualCount) * 100);
         $formatScore = $questions === [] ? 0 : (int) round(($questionLike / max(1, count($questions))) * 100);
         $varietyScore = count($questions) === 0 ? 0 : (int) round(($uniqueCount / max(1, count($questions))) * 100);
-        $accuracyScore = $this->scoreValue(($roleScore * 0.5) + ($formatScore * 0.3) + ($varietyScore * 0.2));
+        // Each requested question must be usable; unrelated, malformed, or repeated
+        // output cannot be hidden by averaging it with otherwise good questions.
+        $accuracyScore = min($roleScore, $formatScore, $varietyScore);
         $safetyScore = $this->safetyScore(implode(' ', $questions));
         $qualityScore = $this->scoreValue(($schemaScore * 0.35) + ($accuracyScore * 0.45) + ($safetyScore * 0.20));
 
@@ -1001,15 +1035,80 @@ class AiProviderEvaluationService
             'accuracy_score' => $accuracyScore,
             'safety_score' => $safetyScore,
             'evidence' => [
-                'generated_count' => count($questions),
+                'generated_count' => $actualCount,
                 'expected_count' => $expectedCount,
                 'matched_expected_terms' => $termHits,
+                'role_relevant_count' => $roleRelevantCount,
                 'question_like_count' => $questionLike,
                 'unique_count' => $uniqueCount,
                 'generated_questions' => $questions,
                 'sample_output' => array_slice($questions, 0, 3),
             ],
         ];
+    }
+
+    private function questionRoleTerms(array $case): array
+    {
+        $position = mb_strtolower(trim((string) ($case['target_position'] ?? '')));
+        $focus = mb_strtolower(trim((string) ($case['focus'] ?? '')));
+        $isUserRequest = str_starts_with((string) ($case['case_key'] ?? ''), 'user_request_');
+        $contextTerms = $isUserRequest
+            ? preg_split('/[^\pL\pN]+/u', $focus) ?: []
+            : (array) ($case['expected_terms'] ?? []);
+        $genericTerms = [
+            'local', 'medium', 'hard', 'easy', 'interview', 'question', 'role', 'work',
+            'general', 'answer', 'practice', 'screening', 'readiness', 'handling',
+            'candidate', 'experience', 'skills', 'checking', 'managing',
+        ];
+        $acronymTerms = match ($position) {
+            'qa' => ['quality', 'assurance', 'testing', 'defect'],
+            'hr' => ['human resources', 'recruiting', 'hiring', 'employee'],
+            'rn' => ['registered nurse', 'nursing', 'patient', 'clinical'],
+            'it' => ['information technology', 'technical', 'systems', 'network', 'computer'],
+            default => [],
+        };
+        $dutyTerms = match (true) {
+            preg_match('/\b(?:software|developer|programmer|web|devops|backend|frontend|full.stack)\b/u', $position) === 1
+                => ['api', 'debug', 'deploy', 'code', 'database', 'application', 'programming'],
+            preg_match('/\b(?:data analyst|data engineer|data scientist)\b/u', $position) === 1
+                => ['sql', 'pipeline', 'dataset', 'analysis', 'database'],
+            preg_match('/\b(?:customer service|customer support|call center|bpo)\b/u', $position) === 1
+                => ['customer', 'client', 'complaint', 'call', 'account', 'support'],
+            preg_match('/\b(?:nurse|doctor|clinical|caregiver)\b/u', $position) === 1
+                => ['patient', 'clinical', 'care', 'medication', 'triage', 'nursing'],
+            preg_match('/\b(?:teacher|educator|tutor)\b/u', $position) === 1
+                => ['student', 'lesson', 'classroom', 'teaching', 'learning'],
+            preg_match('/\b(?:sales|account executive)\b/u', $position) === 1
+                => ['customer', 'client', 'sale', 'prospect', 'objection', 'quota'],
+            preg_match('/\b(?:accountant|accounting|bookkeeper|finance)\b/u', $position) === 1
+                => ['invoice', 'ledger', 'reconciliation', 'payroll', 'audit'],
+            preg_match('/\b(?:warehouse|logistics|supply chain)\b/u', $position) === 1
+                => ['inventory', 'shipment', 'delivery', 'stock', 'warehouse'],
+            default => [],
+        };
+
+        return array_values(array_unique(array_filter(array_merge(
+            $contextTerms,
+            preg_split('/[^\pL\pN]+/u', $position) ?: [],
+            $acronymTerms,
+            $dutyTerms
+        ), fn (string $term): bool => (mb_strlen($term) >= 4 || in_array(mb_strtolower($term), ['api', 'sql'], true))
+            && ! in_array(mb_strtolower($term), $genericTerms, true))));
+    }
+
+    private function isQuestionRoleRelevant(string $question, array $case, array $roleTerms): bool
+    {
+        return app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
+            $question,
+            (string) ($case['target_position'] ?? ''),
+            $case['job_description'] ?? null
+        ) && ($roleTerms === [] || $this->termHits($question, $roleTerms) !== []);
+    }
+
+    private function isQuestionLike(string $question): bool
+    {
+        return str_ends_with(trim($question), '?')
+            && count(preg_split('/\s+/u', trim($question)) ?: []) >= 4;
     }
 
     private function scoreFeedbackGeneration(array $feedback, array $case): array
@@ -1562,7 +1661,11 @@ class AiProviderEvaluationService
 
     private function isUserRequestComparisonRun(?AiProviderEvaluationRun $run): bool
     {
-        return $run?->benchmark_version === self::USER_REQUEST_COMPARISON_VERSION;
+        // Older runs remain readable after the scoring policy changes.
+        return in_array($run?->benchmark_version, [
+            'user-request-provider-comparison-v1',
+            self::USER_REQUEST_COMPARISON_VERSION,
+        ], true);
     }
 
     private function isUserRequestComparisonResult(AiProviderEvaluationResult $result): bool
@@ -1839,28 +1942,30 @@ class AiProviderEvaluationService
 
     private function benchmarkCases(): array
     {
-        return [
-            [
-                'case_key' => 'questions_customer_service_ph',
-                'task_type' => 'question_generation',
-                'title' => 'Question generation for local customer service',
-                'evidence_focus' => 'Provider must return role-specific interview questions in valid JSON.',
-                'num_questions' => 3,
-                'target_position' => 'Customer Service Representative',
-                'difficulty' => 'Medium',
-                'focus' => 'HR screening, customer complaints, call handling, and BPO readiness',
-                'question_types' => ['behavioral', 'situational'],
-                'expected_terms' => [
-                    'customer',
-                    'service',
-                    'call',
-                    'complaint',
-                    'client',
-                    'bpo',
-                    'representative',
-                    'local',
-                ],
+        $questionCases = array_map(static fn (int $count): array => [
+            'case_key' => $count === 3 ? 'questions_customer_service_ph' : 'questions_customer_service_ph_'.$count,
+            'task_type' => 'question_generation',
+            'title' => 'Generate '.$count.' local customer service interview '.($count === 1 ? 'question' : 'questions'),
+            'evidence_focus' => 'Provider must return all '.$count.' role-specific interview '.($count === 1 ? 'question' : 'questions').' in valid JSON.',
+            'num_questions' => $count,
+            'target_position' => 'Customer Service Representative',
+            'difficulty' => 'Medium',
+            'focus' => 'HR screening, customer complaints, call handling, and BPO readiness',
+            'question_types' => ['behavioral', 'situational'],
+            'expected_terms' => [
+                'customer',
+                'service',
+                'call',
+                'complaint',
+                'client',
+                'bpo',
+                'representative',
+                'local',
             ],
+        ], [1, 3, 5, 10]);
+
+        return [
+            ...$questionCases,
             [
                 'case_key' => 'feedback_star_customer_issue',
                 'task_type' => 'feedback_generation',
@@ -2456,6 +2561,23 @@ class AiProviderEvaluationService
         return $this->scoreValue(100 - (($latencyMs - 1500) / 10500 * 80));
     }
 
+    private function questionGenerationLatencyScore(int $latencyMs, int $questionCount): int
+    {
+        // Generating ten distinct questions takes longer than generating one.
+        // Keep the actual measured latency, but judge it against the work size.
+        $fastLimitMs = 1500 + (max(1, min(10, $questionCount)) * 1500);
+        if ($latencyMs <= $fastLimitMs) {
+            return 100;
+        }
+
+        $slowLimitMs = $fastLimitMs + 10500;
+        if ($latencyMs >= $slowLimitMs) {
+            return 20;
+        }
+
+        return $this->scoreValue(100 - (($latencyMs - $fastLimitMs) / 10500 * 80));
+    }
+
     private function safetyScore(?string $text): int
     {
         $text = mb_strtolower((string) $text);
@@ -2481,9 +2603,14 @@ class AiProviderEvaluationService
 
     private function termHits(string $text, array $terms): array
     {
-        $text = mb_strtolower($text);
+        return array_values(array_filter($terms, static function (string $term) use ($text): bool {
+            $term = trim($term);
 
-        return array_values(array_filter($terms, fn (string $term): bool => str_contains($text, mb_strtolower($term))));
+            return $term !== '' && preg_match(
+                '/(?<![\pL\pN])'.preg_quote($term, '/').'(?![\pL\pN])/iu',
+                $text
+            ) === 1;
+        }));
     }
 
     private function scoreValue(mixed $value): int

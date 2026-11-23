@@ -5820,7 +5820,7 @@ return response()->json([
  $situational = preg_match('/\b(?:if|suppose|imagine|scenario|would you|might you|how would|what would|how do you (?:handle|respond|approach|prioritize|adapt|confirm)|what do you do when)\b/i', $questionIntent) === 1;
  $hasScenario = preg_match('/\b(?:if|suppose|imagine|scenario|in the event|what do you do when)\b/i', $questionIntent) === 1;
  $technicalMethod = preg_match('/\b(?:diagnos\w*|debug\w*|troubleshoot\w*|design|code|test\w*|verif\w*|validat\w*|implement\w*|monitor\w*|configur\w*|architect\w*)\b/i', $questionIntent) === 1;
- $technicalPastMethodProbe = preg_match('/\b(?:how|what|which)\b.{0,80}\b(?:did|do|would|could)\s+you\b.{0,80}\b(?:diagnos\w*|debug\w*|troubleshoot\w*|design|cod\w*|test\w*|verif\w*|validat\w*|implement\w*|monitor\w*|configur\w*|architect\w*|secur\w*|protect\w*)\b/i', $questionIntent) === 1;
+ $technicalPastMethodProbe = preg_match('/\b(?:how|what|which)\b.{0,80}\b(?:did|do|would|could)\s+you\b.{0,80}\b(?:check\w*|inspect\w*|assess\w*|evaluat\w*|measur\w*|compar\w*|diagnos\w*|debug\w*|troubleshoot\w*|design|cod\w*|test\w*|verif\w*|validat\w*|implement\w*|monitor\w*|configur\w*|architect\w*|secur\w*|protect\w*)\b/i', $questionIntent) === 1;
 
  // Interviewer replies can be in Filipino, Tagalog, or Cebuano. Recognize
  // their question intent as well as English so the chosen type is not rejected

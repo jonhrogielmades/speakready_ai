@@ -141,7 +141,22 @@ class InterviewQuestionTypeSelectionTest extends TestCase
         $this->assertTrue($this->invoke('questionMatchesSelectedType', $behavioral, 'Behavioral'));
         $this->assertFalse($this->invoke('questionMatchesSelectedType', $behavioral, 'Technical'));
         $this->assertTrue($this->invoke('questionMatchesSelectedType', $technical, 'Technical'));
-        $this->assertFalse($this->invoke('questionMatchesSelectedType', $technical, 'Situational'));
+        // A hypothetical technical problem can satisfy both interview types.
+        $this->assertTrue($this->invoke('questionMatchesSelectedType', $technical, 'Situational'));
+    }
+
+    public function test_past_tense_procedure_question_remains_technical(): void
+    {
+        $this->assertTrue($this->invoke(
+            'questionMatchesSelectedType',
+            'What did you check in the medication record before giving the dose as a Nurse?',
+            'Technical'
+        ));
+        $this->assertFalse($this->invoke(
+            'questionMatchesSelectedType',
+            'Can you tell me about a time you worked with a technical team?',
+            'Technical'
+        ));
     }
 
     public function test_chat_reply_saves_each_single_selected_type_across_response_modes(): void

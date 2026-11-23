@@ -146,4 +146,181 @@ class InterviewQuestionTypePromptTest extends TestCase
 
         $this->assertSame(['How would you check lifeboat safety equipment before a vessel departure?'], $questions);
     }
+
+    public function test_question_generation_fills_ten_slots_from_two_short_provider_responses(): void
+    {
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+        ]);
+
+        $prompts = [];
+        Http::fake([
+            'api.openai.com/*' => function ($request) use (&$prompts) {
+                $prompts[] = (string) data_get($request->data(), 'messages.1.content', '');
+                $start = count($prompts) === 1 ? 1 : 6;
+
+                return Http::response([
+                    'choices' => [[
+                        'finish_reason' => 'stop',
+                        'message' => ['content' => json_encode([
+                            'questions' => array_map(
+                                fn (int $number): string => "How would you handle Developer project task {$number}?",
+                                range($start, $start + 4)
+                            ),
+                        ])],
+                    ]],
+                ]);
+            },
+        ]);
+
+        $result = AIService::generateQuestionsWithProvider(
+            10,
+            'Developer',
+            'medium',
+            'Job Interview',
+            'openai',
+            requestOptions: ['max_providers' => 1, 'generation_attempts' => 2]
+        );
+
+        $this->assertTrue($result['complete']);
+        $this->assertSame(10, $result['requested_count']);
+        $this->assertSame(10, $result['generated_count']);
+        $this->assertCount(10, $result['questions']);
+        $this->assertCount(10, array_unique($result['questions']));
+        $this->assertCount(2, $prompts);
+        $this->assertStringContainsString('Generate 10 mock interview questions', $prompts[0]);
+        $this->assertStringContainsString('Generate 5 mock interview questions', $prompts[1]);
+        $this->assertStringContainsString('How would you handle Developer project task 1?', $prompts[1]);
+    }
+
+    public function test_question_generation_ignores_existing_and_duplicate_questions_while_filling_batch(): void
+    {
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+        ]);
+
+        $calls = 0;
+        Http::fake([
+            'api.openai.com/*' => function () use (&$calls) {
+                $calls++;
+                $questions = $calls === 1
+                    ? [
+                        'How would you plan a Developer release?',
+                        'How would you debug a Developer API outage?',
+                        'How would you write a Developer draft?',
+                    ]
+                    : [
+                        'How would you debug a Developer API outage!',
+                        'How would you review a Developer code change?',
+                        'How would you test a Developer deployment?',
+                    ];
+
+                return Http::response([
+                    'choices' => [[
+                        'finish_reason' => 'stop',
+                        'message' => ['content' => json_encode(['questions' => $questions])],
+                    ]],
+                ]);
+            },
+        ]);
+
+        $result = AIService::generateQuestionsWithProvider(
+            3,
+            'Developer',
+            'medium',
+            'Job Interview',
+            'openai',
+            requestOptions: [
+                'max_providers' => 1,
+                'generation_attempts' => 2,
+                'exclude_question_texts' => ['How would you plan a Developer release?'],
+                'question_validator' => fn (string $question): bool => ! str_contains($question, 'draft'),
+            ]
+        );
+
+        $this->assertTrue($result['complete']);
+        $this->assertSame(3, $result['generated_count']);
+        $this->assertSame([
+            'How would you debug a Developer API outage?',
+            'How would you review a Developer code change?',
+            'How would you test a Developer deployment?',
+        ], $result['questions']);
+        $this->assertSame(2, $calls);
+    }
+
+    public function test_question_generation_preserves_valid_partial_output_after_a_later_request_fails(): void
+    {
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+        ]);
+
+        $calls = 0;
+        Http::fake([
+            'api.openai.com/*' => function () use (&$calls) {
+                $calls++;
+                if ($calls === 1) {
+                    return Http::response([
+                        'choices' => [[
+                            'finish_reason' => 'stop',
+                            'message' => ['content' => json_encode([
+                                'questions' => ['How would you investigate a Developer deployment issue?'],
+                            ])],
+                        ]],
+                    ]);
+                }
+
+                return Http::response([], 503);
+            },
+        ]);
+
+        $result = AIService::generateQuestionsWithProvider(
+            3,
+            'Developer',
+            'medium',
+            'Job Interview',
+            'openai',
+            requestOptions: ['max_providers' => 1, 'generation_attempts' => 2, 'attempts' => 1]
+        );
+
+        $this->assertFalse($result['complete']);
+        $this->assertSame(3, $result['requested_count']);
+        $this->assertSame(1, $result['generated_count']);
+        $this->assertSame('openai', $result['provider']);
+        $this->assertSame(['How would you investigate a Developer deployment issue?'], $result['questions']);
+        $this->assertSame(2, $calls);
+    }
+
+    public function test_strict_requested_provider_does_not_credit_a_different_provider(): void
+    {
+        AiProvider::create([
+            'name' => 'Gemini',
+            'api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta',
+            'api_key' => Crypt::encryptString('test-gemini-key'),
+            'status' => 'active',
+        ]);
+        Http::fake(['*' => Http::response(['questions' => ['How would you debug a Developer issue?']])]);
+
+        $result = AIService::generateQuestionsWithProvider(
+            1,
+            'Developer',
+            'medium',
+            'Job Interview',
+            'local',
+            requestOptions: ['only_requested_provider' => true]
+        );
+
+        $this->assertFalse($result['complete']);
+        $this->assertSame([], $result['questions']);
+        $this->assertSame([], $result['attempted_providers']);
+        Http::assertNothingSent();
+    }
 }

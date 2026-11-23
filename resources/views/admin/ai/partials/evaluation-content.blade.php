@@ -617,7 +617,14 @@
                         @foreach($selectedRun->results as $result)
                             <tr>
                                 <td data-label="Provider" class="fw-bold">{{ $result->provider_name }}</td>
-                                <td data-label="Task">{{ ucfirst(str_replace('_', ' ', $result->task_type)) }}</td>
+                                <td data-label="Task">
+                                    {{ ucfirst(str_replace('_', ' ', $result->task_type)) }}
+                                    @if($result->task_type === 'question_generation' && (int) data_get($result->evidence, 'expected_count', 0) > 0)
+                                        <small class="d-block text-muted">
+                                            {{ (int) data_get($result->evidence, 'generated_count', 0) }}/{{ (int) data_get($result->evidence, 'expected_count', 0) }} generated
+                                        </small>
+                                    @endif
+                                </td>
                                 <td data-label="Status">
                                     <span class="stat-badge {{ $result->status === 'success' ? 'success' : 'danger' }}">
                                         {{ ucfirst($result->status) }}

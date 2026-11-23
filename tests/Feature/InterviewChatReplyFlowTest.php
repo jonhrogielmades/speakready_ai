@@ -176,6 +176,73 @@ class InterviewChatReplyFlowTest extends TestCase
         Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
     }
 
+    public function test_ten_question_session_uses_ai_for_every_question_when_provider_replies_are_valid(): void
+    {
+        Setting::setVal('int_follow_up', true, 'interview', 'boolean');
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+            'is_primary' => true,
+        ]);
+
+        $turns = [
+            ['I redesigned the approval queue and reduced waiting time for invoices.', 'How did you measure invoice waiting time after redesigning the approval queue for the Developer role?'],
+            ['I traced slow database queries and added an index to improve reporting.', 'What checks confirmed that the database index improved reporting for the Developer role?'],
+            ['I built a deployment checklist and used it to prevent release errors.', 'How did you test the deployment checklist before the release as a Developer?'],
+            ['I reviewed API error logs and found a timeout in payment processing.', 'What did the API error logs reveal about payment processing timeouts in your Developer role?'],
+            ['I paired with a designer to simplify a confusing checkout form.', 'How did the designer feedback shape the checkout form you changed as a Developer?'],
+            ['I wrote automated tests for user registration and identified edge cases.', 'Which registration edge cases did your automated tests uncover as a Developer?'],
+            ['I documented a customer support handoff and clarified ownership.', 'How did you clarify ownership during the support handoff in the Developer role?'],
+            ['I monitored server memory during a traffic spike and scaled a worker.', 'What did server memory monitoring show before you scaled the worker as a Developer?'],
+            ['I changed the password reset flow after an accessibility review.', 'For my final question, how did the accessibility review change the password reset flow in your Developer work?'],
+        ];
+        $pendingReplies = array_column($turns, 1);
+        Http::fake(['api.openai.com/*' => function () use (&$pendingReplies) {
+            return Http::response([
+                'choices' => [['finish_reason' => 'stop', 'message' => ['content' => array_shift($pendingReplies)]]],
+            ]);
+        }]);
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        [$session, $question] = $this->interview($user, $this->category(), 'text');
+        $session->forceFill(['num_questions' => 10])->save();
+        $question->forceFill(['source_type' => 'ai_generated', 'ai_provider' => 'openai'])->save();
+
+        foreach ($turns as [$answer, $expectedQuestion]) {
+            $response = $this->actingAs($user)
+                ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+                ->postJson(route('interview.chatReply'), [
+                    'session_id' => $session->id,
+                    'question_id' => $question->id,
+                    'answer_text' => $answer,
+                ])
+                ->assertOk()
+                ->assertJsonPath('source_type', 'ai_generated')
+                ->assertJsonPath('ai_provider', 'openai')
+                ->assertJsonPath('next_question_text', $expectedQuestion);
+
+            $question = Question::findOrFail($response->json('next_question_id'));
+        }
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
+            ->postJson(route('interview.chatReply'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+                'answer_text' => 'I applied the accessibility findings and checked the updated reset form.',
+            ])
+            ->assertOk()
+            ->assertJsonPath('interview_completed', true);
+
+        $this->assertSame(10, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(10, InterviewAnswer::where('interview_session_id', $session->id)->count());
+        $this->assertSame(10, Question::where('interview_session_id', $session->id)->where('source_type', 'ai_generated')->count());
+        $this->assertSame(0, Question::where('interview_session_id', $session->id)->where('source_type', 'local_follow_up_fallback')->count());
+        Http::assertSentCount(9);
+    }
+
     public function test_grounded_provider_questions_with_natural_wording_and_job_terms_are_not_backups(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
