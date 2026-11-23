@@ -2717,7 +2717,7 @@ EOT;
  'timeout_seconds' => $runtimeInt('timeout_seconds', 'services.ai_feedback.timeout_seconds', 'AI_FEEDBACK_TIMEOUT', 45, 2, 60),
  'attempts' => $runtimeInt('http_attempts', 'services.ai_feedback.http_attempts', 'AI_FEEDBACK_HTTP_ATTEMPTS', 2, 1, 2),
  'response_format' => $responseFormat,
- 'model' => trim((string) RuntimeConfiguration::get('services.openai.feedback_model', 'OPENAI_FEEDBACK_MODEL', config('services.openai.model', self::PROVIDER_DEFAULT_MODELS['openai']))),
+ 'model' => self::feedbackOpenAiModel(),
  'max_output_tokens' => $configuredOutputTokens,
  'require_finish_reason' => true,
  ];
@@ -3323,6 +3323,7 @@ EOT;
  'timeout_seconds' => self::fairRequestTimeoutSeconds($remaining, 1, 25),
  'request_deadline_at' => $providerDeadlineAt,
  'attempts' => 1,
+ 'model' => $provider === 'openai' ? self::feedbackOpenAiModel() : null,
  'max_output_tokens' => 2048,
  'require_finish_reason' => true,
  'response_format' => [
@@ -3505,6 +3506,7 @@ EOT;
  'timeout_seconds' => self::fairRequestTimeoutSeconds($remaining, 1, 25),
  'request_deadline_at' => $providerDeadlineAt,
  'attempts' => 1,
+ 'model' => $provider === 'openai' ? self::feedbackOpenAiModel() : null,
  'max_output_tokens' => 2048,
  'require_finish_reason' => true,
  'response_format' => [
@@ -3566,6 +3568,7 @@ EOT;
  'timeout_seconds' => self::fairRequestTimeoutSeconds($repairRemaining, 1, 15),
  'request_deadline_at' => $providerDeadlineAt,
  'attempts' => 1,
+ 'model' => $provider === 'openai' ? self::feedbackOpenAiModel() : null,
  'max_output_tokens' => 1400,
  'require_finish_reason' => true,
  'response_format' => [
@@ -6087,7 +6090,19 @@ PROMPT;
  return "Write {$contentScope} in {$target}. Keep names, company names, technical terms, acronyms, numbers, and JSON keys unchanged unless translating them would be natural and unambiguous. ";
  }
 
-  /**
+ /** Use the compact feedback default unless a dedicated model was selected. */
+ private static function feedbackOpenAiModel(): string
+ {
+  $model = trim((string) RuntimeConfiguration::get(
+   'services.openai.feedback_model',
+   'OPENAI_FEEDBACK_MODEL',
+   'gpt-4o-mini'
+  ));
+
+  return $model !== '' ? $model : 'gpt-4o-mini';
+ }
+
+ /**
   * Return the configured provider cascade for strict Detailed Review calls.
   *
   * The dedicated priority lets production deployments put their verified

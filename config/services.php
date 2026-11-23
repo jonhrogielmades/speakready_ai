@@ -103,7 +103,7 @@ return [
  'api_key' => env('OPENAI_API_KEY'),
  'api_endpoint' => env('OPENAI_API_URL', 'https://api.openai.com/v1'),
  'model' => env('OPENAI_MODEL', 'gpt-6-astra'),
- 'feedback_model' => env('OPENAI_FEEDBACK_MODEL') ?: env('OPENAI_MODEL', 'gpt-6-astra'),
+ 'feedback_model' => env('OPENAI_FEEDBACK_MODEL') ?: 'gpt-4o-mini',
  'json_mode_fallback' => env('OPENAI_JSON_MODE_FALLBACK', true),
  'tts_enabled' => env('AI_TTS_ENABLED', false),
  'tts_model' => env('OPENAI_TTS_MODEL', 'gpt-4o-mini-tts'),

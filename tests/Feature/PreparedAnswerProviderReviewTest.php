@@ -212,7 +212,13 @@ class PreparedAnswerProviderReviewTest extends TestCase
         $this->assertSame($validSummary['strengths'], $review['session_feedback']['strengths']);
         Http::assertSentCount(3);
         Http::assertSent(fn ($request): bool =>
-            data_get($request->data(), 'response_format.json_schema.name') === 'interview_session_feedback_correction');
+            data_get($request->data(), 'response_format.json_schema.name') === 'interview_session_feedback'
+            && data_get($request->data(), 'model') === 'gpt-4o-mini'
+            && data_get($request->data(), 'max_tokens') === 2048);
+        Http::assertSent(fn ($request): bool =>
+            data_get($request->data(), 'response_format.json_schema.name') === 'interview_session_feedback_correction'
+            && data_get($request->data(), 'model') === 'gpt-4o-mini'
+            && data_get($request->data(), 'max_tokens') === 1400);
     }
 
     public function test_last_prepared_answer_resumes_a_completed_unverified_review(): void

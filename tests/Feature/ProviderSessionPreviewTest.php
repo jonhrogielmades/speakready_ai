@@ -80,7 +80,9 @@ class ProviderSessionPreviewTest extends TestCase
         Http::assertSentCount(1);
         Http::assertSent(fn ($request): bool =>
             data_get($request->data(), 'response_format.json_schema.name') === 'interview_session_feedback'
+            && data_get($request->data(), 'model') === 'gpt-4o-mini'
             && data_get($request->data(), 'max_tokens') === 2048
+            && data_get($request->data(), 'max_completion_tokens') === null
             && array_keys((array) data_get($request->data(), 'response_format.json_schema.schema.properties', [])) === ['session_feedback']
         );
     }
@@ -104,6 +106,21 @@ class ProviderSessionPreviewTest extends TestCase
             < array_search(GenerateInterviewFeedback::class, $types, true)
         );
         Http::assertNothingSent();
+    }
+
+    public function test_blank_feedback_model_uses_the_small_default_for_the_overall_preview(): void
+    {
+        putenv('OPENAI_FEEDBACK_MODEL=');
+        $_ENV['OPENAI_FEEDBACK_MODEL'] = $_SERVER['OPENAI_FEEDBACK_MODEL'] = '';
+        [$session] = $this->completedSession();
+        Http::fake(Http::response($this->openAiResponse(['session_feedback' => $this->summary()])));
+
+        $this->assertTrue(app(ProviderSessionPreviewService::class)->generateAndSave($session));
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request): bool =>
+            data_get($request->data(), 'model') === 'gpt-4o-mini'
+            && data_get($request->data(), 'max_tokens') === 2048
+        );
     }
 
     public function test_current_provider_preview_finishes_prepared_report_without_a_second_summary_request(): void

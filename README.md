@@ -438,7 +438,7 @@ OPENAI_API_KEY=
 ```
 
 Provider URLs and model names are already listed in `.env.example`. Configure at least one provider key for AI generation, coaching, and feedback features.
-For Dokploy, set provider keys in the deployment environment; the Docker image does not include the local `.env`. Leave `OPENAI_FEEDBACK_MODEL` blank to use `OPENAI_MODEL` for feedback. If an explicitly selected feedback model is rejected as unavailable, feedback retries once with `OPENAI_MODEL` before trying another provider. Redeploy after changing these values so Laravel rebuilds its cached configuration.
+For Dokploy, set provider keys in the deployment environment; the Docker image does not include the local `.env`. Leave `OPENAI_FEEDBACK_MODEL` blank to use the compact `gpt-4o-mini` default for feedback, including the overall session summary. If the feedback model is rejected as unavailable, feedback retries once with `OPENAI_MODEL` before trying another provider. Redeploy after changing these values so Laravel rebuilds its cached configuration.
 
 Recommended hosted AI runtime limits:
 
