@@ -130,6 +130,7 @@ class AdminAiController extends Controller
  $runId = $request->integer('run')?: null;
  $dashboard = $evaluationService->dashboard($days, $runId);
  $generatedOutputs = collect($dashboard['generatedOutputs']?? []);
+  $selectedRun = $dashboard['selectedRun']?? null;
 
  return response()->json([
  'html' => view('admin.ai.partials.evaluation-content', $dashboard)->render(),
@@ -141,6 +142,9 @@ class AdminAiController extends Controller
  'generated_provider_count' => $generatedOutputs->where('has_generated_evidence', true)->count(),
  'generated_question_count' => $generatedOutputs->sum(fn (array $group): int => count($group['questions']?? [])),
  'generated_feedback_count' => $generatedOutputs->sum(fn (array $group): int => count($group['feedback']?? [])),
+  'run_status' => $selectedRun?->status,
+  'run_completed_cases' => $selectedRun?->results?->count()?? 0,
+  'run_total_cases' => $selectedRun?->case_count?? 0,
  'poll_ms' => 8000,
  ])->header('Cache-Control', 'no-store, no-cache, must-revalidate');
  }
@@ -150,7 +154,9 @@ class AdminAiController extends Controller
  AiProviderSchema::ensure(createIfMissing: true);
 
  $run = $evaluationService->runUserRequestComparison(auth()->id());
- $message = $run->case_count > 0? 'AI provider comparison completed. Every configured provider was evaluated against the same user request evidence for review and export.': ($run->summary['note']?? 'AI provider comparison did not run because no comparable user request evidence was available.');
+  $message = $run->status === 'running'
+  ? 'AI provider comparison started. Results will appear here as each provider finishes.'
+  : ($run->summary['note']?? 'AI provider comparison did not start because no comparable user request evidence was available.');
 
  return redirect()
  ->route('admin.ai.evaluation', ['run' => $run->id])

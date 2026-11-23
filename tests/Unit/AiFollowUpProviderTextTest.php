@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Models\AiProvider;
+use App\Models\AiProviderLog;
 use App\Models\InterviewSession;
 use App\Services\AIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -107,6 +108,142 @@ class AiFollowUpProviderTextTest extends TestCase
         Http::assertSentCount(3);
 
         Cache::forget('ai:chat:rate-limit:gemini');
+    }
+
+    public function test_follow_up_prompt_keeps_current_question_without_repeating_latest_answer(): void
+    {
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+        ]);
+
+        $prompt = '';
+        $question = 'How did your deployment checks improve reliability for the Developer role?';
+        Http::fake(['api.openai.com/*' => function ($request) use (&$prompt, $question) {
+            $prompt = (string) data_get($request->data(), 'messages.1.content', '');
+
+            return Http::response(['choices' => [[
+                'finish_reason' => 'stop',
+                'message' => ['content' => $question],
+            ]]]);
+        }]);
+
+        $answer = 'I improved deployment checks so our software releases became more reliable.';
+        $history = [
+            ['question' => 'What did you build first?', 'answer' => 'I fixed a database issue earlier.'],
+            ['question' => 'How did you improve the release?', 'answer' => $answer],
+        ];
+        $usedProvider = null;
+        $this->assertSame($question, AIService::generateChatReply(
+            new InterviewSession(['target_position' => 'Developer', 'difficulty' => 'medium']),
+            $history, $answer, 'openai', false, null, [], null, null,
+            fn (string $candidate): bool => str_contains($candidate, 'deployment checks'),
+            $usedProvider
+        ));
+        $this->assertSame('openai', $usedProvider);
+        $this->assertSame(1, substr_count($prompt, $answer));
+        $this->assertLessThan(6500, strlen($prompt));
+        $this->assertStringContainsString('How did you improve the release?', $prompt);
+        $this->assertStringContainsString('I fixed a database issue earlier.', $prompt);
+    }
+
+    public function test_follow_up_skips_a_cooling_down_provider_before_applying_provider_limit(): void
+    {
+        config([
+            'services.ai_providers.circuit_breaker_in_tests' => true,
+            'services.ai_providers.circuit_breaker_enabled' => true,
+            'services.interview_follow_up.max_providers' => 1,
+            'services.interview_follow_up.max_retries' => 1,
+        ]);
+        foreach ([
+            ['OpenAI', 'https://api.openai.com/v1/chat/completions/'],
+            ['Gemini', 'https://generativelanguage.googleapis.com/v1beta'],
+        ] as [$name, $endpoint]) {
+            AiProvider::create([
+                'name' => $name,
+                'api_endpoint' => $endpoint,
+                'api_key' => Crypt::encryptString('test-'.$name.'-key'),
+                'status' => 'active',
+            ]);
+        }
+        foreach (range(1, 3) as $attempt) {
+            AiProviderLog::create([
+                'module' => 'chat',
+                'endpoint' => 'openai',
+                'status' => 'failed',
+                'response_time_ms' => 100,
+            ]);
+        }
+
+        $question = 'How did your deployment checks improve reliability for the Developer role?';
+        Http::fake([
+            'api.openai.com/*' => Http::response(['error' => 'should not be called'], 503),
+            'generativelanguage.googleapis.com/*' => Http::response(['candidates' => [[
+                'finishReason' => 'STOP',
+                'content' => ['parts' => [['text' => $question]]],
+            ]]]),
+        ]);
+
+        $answer = 'I improved deployment checks so our software releases became more reliable.';
+        $usedProvider = null;
+        $this->assertTrue(app(\App\Services\AiProviderReliabilityService::class)->circuitState('openai', 'chat')['open']);
+        $this->assertSame($question, AIService::generateChatReply(
+            new InterviewSession(['target_position' => 'Developer', 'difficulty' => 'medium']),
+            [['question' => 'Tell me about your work.', 'answer' => $answer]],
+            $answer, 'openai', false, null, [], null, null,
+            fn (string $candidate): bool => str_contains($candidate, 'deployment checks'),
+            $usedProvider
+        ));
+        $this->assertSame('gemini', $usedProvider);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'generativelanguage.googleapis.com'));
+    }
+
+    public function test_opening_selects_third_provider_when_first_two_are_cooling_down(): void
+    {
+        config([
+            'services.ai_providers.interview_provider_priority' => 'openai,gemini,groq,cohere',
+            'services.ai_providers.rate_limit_cooldown_in_tests' => true,
+        ]);
+        foreach ([
+            ['OpenAI', 'https://api.openai.com/v1/chat/completions/'],
+            ['Gemini', 'https://generativelanguage.googleapis.com/v1beta'],
+            ['Groq', 'https://api.groq.com/openai/v1'],
+        ] as [$name, $endpoint]) {
+            AiProvider::create([
+                'name' => $name,
+                'api_endpoint' => $endpoint,
+                'api_key' => Crypt::encryptString('test-'.$name.'-key'),
+                'status' => 'active',
+            ]);
+        }
+        Cache::put('ai:chat:rate-limit:openai', time() + 3600, 3600);
+        Cache::put('ai:chat:rate-limit:gemini', time() + 3600, 3600);
+
+        $openingText = 'Hi, nice to meet you. I will be your AI interviewer for the Developer interview. Tell me about yourself.';
+        Http::fake([
+            'api.openai.com/*' => Http::response(['error' => 'should not be called'], 503),
+            'generativelanguage.googleapis.com/*' => Http::response(['error' => 'should not be called'], 503),
+            'api.groq.com/*' => Http::response(['choices' => [[
+                'message' => ['content' => $openingText],
+            ]]]),
+        ]);
+
+        try {
+            $opening = AIService::generateInterviewOpeningIntro(
+                new InterviewSession(['target_position' => 'Developer', 'difficulty' => 'medium']),
+                'openai'
+            );
+            $this->assertSame('groq', $opening['provider']);
+            $this->assertSame($openingText, $opening['text']);
+            Http::assertSentCount(1);
+            Http::assertSent(fn ($request): bool => str_contains((string) $request->url(), 'api.groq.com'));
+        } finally {
+            Cache::forget('ai:chat:rate-limit:openai');
+            Cache::forget('ai:chat:rate-limit:gemini');
+        }
     }
 
     public function test_follow_up_sweeps_every_configured_provider_before_failing(): void

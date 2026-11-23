@@ -22,6 +22,7 @@ use App\Services\EvidenceBasedCoachingService;
 use App\Services\LocalFeedbackModelService;
 use App\Services\QuestionDatasetProvider;
 use App\Services\QuestionIntentService;
+use App\Services\QuestionRecommendationService;
 use App\Services\TrustworthyAssessmentService;
 use App\Support\FeedbackEvidencePresenter;
 use Illuminate\Database\Schema\Blueprint;
@@ -275,6 +276,7 @@ class ReliabilityHardeningTest extends TestCase
   $category = $this->category(['title' => 'Behavioral']);
   $this->aiProvider('OpenAI', ['api_endpoint' => 'https://api.openai.com/v1']);
   $this->aiProvider('Gemini', ['api_endpoint' => 'https://generativelanguage.googleapis.com/v1beta']);
+   $this->mock(QuestionRecommendationService::class, fn ($mock) => $mock->shouldNotReceive('recommendForContext'));
 
   Http::fake([
    'api.openai.com/*' => Http::response([], 503),

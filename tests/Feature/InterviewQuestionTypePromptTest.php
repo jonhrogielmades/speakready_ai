@@ -323,4 +323,31 @@ class InterviewQuestionTypePromptTest extends TestCase
         $this->assertSame([], $result['attempted_providers']);
         Http::assertNothingSent();
     }
+
+    public function test_expired_question_generation_deadline_skips_provider_requests(): void
+    {
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1/chat/completions/',
+            'api_key' => Crypt::encryptString('test-openai-key'),
+            'status' => 'active',
+        ]);
+        Http::fake(['*' => Http::response(['questions' => ['How would you debug a Developer issue?']])]);
+
+        $result = AIService::generateQuestionsWithProvider(
+            1,
+            'Developer',
+            'medium',
+            'Job Interview',
+            'openai',
+            requestOptions: [
+                'only_requested_provider' => true,
+                'request_deadline_at' => microtime(true) - 1,
+            ]
+        );
+
+        $this->assertFalse($result['complete']);
+        $this->assertSame([], $result['attempted_providers']);
+        Http::assertNothingSent();
+    }
 }

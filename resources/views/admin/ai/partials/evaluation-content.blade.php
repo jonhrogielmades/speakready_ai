@@ -594,8 +594,25 @@
     <div class="premium-card ai-eval-panel">
         <div class="ai-eval-panel-title">
             <h5 class="fw-bold mb-0"><i class="fa-solid fa-magnifying-glass-chart me-2 text-warning"></i>Provider Comparison Evidence</h5>
-            <span class="stat-badge {{ $selectedRun ? 'success' : 'secondary' }}">{{ $selectedRun ? 'Run #'.$selectedRun->id : 'No run' }}</span>
+            <span class="stat-badge {{ $selectedRun?->status === 'running' ? 'warning' : ($selectedRun?->status === 'failed' ? 'danger' : ($selectedRun ? 'success' : 'secondary')) }}">
+                @if($selectedRun)
+                    Run #{{ $selectedRun->id }} · {{ $selectedRun->status === 'running' ? 'Running' : ($selectedRun->status === 'failed' ? 'Stopped' : 'Completed') }}
+                    {{ $selectedRun->results->count() }}/{{ $selectedRun->case_count }} cases
+                @else
+                    No run
+                @endif
+            </span>
         </div>
+
+        @if($selectedRun?->status === 'running')
+            <div class="alert alert-info mb-3" role="status">
+                Comparing providers in the background: {{ $selectedRun->results->count() }} of {{ $selectedRun->case_count }} cases finished. This page updates automatically.
+            </div>
+        @elseif($selectedRun?->status === 'failed')
+            <div class="alert alert-warning mb-3" role="status">
+                {{ $selectedRun->summary['note'] ?? 'The comparison stopped before every case finished. Please run it again.' }}
+            </div>
+        @endif
 
         @if($selectedRun && $selectedRun->results->count() > 0)
             <div class="table-responsive">
@@ -755,9 +772,12 @@
                 }
 
                 liveRoot.innerHTML = freshRoot.innerHTML;
+                const runProgress = payload.run_status === 'running'
+                    ? `Comparison running ${payload.run_completed_cases || 0}/${payload.run_total_cases || 0} cases · `
+                    : (payload.run_status === 'failed' ? 'Comparison stopped · ' : '');
                 setStatus(
-                    `Live updated ${payload.updated_at} · ${payload.active_configured_provider_count || 0}/${payload.minimum_required_provider_count || 3} active APIs · ${payload.generated_provider_count || 0}/${payload.total_provider_count || 0} providers ranked · ${payload.generated_question_count || 0} questions · ${payload.generated_feedback_count || 0} feedback`,
-                    'ready'
+                    `${runProgress}Live updated ${payload.updated_at} · ${payload.active_configured_provider_count || 0}/${payload.minimum_required_provider_count || 3} active APIs · ${payload.generated_provider_count || 0}/${payload.total_provider_count || 0} providers ranked · ${payload.generated_question_count || 0} questions · ${payload.generated_feedback_count || 0} feedback`,
+                    payload.run_status === 'failed' ? 'error' : 'ready'
                 );
             } catch (error) {
                 setStatus('Realtime refresh retrying...', 'error');
