@@ -29,11 +29,19 @@ function harness(options = {}) {
     const storage = options.storage || new Map();
     const heading = { textContent: '' };
     const detail = { textContent: '' };
+    const answerCount = { textContent: '' };
+    const answerTrack = { attributes: new Map(), setAttribute(name, value) { this.attributes.set(name, value); } };
+    const answerBar = { style: { width: '' } };
+    const summaryStage = { textContent: '' };
     const reload = eventTarget({ hidden: true });
     const elements = {
         '[data-review-status-title]': heading,
         '[data-review-status-message]': detail,
         '[data-review-reload]': reload,
+        '[data-review-answer-count]': answerCount,
+        '[data-review-answer-track]': answerTrack,
+        '[data-review-answer-bar]': answerBar,
+        '[data-review-summary-stage]': summaryStage,
     };
     const panel = {
         hidden: false,
@@ -109,7 +117,7 @@ function harness(options = {}) {
         now = target;
         await settle();
     }
-    return { window, document, panel, heading, detail, reload, requests, storage, advance, settle, timers, get reloads() { return reloads; } };
+    return { window, document, panel, heading, detail, answerCount, answerTrack, answerBar, summaryStage, reload, requests, storage, advance, settle, timers, get reloads() { return reloads; } };
 }
 
 test('desktop and mobile show shared review progress without a manual retry control', () => {
@@ -118,9 +126,12 @@ test('desktop and mobile show shared review progress without a manual retry cont
     assert.match(view, /route\('user\.review\.status', \$sessionRecord\)/);
     assert.match(view, /data-detailed-review-status data-review-status-url=/);
     assert.match(view, /data-summary-preview-ready=/);
+    assert.match(view, /data-review-progress role="group"/);
+    assert.match(view, /data-review-answer-track role="progressbar"/);
+    assert.match(view, /data-review-summary-stage/);
     assert.doesNotMatch(view, /data-review-retry|Retry AI review/);
     assert.match(view, /role="status" aria-live="polite" aria-atomic="true"/);
-    assert.match(view, /detailed-review-status\.js\?v=8/);
+    assert.match(view, /detailed-review-status\.js\?v=9/);
     for (const layout of ['desktop', 'mobile']) {
         const wrapper = readFileSync(join(root, `resources/views/${layout}/user/review.blade.php`), 'utf8');
         assert.match(wrapper, /@include\('shared\.user\.review-content'/);
@@ -139,10 +150,10 @@ test('shows local feedback status on failure and keeps checking for automatic re
     assert.equal(ui.panel.hidden, false);
     await ui.advance(2000);
     assert.equal(ui.panel.hidden, false);
-    assert.equal(ui.heading.textContent, 'Your feedback is available below.');
+    assert.equal(ui.heading.textContent, 'AI provider review is unavailable right now.');
     await ui.advance(15000);
     assert.equal(ui.requests.length, 3);
-    assert.equal(ui.heading.textContent, 'Your AI answer reviews are being prepared.');
+    assert.equal(ui.heading.textContent, 'AI provider analysis is in progress.');
 });
 
 test('reads status without mutations and refreshes automatically after processing and pending', async () => {
@@ -158,6 +169,24 @@ test('reads status without mutations and refreshes automatically after processin
     assert.equal(ui.panel.hidden, true);
     await ui.advance(180000);
     assert.equal(ui.requests.length, 3);
+});
+
+test('updates real provider answer counts and the separate overall summary stage', async () => {
+    const ui = harness({ responses: [
+        { status: 'processing', summary_preview_ready: false, provider_progress: { total: 3, verified: 1, processing: 1, pending: 1, failed: 0 } },
+        { status: 'processing', summary_preview_ready: true, provider_progress: { total: 3, verified: 3, processing: 0, pending: 0, failed: 0 } },
+    ] });
+    await ui.advance(0);
+    assert.equal(ui.answerCount.textContent, '1 of 3 ready');
+    assert.equal(ui.answerTrack.attributes.get('aria-valuenow'), '1');
+    assert.equal(ui.answerTrack.attributes.get('aria-valuemax'), '3');
+    assert.equal(ui.answerBar.style.width, '33%');
+    assert.equal(ui.summaryStage.textContent, 'Overall AI summary: being prepared');
+
+    await ui.advance(2000);
+    assert.equal(ui.answerCount.textContent, '3 of 3 ready');
+    assert.equal(ui.answerBar.style.width, '100%');
+    assert.equal(ui.summaryStage.textContent, 'Overall AI summary: ready');
 });
 
 test('a stale page cannot enter an automatic reload loop', async () => {
@@ -218,7 +247,7 @@ test('falls back to an explicit reload if persistent guards are unavailable', as
 
 test('an initial failed review shows available feedback and keeps polling', async () => {
     const ui = harness({ status: 'failed' });
-    assert.equal(ui.heading.textContent, 'Your feedback is available below.');
+    assert.equal(ui.heading.textContent, 'AI provider review is unavailable right now.');
     await ui.advance(0);
     assert.equal(ui.requests.length, 1);
 });

@@ -945,12 +945,15 @@ class UserController extends Controller
  $preparedAnswerReviews = $providerReviewPending
  ? $preparedReviewService->currentVisibleReviewsForSession($sessionRecord)
  : [];
+ $providerAnswerProgress = $providerReviewPending
+ ? $preparedReviewService->progressForSession($sessionRecord)
+ : null;
  $providerSummaryPreviewReady = $providerReviewPending
  && app(ProviderSessionPreviewService::class)->forSession($sessionRecord) !== null;
  $comparisonRows = $providerReviewPending ? [] : $this->comparisonRowsFor($sessionRecord);
  $reviewEvidence = $providerReviewPending ? null : FeedbackEvidencePresenter::forSession($sessionRecord);
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'providerReviewPending', 'providerReviewStatus', 'providerReviewFailureMessage', 'preparedAnswerReviews', 'providerSummaryPreviewReady'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'providerReviewPending', 'providerReviewStatus', 'providerReviewFailureMessage', 'preparedAnswerReviews', 'providerAnswerProgress', 'providerSummaryPreviewReady'));
  }
 
  public function reviewStatus($id, DetailedFeedbackReviewService $reviewService, PreparedAnswerReviewService $preparedReviewService)
@@ -981,6 +984,7 @@ class UserController extends Controller
  }
  if (in_array($status, ['pending', 'processing', 'failed'], true)) {
  $progress = $preparedReviewService->progressForSession($session);
+ $response['provider_progress'] = $progress;
  if (! isset($response['message']) && $progress['total'] > 0 && ($progress['verified'] > 0 || $progress['processing'] > 0)) {
  $response['message'] = $status === 'failed' && $progress['verified'] > 0
  ? "Provider AI feedback for {$progress['verified']} of {$progress['total']} answers is available below. The final AI summary remains unavailable."
@@ -996,6 +1000,7 @@ class UserController extends Controller
  private function reviewFailureMessage(?string $failureCode): ?string
  {
  return match ($failureCode) {
+ 'ai_evaluation_disabled' => 'AI interview evaluation is disabled in server settings. Your saved-answer feedback is available below.',
  'no_provider_credentials' => 'AI provider feedback is waiting for a provider connection. Your saved-answer feedback is available below.',
  'provider_authentication' => 'The AI provider rejected its credentials. Your saved-answer feedback is available while the connection is repaired.',
  'provider_model' => 'The AI provider could not use its configured model. Your saved-answer feedback is available while the model is repaired.',

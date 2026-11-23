@@ -54,24 +54,39 @@
  @if(!$sessionEndedEarly && ($providerReviewPending ?? false))
  @php
  $initialProviderReviewStatus = in_array($providerReviewStatus ?? null, ['pending', 'processing', 'failed'], true) ? $providerReviewStatus : 'pending';
+ $initialAnswerProgress = is_array($providerAnswerProgress ?? null) ? $providerAnswerProgress : [];
+ $initialAnswerTotal = max(0, (int) ($initialAnswerProgress['total'] ?? $sessionRecord->answers->count()));
+ $initialAnswersReady = min($initialAnswerTotal, max(0, (int) ($initialAnswerProgress['verified'] ?? $preparedAnswerCount)));
+ $initialAnswerPercent = $initialAnswerTotal > 0 ? (int) round($initialAnswersReady * 100 / $initialAnswerTotal) : 0;
  @endphp
  <div class="alert mb-4" data-detailed-review-status data-review-status-url="{{ route('user.review.status', $sessionRecord) }}" data-review-status="{{ $initialProviderReviewStatus }}" data-summary-preview-ready="{{ ($providerSummaryPreviewReady ?? false) ? 'true' : 'false' }}" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;overflow-wrap:anywhere;">
  <div role="status" aria-live="polite" aria-atomic="true">
  <strong class="d-block mb-1" data-review-status-title>{{ ($providerSummaryPreviewReady ?? false)
  ? 'Provider AI session summary is available below.'
  : ($initialProviderReviewStatus === 'failed'
- ? 'Your feedback is available below.'
- : ($preparedAnswerCount > 0 ? 'Your final AI review is being prepared.' : 'Your feedback is available below.')) }}</strong>
+ ? 'AI provider review is unavailable right now.'
+ : 'AI provider analysis is in progress.') }}</strong>
  <p class="mb-2" data-review-status-message>{{ ($providerSummaryPreviewReady ?? false)
  ? 'The overall summary has passed provider validation. Remaining answer details are still being prepared.'
  : ($initialProviderReviewStatus !== 'failed'
  ? ($preparedAnswerCount > 0 ? "Provider AI feedback is available below for {$preparedAnswerCount} of {$sessionRecord->answers->count()} answers. The final summary is still being prepared." : 'A provider AI review is being prepared in the background. This page updates when it passes validation.')
  : ($providerReviewFailureMessage ?? 'A provider AI review could not be completed right now. The local feedback below remains available.')) }}</p>
+ <p class="mb-2">Your feedback is available below.</p>
  @if($preparedAnswerCount === 0)
  <p class="mb-2">{{ ($providerSummaryPreviewReady ?? false)
  ? 'The provider-written overall summary and local answer guidance below use your saved responses.'
  : 'The preliminary local summary and answer guidance below use your saved responses.' }}</p>
  @endif
+ <div data-review-progress role="group" aria-label="AI provider review progress" style="margin-top:.75rem;">
+ <div class="d-flex justify-content-between align-items-center gap-2 mb-1" style="font-size:.85rem;">
+ <span>AI provider answer reviews</span>
+ <strong data-review-answer-count>{{ $initialAnswersReady }} of {{ $initialAnswerTotal }} ready</strong>
+ </div>
+ <div class="progress" data-review-answer-track role="progressbar" aria-label="AI provider answer reviews ready" aria-valuemin="0" aria-valuemax="{{ max(1, $initialAnswerTotal) }}" aria-valuenow="{{ $initialAnswersReady }}" style="height:8px;">
+ <div class="progress-bar" data-review-answer-bar style="width:{{ $initialAnswerPercent }}%;background:#2563eb;"></div>
+ </div>
+ <span class="d-block mt-2" data-review-summary-stage style="font-size:.82rem;color:var(--tx3);">Overall AI summary: {{ ($providerSummaryPreviewReady ?? false) ? 'ready' : ($initialProviderReviewStatus === 'failed' ? 'unavailable right now' : 'being prepared') }}</span>
+ </div>
  </div>
  <button type="button" class="btn btn-primary" data-review-reload hidden>Show completed review</button>
  <noscript>
@@ -80,7 +95,7 @@
  </div>
  @once
  @push('scripts')
- <script src="{{ asset('js/detailed-review-status.js?v=8') }}" defer></script>
+ <script src="{{ asset('js/detailed-review-status.js?v=9') }}" defer></script>
  @endpush
  @endonce
  @endif

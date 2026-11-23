@@ -1,4 +1,4 @@
-// Detailed Review release with saved local total score: 2026-11-23.
+// Detailed Review provider progress and saved local total score: 2026-11-23.
 (function () {
     'use strict';
 
@@ -10,6 +10,10 @@
         var title = panel.querySelector('[data-review-status-title]');
         var message = panel.querySelector('[data-review-status-message]');
         var reload = panel.querySelector('[data-review-reload]');
+        var answerCount = panel.querySelector('[data-review-answer-count]');
+        var answerTrack = panel.querySelector('[data-review-answer-track]');
+        var answerBar = panel.querySelector('[data-review-answer-bar]');
+        var summaryStage = panel.querySelector('[data-review-summary-stage]');
         var statusUrl;
         var timer = null;
         var request = null;
@@ -25,6 +29,27 @@
         function setText(heading, detail) {
             if (title) title.textContent = heading;
             if (message) message.textContent = detail;
+        }
+
+        function updateProgress(result) {
+            var progress = result.provider_progress;
+            if (progress && typeof progress === 'object') {
+                var total = Number(progress.total);
+                var verified = Number(progress.verified);
+                if (Number.isSafeInteger(total) && total >= 0 && Number.isSafeInteger(verified) && verified >= 0) {
+                    verified = Math.min(verified, total);
+                    if (answerCount) answerCount.textContent = verified + ' of ' + total + ' ready';
+                    if (answerTrack) {
+                        answerTrack.setAttribute('aria-valuemax', String(Math.max(1, total)));
+                        answerTrack.setAttribute('aria-valuenow', String(verified));
+                    }
+                    if (answerBar) answerBar.style.width = (total > 0 ? Math.round(verified * 100 / total) : 0) + '%';
+                }
+            }
+            if (summaryStage) {
+                var ready = result.status === 'verified' || result.summary_preview_ready === true;
+                summaryStage.textContent = 'Overall AI summary: ' + (ready ? 'ready' : result.status === 'failed' ? 'unavailable right now' : 'being prepared');
+            }
         }
 
         function showPanel() {
@@ -59,7 +84,7 @@
             setText(
                 panel.dataset.summaryPreviewReady === 'true'
                     ? 'Provider AI session summary is available below.'
-                    : 'Your feedback is available below.',
+                    : 'AI provider review is unavailable right now.',
                 detail || 'The AI provider review could not be completed right now. Local feedback remains available below.'
             );
             if (reload) reload.hidden = true;
@@ -183,6 +208,7 @@
                 throw new Error('Invalid review status');
             }
             failures = 0;
+            updateProgress(result);
             var detail = typeof result.message === 'string' ? result.message.trim().slice(0, 500) : '';
             if (result.status === 'verified') {
                 reloadReadyReview();
@@ -195,7 +221,7 @@
                 showFailedProvider(detail);
             } else {
                 showPanel();
-                setText('Your AI answer reviews are being prepared.', detail || 'Your interview is complete. This page updates when provider feedback passes validation.');
+                setText('AI provider analysis is in progress.', detail || 'Your interview is complete. This page updates when provider feedback passes validation.');
                 var delay = Number(result.retry_after_ms);
                 nextDelay = Number.isFinite(delay) ? Math.max(2000, Math.min(15000, delay)) : 2000;
             }

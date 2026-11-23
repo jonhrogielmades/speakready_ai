@@ -490,15 +490,15 @@ For ordinary interviews, questions and answers are saved in the database as the 
 
 The queue tries APIs in `AI_DETAILED_REVIEW_PROVIDER_PRIORITY` order (OpenAI, Gemini, Groq, Cohere by default). The focused provider path requests at most 4,096 output tokens per answer before model-specific minimums; the larger `AI_FEEDBACK_MAX_OUTPUT_TOKENS` setting is reserved for full-session recovery. The initial full-report job waits briefly so in-flight answer reviews can finish and avoid duplicate provider work. Provider text replaces local guidance only after it passes saved-answer checks and is persisted. Failed jobs remain visible with saved feedback; `feedback:requeue-stale` automatically recovers abandoned or failed reviews up to a bounded attempt count. After repairing credentials or a model setting, an operator can run `php artisan feedback:requeue-stale --reset-config-failures --limit=50` to recover terminal configuration failures. There is no user-facing retry button. Run a database or Redis queue worker and the Laravel scheduler in every deployment. Dokploy's `docker-start.sh` starts both by default, and `RUN_MIGRATIONS_ON_START=true` applies the preview tables. A sync queue is routed to the database for these jobs, so a worker must still be running. Provider calls use `AI_FEEDBACK_REVIEW_REFRESH_*` limits, independent of the interview HTTP request.
 
-For local development, set `QUEUE_CONNECTION=database` and run these as separate long-running processes:
+For local development on Windows/Laragon, set `QUEUE_CONNECTION=database` and keep this one worker command running in a separate terminal while you interview. It handles both answer reviews and the session summary; stop it with Ctrl+C when finished:
 
-```bash
-php artisan queue:work database --queue=default --sleep=3 --tries=3 --timeout=180
-php artisan queue:work database --queue=review-answers --sleep=3 --tries=3 --timeout=180
-php artisan schedule:work
+```powershell
+php artisan queue:work database --queue=review-answers,default --sleep=1 --tries=3 --timeout=190 --backoff=5
 ```
 
-Run `php artisan ai:smoke-detailed-feedback` with configured provider keys to check strict provider response validation using a synthetic answer. `--provider=openai` tests one provider. The saved-answer persistence gate is covered by the review integration tests. A passing smoke check verifies the current API response only; provider quotas, network access, and response quality can change later. On Dokploy, set the API keys in the Compose environment editor and redeploy; the image excludes your local `.env`, and Laravel caches configuration at startup. The default `AI_FEEDBACK_MAX_OUTPUT_TOKENS=16384` fits the default Dokploy `gpt-4o-mini` model; higher configured values are capped for known model limits.
+For automatic recovery of stalled or failed provider reviews, also run `php artisan schedule:work` in another terminal. The saved local preview can appear immediately while the queue worker makes real provider calls.
+
+Run `php artisan ai:smoke-detailed-feedback --answer-only --prepared-summary` with configured provider keys to check both provider calls using a synthetic answer. `--provider=openai` tests one provider. The saved-answer persistence gate is covered by the review integration tests. A passing smoke check verifies the current API response only; provider quotas, network access, and response quality can change later. On Dokploy, set the API keys in the Compose environment editor and redeploy; the image excludes your local `.env`, and Laravel caches configuration at startup. The default `AI_FEEDBACK_MAX_OUTPUT_TOKENS=16384` fits the default Dokploy `gpt-4o-mini` model; higher configured values are capped for known model limits.
 
 Local and hosted scoring share action/result checks: dates and team sizes do not establish an outcome, and a hypothetical plan is not a completed behavioral example. Qualitative and unsuccessful outcomes still count as reported evidence. Provider numeric claims must preserve quantities and units from the answer. Detailed Review refreshes compare a locked input fingerprint before saving, so an in-flight API response cannot overwrite feedback after its answer or question changed. Displayed evidence excerpts are also checked against the saved answer.
 

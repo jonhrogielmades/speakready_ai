@@ -4,9 +4,13 @@ namespace Tests\Feature;
 
 use App\Jobs\RefreshDetailedFeedbackReview;
 use App\Models\Category;
+use App\Models\InterviewAnswer;
+use App\Models\InterviewAnswerProviderReview;
 use App\Models\InterviewSession;
+use App\Models\Question;
 use App\Models\User;
 use App\Services\DetailedFeedbackReviewService;
+use App\Services\PreparedAnswerReviewService;
 use App\Support\DetailedReviewProgress;
 use Illuminate\Contracts\Queue\Job as QueueJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -141,12 +145,68 @@ class AutomaticDetailedReviewProgressTest extends TestCase
 
         $this->actingAs($user)->getJson(route('user.review.status', $session->id))
             ->assertOk()
-            ->assertExactJson(['status' => 'pending', 'retry_after_ms' => 2000, 'summary_preview_ready' => false])
+            ->assertExactJson([
+                'status' => 'pending',
+                'retry_after_ms' => 2000,
+                'summary_preview_ready' => false,
+                'provider_progress' => ['total' => 0, 'verified' => 0, 'processing' => 0, 'pending' => 0, 'failed' => 0],
+            ])
             ->assertHeader('Cache-Control', 'no-store, private');
 
         $this->assertSame($before, $session->fresh()->getAttributes());
         $this->assertSame($progressBefore, Cache::get('feedback-review-status:'.$session->id));
         $this->assertFalse(Cache::has('feedback-review-refresh:'.$session->id));
+        Queue::assertNothingPushed();
+        Http::assertNothingSent();
+    }
+
+    public function test_status_reports_saved_provider_answer_work_in_progress(): void
+    {
+        $user = $this->user();
+        $session = $this->reviewSession($user, ['feedback_status' => 'processing']);
+        $question = Question::create([
+            'category_id' => $session->category_id,
+            'interview_session_id' => $session->id,
+            'question_text' => 'How did you handle a difficult support request?',
+            'difficulty' => 'medium',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+        $answer = InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $question->id,
+            'answer_text' => 'I listened to the request, checked the account details, and explained the next step.',
+        ]);
+        $secondQuestion = Question::create([
+            'category_id' => $session->category_id,
+            'interview_session_id' => $session->id,
+            'question_text' => 'How did you document the support result?',
+            'difficulty' => 'medium',
+            'type' => 'Behavioral',
+            'status' => 'active',
+        ]);
+        InterviewAnswer::create([
+            'interview_session_id' => $session->id,
+            'question_id' => $secondQuestion->id,
+            'answer_text' => 'I reviewed the same request with my teammate and documented the result.',
+        ]);
+        $fingerprint = app(PreparedAnswerReviewService::class)->inputFingerprint($session, $answer);
+        InterviewAnswerProviderReview::create([
+            'interview_session_id' => $session->id,
+            'interview_answer_id' => $answer->id,
+            'status' => 'processing',
+            'input_fingerprint' => $fingerprint,
+            'attempts' => 1,
+        ]);
+        $this->actingAs($user)->getJson(route('user.review.status', $session->id))
+            ->assertOk()
+            ->assertJsonPath('status', 'processing')
+            ->assertJsonPath('provider_progress.total', 2)
+            ->assertJsonPath('provider_progress.verified', 0)
+            ->assertJsonPath('provider_progress.processing', 1)
+            ->assertJsonPath('provider_progress.pending', 1)
+            ->assertJsonPath('provider_progress.failed', 0);
+
         Queue::assertNothingPushed();
         Http::assertNothingSent();
     }
@@ -172,11 +232,16 @@ class AutomaticDetailedReviewProgressTest extends TestCase
     public function test_status_get_uses_durable_failed_and_pending_states(): void
     {
         $user = $this->user();
-        $session = $this->reviewSession($user, ['feedback_status' => 'failed']);
+        $session = $this->reviewSession($user, [
+            'feedback_status' => 'failed',
+            'feedback_failure_code' => 'ai_evaluation_disabled',
+        ]);
         DetailedReviewProgress::mark($session->id, 'failed');
         $this->mockStatusService(true, true);
         $this->actingAs($user)->getJson(route('user.review.status', $session->id))
-            ->assertOk()->assertJsonPath('status', 'failed');
+            ->assertOk()
+            ->assertJsonPath('status', 'failed')
+            ->assertJsonPath('message', 'AI interview evaluation is disabled in server settings. Your saved-answer feedback is available below.');
 
         $session->forceFill(['feedback_status' => 'pending'])->save();
         $this->mockStatusService(true, false);
