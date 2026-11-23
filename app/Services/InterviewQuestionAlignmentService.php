@@ -11,7 +11,7 @@ class InterviewQuestionAlignmentService
      */
     private const SPECIALIZED_TASK_DOMAINS = [
         'software' => [
-            'task' => '/\b(?:debug\w*|deploy\w*|cod(?:e|ing)|program\w*|troubleshoot\w*|architect\w*)\b.*\b(?:cloud|software|code|api|database|website|web app|application|kubernetes|aws|azure)\b|\b(?:cloud|software|code|api|database|website|web app|application|kubernetes|aws|azure)\b.*\b(?:deploy\w*|debug\w*|cod(?:e|ing)|program\w*|troubleshoot\w*|architecture)\b/i',
+            'task' => '/\b(?:debug\w*|deploy\w*|cod(?:e|ing)|program\w*|troubleshoot\w*|architect\w*)\b.*\b(?:cloud|software|code|api|database|website|web app|application|kubernetes|aws|azure)\b|\b(?:cloud|software|code|api|database|website|web app|application|kubernetes|aws|azure)\b.*\b(?:deploy\w*|debug\w*|cod(?:e|ing)|program\w*|troubleshoot\w*|architecture)\b|\b(?:build|built|creat\w*|develop\w*)\b.*\b(?:website|web app|software|code|api|database)\b|\b(?:website|web app|software|code|api|database)\b.*\b(?:build|built|creat\w*|develop\w*)\b/i',
             'role' => '/\b(?:developer|programmer|software|web|cloud|devops|database|systems? engineer|data engineer|qa engineer|it engineer|it specialist|information technology|technical support|application support|support engineer|system administrator|network engineer|site reliability|cybersecurity)\b/i',
         ],
         'clinical' => [
@@ -156,6 +156,15 @@ class InterviewQuestionAlignmentService
         $questionWithoutRole = str_replace($this->normalize($targetPosition), '', $question);
 
         return $acknowledgementHasAnchor && $this->isGenericEvidenceProbe($questionWithoutRole);
+    }
+
+    public function answerDescribesUnrelatedSpecializedTask(string $answer, string $targetPosition, ?string $jobDescription = null): bool
+    {
+        return $this->hasUnrelatedSpecializedTask(
+            $this->normalize($answer),
+            $this->normalize($targetPosition),
+            $this->normalize((string) $jobDescription)
+        );
     }
 
     public function fallbackQuestion(string $targetPosition, ?string $requiredType, string $latestAnswer, bool $isFinal = false): ?string

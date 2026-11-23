@@ -150,6 +150,50 @@ class InterviewFollowUpReliabilityTest extends TestCase
         $this->assertFalse($this->matchesSelectedType('If those checks failed, how would you respond?', 'Behavioral'));
     }
 
+    public function test_stakeholder_goals_interests_and_system_values_do_not_turn_other_question_types_into_personal_questions(): void
+    {
+        $this->assertTrue($this->matchesSelectedType(
+            "If the customer's goals changed during a support case, how would you prioritize the response?",
+            'Situational'
+        ));
+        $this->assertTrue($this->matchesSelectedType(
+            'What method would you use to reconcile stakeholder interests during a dispute?',
+            'Technical'
+        ));
+        $this->assertTrue($this->matchesSelectedType(
+            'How did you validate the system values before deployment?',
+            'Technical'
+        ));
+
+        $this->assertTrue($this->matchesSelectedType('What interests you about the Developer role?', 'Personal'));
+        $this->assertTrue($this->matchesSelectedType('What career goals do you have for the Developer role?', 'Personal'));
+        $this->assertTrue($this->matchesSelectedType('What values guide your work as a Developer?', 'Personal'));
+    }
+
+    public function test_hypothetical_work_scenario_can_include_a_technical_method(): void
+    {
+        $this->assertTrue($this->matchesSelectedType(
+            'If a deployment fails during a release, how would you diagnose the cause for your team?',
+            'Situational'
+        ));
+        $this->assertTrue($this->matchesSelectedType(
+            'What diagnosis method would you use to find a deployment failure?',
+            'Technical'
+        ));
+    }
+
+    public function test_answer_anchor_accepts_an_inflected_version_of_the_saved_answer_action(): void
+    {
+        $answer = 'I checked it repeatedly during several shifts because unexpected behavior remained difficult to reproduce.';
+
+        $this->assertTrue($this->isReliable(
+            'How would you decide whether more checking is needed for the Developer role?',
+            $answer,
+            'Developer',
+            true
+        ));
+    }
+
     public function test_rejection_gate_reports_a_reason_without_candidate_content(): void
     {
         $session = new InterviewSession;

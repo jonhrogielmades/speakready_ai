@@ -619,7 +619,7 @@ class ReliabilityHardeningTest extends TestCase
  ]);
  }
 
- public function test_unrelated_provider_follow_up_does_not_create_a_local_backup(): void
+  public function test_unrelated_provider_follow_up_uses_a_grounded_local_backup(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = $this->category(['title' => 'Software Engineering']);
@@ -639,7 +639,7 @@ class ReliabilityHardeningTest extends TestCase
  ], 200),
  ]);
 
-  $this->actingAs($user)
+   $response = $this->actingAs($user)
  ->withSession([
  'active_interview_id' => $session->id,
  'active_interview_provider' => 'openai',
@@ -650,15 +650,18 @@ class ReliabilityHardeningTest extends TestCase
  'response_mode' => 'text',
  'ai_provider' => 'openai',
  ])
-  ->assertStatus(503)
-  ->assertJsonPath('success', false)
-  ->assertJsonPath('answer_saved', true)
-  ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable')
-  ->assertJsonMissingPath('next_question_id');
+   ->assertOk()
+   ->assertJsonPath('success', true)
+   ->assertJsonPath('source_type', 'local_follow_up_fallback')
+   ->assertJsonPath('ai_provider', null);
 
-  $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
-  $this->assertSame(0, Question::where('interview_session_id', $session->id)
-  ->where('source_type', 'local_question_fallback')->count());
+  $this->assertStringNotContainsString('favorite color', strtolower((string) $response->json('next_question_text')));
+  $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+  $this->assertDatabaseHas('questions', [
+   'id' => $response->json('next_question_id'),
+   'source_type' => 'local_follow_up_fallback',
+   'ai_provider' => null,
+  ]);
   $this->assertDatabaseHas('interview_answers', [
   'interview_session_id' => $session->id,
   'question_id' => $question->id,
