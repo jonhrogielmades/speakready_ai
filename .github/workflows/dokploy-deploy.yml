@@ -320,7 +320,7 @@ jobs:
           for attempt in $(seq 1 40); do
             response="$(curl --silent --show-error --fail --connect-timeout 5 --max-time 10 "${health_url}" 2>/dev/null || true)"
 
-            if HEALTH_RESPONSE="${response}" python3 - <<'PY'
+            if health_state="$(HEALTH_RESPONSE="${response}" python3 - <<'PY'
           import json
           import os
 
@@ -329,9 +329,23 @@ jobs:
           except json.JSONDecodeError:
               raise SystemExit(1)
 
-          raise SystemExit(0 if payload.get("status") == "ok" else 1)
+          status = payload.get("status")
+          checks = payload.get("checks")
+          if status == "ok":
+              print("ok")
+          elif status == "degraded" and isinstance(checks, dict) \
+                  and checks.get("failed_jobs") is False \
+                  and all(checks.get(key) is True for key in (
+                      "php", "laravel", "startup_maintenance", "storage",
+                      "queue_worker", "review_answer_worker", "scheduler",
+                      "queue_backlog", "database")):
+              # Historical failed jobs need investigation, but they do not
+              # prevent a new release from becoming ready and serving assets.
+              print("degraded_failed_jobs")
+          else:
+              raise SystemExit(1)
           PY
-            then
+            )"; then
               # Use a fresh URL on every probe. A CDN can keep serving the
               # previous asset when the same deployment query is reused.
               asset_probe_url="${asset_url}${asset_query_separator}deployment=${GITHUB_SHA}&verify_run=${GITHUB_RUN_ID}&attempt=${attempt}"
@@ -344,6 +358,9 @@ jobs:
                 consecutive_successes=$((consecutive_successes + 1))
                 echo "Health check ${attempt}: healthy with current review asset (${consecutive_successes}/3 consecutive)."
                 if [ "${consecutive_successes}" -ge 3 ]; then
+                  if [ "${health_state}" = 'degraded_failed_jobs' ]; then
+                    echo "::warning title=Recent failed queue jobs::The deployed app is ready and serves the current review asset, but /up reports recent failed jobs above its alert threshold."
+                  fi
                   exit 0
                 fi
               else

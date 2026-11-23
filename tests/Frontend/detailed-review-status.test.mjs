@@ -120,7 +120,7 @@ test('desktop and mobile show shared review progress without a manual retry cont
     assert.match(view, /data-summary-preview-ready=/);
     assert.doesNotMatch(view, /data-review-retry|Retry AI review/);
     assert.match(view, /role="status" aria-live="polite" aria-atomic="true"/);
-    assert.match(view, /detailed-review-status\.js\?v=7/);
+    assert.match(view, /detailed-review-status\.js\?v=8/);
     for (const layout of ['desktop', 'mobile']) {
         const wrapper = readFileSync(join(root, `resources/views/${layout}/user/review.blade.php`), 'utf8');
         assert.match(wrapper, /@include\('shared\.user\.review-content'/);

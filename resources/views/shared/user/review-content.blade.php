@@ -80,7 +80,7 @@
  </div>
  @once
  @push('scripts')
- <script src="{{ asset('js/detailed-review-status.js?v=7') }}" defer></script>
+ <script src="{{ asset('js/detailed-review-status.js?v=8') }}" defer></script>
  @endpush
  @endonce
  @endif

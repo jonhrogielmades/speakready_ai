@@ -1,4 +1,4 @@
-// AI-only interview follow-up release: 2026-11-18.
+// Detailed Review release with saved local total score: 2026-11-23.
 (function () {
     'use strict';
 
