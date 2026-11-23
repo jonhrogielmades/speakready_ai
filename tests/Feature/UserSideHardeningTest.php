@@ -3745,13 +3745,15 @@ class UserSideHardeningTest extends TestCase
  $category = $this->category(['type' => 'game']);
  $level = $this->gameLevel($category);
 
+ $requestStartedAt = now()->startOfSecond();
  $this->actingAs($user)
  ->post(route('user.game.start', $level))
  ->assertRedirect(route('user.game.match'));
 
  $profile = Profile::where('user_id', $user->id)->firstOrFail();
  $this->assertSame(2, $profile->energy);
- $this->assertTrue($profile->energy_last_refilled_at->isSameSecond(now()));
+ $this->assertTrue($profile->energy_last_refilled_at->gte($requestStartedAt));
+ $this->assertTrue($profile->energy_last_refilled_at->lte(now()));
  $this->assertDatabaseHas('game_sessions', [
  'user_id' => $user->id,
  'game_level_id' => $level->id,
