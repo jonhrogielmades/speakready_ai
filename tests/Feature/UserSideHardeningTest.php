@@ -1233,16 +1233,16 @@ class UserSideHardeningTest extends TestCase
  $this->assertStringContainsString('function revealInterviewSetupPage()', $mobileResponse->getContent());
  }
 
- public function test_interview_setup_shows_added_question_count_options_on_desktop_and_mobile(): void
+ public function test_interview_setup_shows_only_supported_question_counts_on_desktop_and_mobile(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- Setting::setVal('int_max_questions', 30, 'interview', 'integer');
+ Setting::setVal('int_max_questions', 20, 'interview', 'integer');
  $this->category();
  $expectedOptions = [
  '<option value="1"',
  '<option value="3"',
- '<option value="25"',
- '<option value="30"',
+ '<option value="5"',
+ '<option value="10"',
  ];
  $mobileUserAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
@@ -1255,6 +1255,10 @@ class UserSideHardeningTest extends TestCase
  foreach ($expectedOptions as $option) {
  $desktopResponse->assertSee($option, false);
  $mobileResponse->assertSee($option, false);
+ }
+ foreach ([15, 20, 25, 30] as $count) {
+ $desktopResponse->assertDontSee('<option value="'.$count.'"', false);
+ $mobileResponse->assertDontSee('<option value="'.$count.'"', false);
  }
  }
 
@@ -1526,13 +1530,14 @@ class UserSideHardeningTest extends TestCase
  $this->assertDatabaseCount('interview_sessions', 0);
  }
 
- public function test_interview_start_accepts_added_question_counts(): void
+ public function test_interview_start_accepts_only_one_three_five_or_ten_questions(): void
  {
+ $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
- Setting::setVal('int_max_questions', 30, 'interview', 'integer');
+ Setting::setVal('int_max_questions', 20, 'interview', 'integer');
  $category = $this->category();
 
- foreach ([1, 3, 25, 30] as $count) {
+ foreach ([1, 3, 5, 10] as $count) {
  $this->actingAs($user)
  ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
  'num_questions' => $count,
@@ -1543,6 +1548,56 @@ class UserSideHardeningTest extends TestCase
 
  $this->assertSame($count, $session->num_questions);
  }
+ $sessionCount = InterviewSession::where('user_id', $user->id)->count();
+ foreach ([2, 4, 15, 20, 25, 30] as $count) {
+ $this->actingAs($user)
+ ->from(route('interview.setup'))
+ ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+ 'num_questions' => $count,
+ ]))
+ ->assertRedirect(route('interview.setup'))
+ ->assertSessionHasErrors('num_questions');
+ }
+ $this->assertSame($sessionCount, InterviewSession::where('user_id', $user->id)->count());
+ }
+
+ public function test_legacy_question_limit_and_default_settings_are_capped_at_ten(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Setting::setVal('int_max_questions', 20, 'interview', 'integer');
+ Setting::setVal('int_default_questions', 20, 'interview', 'integer');
+ $category = $this->category();
+
+ $payload = $this->interviewPayload($category);
+ unset($payload['num_questions']);
+ $this->actingAs($user)
+ ->post(route('interview.start'), $payload)
+ ->assertRedirect(route('interview.session'));
+
+ $this->assertSame(10, InterviewSession::where('user_id', $user->id)->latest('id')->firstOrFail()->num_questions);
+ }
+
+ public function test_admin_question_limit_still_caps_supported_choices(): void
+ {
+ $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+ Setting::setVal('int_max_questions', 5, 'interview', 'integer');
+ $category = $this->category();
+
+ $this->actingAs($user)
+ ->from(route('interview.setup'))
+ ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+ 'num_questions' => 10,
+ ]))
+ ->assertRedirect(route('interview.setup'))
+ ->assertSessionHasErrors('num_questions');
+ $this->assertDatabaseCount('interview_sessions', 0);
+
+ $this->actingAs($user)
+ ->post(route('interview.start'), array_merge($this->interviewPayload($category), [
+ 'num_questions' => 5,
+ ]))
+ ->assertRedirect(route('interview.session'));
+ $this->assertSame(5, InterviewSession::where('user_id', $user->id)->firstOrFail()->num_questions);
  }
 
  public function test_interview_start_stores_complete_interview_structure_settings(): void

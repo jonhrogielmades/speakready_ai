@@ -36,7 +36,7 @@ class SystemSettings
         'role_user_perm_3' => ['value' => true, 'group' => 'roles', 'type' => 'boolean'],
 
         'int_default_questions' => ['value' => 10, 'group' => 'interview', 'type' => 'integer'],
-        'int_max_questions' => ['value' => 20, 'group' => 'interview', 'type' => 'integer'],
+        'int_max_questions' => ['value' => 10, 'group' => 'interview', 'type' => 'integer'],
         'int_time_limit' => ['value' => 0, 'group' => 'interview', 'type' => 'integer'],
         'int_follow_up' => ['value' => true, 'group' => 'interview', 'type' => 'boolean'],
         'int_ai_eval' => ['value' => true, 'group' => 'interview', 'type' => 'boolean'],
@@ -173,8 +173,8 @@ class SystemSettings
             'sys_language' => ['nullable', 'string', Rule::in(array_keys(Setting::supportedLanguages()))],
 
             'acc_session_timeout' => ['nullable', 'integer', 'min:5', 'max:1440'],
-            'int_default_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10, 15, 20, 25, 30])],
-            'int_max_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10, 15, 20, 25, 30])],
+            'int_default_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10])],
+            'int_max_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10])],
             'int_time_limit' => ['nullable', 'integer', Rule::in([0, 1, 2, 3])],
 
             'mail_host' => ['nullable', 'string', 'max:255'],

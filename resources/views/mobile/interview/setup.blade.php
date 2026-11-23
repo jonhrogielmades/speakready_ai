@@ -72,9 +72,9 @@
  }
  $requestedJobCategory = trim((string) old('job_category', ''));
  $selectedJobCategory = $jobPositionOptionGroups->has($requestedJobCategory) ? $requestedJobCategory : '';
- $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
- $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 20);
- $maxQuestionSetting = $questionOptions->contains($maxQuestionSetting) ? $maxQuestionSetting : 20;
+ $questionOptions = collect([1, 3, 5, 10]);
+ $maxQuestionSetting = (int) \App\Support\SystemSettings::value('int_max_questions', 10);
+ $maxQuestionSetting = $questionOptions->contains($maxQuestionSetting) ? $maxQuestionSetting : 10;
  $questionOptions = $questionOptions->filter(fn (int $count): bool => $count <= $maxQuestionSetting)->values();
  $defaultQuestionSetting = (int) \App\Support\SystemSettings::value('int_default_questions', 10);
  if (!$questionOptions->contains($defaultQuestionSetting)) {

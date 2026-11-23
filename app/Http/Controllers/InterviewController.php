@@ -141,7 +141,7 @@ class InterviewController extends Controller
  'custom_position' => 'nullable|string|max:255',
  'resume_text' => 'nullable|string|max:20000',
  'job_description' => 'nullable|string|max:20000',
- 'num_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10, 15, 20, 25, 30])],
+ 'num_questions' => ['nullable', 'integer', Rule::in([1, 3, 5, 10])],
  'coach_focus_mode' => 'nullable|string|max:80',
  'response_mode' => ['nullable', Rule::in(self::ACCEPTED_RESPONSE_MODES)],
  'interviewer_avatar' => ['required', 'string', Rule::in(InterviewerAvatar::keys())],
@@ -161,9 +161,9 @@ class InterviewController extends Controller
  ]);
 
  $validated['response_mode'] = $this->normalizeResponseMode($validated['response_mode']?? 'voice');
- $questionOptions = collect([1, 3, 5, 10, 15, 20, 25, 30]);
- $maxQuestions = (int) SystemSettings::value('int_max_questions', 20);
- $maxQuestions = $questionOptions->contains($maxQuestions)? $maxQuestions: 20;
+ $questionOptions = collect([1, 3, 5, 10]);
+ $maxQuestions = (int) SystemSettings::value('int_max_questions', 10);
+ $maxQuestions = $questionOptions->contains($maxQuestions)? $maxQuestions: 10;
  $defaultQuestions = (int) SystemSettings::value('int_default_questions', 10);
  if (! $questionOptions->contains($defaultQuestions) || $defaultQuestions > $maxQuestions) {
  $defaultQuestions = (int) ($questionOptions->filter(fn (int $count): bool => $count <= $maxQuestions)->last()?: 10);
@@ -4573,6 +4573,7 @@ return response()->json([
 
  private function targetQuestionCountForSession(InterviewSession $session): int
  {
+  // Existing interviews may have been started before the 10-question setup cap.
  $count = max(1, min(30, (int) ($session->num_questions?? 1)));
  $hasOpeningQuestion = Question::where('interview_session_id', $session->id)
  ->where('source_type', 'real_interview_opening')

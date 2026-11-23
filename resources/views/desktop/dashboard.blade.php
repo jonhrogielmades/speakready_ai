@@ -464,9 +464,13 @@
 
                         <div class="sr-dashboard-mock-field">
                             <label class="sr-dashboard-coach-label" for="dashboardMockQuestions">Questions</label>
+                            @php
+                                $dashboardQuestionCount = (int) old('num_questions', 5);
+                                $dashboardQuestionCount = in_array($dashboardQuestionCount, [1, 3, 5, 10], true) ? $dashboardQuestionCount : 5;
+                            @endphp
                             <select class="sr-dashboard-mock-control" name="num_questions" id="dashboardMockQuestions">
-                                @foreach([1, 3, 5, 10, 15, 20, 25, 30] as $questionCount)
-                                    <option value="{{ $questionCount }}" {{ (string) old('num_questions', 5) === (string) $questionCount ? 'selected' : '' }}>{{ $questionCount }} {{ $questionCount === 1 ? 'Question' : 'Questions' }}</option>
+                                @foreach([1, 3, 5, 10] as $questionCount)
+                                    <option value="{{ $questionCount }}" {{ $dashboardQuestionCount === $questionCount ? 'selected' : '' }}>{{ $questionCount }} {{ $questionCount === 1 ? 'Question' : 'Questions' }}</option>
                                 @endforeach
                             </select>
                         </div>

@@ -63,7 +63,7 @@ test('legacy saved avatar is ignored while other setup fields are restored', () 
         values: {
             interviewer_avatar: 'role_specialist',
             difficulty: 'hard',
-            num_questions: '6',
+            num_questions: '5',
         },
         visited_step_ids: ['panel-basic'],
     });
@@ -76,14 +76,14 @@ test('legacy saved avatar is ignored while other setup fields are restored', () 
     assert.equal(avatarTwo.checked, false);
     assert.deepEqual(avatarTwo.events, ['change']);
     assert.equal(difficultyTwo.checked, true);
-    assert.equal(questions.value, '6');
+    assert.equal(questions.value, '5');
     assert.deepEqual(events, ['speakready:interview-setup-draft-restored']);
 
     api.save(form);
     const savedValues = JSON.parse(stored.get(storageKey)).values;
     assert.equal(Object.hasOwn(savedValues, 'interviewer_avatar'), false);
     assert.equal(savedValues.difficulty, 'hard');
-    assert.equal(savedValues.num_questions, '6');
+    assert.equal(savedValues.num_questions, '5');
 });
 
 test('a fresh setup clears browser-restored avatar even without a saved draft', () => {

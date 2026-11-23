@@ -209,19 +209,26 @@
                     </div>
                     <div class="modal-body settings-modal-body">
             <div class="row g-3 mb-3 admin-settings-fields-grid">
+                @php
+                    $interviewQuestionOptions = [1, 3, 5, 10];
+                    $selectedDefaultQuestions = (int) $value('int_default_questions', 10);
+                    $selectedMaxQuestions = (int) $value('int_max_questions', 10);
+                    $selectedDefaultQuestions = in_array($selectedDefaultQuestions, $interviewQuestionOptions, true) ? $selectedDefaultQuestions : 10;
+                    $selectedMaxQuestions = in_array($selectedMaxQuestions, $interviewQuestionOptions, true) ? $selectedMaxQuestions : 10;
+                @endphp
                 <div class="col-md-4">
                     <label class="form-label">Default Number of Questions</label>
                     <select class="form-select" name="int_default_questions">
-                        @foreach([1, 3, 5, 10, 15, 20, 25, 30] as $count)
-                            <option value="{{ $count }}" {{ (string) $value('int_default_questions', 10) === (string) $count ? 'selected' : '' }}>{{ $count }}</option>
+                        @foreach($interviewQuestionOptions as $count)
+                            <option value="{{ $count }}" {{ $selectedDefaultQuestions === $count ? 'selected' : '' }}>{{ $count }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Maximum Questions Allowed</label>
                     <select class="form-select" name="int_max_questions">
-                        @foreach([1, 3, 5, 10, 15, 20, 25, 30] as $count)
-                            <option value="{{ $count }}" {{ (string) $value('int_max_questions', 20) === (string) $count ? 'selected' : '' }}>{{ $count }}</option>
+                        @foreach($interviewQuestionOptions as $count)
+                            <option value="{{ $count }}" {{ $selectedMaxQuestions === $count ? 'selected' : '' }}>{{ $count }}</option>
                         @endforeach
                     </select>
                 </div>
