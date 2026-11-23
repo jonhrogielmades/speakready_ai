@@ -683,6 +683,7 @@ FFPROBE_COMMAND=ffprobe
 AI_VOICE_ANALYSIS_TIMEOUT=12
 AI_VOICE_ANALYSIS_MAX_PROVIDERS=2
 AI_VOICE_ANALYSIS_HTTP_ATTEMPTS=1
+AI_INTERVIEW_TTS_ENABLED=true
 AI_TTS_ENABLED=false
 AI_TTS_PROVIDER=openai,gemini,elevenlabs
 AI_TTS_TIMEOUT=30
@@ -697,7 +698,7 @@ ELEVENLABS_TTS_VOICE_ID=21m00Tcm4TlvDq8ikWAM
 ELEVENLABS_TTS_SPEED=0.90
 ```
 
-Voice previews and new interview sessions try OpenAI first, then Gemini, then ElevenLabs until the first session audio succeeds. The successful provider, model, and voice are fixed for that session's questions, repeats, and closing speech. If that voice becomes unavailable, the text remains visible without switching to a different voice. The six interviewers have distinct voices on OpenAI and Gemini. ElevenLabs currently uses the single configured `ELEVENLABS_TTS_VOICE_ID` for all six interviewers. Enable `AI_TTS_ENABLED` and configure credentials for each provider you want to use. Set `AI_TTS_PROVIDER=openai,gemini,elevenlabs` on existing deployments because an environment value overrides the default. The current OpenAI Speech API model, `gpt-4o-mini-tts`, is [scheduled to shut down on January 6, 2027](https://developers.openai.com/api/docs/guides/text-to-speech); migrate the fallback before then.
+Voice previews and new interview sessions try OpenAI first, then Gemini, then ElevenLabs until the first session audio succeeds. The successful provider, model, and voice are fixed for that session's questions, repeats, and closing speech. If that server voice becomes unavailable, the interview uses the device's speech voice when supported and keeps the question text visible. The six interviewers have distinct voices on OpenAI and Gemini. ElevenLabs currently uses the single configured `ELEVENLABS_TTS_VOICE_ID` for all six interviewers. `AI_INTERVIEW_TTS_ENABLED=true` enables interview speech independently of `AI_TTS_ENABLED`, which controls onboarding and game speech. Configure valid credentials for the speech providers you want to use in Dokploy, then redeploy so Laravel loads the updated configuration. `AI_TTS_PROVIDER` controls onboarding and game speech; interview sessions always try OpenAI, Gemini, then ElevenLabs. The current OpenAI Speech API model, `gpt-4o-mini-tts`, is [scheduled to shut down on January 6, 2027](https://developers.openai.com/api/docs/guides/text-to-speech); migrate the fallback before then.
 
 Optional local speech assessment:
 

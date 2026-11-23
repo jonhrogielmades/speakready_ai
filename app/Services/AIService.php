@@ -4134,7 +4134,9 @@ PROMPT;
 
  public static function synthesizeSpeech(string $text, array|string|null $targetLanguage = null, array $options = []):?array
  {
- if (! self::speechSynthesisEnabled()) {
+ if (array_key_exists('interviewer_avatar', $options)
+  ? ! self::interviewerSpeechEnabled()
+  : ! self::speechSynthesisEnabled()) {
  return null;
  }
 
@@ -4257,16 +4259,20 @@ PROMPT;
  }
 
  $audio = $response->body();
- if ($audio === '') {
- return null;
- }
+ $mimeType = self::speechAudioMimeType(
+  $audio,
+  (string) $response->header('Content-Type', ''),
+  self::elevenLabsMimeType($credentials['output_format'])
+ );
+ if ($mimeType === null) {
+  Log::warning('ElevenLabs Speech Error: response was not audio; '.self::safeProviderResponseBody($response));
 
- $contentType = trim((string) $response->header('Content-Type', ''));
- $mimeType = str_contains($contentType, ';')? trim(strstr($contentType, ';', true)): $contentType;
+  return null;
+ }
 
  return [
  'audio' => $audio,
- 'mime_type' => $mimeType!== ''? $mimeType: self::elevenLabsMimeType($credentials['output_format']),
+ 'mime_type' => $mimeType,
   'provider' => 'elevenlabs',
   'model' => $model,
   'voice' => $voiceId,
@@ -4340,16 +4346,16 @@ PROMPT;
  }
 
  $audio = $response->body();
- if ($audio === '') {
- return null;
- }
+ $mimeType = self::speechAudioMimeType($audio, (string) $response->header('Content-Type', ''), 'audio/mpeg');
+ if ($mimeType === null) {
+  Log::warning('OpenAI Speech Error: response was not audio; '.self::safeProviderResponseBody($response));
 
- $contentType = trim((string) $response->header('Content-Type', 'audio/mpeg'));
- $mimeType = str_contains($contentType, ';')? trim(strstr($contentType, ';', true)): $contentType;
+  return null;
+ }
 
  return [
  'audio' => $audio,
- 'mime_type' => $mimeType!== ''? $mimeType: 'audio/mpeg',
+ 'mime_type' => $mimeType,
   'provider' => 'openai',
   'model' => $model,
   'voice' => $voice,
@@ -5182,7 +5188,7 @@ PROMPT;
 
  public static function interviewerSpeechAvailable(?string $pinnedProvider = null): bool
  {
- if (! self::speechSynthesisEnabled()) {
+ if (! self::interviewerSpeechEnabled()) {
  return false;
  }
 
@@ -5232,6 +5238,11 @@ PROMPT;
  config('services.ai_tts.enabled', config('services.openai.tts_enabled', false)),
  FILTER_VALIDATE_BOOLEAN
  );
+ }
+
+ private static function interviewerSpeechEnabled(): bool
+ {
+ return filter_var(config('services.ai_tts.interview_enabled', true), FILTER_VALIDATE_BOOLEAN);
  }
 
  private static function speechSynthesisProvider(): string
@@ -5520,6 +5531,39 @@ PROMPT;
  private static function elevenLabsMimeType(string $outputFormat): string
  {
  return self::elevenLabsAcceptHeader($outputFormat);
+ }
+
+ private static function speechAudioMimeType(string $audio, string $contentType, string $fallbackMimeType): ?string
+ {
+  if ($audio === '') {
+   return null;
+  }
+
+  // Some proxies return a successful status with a JSON or HTML error body.
+  $prefix = ltrim(substr($audio, 0, 32));
+  if (str_starts_with($prefix, '{') || str_starts_with($prefix, '[') || str_starts_with($prefix, '<')) {
+   return null;
+  }
+
+  $mimeType = strtolower(trim(strtok($contentType, ';') ?: ''));
+  if (str_starts_with($mimeType, 'audio/')) {
+   return $mimeType;
+  }
+
+  if ($mimeType !== '' && $mimeType !== 'application/octet-stream') {
+   return null;
+  }
+
+  // A missing or generic Content-Type is only safe when the bytes identify audio.
+  if (str_starts_with($audio, 'ID3')
+   || (strlen($audio) >= 2 && ord($audio[0]) === 0xff && (ord($audio[1]) & 0xe0) === 0xe0)
+   || (str_starts_with($audio, 'RIFF') && substr($audio, 8, 4) === 'WAVE')
+   || str_starts_with($audio, 'OggS')
+   || substr($audio, 4, 4) === 'ftyp') {
+   return $fallbackMimeType;
+  }
+
+  return null;
  }
 
  private static function openAiSpeechCredentials():?array

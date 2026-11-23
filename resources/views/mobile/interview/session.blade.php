@@ -3289,6 +3289,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  let questionLoadToken = 0;
  let activeQuestionAudio = null;
  let activeQuestionAudioUrl = null;
+ let activeQuestionUtterance = null;
  let captionInterval = null;
  let activeSpeechCompletion = null;
  let serverVoiceUnavailable =!serverAiVoiceEnabled;
@@ -4269,10 +4270,24 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  releaseQuestionAudioUrl(url);
  }
 
+ function cancelQuestionDeviceVoice() {
+ const active = activeQuestionUtterance;
+ activeQuestionUtterance = null;
+ if (!active) return;
+ clearTimeout(active.startTimeoutId);
+ active.settleStart(false);
+ try {
+ window.speechSynthesis?.cancel();
+ } catch (error) {
+ console.warn('Browser interviewer voice could not be stopped:', error);
+ }
+ }
+
  function cancelQuestionSpeechOutput() {
  questionSpeechToken++;
  resolveAnySpeechCompletion();
  cancelQuestionAudio();
+ cancelQuestionDeviceVoice();
  clearCaptionInterval();
  renderQuestionCaption([], -1);
  if (visualizerInterval) clearInterval(visualizerInterval);
@@ -4310,9 +4325,6 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  });
 
  if (!response.ok) {
- if (response.status === 400 || response.status === 403) {
- serverVoiceUnavailable = true;
- }
  return null;
  }
 
@@ -4328,7 +4340,8 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  } finally {
  clearTimeout(bodyTimeoutId);
  }
- if (!blob || blob.size < 128) return null;
+ const responseType = response.headers?.get?.('content-type') || blob?.type || '';
+ if (!blob || blob.size < 128 || (responseType && !String(responseType).toLowerCase().startsWith('audio/'))) return null;
 
  return blob;
  })().catch(error => {
@@ -4382,13 +4395,29 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
 
  audio.addEventListener('error', () => {
  if (activeQuestionAudio!== audio) return;
+ audio.pause?.();
  activeQuestionAudio = null;
  activeQuestionAudioUrl = null;
  releaseQuestionAudioUrl(url);
  if (token!== questionSpeechToken || interviewTerminated) return;
  if (playbackReady) {
+ if (activeSpeechCompletion?.token === token) {
+ clearTimeout(activeSpeechCompletion.timeoutId);
+ activeSpeechCompletion.timeoutId = null;
+ }
+ clearCaptionInterval();
+ stopSpeechSpectrumVisualizer();
+ showPreparingVoiceCaption();
+ speakWithDeviceVoice(text, token, startTimerAfterSpeech).then(usedDeviceVoice => {
+ if (usedDeviceVoice || token!== questionSpeechToken || interviewTerminated) return;
  showSessionNotice('Interviewer audio stopped. Read the text on screen.', 'warning');
  finishSpeakingUi(text, token, startTimerAfterSpeech);
+ }).catch(error => {
+ console.warn('Browser interviewer voice unavailable:', error);
+ if (token!== questionSpeechToken || interviewTerminated) return;
+ showSessionNotice('Interviewer audio stopped. Read the text on screen.', 'warning');
+ finishSpeakingUi(text, token, startTimerAfterSpeech);
+ });
  }
  }, { once: true });
 
@@ -4420,6 +4449,80 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  }
 
 
+ function speakWithDeviceVoice(text, token, startTimerAfterSpeech) {
+ const synthesis = window.speechSynthesis;
+ const Utterance = window.SpeechSynthesisUtterance;
+ if (!synthesis || typeof synthesis.speak!== 'function' || !Utterance || interviewTerminated) {
+ return Promise.resolve(false);
+ }
+
+ return new Promise(resolve => {
+ let utterance;
+ try {
+ utterance = new Utterance(text);
+ } catch (error) {
+ console.warn('Browser interviewer voice unavailable:', error);
+ resolve(false);
+ return;
+ }
+ utterance.lang = speechLocale;
+ utterance.rate = 1;
+ let started = false;
+ let startSettled = false;
+ let captionController = null;
+ const active = { utterance, startTimeoutId: null, settleStart: value => {
+ if (startSettled) return;
+ startSettled = true;
+ clearTimeout(active.startTimeoutId);
+ resolve(value);
+ } };
+ activeQuestionUtterance = active;
+ const current = () => activeQuestionUtterance === active && token === questionSpeechToken && !interviewTerminated;
+
+ utterance.onstart = () => {
+ if (!current()) return;
+ started = true;
+ captionController = startSpeakingUi(text, { boundaryAware: true });
+ if (activeSpeechCompletion?.token === token) {
+ activeSpeechCompletion.timeoutId = setTimeout(() => {
+ if (!current()) return;
+ cancelQuestionDeviceVoice();
+ finishSpeakingUi(text, token, startTimerAfterSpeech);
+ }, estimatedSpeechTimeoutMs(text));
+ }
+ active.settleStart(true);
+ };
+ utterance.onboundary = event => {
+ if (current() && started) captionController?.markBoundary(event.charIndex);
+ };
+ utterance.onend = () => {
+ if (!current()) return;
+ activeQuestionUtterance = null;
+ active.settleStart(started);
+ if (started) finishSpeakingUi(text, token, startTimerAfterSpeech);
+ };
+ utterance.onerror = () => {
+ if (!current()) return;
+ activeQuestionUtterance = null;
+ active.settleStart(started);
+ if (started) {
+ showSessionNotice('Interviewer audio stopped. Read the text on screen.', 'warning');
+ finishSpeakingUi(text, token, startTimerAfterSpeech);
+ }
+ };
+
+ active.startTimeoutId = setTimeout(() => {
+ if (current() && !started) cancelQuestionDeviceVoice();
+ }, 4000);
+ try {
+ synthesis.speak(utterance);
+ } catch (error) {
+ console.warn('Browser interviewer voice unavailable:', error);
+ cancelQuestionDeviceVoice();
+ }
+ });
+ }
+
  async function speakQuestion(text, options = {}) {
  if (interviewTerminated) return 'cancelled';
 
@@ -4435,6 +4538,7 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  if (isRecording) {
  await pauseRecording();
  }
+ if (token!== questionSpeechToken || interviewTerminated) return completion;
 
  const speechText = options.speechText || '';
  const cleanSpeechText = cleanTranscriptText(speechText);
@@ -4442,6 +4546,15 @@ $clientQuestionsForUi = $questions->values()->map(fn ($question) => [
  showPreparingVoiceCaption();
  const usedServerVoice = await speakWithServerVoice(text, token, startTimerAfterSpeech, options.questionId, speechText);
  if (usedServerVoice || token!== questionSpeechToken || interviewTerminated) return completion;
+ }
+ if (token === questionSpeechToken && !interviewTerminated) {
+ let usedDeviceVoice = false;
+ try {
+ usedDeviceVoice = await speakWithDeviceVoice(text, token, startTimerAfterSpeech);
+ } catch (error) {
+ console.warn('Browser interviewer voice unavailable:', error);
+ }
+ if (usedDeviceVoice || token!== questionSpeechToken || interviewTerminated) return completion;
  }
  if (token === questionSpeechToken && !interviewTerminated) {
  showSessionNotice('Interviewer audio is unavailable. Read the text on screen.', 'warning');

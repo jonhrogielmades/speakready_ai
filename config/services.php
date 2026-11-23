@@ -62,6 +62,7 @@ return [
 
  'ai_tts' => [
  'enabled' => env('AI_TTS_ENABLED', false),
+ 'interview_enabled' => env('AI_INTERVIEW_TTS_ENABLED', true),
  'provider' => env('AI_TTS_PROVIDER', 'openai,gemini,elevenlabs'),
  'timeout' => env('AI_TTS_TIMEOUT', 30),
  'onboarding_cache_ttl_seconds' => env('AI_TTS_ONBOARDING_CACHE_TTL_SECONDS', 604800),

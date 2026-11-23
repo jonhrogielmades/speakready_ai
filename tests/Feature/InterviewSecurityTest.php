@@ -902,6 +902,40 @@ class InterviewSecurityTest extends TestCase
         $this->assertSame($question->question_text, $requests[2]['text']);
     }
 
+    public function test_interview_speech_rejects_a_successful_json_error_before_pinning_a_provider(): void
+    {
+        $this->configureInterviewerSpeechProviderChain();
+
+        Http::fake(function ($request) {
+            if ($request->url() === 'https://api.openai.com/v1/audio/speech') {
+                return Http::response(['error' => ['message' => 'Upstream speech failed']], 200, [
+                    'Content-Type' => 'application/json',
+                ]);
+            }
+
+            return Http::response([
+                'interaction' => ['output_audio' => ['data' => base64_encode(str_repeat("\0", 480))]],
+            ], 200, ['Content-Type' => 'application/json']);
+        });
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+
+        $response = $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.speech'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+            ]);
+
+        $response->assertOk()->assertHeader('Content-Type', 'audio/wav');
+        $this->assertStringStartsWith('RIFF', $response->getContent());
+        $this->assertSame('gemini', $session->fresh()->tts_provider);
+        Http::assertSentCount(2);
+    }
+
     public function test_concurrent_first_speech_request_returns_only_audio_matching_the_winning_voice(): void
     {
         $this->configureInterviewerSpeechProviderChain();
@@ -1171,7 +1205,7 @@ class InterviewSecurityTest extends TestCase
             'speech_text' => 'Say a user supplied script',
         ])->assertUnprocessable();
 
-        config(['services.ai_tts.enabled' => false]);
+        config(['services.ai_tts.interview_enabled' => false]);
         $this->assertFalse(AIService::interviewerSpeechAvailable());
         $this->postJson(route('interview.avatarVoicePreview'), ['interviewer_avatar' => 'friendly_recruiter'])
             ->assertStatus(503)
@@ -1465,10 +1499,53 @@ class InterviewSecurityTest extends TestCase
             && $request['voice'] === 'nova');
     }
 
-    public function test_speech_endpoint_does_not_call_paid_tts_when_disabled(): void
+    public function test_interview_speech_works_when_global_tts_is_disabled(): void
     {
         config([
             'services.ai_tts.enabled' => false,
+            'services.ai_tts.interview_enabled' => true,
+            'services.openai.tts_enabled' => false,
+        ]);
+        Http::fake([
+            'https://api.openai.com/v1/audio/speech' => Http::response('interviewer-audio', 200, [
+                'Content-Type' => 'audio/mpeg',
+            ]),
+        ]);
+
+        AiProvider::create([
+            'name' => 'OpenAI',
+            'api_endpoint' => 'https://api.openai.com/v1',
+            'api_key' => Crypt::encryptString('test-key'),
+            'status' => 'active',
+        ]);
+
+        $this->assertFalse(AIService::speechSynthesisAvailable());
+        $this->assertTrue(AIService::interviewerSpeechAvailable());
+
+        $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
+        $category = $this->category();
+        $session = $this->sessionFor($user, $category);
+        $question = $this->sessionQuestion($session, $category);
+
+        $this->actingAs($user)
+            ->withSession(['active_interview_id' => $session->id])
+            ->post(route('interview.speech'), [
+                'session_id' => $session->id,
+                'question_id' => $question->id,
+            ])
+            ->assertOk()
+            ->assertHeader('Content-Type', 'audio/mpeg')
+            ->assertSee('interviewer-audio');
+
+        $this->assertSame('openai', $session->fresh()->tts_provider);
+        Http::assertSentCount(1);
+    }
+
+    public function test_speech_endpoint_does_not_call_paid_tts_when_interview_is_disabled(): void
+    {
+        config([
+            'services.ai_tts.enabled' => false,
+            'services.ai_tts.interview_enabled' => false,
             'services.openai.tts_enabled' => false,
         ]);
         Http::fake();

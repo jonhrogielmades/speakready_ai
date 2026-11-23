@@ -142,6 +142,46 @@ for (const layout of layouts) {
         assert.equal(captionsFinished, 1);
     });
 
+    test(`${layout} switches to browser voice when server playback stops`, async () => {
+        const events = new Map();
+        const audio = { addEventListener(name, callback) { events.set(name, callback); }, play: async () => {} };
+        let browserCalls = 0;
+        let finishes = 0;
+        let clearedWatchdog = 0;
+        const context = evaluate(source, ['speakWithServerVoice'], {
+            window: { Audio() {} },
+            Audio: function Audio() { return audio; },
+            interviewerServerAudioPlaybackRate: 1,
+            serverVoiceUnavailable: false,
+            interviewTerminated: false,
+            questionSpeechToken: 3,
+            activeQuestionAudio: null,
+            activeQuestionAudioUrl: null,
+            serverSpeechUrl: async () => 'blob:question-12',
+            releaseQuestionAudioUrl() {},
+            startSpeakingUi() {},
+            finishSpeakingUi() { finishes++; },
+            activeSpeechCompletion: { token: 3, timeoutId: null },
+            estimatedSpeechTimeoutMs: () => 10000,
+            clearCaptionInterval() {},
+            stopSpeechSpectrumVisualizer() {},
+            showPreparingVoiceCaption() {},
+            speakWithDeviceVoice: async () => { browserCalls++; return true; },
+            showSessionNotice() { assert.fail('browser voice is available'); },
+            setTimeout: () => 7,
+            clearTimeout(id) { if (id === 7) clearedWatchdog++; },
+            console,
+        });
+
+        assert.equal(await context.speakWithServerVoice('Question', 3, true, 12), true);
+        events.get('playing')();
+        events.get('error')();
+        await Promise.resolve();
+        assert.equal(browserCalls, 1);
+        assert.equal(finishes, 0, 'answer timer waits for browser speech to end');
+        assert.equal(clearedWatchdog, 1);
+    });
+
     test(`${layout} keeps captions aligned with playback speed and pauses`, () => {
         const rendered = [];
         const intervals = [];
@@ -197,7 +237,7 @@ for (const layout of layouts) {
         assert.equal(rendered.at(-1), 7);
     });
 
-    test(`${layout} keeps the question readable and continues when server audio is unavailable`, async () => {
+    test(`${layout} keeps the question readable when both audio sources are unavailable`, async () => {
         const shown = { innerText: '...' };
         const notices = [];
         let finished = 0;
@@ -213,7 +253,7 @@ for (const layout of layouts) {
             cleanTranscriptText: value => value.trim(),
             cancelQuestionSpeechOutput() { context.questionSpeechToken++; },
             speakWithServerVoice: async () => false,
-            speakWithDeviceVoice() { assert.fail('interviewer must not use browser speech'); },
+            speakWithDeviceVoice: async () => false,
             showSessionNotice(message, type) { notices.push([message, type]); },
             finishSpeakingUi(_text, token) {
                 finished++;
@@ -227,6 +267,137 @@ for (const layout of layouts) {
         assert.equal(notices.length, 1);
         assert.match(notices[0][0], /audio is unavailable/i);
         assert.equal(notices[0][1], 'warning');
+    });
+
+    test(`${layout} uses browser voice when server audio fails`, async () => {
+        const shown = { innerText: '' };
+        const notices = [];
+        let browserCalls = 0;
+        const context = evaluate(source, ['speakQuestion'], {
+            interviewTerminated: false,
+            questionSpeechToken: 0,
+            activeSpeechCompletion: null,
+            isRecording: false,
+            serverAiVoiceEnabled: true,
+            document: { getElementById: () => shown },
+            showPreparingVoiceCaption() {},
+            cleanTranscriptText: value => value.trim(),
+            cancelQuestionSpeechOutput() { context.questionSpeechToken++; },
+            speakWithServerVoice: async () => false,
+            speakWithDeviceVoice() {
+                browserCalls++;
+                context.activeSpeechCompletion.resolve('finished');
+                return Promise.resolve(true);
+            },
+            showSessionNotice(message) { notices.push(message); },
+            finishSpeakingUi() { assert.fail('browser voice should finish the question'); },
+        });
+
+        assert.equal(await context.speakQuestion('Tell me about your project.', { questionId: 12 }), 'finished');
+        assert.equal(browserCalls, 1);
+        assert.deepEqual(notices, []);
+    });
+
+    test(`${layout} starts browser voice immediately when server voice is disabled`, async () => {
+        const shown = { innerText: '' };
+        let browserCalls = 0;
+        const context = evaluate(source, ['speakQuestion'], {
+            interviewTerminated: false,
+            questionSpeechToken: 0,
+            activeSpeechCompletion: null,
+            isRecording: false,
+            serverAiVoiceEnabled: false,
+            document: { getElementById: () => shown },
+            cleanTranscriptText: value => value.trim(),
+            cancelQuestionSpeechOutput() { context.questionSpeechToken++; },
+            speakWithServerVoice() { assert.fail('disabled server voice must not be requested'); },
+            speakWithDeviceVoice() {
+                browserCalls++;
+                context.activeSpeechCompletion.resolve('finished');
+                return Promise.resolve(true);
+            },
+            showSessionNotice() { assert.fail('browser voice is available'); },
+        });
+
+        const result = context.speakQuestion('Tell me about your project.', { questionId: 12 });
+        assert.equal(browserCalls, 1);
+        assert.equal(await result, 'finished');
+    });
+
+    test(`${layout} aligns browser captions and completes only after speech ends`, async () => {
+        const utterances = [];
+        const boundaries = [];
+        const finishes = [];
+        let captionStarts = 0;
+        const context = evaluate(source, ['speakWithDeviceVoice', 'cancelQuestionDeviceVoice'], {
+            speechLocale: 'en-GB',
+            window: {
+                speechSynthesis: { speak(utterance) { utterances.push(utterance); }, cancel() {} },
+                SpeechSynthesisUtterance: class SpeechSynthesisUtterance { constructor(text) { this.text = text; } },
+            },
+            interviewTerminated: false,
+            questionSpeechToken: 1,
+            activeQuestionUtterance: null,
+            activeSpeechCompletion: { token: 1, timeoutId: null },
+            estimatedSpeechTimeoutMs: () => 10000,
+            setTimeout: () => 1,
+            clearTimeout() {},
+            startSpeakingUi(_text, options) {
+                captionStarts++;
+                assert.equal(options.boundaryAware, true);
+                return { markBoundary: index => boundaries.push(index) };
+            },
+            finishSpeakingUi(text, token, startTimer) { finishes.push({ text, token, startTimer }); },
+            showSessionNotice() { assert.fail('browser speech ended normally'); },
+            console,
+        });
+
+        const attempt = context.speakWithDeviceVoice('Tell me about your project.', 1, true);
+        assert.equal(utterances.length, 1);
+        assert.equal(utterances[0].lang, 'en-GB');
+        assert.equal(captionStarts, 0);
+        utterances[0].onstart();
+        assert.equal(await attempt, true);
+        assert.equal(captionStarts, 1);
+        utterances[0].onboundary({ charIndex: 8 });
+        assert.deepEqual(boundaries, [8]);
+        assert.deepEqual(finishes, []);
+        utterances[0].onend();
+        assert.deepEqual(finishes, [{ text: 'Tell me about your project.', token: 1, startTimer: true }]);
+        assert.equal(context.activeQuestionUtterance, null);
+    });
+
+    test(`${layout} cancels browser voice before a later question can speak`, async () => {
+        const utterances = [];
+        let cancels = 0;
+        let captions = 0;
+        let finishes = 0;
+        const context = evaluate(source, ['speakWithDeviceVoice', 'cancelQuestionDeviceVoice'], {
+            speechLocale: 'en-US',
+            window: {
+                speechSynthesis: { speak(utterance) { utterances.push(utterance); }, cancel() { cancels++; } },
+                SpeechSynthesisUtterance: class SpeechSynthesisUtterance {},
+            },
+            interviewTerminated: false,
+            questionSpeechToken: 1,
+            activeQuestionUtterance: null,
+            activeSpeechCompletion: null,
+            setTimeout: () => 1,
+            clearTimeout() {},
+            startSpeakingUi() { captions++; },
+            finishSpeakingUi() { finishes++; },
+            console,
+        });
+
+        const pending = context.speakWithDeviceVoice('Old question', 1, true);
+        context.cancelQuestionDeviceVoice();
+        assert.equal(await pending, false);
+        context.questionSpeechToken = 2;
+        utterances[0].onstart();
+        utterances[0].onend();
+        assert.equal(cancels, 1);
+        assert.equal(captions, 0);
+        assert.equal(finishes, 0);
     });
 
     test(`${layout} coalesces in-flight speech requests but refetches completed audio`, async () => {
@@ -286,6 +457,54 @@ for (const layout of layouts) {
         assert.equal(context.serverVoiceUnavailable, false);
         assert.equal(await context.serverSpeechUrl(12), 'blob:question-12');
         assert.equal(requests, 2);
+    });
+
+    test(`${layout} does not disable later questions after one forbidden speech request`, async () => {
+        let requests = 0;
+        const context = evaluate(source, ['serverSpeechUrl'], {
+            interviewSessionId: 7,
+            serverVoiceUnavailable: false,
+            serverSpeechObjectUrls: new Set(),
+            serverSpeechRequestCache: new Map(),
+            cleanTranscriptText: value => value.trim(),
+            FormData: class FormData { append() {} },
+            URL: { createObjectURL: () => 'blob:next-question' },
+            managedFetch() {
+                requests++;
+                return Promise.resolve(requests === 1
+                    ? { ok: false, status: 403 }
+                    : { ok: true, blob: async () => ({ size: 256, type: 'audio/mpeg' }) });
+            },
+            setTimeout,
+            clearTimeout,
+            console,
+        });
+
+        assert.equal(await context.serverSpeechUrl(12), null);
+        assert.equal(context.serverVoiceUnavailable, false);
+        assert.equal(await context.serverSpeechUrl(13), 'blob:next-question');
+    });
+
+    test(`${layout} rejects a successful proxy response that is not audio`, async () => {
+        const context = evaluate(source, ['serverSpeechUrl'], {
+            interviewSessionId: 7,
+            serverVoiceUnavailable: false,
+            serverSpeechObjectUrls: new Set(),
+            serverSpeechRequestCache: new Map(),
+            cleanTranscriptText: value => value.trim(),
+            FormData: class FormData { append() {} },
+            URL: { createObjectURL() { assert.fail('HTML must not be played as audio'); } },
+            managedFetch: async () => ({
+                ok: true,
+                headers: { get: () => 'text/html; charset=utf-8' },
+                blob: async () => ({ size: 2048, type: 'text/html' }),
+            }),
+            setTimeout,
+            clearTimeout,
+            console,
+        });
+
+        assert.equal(await context.serverSpeechUrl(12), null);
     });
 
     test(`${layout} stops waiting when an audio response body stalls`, async () => {
@@ -406,7 +625,11 @@ for (const layout of layouts) {
         const firstSpeech = deferred();
         const secondSpeech = deferred();
         const speeches = [firstSpeech, secondSpeech];
-        const elements = { aiQuestionText: { innerText: '' }, qCounter: { innerText: '' } };
+        const elements = {
+            aiQuestionText: { innerText: '' },
+            qCounter: { innerText: '' },
+            backupQuestionBadge: { hidden: false, style: {} },
+        };
         const enabled = [];
         let timerStarts = 0;
         const context = evaluate(source, ['loadQuestion'], {
@@ -421,6 +644,7 @@ for (const layout of layouts) {
             targetQuestionCount: 2,
             document: { getElementById: id => elements[id] },
             displayedQuestionIds: new Set(),
+            pendingSavedAnswerRetry: null,
             answersData: [],
             defaultAnswerState: () => ({}),
             stopQuestionTimer() {},
