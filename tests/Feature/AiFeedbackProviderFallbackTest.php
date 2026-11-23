@@ -91,6 +91,106 @@ class AiFeedbackProviderFallbackTest extends TestCase
         $this->assertSame('ai_provider', $feedback['per_question_feedback'][0]['answer_review_source']);
     }
 
+    public function test_answer_feedback_uses_a_small_output_budget_unless_explicitly_overridden(): void
+    {
+        foreach ([
+            'OPENAI_API_KEY' => 'openai_test_token',
+            'OPENAI_API_URL' => 'https://api.openai.com/v1',
+            'OPENAI_FEEDBACK_MODEL' => 'gpt-4o-mini',
+            'AI_FEEDBACK_MAX_OUTPUT_TOKENS' => '32768',
+            'AI_LIVE_TESTS' => 'false',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        $answer = [
+            'id' => 7014,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I inspected the query plan, compared row estimates, and verified index usage before changing the query.',
+        ];
+        $payload = $this->validFeedbackPayload($answer);
+        Http::fake(Http::response(['choices' => [[
+            'finish_reason' => 'stop',
+            'message' => ['content' => json_encode($payload)],
+        ]]]));
+
+        AIService::generateFeedback(
+            ['target_position' => 'Database Developer', 'difficulty' => 'Medium'],
+            [$answer],
+            'openai',
+            true,
+            false,
+            [
+                'require_provider_narratives' => true,
+                'answer_only_completion' => true,
+                'max_attempts' => 1,
+                'http_attempts' => 1,
+            ]
+        );
+        AIService::generateFeedback(
+            ['target_position' => 'Database Developer', 'difficulty' => 'Medium'],
+            [$answer],
+            'openai',
+            true,
+            false,
+            [
+                'require_provider_narratives' => true,
+                'answer_only_completion' => true,
+                'max_output_tokens' => 8192,
+                'max_attempts' => 1,
+                'http_attempts' => 1,
+            ]
+        );
+
+        $requests = collect(Http::recorded())->map(fn (array $entry) => $entry[0])->values();
+        $this->assertCount(2, $requests);
+        $this->assertSame('gpt-4o-mini', data_get($requests[0]->data(), 'model'));
+        $this->assertSame(4096, data_get($requests[0]->data(), 'max_tokens'));
+        $this->assertSame(8192, data_get($requests[1]->data(), 'max_tokens'));
+    }
+
+    public function test_full_session_feedback_keeps_its_configured_output_budget(): void
+    {
+        foreach ([
+            'OPENAI_API_KEY' => 'openai_test_token',
+            'OPENAI_API_URL' => 'https://api.openai.com/v1',
+            'OPENAI_FEEDBACK_MODEL' => 'gpt-4o-mini',
+            'AI_FEEDBACK_MAX_OUTPUT_TOKENS' => '32768',
+            'AI_LIVE_TESTS' => 'false',
+        ] as $key => $value) {
+            $this->setEnvValue($key, $value);
+        }
+
+        $answer = [
+            'id' => 7015,
+            'question_type' => 'Technical',
+            'question' => 'How would you diagnose a slow database query?',
+            'answer' => 'I inspected the query plan, compared row estimates, and verified index usage before changing the query.',
+        ];
+        Http::fake(Http::response(['choices' => [[
+            'finish_reason' => 'stop',
+            'message' => ['content' => json_encode($this->validFeedbackPayload($answer))],
+        ]]]));
+
+        AIService::generateFeedback(
+            ['target_position' => 'Database Developer', 'difficulty' => 'Medium'],
+            [$answer],
+            'openai',
+            true,
+            false,
+            [
+                'max_attempts' => 1,
+                'http_attempts' => 1,
+            ]
+        );
+
+        $requests = collect(Http::recorded())->map(fn (array $entry) => $entry[0])->values();
+        $this->assertCount(1, $requests);
+        $this->assertSame('gpt-4o-mini', data_get($requests[0]->data(), 'model'));
+        $this->assertSame(16384, data_get($requests[0]->data(), 'max_tokens'));
+    }
+
     public function test_unavailable_feedback_model_retries_once_with_the_general_openai_model(): void
     {
         foreach ([

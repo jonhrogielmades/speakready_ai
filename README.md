@@ -449,7 +449,7 @@ AI_FEEDBACK_MAX_PROVIDERS=4
 AI_FEEDBACK_ATTEMPTS=2
 AI_FEEDBACK_HTTP_ATTEMPTS=2
 AI_FEEDBACK_RETRY_DELAY_MS=250
-AI_FEEDBACK_MAX_OUTPUT_TOKENS=32768
+AI_FEEDBACK_MAX_OUTPUT_TOKENS=16384
 AI_FEEDBACK_FINALIZATION_TIMEOUT=45
 AI_FEEDBACK_FINALIZATION_DEADLINE_SECONDS=180
 AI_FEEDBACK_FINALIZATION_ATTEMPTS=2
@@ -486,7 +486,7 @@ AI Coach chat uses a low temperature for more consistent guidance, bounded provi
 
 Interview follow-ups use the latest saved answer and recent connected turns. Both hosted replies and local fallbacks check for repeated questions and already-supplied outcomes. Local probes quote a real answer detail, preserve uncertainty, and continue the same example while respecting the selected question type and role.
 
-For ordinary interviews, finishing saves the answers and completes the interview before queuing the AI review. Detailed Review stays pending until a provider report passes the saved-answer checks and is persisted. The queue job tries the configured APIs in `AI_DETAILED_REVIEW_PROVIDER_PRIORITY` order (OpenAI, Gemini, Groq, Cohere by default); it retries transient failures and never publishes local feedback as a verified AI review. A failed job remains retryable, and `feedback:requeue-stale` recovers abandoned pending or processing jobs and retries failed jobs up to a bounded attempt count. Run a database or Redis queue worker and the Laravel scheduler in every deployment. A sync queue is routed to the database for this job, but a worker must still be running. Provider calls use `AI_FEEDBACK_REVIEW_REFRESH_*` limits, independent of the interview HTTP request.
+For ordinary interviews, finishing saves the answers and completes the interview before queuing the AI review. Detailed Review shows provisional local feedback based on the saved answers while the provider report is pending or has failed. The queue job still tries the configured APIs in `AI_DETAILED_REVIEW_PROVIDER_PRIORITY` order (OpenAI, Gemini, Groq, Cohere by default). The normal provider path reviews each answer separately, requesting at most 4,096 output tokens per answer before model-specific minimums, then requests a final session summary with a 2,048-token budget. The larger `AI_FEEDBACK_MAX_OUTPUT_TOKENS` setting remains available for a full-session recovery request. A provider report replaces the provisional feedback only after it passes the saved-answer checks and is persisted; local feedback is never labeled as provider-verified. A failed job remains retryable, and `feedback:requeue-stale` recovers abandoned pending or processing jobs and retries failed jobs up to a bounded attempt count. Run a database or Redis queue worker and the Laravel scheduler in every deployment. A sync queue is routed to the database for this job, but a worker must still be running. Provider calls use `AI_FEEDBACK_REVIEW_REFRESH_*` limits, independent of the interview HTTP request.
 
 For local development, set `QUEUE_CONNECTION=database` and run these as separate long-running processes:
 
@@ -496,7 +496,7 @@ php artisan queue:work database --queue=review-answers --sleep=3 --tries=3 --tim
 php artisan schedule:work
 ```
 
-Run `php artisan ai:smoke-detailed-feedback` with configured provider keys to check strict provider response validation using a synthetic answer. `--provider=openai` tests one provider. The saved-answer persistence gate is covered by the review integration tests. A passing smoke check verifies the current API response only; provider quotas, network access, and response quality can change later.
+Run `php artisan ai:smoke-detailed-feedback` with configured provider keys to check strict provider response validation using a synthetic answer. `--provider=openai` tests one provider. The saved-answer persistence gate is covered by the review integration tests. A passing smoke check verifies the current API response only; provider quotas, network access, and response quality can change later. On Dokploy, set the API keys in the Compose environment editor and redeploy; the image excludes your local `.env`, and Laravel caches configuration at startup. The default `AI_FEEDBACK_MAX_OUTPUT_TOKENS=16384` fits the default Dokploy `gpt-4o-mini` model; higher configured values are capped for known model limits.
 
 Local and hosted scoring share action/result checks: dates and team sizes do not establish an outcome, and a hypothetical plan is not a completed behavioral example. Qualitative and unsuccessful outcomes still count as reported evidence. Provider numeric claims must preserve quantities and units from the answer. Detailed Review refreshes compare a locked input fingerprint before saving, so an in-flight API response cannot overwrite feedback after its answer or question changed. Displayed evidence excerpts are also checked against the saved answer.
 
@@ -592,7 +592,7 @@ provenance, and a lightweight ensemble for larger datasets. The predictor
 remains compatible with older artifacts, but the runtime will not use an old
 or unvalidated artifact when the production validation gate is enabled.
 
-The local model remains available for training and other explicitly local workflows. Ordinary completed interviews wait for a validated hosted provider review when APIs fail:
+The trained local model remains available for training and other explicitly local workflows. Ordinary completed interviews show evidence-based local feedback while they await a validated hosted provider review:
 
 ```env
 LOCAL_FEEDBACK_MODEL_ENABLED=true
@@ -759,12 +759,16 @@ On startup, `docker-start.sh`:
 
 The container health check calls Laravel's `GET /up` readiness endpoint. It returns `200` only when the supported PHP runtime, Laravel boot, startup-maintenance state, writable storage, configured queue/scheduler heartbeats, and a live database query are healthy; otherwise it returns `503`. External AI, mail, and push providers do not block readiness.
 
+Read the JSON body as well as the HTTP status. A `200` response with `"status":"degraded"` and `"failed_jobs":false` means the number of recent failed queue jobs exceeds the monitoring limit. It does not identify which jobs failed or prove an AI provider failure. In the Dokploy app terminal, inspect `php artisan queue:failed` and the app logs, then run `php artisan ai:smoke-detailed-feedback --provider=openai` (or another configured provider) to test provider access and response validation. Once the cause is fixed, `php artisan feedback:requeue-stale --limit=50` can recover eligible interview reviews.
+
 Queue and scheduler monitoring defaults are:
 
 ```env
 QUEUE_HEALTHCHECK_ENABLED=true
 QUEUE_HEARTBEAT_MAX_AGE_SECONDS=420
 QUEUE_WORKER_MAX_TIME=240
+QUEUE_REVIEW_ANSWER_WORKERS=2
+QUEUE_REVIEW_ANSWER_HEALTHCHECK_ENABLED=true
 SCHEDULER_HEALTHCHECK_ENABLED=true
 SCHEDULER_HEARTBEAT_MAX_AGE_SECONDS=180
 ```

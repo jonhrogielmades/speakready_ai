@@ -85,8 +85,37 @@ class PostInterviewAiFeedbackReviewTest extends TestCase
 
             $response->assertOk()
                 ->assertSee('Your AI answer reviews are being prepared.')
+                ->assertSee('Open an answer below for preliminary local feedback')
+                ->assertSee('Local feedback preview')
+                ->assertSee('query plan')
                 ->assertDontSee('AI Feedback Review')
                 ->assertDontSee('Stale provider summary must stay hidden.');
+        }
+
+        Http::assertNothingSent();
+    }
+
+    public function test_failed_provider_review_keeps_local_feedback_visible_and_offers_ai_retry(): void
+    {
+        [$user, $session] = $this->fixture();
+
+        $this->actingAs($user)->postJson(route('interview.finish'), ['session_id' => $session->id])
+            ->assertStatus(202);
+        $session->update([
+            'feedback_status' => 'failed',
+            'feedback_failure_code' => 'provider_timeout',
+        ]);
+
+        foreach (['desktop', 'mobile'] as $device) {
+            $this->actingAs($user)
+                ->withHeader('User-Agent', $this->userAgent($device))
+                ->get(route('user.review', $session))
+                ->assertOk()
+                ->assertSee('Retry AI review')
+                ->assertSee('Open an answer below for preliminary local feedback')
+                ->assertSee('Local feedback preview')
+                ->assertSee('query plan')
+                ->assertDontSee('AI Feedback Review');
         }
 
         Http::assertNothingSent();
@@ -115,6 +144,7 @@ class PostInterviewAiFeedbackReviewTest extends TestCase
                 ->assertOk()
                 ->assertSee('AI Feedback Review')
                 ->assertSee('Overall Review')
+                ->assertDontSee('Local feedback preview')
                 ->assertSee('Across the database query answer, the response used specific database query details.');
         }
 

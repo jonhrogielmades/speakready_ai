@@ -10,6 +10,25 @@
  $preparedProviderReview = ! $reviewEndedEarly && ! $providerReviewVerified && is_array($preparedProviderReview ?? null)
  ? $preparedProviderReview : null;
  $preparedReviewReady = $preparedProviderReview !== null;
+ $localPreview = null;
+ if (! $reviewEndedEarly && ! $providerReviewVerified && ! $preparedReviewReady) {
+     $localAnswer = (bool) ($answer->is_skipped ?? false)
+         ? ''
+         : ($answerText !== '' ? $answerText : trim((string) ($answer->delivery_transcript ?? '')));
+     if ($localAnswer !== '' || (bool) ($answer->is_skipped ?? false)) {
+         $localPreview = \App\Services\AIService::localReviewQuestionFeedback([
+             'id' => $answer->id,
+             'question' => $answer->question->question_text ?? '',
+             'question_type' => $answer->question->type ?? null,
+             'answer' => $localAnswer,
+             'is_skipped' => (bool) ($answer->is_skipped ?? false),
+             'expected_guide' => $answer->question->expected_guide ?? null,
+             'mapped_skills' => $answer->question->mapped_skills ?? [],
+             'response_mode' => $answer->response_mode ?? 'text',
+             'delivery_transcript' => $answer->delivery_transcript ?? '',
+         ]);
+     }
+ }
 
  $answerDisplay = $answerText !== ''
  ? $answerText
@@ -68,7 +87,7 @@
  @if($reviewEndedEarly || (! $providerReviewVerified && ! $preparedReviewReady))
  <div class="early-ended-answer-note" role="note">
  <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
- <span>{{ $reviewEndedEarly ? 'This answer was saved, but it was not assessed because the interview ended early.' : 'This answer was saved. Provider feedback will appear after the AI review passes validation.' }}</span>
+ <span>{{ $reviewEndedEarly ? 'This answer was saved, but it was not assessed because the interview ended early.' : 'This answer was saved. Provider feedback will appear after the AI review passes validation. Local feedback below is preliminary guidance from your saved answer.' }}</span>
  </div>
  <div class="review-answer-example-grid">
  <section class="review-answer-section-wide">
@@ -79,6 +98,17 @@
  <p>{{ $answerDisplay }}</p>
  @endif
  </section>
+ @if($localPreview !== null)
+ <section class="review-answer-section-wide" aria-label="Local feedback preview">
+ <span>Local feedback preview</span>
+ <p>{{ trim((string) ($localPreview['ai_feedback'] ?? '')) }}</p>
+ </section>
+ @elseif(! $reviewEndedEarly && ! $preparedReviewReady && $hasVoiceRecording && ! $hasVoiceEvidence && $answerText === '')
+ <section class="review-answer-section-wide" aria-label="Local feedback preview">
+ <span>Local feedback preview</span>
+ <p>A saved transcript is needed before local feedback can review this voice answer. The AI provider review is still being prepared.</p>
+ </section>
+ @endif
  </div>
  @else
  @if($preparedReviewReady)

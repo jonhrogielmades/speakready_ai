@@ -555,6 +555,20 @@ class RemovedAiProviderSupportTest extends TestCase
  ], $legacy);
  }
 
+ public function test_openai_four_o_feedback_budget_stays_within_model_output_limit(): void
+ {
+ $parameters = new \ReflectionMethod(AIService::class, 'openAiGenerationParameters');
+ $parameters->setAccessible(true);
+
+ foreach (['gpt-4o', 'gpt-4o-mini', 'gpt-4o-mini-2024-07-18'] as $model) {
+  $result = $parameters->invoke(null, $model, 32768, 0.1);
+  $this->assertSame(16384, $result['max_tokens']);
+ }
+
+ $this->assertSame(8192, $parameters->invoke(null, 'gpt-4o-mini', 8192, 0.1)['max_tokens']);
+ $this->assertSame(32768, $parameters->invoke(null, 'gpt-4.1-mini', 32768, 0.1)['max_tokens']);
+ }
+
  public function test_gemini_four_uses_high_thinking_without_ignored_sampling_parameters(): void
  {
  config()->set('services.gemini.thinking_level', 'high');
