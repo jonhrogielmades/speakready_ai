@@ -22,7 +22,7 @@ final class LocalFeedbackReportPresenter
         return self::forReport($session)['session_feedback'] ?? null;
     }
 
-    /** @return array{session_feedback:array<string,string>,answer_feedback:array<string,array<string,mixed>>}|null */
+    /** @return array{overall_score:int,session_feedback:array<string,string>,answer_feedback:array<string,array<string,mixed>>}|null */
     public static function forReport(InterviewSession $session): ?array
     {
         $session = $session->fresh() ?? $session;
@@ -172,6 +172,10 @@ final class LocalFeedbackReportPresenter
             || ! is_array($payload['answer_feedback'] ?? null)) {
             return null;
         }
+        $score = $payload['overall_score'] ?? null;
+        if (! is_int($score) || $score < 0 || $score > 100) {
+            return null;
+        }
         foreach (['overall_summary', 'strengths', 'weaknesses', 'improvement_suggestions'] as $field) {
             if (! is_string($payload['session_feedback'][$field] ?? null)
                 || trim($payload['session_feedback'][$field]) === '') {
@@ -197,6 +201,10 @@ final class LocalFeedbackReportPresenter
             return null;
         }
         $summary = is_array($feedback['session_feedback'] ?? null) ? $feedback['session_feedback'] : [];
+        $score = $summary['overall_readiness_score'] ?? null;
+        if (! is_int($score) || $score < 0 || $score > 100) {
+            return null;
+        }
         $fields = [
             'overall_summary' => trim((string) ($summary['overall_summary'] ?? '')),
             'strengths' => trim((string) ($summary['strengths'] ?? '')),
@@ -224,6 +232,7 @@ final class LocalFeedbackReportPresenter
         }
 
         return self::validatedPayload([
+            'overall_score' => $score,
             'session_feedback' => $fields,
             'answer_feedback' => $answerFeedback,
         ], $answers);

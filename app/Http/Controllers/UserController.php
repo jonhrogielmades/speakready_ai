@@ -48,6 +48,7 @@ use App\Services\TrustworthyAssessmentService;
 use App\Support\AccountNotificationSchema;
 use App\Support\ChatbotSchema;
 use App\Support\FeedbackEvidencePresenter;
+use App\Support\LocalFeedbackReportPresenter;
 use App\Support\GameSchema;
 use App\Support\LearningModuleSchema;
 use App\Support\ModuleChapterGate;
@@ -750,7 +751,8 @@ class UserController extends Controller
   $feedbackCategories = $hasFeedbackRecords? collect([$practiceScenario]): collect();
 
  $feedbackSummary = $this->feedbackCenterSummary($latestFeedbackSession);
- $feedbackEvidence = FeedbackEvidencePresenter::forSession($latestFeedbackSession);
+ $feedbackEvidence = ($feedbackSummary->needs_current_provider_review ?? false)
+ ? null : FeedbackEvidencePresenter::forSession($latestFeedbackSession);
 
  $feedbackFilters = [
  'scenario' => $selectedScenario,
@@ -776,8 +778,17 @@ class UserController extends Controller
  return null;
  }
 
- $score = $session->score;
- $overall = is_numeric($score?->overall_readiness_score?? null)? max(0, min(100, (int) round($score->overall_readiness_score))): null;
+ $savedStatus = strtolower(trim((string) $session->feedback_status));
+ $needsCurrentProviderReview = $session->status === 'completed'
+ && $session->game_level_id === null
+ && in_array($savedStatus, ['pending', 'processing', 'failed', 'verified'], true)
+ && app(DetailedFeedbackReviewService::class)->shouldRefreshWithProvider($session);
+ $score = $needsCurrentProviderReview ? null : $session->score;
+ $localScore = $needsCurrentProviderReview
+ ? data_get(LocalFeedbackReportPresenter::forReport($session), 'overall_score') : null;
+ $overall = is_int($localScore) ? $localScore
+ : (is_numeric($score?->overall_readiness_score?? null)
+ ? max(0, min(100, (int) round($score->overall_readiness_score))) : null);
  $metricRows = $this->feedbackCenterMetricRows($score);
  $focusMetric = $metricRows->sortBy('value')->first();
  $strongestMetric = $metricRows->sortByDesc('value')->first();
@@ -785,8 +796,16 @@ class UserController extends Controller
  ? $session->answers->first(fn ($answer) => trim((string) ($answer->voice_recording_path?? ''))!== '')
  : null;
  $hasVoiceEvidence = $voiceAnswer && trim((string) ($voiceAnswer->delivery_transcript?? ''))!== '';
- $rating = $score?->readiness_band?: ($overall === null? 'Score pending': ($overall >= 90? 'Excellent': ($overall >= 70? 'Good': ($overall >= 50? 'Fair': 'Needs Practice'))));
+ $rating = $needsCurrentProviderReview && $overall !== null
+ ? 'Local estimate'
+ : ($score?->readiness_band?: ($overall === null? 'Score pending': ($overall >= 90? 'Excellent': ($overall >= 70? 'Good': ($overall >= 50? 'Fair': 'Needs Practice')))));
  $headline = match (true) {
+ $needsCurrentProviderReview && $overall !== null && ! $session->readinessScoreEligible()
+ => 'Local score from your saved answers. This coached practice is not included in your readiness score.',
+ $needsCurrentProviderReview && $overall !== null && $savedStatus === 'failed'
+ => 'Local score from your saved answers. The AI provider review is unavailable right now.',
+ $needsCurrentProviderReview && $overall !== null
+ => 'Local score from your saved answers. The AI provider review is still being prepared.',
  $overall === null => 'Feedback is ready. Score is still pending.',
  $overall >= 85 => 'Strong readiness. Keep sharpening proof and pace.',
  $overall >= 70 => 'Good foundation. Focus on the next weak spot.',
@@ -798,6 +817,10 @@ class UserController extends Controller
  'scenario' => $session->practice_scenario?? $this->practiceScenarioLabel($session),
  'date' => $session->created_at?->format('M d, Y')?? '',
  'overall' => $overall,
+ 'score_source' => $needsCurrentProviderReview
+ ? ($overall === null ? 'pending' : 'local')
+ : ($overall === null ? 'pending' : 'saved'),
+ 'needs_current_provider_review' => $needsCurrentProviderReview,
  'rating' => $rating,
  'headline' => $headline,
  'metrics' => $metricRows,

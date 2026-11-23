@@ -9,6 +9,7 @@ use App\Models\InterviewSession;
 use App\Models\InterviewSessionLocalFeedbackPreview;
 use App\Models\InterviewSessionProviderPreview;
 use App\Models\Question;
+use App\Models\Score;
 use App\Models\User;
 use App\Services\ProviderSessionPreviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -52,6 +53,8 @@ class LocalFeedbackOverallReviewTest extends TestCase
                     ->assertSee('Strengths')
                     ->assertSee('Weaknesses')
                     ->assertSee('What to Practice Next')
+                    ->assertSee('Total Score')
+                    ->assertSee('Local estimate')
                     ->assertSee('query plan')
                     ->assertDontSee('Stale provider summary must stay hidden.')
                     ->assertDontSee('Stale provider strength must stay hidden.')
@@ -91,8 +94,10 @@ class LocalFeedbackOverallReviewTest extends TestCase
         $stored = InterviewSessionLocalFeedbackPreview::where('interview_session_id', $session->id)->firstOrFail();
         $this->assertNotEmpty(data_get($stored->payload, 'session_feedback.overall_summary'));
         $this->assertNotEmpty(data_get($stored->payload, "answer_feedback.{$answer->id}.ai_feedback"));
+        $this->assertIsInt(data_get($stored->payload, 'overall_score'));
 
         $saved = $stored->payload;
+        $saved['overall_score'] = 99;
         $saved['session_feedback']['overall_summary'] = 'Saved local summary for the query plan and index usage answer.';
         $saved['answer_feedback'][(string) $answer->id]['ai_feedback'] = 'Saved local feedback for the query plan and index usage answer.';
         $stored->update(['payload' => $saved]);
@@ -100,12 +105,14 @@ class LocalFeedbackOverallReviewTest extends TestCase
 
         $this->actingAs($user)->get(route('user.review', $session))
             ->assertOk()
+            ->assertSee('99%')
             ->assertSee('Saved local summary for the query plan and index usage answer.')
             ->assertSee('Saved local feedback for the query plan and index usage answer.');
 
         $answer->update(['answer_text' => 'I compared index statistics and row estimates before changing the query.']);
         $this->actingAs($user)->get(route('user.review', $session))
             ->assertOk()
+            ->assertDontSee('99%')
             ->assertDontSee('Saved local summary for the query plan and index usage answer.')
             ->assertDontSee('Saved local feedback for the query plan and index usage answer.')
             ->assertSee('index statistics');
@@ -140,6 +147,8 @@ class LocalFeedbackOverallReviewTest extends TestCase
                 ->assertOk()
                 ->assertSee('AI provider session review')
                 ->assertSee('AI Feedback Review')
+                ->assertSee('Total Score')
+                ->assertSee('Local estimate')
                 ->assertSee('Across the database query answer, the response used specific database query details.')
                 ->assertDontSee('Overall Feedback Preview');
         }
@@ -153,6 +162,38 @@ class LocalFeedbackOverallReviewTest extends TestCase
             ->assertSee('Overall Feedback Preview')
             ->assertSee('index statistics')
             ->assertDontSee('Across the database query answer, the response used specific database query details.');
+
+        Http::assertNothingSent();
+    }
+
+    public function test_feedback_center_uses_current_local_total_instead_of_a_stale_provider_score(): void
+    {
+        [$user, $session] = $this->fixture();
+        Score::create([
+            'interview_session_id' => $session->id,
+            'overall_readiness_score' => 99,
+            'readiness_band' => 'Excellent',
+        ]);
+        $session->update(['feedback_status' => 'failed']);
+
+        foreach (['desktop', 'mobile'] as $device) {
+            $response = $this->actingAs($user)
+                ->withHeader('User-Agent', $device === 'mobile'
+                    ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148'
+                    : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36')
+                ->get(route('user.feedback'));
+
+            $localScore = data_get(
+                InterviewSessionLocalFeedbackPreview::where('interview_session_id', $session->id)->firstOrFail()->payload,
+                'overall_score'
+            );
+            $this->assertIsInt($localScore);
+            $response->assertOk()
+                ->assertSee('Local estimate')
+                ->assertViewHas('feedbackSummary', fn ($summary): bool => $summary
+                    && $summary->overall === $localScore
+                    && $summary->score_source === 'local');
+        }
 
         Http::assertNothingSent();
     }

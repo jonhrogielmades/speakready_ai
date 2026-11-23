@@ -97,7 +97,7 @@
  @else
  <strong>{{ $summaryOverall }}%</strong>
  @endif
- <span>{{ $feedbackSummary->rating }}</span>
+ <span>{{ $summaryOverall === null ? $feedbackSummary->rating : 'Total Score · '.$feedbackSummary->rating }}</span>
  <small>{{ $feedbackSummary->scenario }} - {{ $feedbackSummary->date }}</small>
  </div>
  <div class="feedback-summary-copy">

@@ -9,6 +9,11 @@
     $providerKey = \App\Services\AIService::normalizeProviderKey($providerPreview['provider_key'] ?? null);
     $providerNames = ['openai' => 'OpenAI', 'gemini' => 'Gemini', 'groq' => 'Groq', 'cohere' => 'Cohere'];
     $providerName = $providerNames[$providerKey] ?? ucfirst($providerKey);
+    $localOverallScore = data_get($localFeedbackReport, 'overall_score');
+    $localOverallScore = is_numeric($localOverallScore)
+        ? max(0, min(100, (int) round((float) $localOverallScore))) : null;
+    $scoreColor = $localOverallScore === null ? '#64748b'
+        : ($localOverallScore >= 80 ? '#10b981' : ($localOverallScore >= 60 ? '#3b82f6' : '#f59e0b'));
 @endphp
 
 @if($summary !== null)
@@ -18,11 +23,18 @@
             <div class="review-kicker">{{ $isProviderPreview ? "AI provider session review · {$providerName}" : 'Preliminary local feedback · Current saved answers' }}</div>
             <h4 id="pending-feedback-review-title" style="margin:0 0 .35rem;color:var(--tx);font-weight:800;">{{ $isProviderPreview ? 'AI Feedback Review' : 'Overall Feedback Preview' }}</h4>
             <span style="color:var(--tx3);font-size:.88rem;">{{ $isProviderPreview
-                ? 'Provider-written overall feedback is validated against your saved answers. The full report is still being prepared.'
+                ? 'Provider-written overall feedback is validated against your saved answers. The total score is a local estimate while the full report is being prepared.'
                 : (($providerReviewStatus ?? null) === 'failed'
-                    ? 'The AI provider review is unavailable right now. This preview uses your saved answers and is not a verified readiness score.'
-                    : 'The AI provider review continues in the background. This preview uses your saved answers and is not a verified readiness score.') }}</span>
+                    ? 'The AI provider review is unavailable right now. This preview and its estimated total score use your saved answers.'
+                    : 'The AI provider review continues in the background. This preview and its estimated total score use your saved answers.') }}</span>
         </div>
+        @if($localOverallScore !== null)
+        <div class="review-overall-score" style="--review-score-color: {{ $scoreColor }};" aria-label="Local estimate total score">
+            <strong>{{ $localOverallScore }}%</strong>
+            <span>Total Score</span>
+            <span>Local estimate</span>
+        </div>
+        @endif
     </div>
 
     <div class="review-quick-grid">

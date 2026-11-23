@@ -7,9 +7,7 @@
  $comparisonRows = $comparisonRows?? [];
  $preparedAnswerReviews = is_array($preparedAnswerReviews ?? null) ? $preparedAnswerReviews : [];
  $preparedAnswerCount = count($preparedAnswerReviews);
- $needsLocalFeedbackReport = ($providerReviewPending ?? false)
- && (! ($providerSummaryPreviewReady ?? false) || $preparedAnswerCount < $sessionRecord->answers->count());
- $localFeedbackReport = $needsLocalFeedbackReport
+ $localFeedbackReport = ($providerReviewPending ?? false)
  ? \App\Support\LocalFeedbackReportPresenter::forReport($sessionRecord) : null;
  @endphp
  <!-- Feature 2 & 15: Header, Report Info, Export -->
