@@ -81,8 +81,31 @@ jobs:
           sort -z "${feature_test_list}" > "${sorted_feature_test_list}"
           while IFS= read -r -d '' test_file; do
             echo "Running ${test_file}"
-            if ! php artisan test "${test_file}"; then
-              echo "::error file=${test_file},title=Isolated feature test failed::${test_file} failed on the CI runner."
+            junit_file="${RUNNER_TEMP}/speakready-feature-test.xml"
+            if ! php artisan test "${test_file}" --log-junit="${junit_file}"; then
+              TEST_FILE="${test_file}" JUNIT_FILE="${junit_file}" python3 - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+
+          test_file = os.environ['TEST_FILE']
+          try:
+              root = ET.parse(os.environ['JUNIT_FILE']).getroot()
+              failures = []
+              for case in root.iter('testcase'):
+                  for result in case:
+                      if result.tag not in ('failure', 'error'):
+                          continue
+                      message = result.get('message') or (result.text or '').strip().splitlines()[0]
+                      message = ' '.join(message.split())[:500]
+                      failures.append(f"{case.get('name', 'Unknown test')}: {message}")
+              if not failures:
+                  failures = ['The test process failed before writing a JUnit failure.']
+          except (OSError, ET.ParseError, IndexError):
+              failures = ['The test process failed without a readable JUnit report.']
+          for failure in failures:
+              escaped = failure.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::error file={test_file},title=Isolated feature test failed::{escaped}')
+          PY
               exit 1
             fi
           done < "${sorted_feature_test_list}"
