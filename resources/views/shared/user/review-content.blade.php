@@ -7,6 +7,10 @@
  $comparisonRows = $comparisonRows?? [];
  $preparedAnswerReviews = is_array($preparedAnswerReviews ?? null) ? $preparedAnswerReviews : [];
  $preparedAnswerCount = count($preparedAnswerReviews);
+ $needsLocalFeedbackReport = ($providerReviewPending ?? false)
+ && (! ($providerSummaryPreviewReady ?? false) || $preparedAnswerCount < $sessionRecord->answers->count());
+ $localFeedbackReport = $needsLocalFeedbackReport
+ ? \App\Support\LocalFeedbackReportPresenter::forReport($sessionRecord) : null;
  @endphp
  <!-- Feature 2 & 15: Header, Report Info, Export -->
  <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -52,34 +56,33 @@
  @if(!$sessionEndedEarly && ($providerReviewPending ?? false))
  @php
  $initialProviderReviewStatus = in_array($providerReviewStatus ?? null, ['pending', 'processing', 'failed'], true) ? $providerReviewStatus : 'pending';
- $providerReviewCanContinue = $initialProviderReviewStatus !== 'failed';
  @endphp
- <div class="alert mb-4" data-detailed-review-status data-review-status-url="{{ route('user.review.status', $sessionRecord) }}" data-review-status="{{ $initialProviderReviewStatus }}" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;overflow-wrap:anywhere;">
+ <div class="alert mb-4" data-detailed-review-status data-review-status-url="{{ route('user.review.status', $sessionRecord) }}" data-review-status="{{ $initialProviderReviewStatus }}" data-summary-preview-ready="{{ ($providerSummaryPreviewReady ?? false) ? 'true' : 'false' }}" style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.24);color:var(--tx);border-radius:14px;overflow-wrap:anywhere;">
  <div role="status" aria-live="polite" aria-atomic="true">
- <strong class="d-block mb-1" data-review-status-title>{{ $preparedAnswerCount > 0
- ? ($providerReviewCanContinue ? 'Your final AI review is being prepared.' : 'Your final AI review needs another attempt.')
- : ($providerReviewCanContinue ? 'Your AI answer reviews are being prepared.' : 'Your AI answer reviews need another attempt.') }}</strong>
- <p class="mb-2" data-review-status-message>{{ $providerReviewCanContinue
- ? ($preparedAnswerCount > 0 ? "Provider AI feedback is available below for {$preparedAnswerCount} of {$sessionRecord->answers->count()} answers. The final summary is still being prepared." : 'Your interview is complete and your answers are saved. This page updates when provider feedback passes validation.')
- : ($providerReviewFailureMessage ?? ($preparedAnswerCount > 0 ? 'Provider AI feedback is available below. The final session summary could not be validated; retry it below.' : 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.')) }}</p>
+ <strong class="d-block mb-1" data-review-status-title>{{ ($providerSummaryPreviewReady ?? false)
+ ? 'Provider AI session summary is available below.'
+ : ($initialProviderReviewStatus === 'failed'
+ ? 'Your feedback is available below.'
+ : ($preparedAnswerCount > 0 ? 'Your final AI review is being prepared.' : 'Your feedback is available below.')) }}</strong>
+ <p class="mb-2" data-review-status-message>{{ ($providerSummaryPreviewReady ?? false)
+ ? 'The overall summary has passed provider validation. Remaining answer details are still being prepared.'
+ : ($initialProviderReviewStatus !== 'failed'
+ ? ($preparedAnswerCount > 0 ? "Provider AI feedback is available below for {$preparedAnswerCount} of {$sessionRecord->answers->count()} answers. The final summary is still being prepared." : 'A provider AI review is being prepared in the background. This page updates when it passes validation.')
+ : ($providerReviewFailureMessage ?? 'A provider AI review could not be completed right now. The local feedback below remains available.')) }}</p>
  @if($preparedAnswerCount === 0)
- <p class="mb-2">Open an answer below for preliminary local feedback based on your saved response.</p>
+ <p class="mb-2">{{ ($providerSummaryPreviewReady ?? false)
+ ? 'The provider-written overall summary and local answer guidance below use your saved responses.'
+ : 'The preliminary local summary and answer guidance below use your saved responses.' }}</p>
  @endif
  </div>
- <form method="POST" action="{{ route('user.review.refresh', $sessionRecord) }}" data-review-retry @if($providerReviewCanContinue) hidden @endif>
- @csrf
- <button type="submit" class="btn btn-primary">Retry AI review</button>
- </form>
  <button type="button" class="btn btn-primary" data-review-reload hidden>Show completed review</button>
-  @if($providerReviewCanContinue)
  <noscript>
- <p>Reload this page shortly to check your AI review status.</p>
+ <p>Reload this page later to check whether the provider AI review is ready.</p>
  </noscript>
- @endif
  </div>
  @once
  @push('scripts')
- <script src="{{ asset('js/detailed-review-status.js?v=6') }}" defer></script>
+ <script src="{{ asset('js/detailed-review-status.js?v=7') }}" defer></script>
  @endpush
  @endonce
  @endif
@@ -101,6 +104,8 @@
  'sessionRecord' => $sessionRecord,
  ])
  @endif
+ @elseif($sessionRecord->status === 'completed' && ! $sessionRecord->game_level_id)
+ @include('shared.user.pending-feedback-review', ['sessionRecord' => $sessionRecord])
  @endif
 
  @endif

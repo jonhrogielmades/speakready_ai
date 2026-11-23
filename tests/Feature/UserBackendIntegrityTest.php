@@ -110,8 +110,8 @@ class UserBackendIntegrityTest extends TestCase
             ->get(route('user.review', $session))
             ->assertOk()
             ->assertSee('data-review-status="failed"', false)
-            ->assertSee('The providers could not complete a validated review.')
-            ->assertSee('Retry AI review');
+            ->assertSee('A provider AI review could not be completed right now. The local feedback below remains available.')
+            ->assertDontSee('Retry AI review');
 
         $this->get(route('user.review', $session))
             ->assertOk()

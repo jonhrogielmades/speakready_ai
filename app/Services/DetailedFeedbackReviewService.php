@@ -58,7 +58,10 @@ class DetailedFeedbackReviewService
  $preparedItems,
  45,
  fn (array $candidate, string $candidateProvider): bool =>
- ($this->providerFeedbackValidation($answers, $candidate, $candidateProvider)['status'] ?? null) === 'verified'
+ ($this->providerFeedbackValidation($answers, $candidate, $candidateProvider)['status'] ?? null) === 'verified',
+ null,
+ 'feedback_generation',
+ app(ProviderSessionPreviewService::class)->forSession($session)
  );
  $providerKey = AIService::normalizeProviderKey($feedback['_provider_key'] ?? null);
  $validation = $this->providerFeedbackValidation($answers, $feedback, $providerKey);

@@ -9,7 +9,6 @@
 
         var title = panel.querySelector('[data-review-status-title]');
         var message = panel.querySelector('[data-review-status-message]');
-        var retry = panel.querySelector('[data-review-retry]');
         var reload = panel.querySelector('[data-review-reload]');
         var statusUrl;
         var timer = null;
@@ -36,7 +35,6 @@
         function hidePanel() {
             panel.hidden = true;
             panel.setAttribute('aria-hidden', 'true');
-            if (retry) retry.hidden = true;
             if (reload) reload.hidden = true;
         }
 
@@ -56,22 +54,22 @@
             pause();
         }
 
-        function offerRetry(detail, heading) {
-            stop();
+        function showFailedProvider(detail) {
             showPanel();
             setText(
-                heading || 'Your AI answer reviews need another attempt.',
-                detail || 'The providers could not complete a validated review. Your answers remain saved.'
+                panel.dataset.summaryPreviewReady === 'true'
+                    ? 'Provider AI session summary is available below.'
+                    : 'Your feedback is available below.',
+                detail || 'The AI provider review could not be completed right now. Local feedback remains available below.'
             );
-            if (retry) retry.hidden = false;
             if (reload) reload.hidden = true;
+            nextDelay = 15000;
         }
 
         function offerReload(detail) {
             stop();
             showPanel();
             setText('Your AI review is still being checked.', detail);
-            if (retry) retry.hidden = true;
             if (reload) {
                 reload.textContent = 'Check review status';
                 reload.hidden = false;
@@ -142,6 +140,44 @@
             window.location.reload();
         }
 
+        function reloadNewSessionSummary() {
+            if (panel.dataset.summaryPreviewReady === 'true') return false;
+
+            var key = 'speakready:summary-preview-ready:' + statusUrl.pathname;
+            var seen = false;
+            var persisted = false;
+            var now = Date.now();
+            function recent(value) {
+                return Number.isFinite(Number(value)) && Number(value) > 0 && now - Number(value) < maximumWait;
+            }
+            try {
+                seen = recent(window.sessionStorage.getItem(key));
+                window.sessionStorage.setItem(key, String(now));
+                persisted = true;
+            } catch (_) { /* History state can guard the reload instead. */ }
+            try {
+                var state = window.history.state || {};
+                seen = seen || recent(state[key]);
+                var updated = Object.assign({}, state);
+                updated[key] = now;
+                window.history.replaceState(updated, '', window.location.href);
+                persisted = true;
+            } catch (_) { /* Offer a manual reload if no guard can be saved. */ }
+
+            stop();
+            if (seen || !persisted) {
+                showPanel();
+                setText('AI session summary is ready.', 'Reload this page to display the new provider summary.');
+                if (reload) {
+                    reload.textContent = 'Show AI session summary';
+                    reload.hidden = false;
+                }
+            } else {
+                window.location.reload();
+            }
+            return true;
+        }
+
         function applyStatus(result) {
             if (!result || !['pending', 'processing', 'verified', 'failed'].includes(result.status)) {
                 throw new Error('Invalid review status');
@@ -150,8 +186,13 @@
             var detail = typeof result.message === 'string' ? result.message.trim().slice(0, 500) : '';
             if (result.status === 'verified') {
                 reloadReadyReview();
+            } else if (result.summary_preview_ready === true) {
+                if (reloadNewSessionSummary()) return;
+                showPanel();
+                setText('Provider AI session summary is available below.', detail || 'The remaining review details are still being prepared.');
+                nextDelay = result.status === 'failed' ? 15000 : 2000;
             } else if (result.status === 'failed') {
-                offerRetry(detail || 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.');
+                showFailedProvider(detail);
             } else {
                 showPanel();
                 setText('Your AI answer reviews are being prepared.', detail || 'Your interview is complete. This page updates when provider feedback passes validation.');
@@ -209,11 +250,10 @@
 
         if (panel.dataset.reviewStatus === 'failed') {
             var initialDetail = message ? message.textContent.trim() : '';
-            offerRetry(initialDetail || 'The providers could not complete a validated review. Your answers remain saved; request another attempt below.');
-            return;
+            showFailedProvider(initialDetail);
+        } else {
+            showPanel();
         }
-        showPanel();
-        if (retry) retry.hidden = true;
         document.addEventListener('visibilitychange', resume);
         window.addEventListener('online', resume);
         window.addEventListener('offline', resume);

@@ -110,12 +110,30 @@ class InitialProviderReviewReadinessTest extends TestCase
         $this->assertSame('completed', $session->fresh()->status);
         $savedAnswer = $answer->fresh();
         $this->assertSame($answer->answer_text, $savedAnswer->answer_text);
+        $this->assertDatabaseHas('questions', [
+            'id' => $savedAnswer->question_id,
+            'interview_session_id' => $session->id,
+        ]);
+        $this->assertDatabaseHas('interview_answers', [
+            'id' => $savedAnswer->id,
+            'answer_text' => $answer->answer_text,
+        ]);
         $this->assertNotSame('verified', $session->fresh()->feedback_status);
         $this->assertDatabaseMissing('scores', ['interview_session_id' => $session->id]);
         $this->assertDatabaseMissing('feedback', ['interview_session_id' => $session->id]);
         $this->assertContains($savedAnswer->ai_provider, [null, '']);
         $this->assertEmpty($savedAnswer->ai_feedback);
         $this->assertFalse((bool) data_get($savedAnswer->coaching_feedback, 'local_fallback'));
+
+        $providerCallsBeforeReview = Http::recorded()->count();
+        $this->actingAs($user)->get(route('user.review', $session))
+            ->assertOk()
+            ->assertSee('Overall Feedback Preview')
+            ->assertSee('Local feedback preview');
+        $this->assertDatabaseHas('interview_session_local_feedback_previews', [
+            'interview_session_id' => $session->id,
+        ]);
+        $this->assertSame($providerCallsBeforeReview, Http::recorded()->count());
     }
 
     public function test_missing_credentials_fail_without_using_retries_and_requeue_after_configuration(): void
@@ -138,10 +156,10 @@ class InitialProviderReviewReadinessTest extends TestCase
         $this->actingAs($user)->getJson(route('user.review.status', $session))
             ->assertOk()
             ->assertJsonPath('status', 'failed')
-            ->assertJsonPath('message', 'AI review is waiting for a provider to be connected. Your answers are saved, and the report will retry automatically after setup.');
+            ->assertJsonPath('message', 'AI provider feedback is waiting for a provider connection. Your saved-answer feedback is available below.');
         $this->actingAs($user)->get(route('user.review', $session))
             ->assertOk()
-            ->assertSee('AI review is waiting for a provider to be connected.');
+            ->assertSee('AI provider feedback is waiting for a provider connection.');
 
         putenv('OPENAI_API_KEY=openai_test_token');
         $_ENV['OPENAI_API_KEY'] = $_SERVER['OPENAI_API_KEY'] = 'openai_test_token';

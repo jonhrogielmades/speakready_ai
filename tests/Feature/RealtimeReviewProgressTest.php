@@ -8,6 +8,7 @@ use App\Models\InterviewSession;
 use App\Models\User;
 use App\Services\DetailedFeedbackReviewService;
 use App\Services\PreparedAnswerReviewService;
+use App\Services\ProviderSessionPreviewService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
@@ -128,7 +129,38 @@ class RealtimeReviewProgressTest extends TestCase
         $this->actingAs($user)->getJson(route('user.review.status', $session->id))
             ->assertOk()
             ->assertJsonPath('status', 'failed')
-            ->assertJsonPath('message', 'Provider AI feedback for 2 of 3 answers is available below. Retry the final AI summary.');
+            ->assertJsonPath('message', 'Provider AI feedback for 2 of 3 answers is available below. The final AI summary remains unavailable.');
+
+        Queue::assertNothingPushed();
+    }
+
+    public function test_review_status_reports_provider_written_overall_preview_readiness(): void
+    {
+        [$user, $session] = $this->completedSession();
+        $this->mock(DetailedFeedbackReviewService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('shouldRefreshWithProvider')->once()->andReturn(true);
+        });
+        $this->mock(PreparedAnswerReviewService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('progressForSession')->once()->andReturn([
+                'total' => 0, 'verified' => 0, 'pending' => 0, 'processing' => 0, 'failed' => 0,
+            ]);
+        });
+        $this->mock(ProviderSessionPreviewService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('forSession')->once()->andReturn([
+                'provider_key' => 'openai',
+                'session_feedback' => [
+                    'overall_summary' => 'Provider summary.',
+                    'strengths' => 'Provider strengths.',
+                    'weaknesses' => 'Provider weaknesses.',
+                    'improvement_suggestions' => 'Provider suggestions.',
+                ],
+            ]);
+        });
+
+        $this->actingAs($user)->getJson(route('user.review.status', $session->id))
+            ->assertOk()
+            ->assertJsonPath('status', 'pending')
+            ->assertJsonPath('summary_preview_ready', true);
 
         Queue::assertNothingPushed();
     }

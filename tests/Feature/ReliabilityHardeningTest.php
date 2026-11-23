@@ -2442,9 +2442,8 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Your AI answer reviews need another attempt.')
- ->assertSee('Retry AI review')
- ->assertDontSee('Possible Answer')
+ ->assertSee('Your feedback is available below.')
+ ->assertDontSee('Retry AI review')
  ->assertDontSee('The answer included relevant ownership and handoff evidence.');
 
  $this->assertNull(
@@ -2494,9 +2493,8 @@ class ReliabilityHardeningTest extends TestCase
  ->get(route('user.review', $session))
  ->assertOk()
  ->assertSee('Detailed Review')
- ->assertSee('Your AI answer reviews need another attempt.')
+ ->assertSee('Your feedback is available below.')
  ->assertDontSee('Saved feedback remains visible.')
- ->assertDontSee('Possible Answer')
  ->assertDontSee('Score Breakdown')
  ->assertDontSee('>Clarity</strong>', false)
  ->assertDontSee('Score version', false)
@@ -2595,8 +2593,7 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Your AI answer reviews need another attempt.')
- ->assertDontSee('Possible Answer')
+ ->assertSee('Your feedback is available below.')
  ->assertDontSee('retryRenderedCoachingHtml', false)
  ->assertDontSee('appendRetryAttempt', false);
 
@@ -2605,8 +2602,7 @@ class ReliabilityHardeningTest extends TestCase
  ->get(route('user.review', $session))
  ->assertOk()
  ->assertSee('serverDetectedMobile: true', false)
- ->assertSee('Your AI answer reviews need another attempt.')
- ->assertDontSee('Possible Answer')
+ ->assertSee('Your feedback is available below.')
  ->assertDontSee('appendRetryAttempt', false);
  }
 
@@ -2978,9 +2974,8 @@ class ReliabilityHardeningTest extends TestCase
  $this->actingAs($user)
  ->get(route('user.review', $session))
  ->assertOk()
- ->assertSee('Your AI answer reviews need another attempt.')
+ ->assertSee('Your feedback is available below.')
  ->assertDontSee('The response was too short for a dependable evaluation.')
- ->assertDontSee('Possible Answer')
  ->assertDontSee('Not enough detail')
  ->assertDontSee('Score: Not scored')
  ->assertDontSee('Score: 0')

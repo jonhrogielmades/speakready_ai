@@ -7,6 +7,7 @@ use App\Exceptions\InterviewFollowUpProviderFailureException;
 use App\Exceptions\InterviewFeedbackLeaseLostException;
 use App\Helpers\ActivityLogger;
 use App\Jobs\GenerateInterviewFeedback;
+use App\Jobs\GenerateSessionProviderPreview;
 use App\Jobs\GenerateAnswerProviderFeedback;
 use App\Models\Category;
 use App\Models\Feedback;
@@ -2015,7 +2016,16 @@ return response()->json([
   ]);
   } else {
   try {
-  GenerateInterviewFeedback::dispatch((int) $session->id, (int) $session->user_id);
+  GenerateSessionProviderPreview::dispatch((int) $session->id, (int) $session->user_id);
+  } catch (\Throwable $previewDispatchError) {
+  Log::warning('Provider session preview could not be queued.', [
+  'session_id' => $session->id,
+  'error_type' => $previewDispatchError::class,
+  ]);
+  }
+  try {
+  GenerateInterviewFeedback::dispatch((int) $session->id, (int) $session->user_id)
+  ->delay(now()->addSeconds(12));
   } catch (\Throwable $dispatchError) {
   InterviewSession::whereKey($session->id)->where('feedback_status', 'pending')->update([
   'feedback_status' => 'failed',

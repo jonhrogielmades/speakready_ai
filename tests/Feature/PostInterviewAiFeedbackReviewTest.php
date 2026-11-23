@@ -84,8 +84,9 @@ class PostInterviewAiFeedbackReviewTest extends TestCase
                 ->get(route('user.review', $session));
 
             $response->assertOk()
-                ->assertSee('Your AI answer reviews are being prepared.')
-                ->assertSee('Open an answer below for preliminary local feedback')
+                ->assertSee('Your feedback is available below.')
+                ->assertSee('Overall Feedback Preview')
+                ->assertSee('Overall Answer Summary')
                 ->assertSee('Local feedback preview')
                 ->assertSee('query plan')
                 ->assertDontSee('AI Feedback Review')
@@ -95,7 +96,7 @@ class PostInterviewAiFeedbackReviewTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_failed_provider_review_keeps_local_feedback_visible_and_offers_ai_retry(): void
+    public function test_failed_provider_review_keeps_local_feedback_visible_without_manual_retry(): void
     {
         [$user, $session] = $this->fixture();
 
@@ -111,8 +112,9 @@ class PostInterviewAiFeedbackReviewTest extends TestCase
                 ->withHeader('User-Agent', $this->userAgent($device))
                 ->get(route('user.review', $session))
                 ->assertOk()
-                ->assertSee('Retry AI review')
-                ->assertSee('Open an answer below for preliminary local feedback')
+                ->assertDontSee('Retry AI review')
+                ->assertSee('Overall Feedback Preview')
+                ->assertSee('Overall Answer Summary')
                 ->assertSee('Local feedback preview')
                 ->assertSee('query plan')
                 ->assertDontSee('AI Feedback Review');
@@ -179,8 +181,9 @@ class PostInterviewAiFeedbackReviewTest extends TestCase
                 ->withHeader('User-Agent', $this->userAgent($device))
                 ->get(route('user.review', $session))
                 ->assertOk()
-                ->assertSee('Retry AI review')
-                ->assertSee('Provider feedback will appear after the AI review passes validation.')
+                ->assertDontSee('Retry AI review')
+                ->assertSee('Overall Feedback Preview')
+                ->assertSee('Local feedback preview')
                 ->assertDontSee('AI Feedback Review')
                 ->assertDontSee('Across the database query answer, the response used specific database query details.')
                 ->assertDontSee('Tampered local narrative must never appear as provider feedback.');

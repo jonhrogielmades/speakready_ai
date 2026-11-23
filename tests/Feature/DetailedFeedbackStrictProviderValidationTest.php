@@ -618,9 +618,9 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
             $this->actingAs($user)->withHeader('User-Agent', $agent)
                 ->get(route('user.review', $session))
                 ->assertOk()
-                ->assertSee('Your AI answer reviews are being prepared.')
+                ->assertSee('Your feedback is available below.')
                 ->assertDontSee('Overall Review')
-                ->assertDontSee('Possible Answer')
+                ->assertSee('Possible Answer')
                 ->assertDontSee('international award')
                 ->assertDontSee('90%');
         }
@@ -653,7 +653,7 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         foreach (['desktop', 'mobile'] as $layout) {
             $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout)
                 ->assertOk()
-                ->assertSee('Provider AI feedback is available below.')
+                ->assertSee('Your feedback is available below.')
                 ->assertSeeText($item['ai_feedback'])
                 ->assertSeeText($item['better_sample_answer'])
                 ->assertDontSee('Overall Review');
@@ -664,7 +664,7 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         $this->actingAs($user)->get(route('user.review', $session).'?sr_layout=desktop')
             ->assertOk()
             ->assertDontSee($item['better_sample_answer'])
-            ->assertSee('Provider feedback will appear after the AI review passes validation.');
+            ->assertSee('Local feedback preview');
     }
 
     public function test_changed_answers_show_pending_provider_review_and_score_until_refresh(): void
@@ -685,9 +685,9 @@ class DetailedFeedbackStrictProviderValidationTest extends TestCase
         foreach (['desktop', 'mobile'] as $layout) {
             $this->actingAs($user)->get(route('user.review', $session).'?sr_layout='.$layout)
                 ->assertOk()
-                ->assertSee('Your AI answer reviews are being prepared.')
+                ->assertSee('Your feedback is available below.')
                 ->assertDontSee('Overall Review')
-                ->assertDontSee('Possible Answer')
+                ->assertSee('Possible Answer')
                 ->assertDontSee('I mapped the support handoff issue')
                 ->assertDontSee('<strong>84%</strong>', false);
         }

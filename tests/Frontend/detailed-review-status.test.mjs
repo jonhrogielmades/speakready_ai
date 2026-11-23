@@ -29,12 +29,10 @@ function harness(options = {}) {
     const storage = options.storage || new Map();
     const heading = { textContent: '' };
     const detail = { textContent: '' };
-    const retry = { hidden: true };
     const reload = eventTarget({ hidden: true });
     const elements = {
         '[data-review-status-title]': heading,
         '[data-review-status-message]': detail,
-        '[data-review-retry]': retry,
         '[data-review-reload]': reload,
     };
     const panel = {
@@ -42,6 +40,7 @@ function harness(options = {}) {
         dataset: {
             reviewStatus: options.status || 'processing',
             reviewStatusUrl: options.url || '/session/42/review/status',
+            summaryPreviewReady: options.summaryPreviewReady ? 'true' : 'false',
         },
         setAttribute() {},
         querySelector(selector) { return elements[selector] || null; },
@@ -110,17 +109,18 @@ function harness(options = {}) {
         now = target;
         await settle();
     }
-    return { window, document, panel, heading, detail, retry, reload, requests, storage, advance, settle, timers, get reloads() { return reloads; } };
+    return { window, document, panel, heading, detail, reload, requests, storage, advance, settle, timers, get reloads() { return reloads; } };
 }
 
-test('desktop and mobile show shared review progress and preserve the manual POST fallback', () => {
+test('desktop and mobile show shared review progress without a manual retry control', () => {
     const view = readFileSync(join(root, 'resources/views/shared/user/review-content.blade.php'), 'utf8');
     assert.match(view, /@if\(!\$sessionEndedEarly && \(\$providerReviewPending \?\? false\)\)/);
     assert.match(view, /route\('user\.review\.status', \$sessionRecord\)/);
     assert.match(view, /data-detailed-review-status data-review-status-url=/);
-    assert.match(view, /method="POST" action="{{ route\('user\.review\.refresh', \$sessionRecord\) }}" data-review-retry @if\(\$providerReviewCanContinue\) hidden @endif/);
+    assert.match(view, /data-summary-preview-ready=/);
+    assert.doesNotMatch(view, /data-review-retry|Retry AI review/);
     assert.match(view, /role="status" aria-live="polite" aria-atomic="true"/);
-    assert.match(view, /detailed-review-status\.js\?v=6/);
+    assert.match(view, /detailed-review-status\.js\?v=7/);
     for (const layout of ['desktop', 'mobile']) {
         const wrapper = readFileSync(join(root, `resources/views/${layout}/user/review.blade.php`), 'utf8');
         assert.match(wrapper, /@include\('shared\.user\.review-content'/);
@@ -133,21 +133,22 @@ test('does nothing when there are no pending provider reviews', async () => {
     assert.equal(ui.requests.length, 0);
 });
 
-test('shows progress while polling and reveals retry only for a failed review', async () => {
-    const ui = harness({ responses: [{ status: 'processing' }, { status: 'failed' }] });
+test('shows local feedback status on failure and keeps checking for automatic recovery', async () => {
+    const ui = harness({ responses: [{ status: 'processing' }, { status: 'failed' }, { status: 'pending' }] });
     await ui.advance(0);
     assert.equal(ui.panel.hidden, false);
-    assert.equal(ui.retry.hidden, true);
     await ui.advance(2000);
     assert.equal(ui.panel.hidden, false);
-    assert.equal(ui.retry.hidden, false);
+    assert.equal(ui.heading.textContent, 'Your feedback is available below.');
+    await ui.advance(15000);
+    assert.equal(ui.requests.length, 3);
+    assert.equal(ui.heading.textContent, 'Your AI answer reviews are being prepared.');
 });
 
 test('reads status without mutations and refreshes automatically after processing and pending', async () => {
     const ui = harness({ responses: [{ status: 'processing' }, { status: 'pending', retry_after_ms: 7000 }, { status: 'verified' }] });
     await ui.advance(0);
     assert.equal(ui.requests.length, 1);
-    assert.equal(ui.retry.hidden, true);
     assert.equal(ui.requests[0].init.method, 'GET');
     assert.equal(ui.requests[0].init.credentials, 'same-origin');
     assert.equal(ui.requests[0].init.cache, 'no-store');
@@ -168,10 +169,34 @@ test('a stale page cannot enter an automatic reload loop', async () => {
     await second.advance(0);
     assert.equal(second.reloads, 0);
     assert.equal(second.panel.hidden, false);
-    assert.equal(second.retry.hidden, true);
     assert.equal(second.reload.hidden, false);
     second.reload.emit('click');
     assert.equal(second.reloads, 1);
+});
+
+test('new provider session summary reloads once and then stays visible', async () => {
+    const storage = new Map();
+    const first = harness({ storage, responses: [{ status: 'failed', summary_preview_ready: true }] });
+    await first.advance(0);
+    assert.equal(first.reloads, 1);
+
+    const second = harness({ storage, summaryPreviewReady: true, responses: [{ status: 'failed', summary_preview_ready: true }] });
+    await second.advance(0);
+    assert.equal(second.reloads, 0);
+    assert.equal(second.heading.textContent, 'Provider AI session summary is available below.');
+});
+
+test('a stale page offers one manual reload instead of looping on summary readiness', async () => {
+    const storage = new Map();
+    const first = harness({ storage, responses: [{ status: 'failed', summary_preview_ready: true }] });
+    await first.advance(0);
+    assert.equal(first.reloads, 1);
+
+    const second = harness({ storage, responses: [{ status: 'failed', summary_preview_ready: true }] });
+    await second.advance(0);
+    assert.equal(second.reloads, 0);
+    assert.equal(second.reload.hidden, false);
+    assert.equal(second.reload.textContent, 'Show AI session summary');
 });
 
 test('history state prevents reload loops if session storage is unavailable', async () => {
@@ -191,19 +216,20 @@ test('falls back to an explicit reload if persistent guards are unavailable', as
     assert.equal(ui.reload.hidden, false);
 });
 
-test('an initial failed review shows manual retry without polling', async () => {
+test('an initial failed review shows available feedback and keeps polling', async () => {
     const ui = harness({ status: 'failed' });
-    await ui.advance(180000);
-    assert.equal(ui.requests.length, 0);
-    assert.equal(ui.retry.hidden, false);
+    assert.equal(ui.heading.textContent, 'Your feedback is available below.');
+    await ui.advance(0);
+    assert.equal(ui.requests.length, 1);
 });
 
-test('a failed result ends polling and shows the message as plain text', async () => {
+test('a failed result keeps polling and shows the message as plain text', async () => {
     const ui = harness({ responses: [{ status: 'failed', message: '<img src=x onerror=alert(1)>' }] });
-    await ui.advance(180000);
+    await ui.advance(0);
     assert.equal(ui.requests.length, 1);
-    assert.equal(ui.retry.hidden, false);
     assert.equal(ui.detail.textContent, '<img src=x onerror=alert(1)>');
+    await ui.advance(15000);
+    assert.equal(ui.requests.length, 2);
 });
 
 test('pauses on hidden pages and offline, resumes when visible and online', async () => {
@@ -241,7 +267,6 @@ test('repeated network or invalid status failures offer a manual status reload',
     const ui = harness({ responses: [new Error('Network'), { unexpected: 'shape' }, new Error('Network')] });
     await ui.advance(180000);
     assert.equal(ui.requests.length, 3);
-    assert.equal(ui.retry.hidden, true);
     assert.equal(ui.reload.hidden, false);
 });
 
@@ -249,7 +274,6 @@ test('a successful status clears transient connection failures', async () => {
     const ui = harness({ responses: [new Error('Network'), { status: 'processing' }, new Error('Network'), { status: 'verified' }] });
     await ui.advance(30000);
     assert.equal(ui.reloads, 1);
-    assert.equal(ui.retry.hidden, true);
 });
 
 test('bounds delays and total polling duration', async () => {
@@ -263,7 +287,6 @@ test('bounds delays and total polling duration', async () => {
     await ui.advance(1);
     assert.equal(ui.requests.length, 3);
     await ui.advance(600000);
-    assert.equal(ui.retry.hidden, true);
     assert.equal(ui.reload.hidden, false);
     assert.ok(ui.requests.length <= 300);
     assert.equal(ui.timers.size, 0);
@@ -272,7 +295,6 @@ test('bounds delays and total polling duration', async () => {
 test('allows queued provider attempts to finish before the ten-minute polling limit', async () => {
     const ui = harness();
     await ui.advance(540000);
-    assert.equal(ui.retry.hidden, true);
     assert.equal(ui.reload.hidden, true);
     assert.ok(ui.requests.length > 60);
     await ui.advance(60000);
@@ -291,7 +313,6 @@ test('times out stalled requests without allowing overlapping polls', async () =
     assert.equal(ui.requests[0].init.signal.aborted, true);
     await ui.advance(180000);
     assert.equal(ui.requests.length, 3);
-    assert.equal(ui.retry.hidden, true);
     assert.equal(ui.reload.hidden, false);
 });
 
@@ -299,6 +320,5 @@ test('refuses cross-origin status requests', async () => {
     const ui = harness({ url: 'https://other.test/review/status' });
     await ui.advance(180000);
     assert.equal(ui.requests.length, 0);
-    assert.equal(ui.retry.hidden, true);
     assert.equal(ui.reload.hidden, false);
 });

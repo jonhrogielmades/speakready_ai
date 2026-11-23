@@ -35,6 +35,7 @@ use App\Services\CoachRequestAlignmentService;
 use App\Services\CoachReliabilityService;
 use App\Services\DetailedFeedbackReviewService;
 use App\Services\PreparedAnswerReviewService;
+use App\Services\ProviderSessionPreviewService;
 use App\Services\LearningChallengeGenerationService;
 use App\Services\LearningModuleGenerationService;
 use App\Services\LearningRecommendationService;
@@ -921,10 +922,12 @@ class UserController extends Controller
  $preparedAnswerReviews = $providerReviewPending
  ? $preparedReviewService->currentVisibleReviewsForSession($sessionRecord)
  : [];
+ $providerSummaryPreviewReady = $providerReviewPending
+ && app(ProviderSessionPreviewService::class)->forSession($sessionRecord) !== null;
  $comparisonRows = $providerReviewPending ? [] : $this->comparisonRowsFor($sessionRecord);
  $reviewEvidence = $providerReviewPending ? null : FeedbackEvidencePresenter::forSession($sessionRecord);
 
- return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'providerReviewPending', 'providerReviewStatus', 'providerReviewFailureMessage', 'preparedAnswerReviews'));
+ return $this->mobileView('user.review', compact('sessionRecord', 'comparisonRows', 'sessionEndedEarly', 'reviewEvidence', 'providerReviewPending', 'providerReviewStatus', 'providerReviewFailureMessage', 'preparedAnswerReviews', 'providerSummaryPreviewReady'));
  }
 
  public function reviewStatus($id, DetailedFeedbackReviewService $reviewService, PreparedAnswerReviewService $preparedReviewService)
@@ -941,7 +944,12 @@ class UserController extends Controller
  ? $savedStatus : 'failed';
  $needsReview = $reviewService->shouldRefreshWithProvider($session);
  $status = $needsReview ? ($status === 'verified' ? 'failed' : $status) : 'verified';
- $response = ['status' => $status, 'retry_after_ms' => 2000];
+ $response = [
+ 'status' => $status,
+ 'retry_after_ms' => 2000,
+ 'summary_preview_ready' => $status !== 'verified'
+ && app(ProviderSessionPreviewService::class)->forSession($session) !== null,
+ ];
  if ($status === 'failed') {
  $failureMessage = $this->reviewFailureMessage($session->feedback_failure_code);
  if ($failureMessage !== null) {
@@ -952,7 +960,7 @@ class UserController extends Controller
  $progress = $preparedReviewService->progressForSession($session);
  if (! isset($response['message']) && $progress['total'] > 0 && ($progress['verified'] > 0 || $progress['processing'] > 0)) {
  $response['message'] = $status === 'failed' && $progress['verified'] > 0
- ? "Provider AI feedback for {$progress['verified']} of {$progress['total']} answers is available below. Retry the final AI summary."
+ ? "Provider AI feedback for {$progress['verified']} of {$progress['total']} answers is available below. The final AI summary remains unavailable."
  : ($progress['verified'] === $progress['total']
  ? 'All answer reviews are ready. Preparing your final AI review.'
  : "AI feedback prepared for {$progress['verified']} of {$progress['total']} answers. Reviewing the rest now.");
@@ -965,11 +973,11 @@ class UserController extends Controller
  private function reviewFailureMessage(?string $failureCode): ?string
  {
  return match ($failureCode) {
- 'no_provider_credentials' => 'AI review is waiting for a provider to be connected. Your answers are saved, and the report will retry automatically after setup.',
- 'provider_authentication' => 'The AI provider rejected its credentials. Your answers are saved; the report can be retried after the connection is fixed.',
- 'provider_model' => 'The AI provider could not use its configured model. Your answers are saved; the report can be retried after the model is fixed.',
- 'provider_rate_limit', 'provider_circuit_open' => 'The AI provider is temporarily busy. Your answers are saved; please try the review again shortly.',
- 'provider_timeout', 'provider_network', 'provider_server_error' => 'The AI provider did not complete the review. Your answers are saved; please try the review again.',
+ 'no_provider_credentials' => 'AI provider feedback is waiting for a provider connection. Your saved-answer feedback is available below.',
+ 'provider_authentication' => 'The AI provider rejected its credentials. Your saved-answer feedback is available while the connection is repaired.',
+ 'provider_model' => 'The AI provider could not use its configured model. Your saved-answer feedback is available while the model is repaired.',
+ 'provider_rate_limit', 'provider_circuit_open' => 'The AI provider is temporarily busy. Your saved-answer feedback is available below.',
+ 'provider_timeout', 'provider_network', 'provider_server_error' => 'The AI provider did not complete the review. Your saved-answer feedback is available below.',
  default => null,
  };
  }

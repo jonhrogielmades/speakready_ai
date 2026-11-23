@@ -45,15 +45,15 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
             $this->assertStringContainsString(self::FEEDBACK, $cards[0]);
             $this->assertStringContainsString(self::POSSIBLE, $cards[0]);
             $this->assertStringContainsString(self::ANSWER, $cards[1]);
-            $this->assertStringContainsString('Provider feedback will appear after the AI review passes validation.', $cards[1]);
-            $this->assertStringNotContainsString('Possible Answer', $cards[1]);
+            $this->assertStringContainsString('Local feedback preview', $cards[1]);
+            $this->assertStringContainsString('Possible Answer', $cards[1]);
             $this->assertStringNotContainsString('locally generated review', $cards[1]);
             $this->assertStringNotContainsString('local possible answer', $cards[1]);
         }
         Http::assertNothingSent();
     }
 
-    public function test_answer_review_uses_tabs_for_feedback_answer_and_possible_answer(): void
+    public function test_answer_review_shows_saved_answer_with_two_closed_feedback_buttons(): void
     {
         [$user, $session, $answer] = $this->fixture();
         $this->verifyPreparedProviderNarrative($answer);
@@ -63,12 +63,21 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
 
             $this->assertSame(1, substr_count($html, 'data-answer-review-tabs>'));
             $this->assertSame(1, substr_count($html, 'data-review-tab="feedback"'));
-            $this->assertSame(1, substr_count($html, 'data-review-tab="answer"'));
             $this->assertSame(1, substr_count($html, 'data-review-tab="possible"'));
-            $this->assertStringContainsString('aria-selected="true"', $html);
+            $this->assertSame(0, substr_count($html, 'data-review-tab="answer"'));
+            $document = new \DOMDocument();
+            @$document->loadHTML('<?xml encoding="UTF-8">'.$html);
+            $buttons = (new \DOMXPath($document))->query('//button[contains(concat(" ", normalize-space(@class), " "), " review-answer-tab ")]');
+            $this->assertCount(2, $buttons);
+            foreach ($buttons as $button) {
+                $this->assertSame('false', $button->getAttribute('aria-expanded'));
+            }
+            $this->assertStringContainsString('<span>Your Answer</span>', $html);
+            $this->assertStringContainsString(self::ANSWER, $html);
             $this->assertStringContainsString('data-review-panel="feedback"', $html);
-            $this->assertStringContainsString('data-review-panel="answer"', $html);
             $this->assertStringContainsString('data-review-panel="possible"', $html);
+            $this->assertSame(0, substr_count($html, 'data-review-panel="answer"'));
+            $this->assertStringNotContainsString('ASK AI COACH', $html);
         }
     }
 
@@ -86,7 +95,7 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
             $card = $this->reviewCards($user, $session, $layout)[0];
             $this->assertStringNotContainsString(self::FEEDBACK, $card);
             $this->assertStringNotContainsString(self::POSSIBLE, $card);
-            $this->assertStringContainsString('Provider feedback will appear after the AI review passes validation.', $card);
+            $this->assertStringContainsString('Local feedback preview', $card);
         }
     }
 
@@ -106,7 +115,7 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
         $row->update(['payload' => $changedPayload]);
         $card = $this->reviewCards($user, $session, 'desktop')[0];
         $this->assertStringNotContainsString('50% gain', $card);
-        $this->assertStringContainsString('Provider feedback will appear after the AI review passes validation.', $card);
+        $this->assertStringContainsString('Local feedback preview', $card);
         $row->update(['payload' => $originalPayload]);
 
         $answer->update(['answer_text' => 'I only observed the handoff and did not perform the checklist update.']);
@@ -114,7 +123,7 @@ class ProviderOnlyAnswerReviewDisplayTest extends TestCase
             $card = $this->reviewCards($user, $session, $layout)[0];
             $this->assertStringContainsString('I only observed the handoff', $card);
             $this->assertStringNotContainsString(self::POSSIBLE, $card);
-            $this->assertStringContainsString('Provider feedback will appear after the AI review passes validation.', $card);
+            $this->assertStringContainsString('Local feedback preview', $card);
         }
     }
 

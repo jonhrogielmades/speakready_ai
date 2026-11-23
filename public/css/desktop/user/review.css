@@ -1830,7 +1830,7 @@ html body.user-desktop-shell:not(.admin-shell) .review-ai-coach-button:focus-vis
     }
 }
 
-/* Answer review tabs */
+/* Answer review buttons */
 .review-answer-tabs {
     display: grid;
     gap: 12px;
@@ -1880,7 +1880,7 @@ html body.user-desktop-shell:not(.admin-shell) .review-ai-coach-button:focus-vis
     color: #2563eb !important;
 }
 
-.review-answer-tab[aria-selected="true"] {
+.review-answer-tab[aria-expanded="true"] {
     background: rgba(37, 99, 235, .1) !important;
     border-color: #3b82f6 !important;
     color: #2563eb !important;
@@ -1902,14 +1902,10 @@ html body .review-answer-tabs .review-answer-tab-panel[hidden],
     min-width: 0;
 }
 
-.review-answer-tab-panel .review-ai-coach-action {
-    margin-top: 12px;
-}
-
 @media (max-width: 575.98px) {
     .review-answer-tab-list {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .review-answer-tab {

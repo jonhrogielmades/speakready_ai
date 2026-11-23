@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Jobs\GenerateInterviewFeedback;
+use App\Jobs\GenerateSessionProviderPreview;
 use App\Models\Category;
 use App\Models\InterviewSession;
 use App\Models\User;
@@ -36,6 +37,7 @@ class RequeueStaleInterviewFeedbackTest extends TestCase
             ->expectsOutput('Requeued 3 provider feedback reviews.');
 
         Queue::assertPushed(GenerateInterviewFeedback::class, 3);
+        Queue::assertPushed(GenerateSessionProviderPreview::class, 3);
         $queuedIds = Queue::pushed(GenerateInterviewFeedback::class)
             ->map(fn (GenerateInterviewFeedback $job): int => $job->sessionId)
             ->sort()->values()->all();
@@ -45,6 +47,35 @@ class RequeueStaleInterviewFeedbackTest extends TestCase
         $this->assertSame('pending', $fresh->fresh()->feedback_status);
         $this->assertSame('failed', $exhausted->fresh()->feedback_status);
         $this->assertSame('failed', $exhaustedProcessing->fresh()->feedback_status);
+    }
+
+    public function test_corrected_provider_configuration_can_requeue_terminal_authentication_failure(): void
+    {
+        Queue::fake();
+        $user = User::factory()->create(['status' => 'active', 'is_admin' => false]);
+        $category = Category::create(['title' => 'Technical']);
+        $authentication = $this->makeReviewSession($user, $category, 'processing', 9);
+        $authentication->forceFill([
+            'feedback_failure_code' => 'provider_authentication',
+            'feedback_started_at' => now()->subMinutes(6),
+        ])->save();
+        $unrelated = $this->makeReviewSession($user, $category, 'failed', 9);
+        $unrelated->forceFill(['feedback_failure_code' => 'provider_timeout'])->save();
+        $this->backdate($unrelated, 20);
+
+        $this->artisan('feedback:requeue-stale')->assertSuccessful()
+            ->expectsOutput('Requeued 0 provider feedback reviews.');
+        Queue::assertNothingPushed();
+        $this->assertSame('failed', $authentication->fresh()->feedback_status);
+        $this->assertSame('provider_authentication', $authentication->fresh()->feedback_failure_code);
+
+        $this->artisan('feedback:requeue-stale --reset-config-failures')->assertSuccessful()
+            ->expectsOutput('Requeued 1 provider feedback reviews.');
+        Queue::assertPushed(GenerateInterviewFeedback::class, 1);
+        Queue::assertPushed(GenerateSessionProviderPreview::class, 1);
+        $this->assertSame('pending', $authentication->fresh()->feedback_status);
+        $this->assertSame(0, $authentication->fresh()->feedback_attempts);
+        $this->assertSame('failed', $unrelated->fresh()->feedback_status);
     }
 
     private function makeReviewSession(User $user, Category $category, string $status, int $attempts): InterviewSession

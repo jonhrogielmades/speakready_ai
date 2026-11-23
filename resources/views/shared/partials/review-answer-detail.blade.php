@@ -1,5 +1,4 @@
 @php
- $questionSource = $answer->question ?? $answer;
  $answerText = trim((string) ($answer->answer_text ?? ''));
  $hasVoiceRecording = trim((string) ($answer->voice_recording_path ?? '')) !== '';
  $hasVoiceEvidence = trim((string) ($answer->delivery_transcript ?? '')) !== '';
@@ -16,17 +15,26 @@
          ? ''
          : ($answerText !== '' ? $answerText : trim((string) ($answer->delivery_transcript ?? '')));
      if ($localAnswer !== '' || (bool) ($answer->is_skipped ?? false)) {
-         $localPreview = \App\Services\AIService::localReviewQuestionFeedback([
-             'id' => $answer->id,
-             'question' => $answer->question->question_text ?? '',
-             'question_type' => $answer->question->type ?? null,
-             'answer' => $localAnswer,
-             'is_skipped' => (bool) ($answer->is_skipped ?? false),
-             'expected_guide' => $answer->question->expected_guide ?? null,
-             'mapped_skills' => $answer->question->mapped_skills ?? [],
-             'response_mode' => $answer->response_mode ?? 'text',
-             'delivery_transcript' => $answer->delivery_transcript ?? '',
-         ]);
+         try {
+             $localPreview = $localFeedbackReport['answer_feedback'][(string) $answer->id] ?? null;
+             $localPreview ??= \App\Services\AIService::localReviewQuestionFeedback([
+                 'id' => $answer->id,
+                 'question' => $answer->question->question_text ?? '',
+                 'question_type' => $answer->question->type ?? null,
+                 'answer' => $localAnswer,
+                 'is_skipped' => (bool) ($answer->is_skipped ?? false),
+                 'expected_guide' => $answer->question->expected_guide ?? null,
+                 'mapped_skills' => $answer->question->mapped_skills ?? [],
+                 'response_mode' => $answer->response_mode ?? 'text',
+                 'delivery_transcript' => $answer->delivery_transcript ?? '',
+             ]);
+         } catch (\Throwable $error) {
+             \Illuminate\Support\Facades\Log::warning('Local answer preview could not be prepared.', [
+                 'answer_id' => $answer->id,
+                 'error_type' => $error::class,
+             ]);
+             $localPreview = null;
+         }
      }
  }
 
@@ -52,43 +60,39 @@
  $possibleAnswerReady = (bool) ($providerReview['possible_answer_ready'] ?? false);
  $answerWasSkipped = (bool) ($providerReview['skipped'] ?? false);
  $possibleAnswerNeedsMoreDetail = $feedbackReady && (bool) ($providerReview['insufficient'] ?? false);
- $feedbackText = $feedbackReady ? $providerReview['feedback'] : ($answerWasSkipped
- ? 'No answer content is available to review for this question.'
- : 'AI feedback is not ready for this question yet.');
- $possibleAnswer = $possibleAnswerReady ? $providerReview['possible_answer'] : ($answerWasSkipped
+ $usingLocalPreview = ! $reviewEndedEarly && ! $providerReviewVerified && ! $preparedReviewReady;
+ $localFeedback = trim((string) ($localPreview['ai_feedback'] ?? ''));
+ $localPossibleAnswer = trim((string) ($localPreview['better_sample_answer'] ?? ''));
+ $feedbackText = $feedbackReady
+ ? $providerReview['feedback']
+ : ($localFeedback !== '' ? $localFeedback
+ : ($hasVoiceRecording && ! $hasVoiceEvidence && $answerText === ''
+ ? 'A saved transcript is needed before feedback can review this voice answer.'
+ : 'Feedback is not ready for this question yet.'));
+ $possibleAnswer = $possibleAnswerReady
+ ? $providerReview['possible_answer']
+ : ($usingLocalPreview && $localPossibleAnswer !== '' ? $localPossibleAnswer
+ : ($answerWasSkipped || (bool) ($answer->is_skipped ?? false)
  ? 'No possible answer is generated for an unanswered question.'
- : ($possibleAnswerNeedsMoreDetail
+ : ($possibleAnswerNeedsMoreDetail || (bool) ($localPreview['is_too_short'] ?? false)
  ? 'There is not enough answer detail to create a grounded possible answer.'
- : 'An AI-generated possible answer is not available for this question yet.'));
- $coachQuestion = review_question_text($questionSource);
- if ($coachQuestion === '') {
- $coachQuestion = 'Question text unavailable.';
- }
- $coachAnswer = review_answer_text($answer);
- if ($coachAnswer === '') {
- $coachAnswer = $answerDisplay;
- }
- $coachPrompt = trim(implode("\n\n", [
- 'Please act as my SpeakReady interview coach. Review my saved interview answer and give concise, actionable advice. Use only the exact question and my saved answer as evidence. Keep every suggestion truthful and do not invent details for me.',
- 'Interview question: '.$coachQuestion,
- 'My answer: '.$coachAnswer,
- 'Please tell me what worked, what I should improve, and a stronger structure I can practice for this answer.',
- ]));
- $feedbackCoachPrompt = trim(implode("\n\n", [
- 'Please review my saved interview answer\'s feedback in more detail. Explain the feedback below using exact words from my answer, and give me concrete steps to improve. If a feedback point is not supported by my answer, say so. Focus on this feedback only.',
- 'Interview question: '.\Illuminate\Support\Str::limit($coachQuestion, 500, ''),
- 'My answer: '.\Illuminate\Support\Str::limit($coachAnswer, 900, ''),
- 'Feedback shown in Detailed Review (guidance, not factual evidence): '.\Illuminate\Support\Str::limit($feedbackText, 1600, ''),
- ]));
+ : 'A possible answer is not available for this question yet.')));
  $answerTabKey = 'answer-review-'.((int) ($answer->id ?? 0)).'-'.$index;
 @endphp
 
 <div class="review-answer-simple review-answer-minimal">
- @if($reviewEndedEarly || (! $providerReviewVerified && ! $preparedReviewReady))
+ @if($reviewEndedEarly || $usingLocalPreview || $preparedReviewReady)
  <div class="early-ended-answer-note" role="note">
  <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
- <span>{{ $reviewEndedEarly ? 'This answer was saved, but it was not assessed because the interview ended early.' : 'This answer was saved. Provider feedback will appear after the AI review passes validation. Local feedback below is preliminary guidance from your saved answer.' }}</span>
+ <span>{{ $reviewEndedEarly
+ ? 'This answer was saved, but it was not assessed because the interview ended early.'
+ : ($preparedReviewReady
+ ? 'AI provider feedback for this answer is ready. The full interview report is still being prepared.'
+ : (($providerReviewStatus ?? null) === 'failed'
+ ? 'This answer was saved. Preliminary local feedback is available while the AI provider review is unavailable.'
+ : 'This answer was saved. Preliminary local feedback is available while the AI provider review continues.')) }}</span>
  </div>
+ @endif
  <div class="review-answer-example-grid">
  <section class="review-answer-section-wide">
  <span>Your Answer</span>
@@ -98,64 +102,31 @@
  <p>{{ $answerDisplay }}</p>
  @endif
  </section>
- @if($localPreview !== null)
- <section class="review-answer-section-wide" aria-label="Local feedback preview">
- <span>Local feedback preview</span>
- <p>{{ trim((string) ($localPreview['ai_feedback'] ?? '')) }}</p>
- </section>
- @elseif(! $reviewEndedEarly && ! $preparedReviewReady && $hasVoiceRecording && ! $hasVoiceEvidence && $answerText === '')
- <section class="review-answer-section-wide" aria-label="Local feedback preview">
- <span>Local feedback preview</span>
- <p>A saved transcript is needed before local feedback can review this voice answer. The AI provider review is still being prepared.</p>
- </section>
- @endif
  </div>
- @else
- @if($preparedReviewReady)
- <p class="mb-3" role="status" style="color:var(--tx3);font-size:.88rem;">AI feedback for this answer is ready. The full interview summary is not ready yet.</p>
- @endif
+ @if(! $reviewEndedEarly)
  <div class="review-answer-tabs" data-answer-review-tabs>
- <div class="review-answer-tab-list" role="tablist" aria-label="Answer review sections">
- <button type="button" class="review-answer-tab is-active" id="{{ $answerTabKey }}-feedback-tab" role="tab" aria-selected="true" aria-controls="{{ $answerTabKey }}-feedback-panel" data-review-tab="feedback" title="Show feedback" tabindex="0">
+ <div class="review-answer-tab-list" role="group" aria-label="Answer review sections">
+ <button type="button" class="review-answer-tab" id="{{ $answerTabKey }}-feedback-tab" aria-expanded="false" aria-controls="{{ $answerTabKey }}-feedback-panel" data-review-tab="feedback" title="Show feedback">
  <i class="fa-solid fa-comment-dots" aria-hidden="true"></i>
  <span>Feedback</span>
  </button>
- <button type="button" class="review-answer-tab" id="{{ $answerTabKey }}-answer-tab" role="tab" aria-selected="false" aria-controls="{{ $answerTabKey }}-answer-panel" data-review-tab="answer" title="Show your saved answer" tabindex="-1">
- <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
- <span>Your Answer</span>
- </button>
- <button type="button" class="review-answer-tab" id="{{ $answerTabKey }}-possible-tab" role="tab" aria-selected="false" aria-controls="{{ $answerTabKey }}-possible-panel" data-review-tab="possible" title="Show a possible answer" tabindex="-1">
+ <button type="button" class="review-answer-tab" id="{{ $answerTabKey }}-possible-tab" aria-expanded="false" aria-controls="{{ $answerTabKey }}-possible-panel" data-review-tab="possible" title="Show a possible answer">
  <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
  <span>Possible Answer</span>
  </button>
  </div>
  <div class="review-answer-tab-panels">
- <section class="review-answer-section review-answer-tab-panel" id="{{ $answerTabKey }}-feedback-panel" role="tabpanel" aria-labelledby="{{ $answerTabKey }}-feedback-tab" data-review-panel="feedback" aria-hidden="false" tabindex="0">
- <p @if(!$feedbackReady) role="status" @endif>{{ $feedbackText }}</p>
- @if($feedbackReady)
- <div class="review-ai-coach-action" data-ai-coach-prompt-wrapper>
- <textarea class="review-ai-coach-prompt" data-ai-coach-prompt hidden readonly>{{ $feedbackCoachPrompt }}</textarea>
- <button type="button" class="review-ai-coach-button review-ai-coach-feedback-button" data-coach-url="{{ route('user.coach') }}" data-review-answer-id="{{ (int) ($answer->id ?? 0) }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach for more feedback on this answer">
- <span>ASK AI COACH FOR MORE FEEDBACK</span>
- </button>
- </div>
+ <section class="review-answer-section review-answer-tab-panel" id="{{ $answerTabKey }}-feedback-panel" role="region" aria-labelledby="{{ $answerTabKey }}-feedback-tab" data-review-panel="feedback" hidden>
+ @if($usingLocalPreview && $localFeedback !== '')
+ <small>Local feedback preview</small>
  @endif
+ <p @if(!$feedbackReady && $localFeedback === '') role="status" @endif>{{ $feedbackText }}</p>
  </section>
- <section class="review-answer-section review-answer-tab-panel" id="{{ $answerTabKey }}-answer-panel" role="tabpanel" aria-labelledby="{{ $answerTabKey }}-answer-tab" data-review-panel="answer" aria-hidden="true" tabindex="0" hidden>
- @if($isVoiceModeAnswer)
- @include('shared.partials.interview-answer-voice-recording', ['answer' => $answer, 'providerReviewVerified' => $providerReviewVerified || $preparedReviewReady])
- @else
- <p>{{ $answerDisplay }}</p>
+ <section class="review-answer-section review-answer-tab-panel review-answer-possible-section" id="{{ $answerTabKey }}-possible-panel" role="region" aria-labelledby="{{ $answerTabKey }}-possible-tab" data-review-panel="possible" hidden>
+ @if($usingLocalPreview && $localPossibleAnswer !== '')
+ <small>Preliminary local possible answer</small>
  @endif
- </section>
- <section class="review-answer-section review-answer-tab-panel review-answer-possible-section" id="{{ $answerTabKey }}-possible-panel" role="tabpanel" aria-labelledby="{{ $answerTabKey }}-possible-tab" data-review-panel="possible" aria-hidden="true" tabindex="0" hidden>
- <p @if(!$possibleAnswerReady && !$possibleAnswerNeedsMoreDetail && !$answerWasSkipped) role="status" @endif>{{ $possibleAnswer }}</p>
- <div class="review-ai-coach-action" data-ai-coach-prompt-wrapper>
- <textarea class="review-ai-coach-prompt" data-ai-coach-prompt hidden readonly>{{ $coachPrompt }}</textarea>
- <button type="button" class="review-ai-coach-button" data-coach-url="{{ route('user.coach') }}" data-review-answer-id="{{ (int) ($answer->id ?? 0) }}" onclick="window.speakReadyAskAiCoachFromReview(this)" aria-label="Ask AI Coach about this answer">
- <span>ASK AI COACH</span>
- </button>
- </div>
+ <p @if(!$possibleAnswerReady && $localPossibleAnswer === '' && !$possibleAnswerNeedsMoreDetail && !$answerWasSkipped) role="status" @endif>{{ $possibleAnswer }}</p>
  </section>
  </div>
  </div>
@@ -184,8 +155,7 @@
                     tabs.forEach(function (tab) {
                         const isActive = tab.dataset.reviewTab === key;
                         tab.classList.toggle('is-active', isActive);
-                        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-                        tab.setAttribute('tabindex', isActive ? '0' : '-1');
+                        tab.setAttribute('aria-expanded', isActive ? 'true' : 'false');
 
                         if (isActive && shouldFocus) {
                             tab.focus();
@@ -195,13 +165,12 @@
                     panels.forEach(function (panel) {
                         const isActive = panel.dataset.reviewPanel === key;
                         panel.hidden = !isActive;
-                        panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
                     });
                 }
 
                 tabs.forEach(function (tab, index) {
                     tab.addEventListener('click', function () {
-                        activate(tab.dataset.reviewTab, false);
+                        activate(tab.getAttribute('aria-expanded') === 'true' ? null : tab.dataset.reviewTab, false);
                     });
 
                     tab.addEventListener('keydown', function (event) {
@@ -224,36 +193,9 @@
                     });
                 });
 
-                activate('feedback', false);
+                activate(null, false);
             });
         }
-
-        const reviewCoachPromptKey = 'speakready.aiCoach.reviewPrompt';
-
-        window.speakReadyAskAiCoachFromReview = function (button) {
-            const target = button?.dataset?.coachUrl || '/coach';
-            const promptField = button?.closest('[data-ai-coach-prompt-wrapper]')?.querySelector('[data-ai-coach-prompt]');
-            const prompt = String(promptField?.value || '').trim();
-
-            if (prompt) {
-                try {
-                    window.sessionStorage.setItem(reviewCoachPromptKey, JSON.stringify({
-                        prompt,
-                        source: 'answer-review',
-                        reviewAnswerId: button?.dataset?.reviewAnswerId || null,
-                        createdAt: Date.now()
-                    }));
-                } catch (error) {
-                    const separator = target.includes('?') ? '&' : '?';
-                    const reviewAnswerId = button?.dataset?.reviewAnswerId || '';
-                    const answerQuery = reviewAnswerId ? `&review_answer_id=${encodeURIComponent(reviewAnswerId)}` : '';
-                    window.location.href = `${target}${separator}review_prompt=${encodeURIComponent(prompt.slice(0, 3500))}${answerQuery}`;
-                    return;
-                }
-            }
-
-            window.location.href = target;
-        };
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initAnswerReviewTabs, { once: true });
