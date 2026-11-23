@@ -21,7 +21,7 @@
  $allQuestions = \App\Models\Question::where('interview_session_id', $sessionRecord->id)
  ->orderBy('id')
  ->get();
- $excludedLegacyQuestions = $allQuestions->filter(fn ($item) => $item->source_type === 'local_question_fallback'
+ $excludedLegacyQuestions = $allQuestions->filter(fn ($item) => in_array($item->source_type, ['local_question_fallback', 'local_follow_up_fallback'], true)
      && ! in_array((int) $item->id, $answeredQuestionIds, true));
  $excludedLegacyQuestionTexts = $excludedLegacyQuestions->pluck('question_text')->all();
  $questions = $allQuestions->reject(fn ($item) => $excludedLegacyQuestions->contains('id', $item->id))->values();

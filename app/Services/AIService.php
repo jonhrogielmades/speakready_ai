@@ -905,7 +905,12 @@ class AIService
  }
  $prompt.= ' Keep the reply natural for speech, under 75 words, with exactly one interviewer question. '.self::liveFeedbackReplyBoundary($liveFeedbackMode);
 
- $providers = array_values(array_filter(self::providerPriorityList($provider), fn (string $key): bool => self::providerIsConfigured($key)));
+ $providers = array_values(array_filter(
+  self::providerPriorityList($provider),
+  fn (string $key): bool => self::providerIsConfigured($key)
+   && ! self::providerCircuitIsOpen($key, 'chat')
+   && ! self::chatProviderRateLimited($key)
+ ));
  if ($providers === []) {
  throw new InterviewFollowUpProviderFailureException('No configured AI provider is available to prepare the next interview question.');
  }
@@ -929,11 +934,16 @@ class AIService
  $deadlineSeconds = max(20, min(90, (int) config('services.interview_follow_up.deadline_seconds', 60)));
  $startedAt = microtime(true);
  $deadlineAt = $startedAt + $deadlineSeconds;
+ $reserveSecondsPerProvider = max(2, min(8, (int) floor(
+  ($deadlineSeconds - 2) / count($providers)
+ )));
  $attempt = 0;
  $rejectedProviders = [];
  $failedProviders = [];
  $rejectedReplies = [];
- // After provider failover, use any remaining time for semantic repair.
+ $rejectionGates = [];
+ // Keep semantic repairs available without spending the whole deadline on
+ // the first provider. Reserve time for every later configured provider.
  $repairBudget = $configuredRetries;
  $systemPrompt = 'You are a realistic hiring interviewer named '.self::INTERVIEWER_DISPLAY_NAME.'. Use the recent conversation and target role. Your selected interviewing style is '.InterviewerAvatar::label($session->interviewer_avatar?? null).': '.InterviewerAvatar::followUpInstruction($session->interviewer_avatar?? null).' If asked a brief rapport/logistics question, answer it naturally first, then ask one concise spoken interview question. Do not introduce yourself by a personal name unless asked. Never say "You mentioned", "You said", or "You shared"; avoid restating the full answer, but include one actual detail in the question. '.self::liveFeedbackSystemInstruction($liveFeedbackMode).' '.self::languageOutputInstruction($targetLanguage, 'the whole answer');
  $repairTypeRule = match ($requiredQuestionType) {
@@ -950,17 +960,32 @@ class AIService
  : 'do not infer any unspoken candidate experience; ask for specific role-related evidence; ';
  $repairPrompt = $prompt."\nThe previous response could not be used. Write a DIFFERENT question that passes these checks: ask exactly ONE question with one question mark; {$answerRepairRule}keep it specific to the {$targetPosition} role; {$repairTypeRule}ask for an unanswered action, decision, result, or next step; ask whether an unstated method was considered instead of presuming it was chosen or completed; do not invent candidate history or repeat an earlier question. Output only the spoken interviewer turn.\n";
 
- // Give every configured provider one chance before spending calls on a
- // semantic repair. This also makes rate limits and outages fail over quickly.
- $providerQueue = $providers;
+ // A healthy provider can still return a question that fails the role and
+ // answer checks. Repair that response promptly while reserving a bounded
+ // attempt for each provider that has not yet had its first chance.
+ $providerQueue = array_map(static fn (string $key): array => [
+  'provider' => $key,
+  'repair' => false,
+ ], $providers);
+ $scheduledRepairs = 0;
+ $queuedLaterRepairs = false;
  for ($index = 0; $index < count($providerQueue); $index++) {
- $currentProvider = $providerQueue[$index];
- $isRepair = $index >= count($providers);
+ $currentProvider = $providerQueue[$index]['provider'];
+ $isRepair = $providerQueue[$index]['repair'];
  $remainingSeconds = $deadlineAt - microtime(true);
- $initialProvidersRemaining = max(1, count($providers) - $index);
- $attemptTimeout = min($timeoutSeconds, (int) floor(($remainingSeconds - 2) / ($initialProvidersRemaining * $httpAttempts)));
+ $initialProvidersRemaining = count(array_filter(
+  array_slice($providerQueue, $index + 1),
+  static fn (array $entry): bool => ! $entry['repair']
+ ));
+ $reservedSeconds = $initialProvidersRemaining * $reserveSecondsPerProvider;
+ $attemptTimeout = min($timeoutSeconds, (int) floor(
+  ($remainingSeconds - 2 - $reservedSeconds) / $httpAttempts
+ ));
  if ($attemptTimeout < 2) {
- break;
+  if ($initialProvidersRemaining > 0 || $isRepair) {
+   continue;
+  }
+  break;
  }
  $chatRequestOptions['timeout_seconds'] = $attemptTimeout;
 
@@ -968,35 +993,61 @@ class AIService
  try {
  $requestPrompt = $isRepair ? $repairPrompt : $prompt;
  if ($isRepair && isset($rejectedReplies[$currentProvider])) {
+ $gateInstruction = match ($rejectionGates[$currentProvider] ?? null) {
+  'answer_anchor', 'answer_grounding' => 'Put one concrete word or action from the latest answer in the QUESTION itself.',
+  'question_type' => 'Make the QUESTION match the required interview question type.',
+  'role_relevance', 'target_role' => 'Ask about duties, skills, or evidence for the exact target position.',
+  'duplicate', 'conversation' => 'Ask for a different unanswered detail instead of repeating an earlier question.',
+  'unsupported_method_premise', 'unsupported_premise' => 'Ask whether or how an unstated method was considered; do not claim it happened.',
+  'format', 'sanitizer' => 'Write one short spoken interviewer question ending in one question mark.',
+  'banned_reference' => 'Refer to the answer detail naturally without banned introductory phrases.',
+  default => 'Connect the question to the answer and target role while preserving the required question type.',
+ };
  $requestPrompt.= "\nUNUSABLE PREVIOUS OUTPUT (reference only; do not repeat): "
  .json_encode(self::truncateText($rejectedReplies[$currentProvider], 320), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
- ."\nCorrect its answer anchor, target role, required question type, and repetition issues.\n";
+ ."\nSPECIFIC REPAIR: {$gateInstruction}\n";
  }
  $rawResponse = self::chatMessage($requestPrompt, [], $currentProvider, $systemPrompt, $chatRequestOptions);
  if ($rawResponse !== self::AI_FAILURE_MESSAGE) {
  $response = self::sanitizeInterviewerReply($rawResponse);
- $rejectionGate = match (true) {
+ $preValidationGate = match (true) {
   $response === '' => 'sanitizer',
   preg_match('/\b(?:you\s+(?:mentioned|said|shared)|thinking\s+about\s+what\s+you\s+shared)\b/iu', $response) === 1 => 'banned_reference',
   ! app(InterviewConversationService::class)->isCoherentFollowUp($response, (string) $latestAnswer, $history) => 'conversation',
-  $acceptQuestion !== null && ! $acceptQuestion($response) => 'question_validation',
   default => null,
  };
+ $validatorResult = $preValidationGate === null && $acceptQuestion !== null
+  ? $acceptQuestion($response)
+  : true;
+ $validatorGate = is_string($validatorResult) && $validatorResult !== ''
+  ? $validatorResult
+  : ($validatorResult === false ? 'question_validation' : null);
+ $rejectionGate = $preValidationGate ?? $validatorGate;
 
  if ($rejectionGate === null) {
  $usedProvider = $currentProvider;
  return $response;
  }
  $rejectedReplies[$currentProvider] = $response;
+ $rejectionGates[$currentProvider] = $rejectionGate;
  if (! $isRepair) {
  $rejectedProviders[] = $currentProvider;
+  if ($scheduledRepairs < $repairBudget) {
+   array_splice($providerQueue, $index + 1, 0, [[
+    'provider' => $currentProvider,
+    'repair' => true,
+   ]]);
+   $scheduledRepairs++;
+  }
  }
  if (! self::externalAiDisabledForTests()) {
  Log::warning('AI interview follow-up reply did not pass question validation.', [
+ 'session_id' => $session->id ?? null,
  'provider' => $currentProvider,
  'attempt' => $attempt,
  'phase' => $isRepair ? 'repair' : 'initial',
  'gate' => $rejectionGate,
+ 'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
  ]);
  }
  } elseif (! $isRepair) {
@@ -1008,26 +1059,39 @@ class AIService
  if (! $isRepair) {
  $failedProviders[] = $currentProvider;
  }
- Log::error('AI Chat Reply Error (Attempt '.$attempt.'): '.self::safeProviderErrorMessage($e));
+ Log::warning('AI interview follow-up provider attempt failed.', [
+  'session_id' => $session->id ?? null,
+  'provider' => $currentProvider,
+  'attempt' => $attempt,
+  'phase' => $isRepair ? 'repair' : 'initial',
+  'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+  'error_type' => $e::class,
+  'message' => self::safeProviderErrorMessage($e),
+ ]);
  }
- if ($index === count($providers) - 1) {
+ if (! $queuedLaterRepairs && $initialProvidersRemaining === 0) {
  $repairProviders = array_values(array_unique(array_merge($rejectedProviders, $failedProviders)));
- if ($repairProviders === []) {
- break;
+ if ($repairProviders !== []) {
+  for ($repairIndex = $scheduledRepairs; $repairIndex < $repairBudget; $repairIndex++) {
+   $providerQueue[] = [
+    'provider' => $repairProviders[$repairIndex % count($repairProviders)],
+    'repair' => true,
+   ];
+  }
  }
- for ($repairIndex = 0; $repairIndex < $repairBudget; $repairIndex++) {
- $providerQueue[] = $repairProviders[$repairIndex % count($repairProviders)];
- }
+ $queuedLaterRepairs = true;
  }
  }
 
  if (! self::externalAiDisabledForTests()) {
  Log::warning('AI interview follow-up exhausted without an accepted provider question.', [
+ 'session_id' => $session->id ?? null,
  'providers' => $providers,
  'attempts' => $attempt,
  'elapsed_ms' => (int) round((microtime(true) - $startedAt) * 1000),
  'rejected_providers' => array_values(array_unique($rejectedProviders)),
  'failed_providers' => array_values(array_unique($failedProviders)),
+ 'rejection_gates' => $rejectionGates,
  ]);
  }
 
