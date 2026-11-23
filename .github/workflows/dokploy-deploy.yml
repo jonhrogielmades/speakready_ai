@@ -81,7 +81,10 @@ jobs:
           sort -z "${feature_test_list}" > "${sorted_feature_test_list}"
           while IFS= read -r -d '' test_file; do
             echo "Running ${test_file}"
-            php artisan test "${test_file}"
+            if ! php artisan test "${test_file}"; then
+              echo "::error file=${test_file},title=Isolated feature test failed::${test_file} failed on the CI runner."
+              exit 1
+            fi
           done < "${sorted_feature_test_list}"
 
       - name: Set up Node.js
