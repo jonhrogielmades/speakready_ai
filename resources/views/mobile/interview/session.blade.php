@@ -5103,7 +5103,7 @@ return fallbackText;
  document.getElementById('aiQuestionText').innerText = '...';
  document.getElementById('qCounter').innerText = isOpeningQuestion(q)? 'Intro': Math.min(questionDisplayNumber(idx), targetQuestionCount) + '/' + targetQuestionCount;
  const backupQuestionBadge = document.getElementById('backupQuestionBadge');
- backupQuestionBadge.hidden = !['local_question_fallback', 'local_follow_up_fallback'].includes(q.source_type);
+ backupQuestionBadge.hidden = !['local_question_fallback', 'local_follow_up_fallback', 'validated_local_follow_up'].includes(q.source_type);
  backupQuestionBadge.style.display = backupQuestionBadge.hidden ? 'none' : 'block';
 
  // Append AI question to chat log if it's the first time seeing it

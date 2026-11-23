@@ -91,7 +91,7 @@ class AIService
 
  private const PROVIDER_DEFAULT_MODELS = [
  'openai' => 'gpt-6-astra',
- 'gemini' => 'gemini-4-argon',
+ 'gemini' => 'gemini-3.5-flash-lite',
  'groq' => 'openai/gpt-oss-120b',
  'cohere' => 'command-a-plus-05-2026',
  ];

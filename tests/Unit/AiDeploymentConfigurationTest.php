@@ -224,11 +224,18 @@ class AiDeploymentConfigurationTest extends TestCase
         }
 
         $this->assertStringContainsString(
-            'GEMINI_TRANSCRIPTION_MODEL: "${GEMINI_TRANSCRIPTION_MODEL:-gemini-4-argon}"',
+            'GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.5-flash-lite}"',
             $compose
         );
-        $this->assertStringContainsString('GEMINI_TRANSCRIPTION_MODEL=gemini-4-argon', $dokploy);
-        $this->assertStringContainsString('GEMINI_TRANSCRIPTION_MODEL=gemini-4-argon', $environment);
+        $this->assertStringContainsString('GEMINI_MODEL=gemini-3.5-flash-lite', $dokploy);
+        $this->assertStringContainsString('GEMINI_MODEL=gemini-3.5-flash-lite', $environment);
+
+        $this->assertStringContainsString(
+            'GEMINI_TRANSCRIPTION_MODEL: "${GEMINI_TRANSCRIPTION_MODEL:-gemini-3.5-flash-lite}"',
+            $compose
+        );
+        $this->assertStringContainsString('GEMINI_TRANSCRIPTION_MODEL=gemini-3.5-flash-lite', $dokploy);
+        $this->assertStringContainsString('GEMINI_TRANSCRIPTION_MODEL=gemini-3.5-flash-lite', $environment);
 
         $this->assertStringContainsString(
             'LOCAL_FEEDBACK_MODEL_MAX_VALIDATION_MAE: "${LOCAL_FEEDBACK_MODEL_MAX_VALIDATION_MAE:-5}"',

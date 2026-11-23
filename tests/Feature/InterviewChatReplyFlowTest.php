@@ -10,6 +10,7 @@ use App\Models\Question;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\AIService;
+use App\Services\InterviewQuestionAlignmentService;
 use App\Services\QuestionDatasetProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -503,7 +504,7 @@ class InterviewChatReplyFlowTest extends TestCase
         ]);
     }
 
-    public function test_seaman_session_preserves_answer_without_creating_a_backup_for_unreliable_output(): void
+    public function test_seaman_session_uses_a_role_relevant_local_follow_up_when_provider_output_is_unreliable(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
         config([
@@ -531,7 +532,7 @@ class InterviewChatReplyFlowTest extends TestCase
         $session->forceFill(['target_position' => 'Seaman', 'num_questions' => 3])->save();
         $question->forceFill(['question_text' => 'Describe a time you inspected shipboard safety equipment.'])->save();
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
             ->postJson(route('interview.chatReply'), [
                 'session_id' => $session->id,
@@ -539,20 +540,25 @@ class InterviewChatReplyFlowTest extends TestCase
                 'response_mode' => 'text',
                 'answer_text' => 'I inspected the lifeboat before departure, found expired flares, and reported the safety issue to the captain.',
             ])
-            ->assertStatus(503)
-            ->assertJsonPath('answer_saved', true)
-            ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('source_type', 'validated_local_follow_up')
+            ->assertJsonPath('ai_provider', null);
 
         Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
-        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
-        $this->assertSame(0, Question::where('interview_session_id', $session->id)->where('source_type', 'local_follow_up_fallback')->count());
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Question::where('interview_session_id', $session->id)->where('source_type', 'validated_local_follow_up')->count());
+        $this->assertTrue(app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
+            $response->json('next_question_text'), 'Seaman'
+        ));
+        $this->assertStringNotContainsString('cloud software', strtolower($response->json('next_question_text')));
         $this->assertDatabaseHas('interview_answers', [
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
         ]);
     }
 
-    public function test_provider_failure_saves_the_answer_for_retry_without_creating_a_local_follow_up(): void
+    public function test_provider_failure_advances_with_a_grounded_local_follow_up(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
         config(['services.interview_follow_up.max_retries' => 1]);
@@ -570,7 +576,7 @@ class InterviewChatReplyFlowTest extends TestCase
         $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
         [$session, $question] = $this->interview($user, $this->category(), 'text');
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
             ->postJson(route('interview.chatReply'), [
                 'session_id' => $session->id,
@@ -578,20 +584,42 @@ class InterviewChatReplyFlowTest extends TestCase
                 'response_mode' => 'text',
                 'answer_text' => 'I improved the support workflow and checked the result with the team.',
             ])
-            ->assertStatus(503)
-            ->assertJsonPath('answer_saved', true)
-            ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('source_type', 'validated_local_follow_up')
+            ->assertJsonPath('ai_provider', null);
 
         Http::assertSent(fn ($request) => str_contains((string) $request->url(), 'api.openai.com'));
-        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
-        $this->assertSame(0, Question::where('interview_session_id', $session->id)->where('source_type', 'local_follow_up_fallback')->count());
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(1, Question::where('interview_session_id', $session->id)->where('source_type', 'validated_local_follow_up')->count());
+        $this->assertNotSame($question->question_text, $response->json('next_question_text'));
+        $this->assertTrue(app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
+            $response->json('next_question_text'), 'Developer'
+        ));
+        $this->assertMatchesRegularExpression('/\b(?:support|workflow|checked|team|improved)\b/i', $response->json('next_question_text'));
         $this->assertDatabaseHas('interview_answers', [
             'interview_session_id' => $session->id,
             'question_id' => $question->id,
         ]);
+
+        foreach ([
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126 Safari/537.36',
+            'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Mobile Safari/537.36',
+        ] as $userAgent) {
+            $html = $this->actingAs($user)
+                ->withSession(['active_interview_id' => $session->id])
+                ->withHeader('User-Agent', $userAgent)
+                ->get(route('interview.session'))
+                ->assertOk()
+                ->getContent();
+            $this->assertSame(1, preg_match('/const initialQuestions = (\[.*?\]);\s*let questions =/s', $html, $initialMatch));
+            $initialQuestions = json_decode($initialMatch[1], true, 512, JSON_THROW_ON_ERROR);
+            $this->assertSame([$question->id, $response->json('next_question_id')], array_column($initialQuestions, 'id'));
+            $this->assertSame('validated_local_follow_up', $initialQuestions[1]['source_type']);
+        }
     }
 
-    public function test_failed_provider_does_not_create_backups_for_selected_types_or_skipped_answers(): void
+    public function test_failed_provider_uses_local_follow_ups_for_selected_types_and_skipped_answers(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
         config(['services.interview_follow_up.max_retries' => 1]);
@@ -616,24 +644,32 @@ class InterviewChatReplyFlowTest extends TestCase
             [$session, $question] = $this->interview($user, $category, 'text');
             $session->forceFill(['question_types' => json_encode([$case['type']]), 'num_questions' => 3])->save();
 
-            $this->actingAs($user)
+            $response = $this->actingAs($user)
                 ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
                 ->postJson(route('interview.chatReply'), array_merge([
                     'session_id' => $session->id,
                     'question_id' => $question->id,
                 ], array_diff_key($case, ['type' => true])))
-                ->assertStatus(503)
-                ->assertJsonPath('answer_saved', true)
-                ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+                ->assertOk()
+                ->assertJsonPath('success', true)
+                ->assertJsonPath('source_type', 'validated_local_follow_up')
+                ->assertJsonPath('ai_provider', null);
 
-            $this->assertSame(1, Question::where('interview_session_id', $session->id)->count(), $case['type']);
-            $this->assertSame(0, Question::where('interview_session_id', $session->id)
-                ->where('source_type', 'local_follow_up_fallback')->count(), $case['type']);
+            $this->assertSame(2, Question::where('interview_session_id', $session->id)->count(), $case['type']);
+            $this->assertSame(1, Question::where('interview_session_id', $session->id)
+                ->where('source_type', 'validated_local_follow_up')->count(), $case['type']);
+            $nextQuestion = Question::findOrFail($response->json('next_question_id'));
+            $this->assertSame($case['type'], $nextQuestion->type);
+            $this->assertNull($nextQuestion->ai_provider);
+            $this->assertNotSame($question->question_text, $nextQuestion->question_text);
+            $this->assertTrue(app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
+                $nextQuestion->question_text, 'Developer'
+            ));
             $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
         }
     }
 
-    public function test_repeated_provider_failures_do_not_advance_a_ten_question_session(): void
+    public function test_repeated_provider_failures_advance_with_distinct_local_questions(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
         config(['services.interview_follow_up.max_retries' => 1]);
@@ -650,26 +686,31 @@ class InterviewChatReplyFlowTest extends TestCase
         [$session, $question] = $this->interview($user, $this->category(), 'text');
         $session->forceFill(['num_questions' => 10, 'question_types' => json_encode(['Behavioral'])])->save();
 
+        $questionTexts = [$question->question_text];
         for ($turn = 0; $turn < 3; $turn++) {
             $response = $this->actingAs($user)
                 ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
                 ->postJson(route('interview.chatReply'), [
                     'session_id' => $session->id,
                     'question_id' => $question->id,
-                    'resume_saved_answer' => $turn > 0,
                     'answer_text' => 'I improved the support workflow and checked the result with the team.',
-                ]);
-            $response->assertStatus(503)
-                ->assertJsonPath('answer_saved', true)
-                ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+                ])->assertOk()
+                ->assertJsonPath('success', true)
+                ->assertJsonPath('source_type', 'validated_local_follow_up')
+                ->assertJsonPath('ai_provider', null);
+
+            $question = Question::findOrFail($response->json('next_question_id'));
+            $this->assertSame('Behavioral', $question->type);
+            $this->assertNotContains($question->question_text, $questionTexts);
+            $questionTexts[] = $question->question_text;
         }
 
-        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
-        $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
-        $this->assertSame(0, Question::where('interview_session_id', $session->id)->where('source_type', 'local_follow_up_fallback')->count());
+        $this->assertSame(4, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(3, InterviewAnswer::where('interview_session_id', $session->id)->count());
+        $this->assertSame(3, Question::where('interview_session_id', $session->id)->where('source_type', 'validated_local_follow_up')->count());
     }
 
-    public function test_skipped_answer_can_be_retried_without_creating_backup_questions(): void
+    public function test_skipped_answer_can_be_retried_without_duplicating_the_saved_answer(): void
     {
         $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
@@ -687,6 +728,7 @@ class InterviewChatReplyFlowTest extends TestCase
         [$session, $question] = $this->interview($user, $this->category(), 'text');
         $session->forceFill(['num_questions' => 10, 'question_types' => json_encode(['Behavioral'])])->save();
 
+        $savedAnswerId = null;
         for ($turn = 0; $turn < 3; $turn++) {
             $response = $this->actingAs($user)
                 ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
@@ -695,15 +737,19 @@ class InterviewChatReplyFlowTest extends TestCase
                     'question_id' => $question->id,
                     'resume_saved_answer' => $turn > 0,
                     'is_skipped' => $turn === 0,
-                ]);
-            $response->assertStatus(503)
-                ->assertJsonPath('answer_saved', true)
-                ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+                ])->assertOk()
+                ->assertJsonPath('success', true)
+                ->assertJsonPath('source_type', 'validated_local_follow_up')
+                ->assertJsonPath('ai_provider', null);
+
+            $savedAnswer = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
+            $savedAnswerId ??= $savedAnswer->id;
+            $this->assertSame($savedAnswerId, $savedAnswer->id);
         }
 
-        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
         $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
-        $this->assertSame(0, Question::where('interview_session_id', $session->id)->where('source_type', 'local_follow_up_fallback')->count());
+        $this->assertSame(1, Question::where('interview_session_id', $session->id)->where('source_type', 'validated_local_follow_up')->count());
     }
 
     public function test_off_topic_answer_does_not_trigger_a_local_nurse_backup(): void
@@ -734,10 +780,10 @@ class InterviewChatReplyFlowTest extends TestCase
             ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
 
         $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
-        $this->assertSame(0, Question::where('interview_session_id', $session->id)->where('source_type', 'local_follow_up_fallback')->count());
+        $this->assertSame(0, Question::where('interview_session_id', $session->id)->where('source_type', 'validated_local_follow_up')->count());
     }
 
-    public function test_provider_failure_does_not_create_localized_backup_questions(): void
+    public function test_provider_failure_uses_localized_local_follow_up_questions(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
         config(['services.interview_follow_up.max_retries' => 1]);
@@ -776,23 +822,31 @@ class InterviewChatReplyFlowTest extends TestCase
             [$session, $question] = $this->interview($user, $category, 'text');
             $session->forceFill(['question_types' => json_encode([$case['type']]), 'num_questions' => 3])->save();
 
-            $this->actingAs($user)
+            $response = $this->actingAs($user)
                 ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
                 ->postJson(route('interview.chatReply'), [
                     'session_id' => $session->id,
                     'question_id' => $question->id,
                     'answer_text' => $case['answer'],
-                ])->assertStatus(503)
-                ->assertJsonPath('answer_saved', true)
-                ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+                ])->assertOk()
+                ->assertJsonPath('success', true)
+                ->assertJsonPath('source_type', 'validated_local_follow_up')
+                ->assertJsonPath('ai_provider', null);
 
-            $this->assertSame(1, Question::where('interview_session_id', $session->id)->count(), $case['language']);
-            $this->assertSame(0, Question::where('interview_session_id', $session->id)
-                ->where('source_type', 'local_follow_up_fallback')->count(), $case['language']);
+            $this->assertSame(2, Question::where('interview_session_id', $session->id)->count(), $case['language']);
+            $this->assertSame(1, Question::where('interview_session_id', $session->id)
+                ->where('source_type', 'validated_local_follow_up')->count(), $case['language']);
+            $nextQuestion = Question::findOrFail($response->json('next_question_id'));
+            $this->assertSame($case['type'], $nextQuestion->type);
+            $this->assertNull($nextQuestion->ai_provider);
+            $this->assertMatchesRegularExpression(
+                $case['language'] === 'ceb' ? '/\b(?:unsa|kon|pamaagi)\b/iu' : '/\b(?:paano|ano|alin|ikuwento)\b/iu',
+                $nextQuestion->question_text
+            );
         }
     }
 
-    public function test_saved_answer_is_reused_when_provider_recovers_without_creating_a_backup(): void
+    public function test_saved_answer_is_reused_when_provider_recovers_after_a_local_follow_up(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
         config(['services.interview_follow_up.max_retries' => 1]);
@@ -815,17 +869,18 @@ class InterviewChatReplyFlowTest extends TestCase
         [$session, $question] = $this->interview($user, $this->category(), 'text');
         $answerText = 'I build small web services and want to make them more reliable.';
 
-        $this->actingAs($user)
+        $fallback = $this->actingAs($user)
             ->withSession(['active_interview_id' => $session->id, 'active_interview_provider' => 'openai'])
             ->postJson(route('interview.chatReply'), [
                 'session_id' => $session->id,
                 'question_id' => $question->id,
                 'answer_text' => $answerText,
-            ])->assertStatus(503)
-            ->assertJsonPath('answer_saved', true)
-            ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+            ])->assertOk()
+            ->assertJsonPath('source_type', 'validated_local_follow_up')
+            ->assertJsonPath('ai_provider', null);
 
-        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
+        $fallbackId = $fallback->json('next_question_id');
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
 
         $saved = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail();
         $savedId = $saved->id;
@@ -845,6 +900,7 @@ class InterviewChatReplyFlowTest extends TestCase
             ->assertJsonPath('source_type', 'ai_generated')
             ->assertJsonPath('ai_provider', 'openai')
             ->assertJsonPath('next_question_text', $generated);
+        $this->assertNotSame($fallbackId, $recovered->json('next_question_id'));
 
         $providerAvailable = false;
         $this->actingAs($user)
@@ -1115,7 +1171,7 @@ class InterviewChatReplyFlowTest extends TestCase
         }
     }
 
-    public function test_repeated_provider_failures_preserve_one_answer_and_no_backup_question(): void
+    public function test_repeated_provider_failures_preserve_one_answer_while_replacing_unanswered_local_question(): void
     {
         Setting::setVal('int_follow_up', true, 'interview', 'boolean');
         config(['services.interview_follow_up.max_retries' => 1]);
@@ -1138,9 +1194,9 @@ class InterviewChatReplyFlowTest extends TestCase
                 'session_id' => $session->id,
                 'question_id' => $question->id,
                 'answer_text' => 'I improved the support workflow and checked the result with the team.',
-            ])->assertStatus(503)
-            ->assertJsonPath('answer_saved', true)
-            ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+            ])->assertOk()
+            ->assertJsonPath('source_type', 'validated_local_follow_up');
+        $savedAnswerId = InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail()->id;
 
         $this->actingAs($user)
             ->withSession(['active_interview_id' => $session->id])
@@ -1148,13 +1204,13 @@ class InterviewChatReplyFlowTest extends TestCase
                 'session_id' => $session->id,
                 'question_id' => $question->id,
                 'resume_saved_answer' => true,
-            ])->assertStatus(503)
-            ->assertJsonPath('answer_saved', true)
-            ->assertJsonPath('error_code', 'ai_interview_follow_up_unavailable');
+            ])->assertOk()
+            ->assertJsonPath('source_type', 'validated_local_follow_up');
 
-        $this->assertSame(1, Question::where('interview_session_id', $session->id)->count());
+        $this->assertSame(2, Question::where('interview_session_id', $session->id)->count());
         $this->assertSame(1, InterviewAnswer::where('interview_session_id', $session->id)->count());
-        $this->assertSame(0, Question::where('interview_session_id', $session->id)->where('source_type', 'local_follow_up_fallback')->count());
+        $this->assertSame($savedAnswerId, InterviewAnswer::where('interview_session_id', $session->id)->firstOrFail()->id);
+        $this->assertSame(1, Question::where('interview_session_id', $session->id)->where('source_type', 'validated_local_follow_up')->count());
     }
 
     public function test_disabled_ai_follow_up_does_not_use_local_conversation_questions(): void

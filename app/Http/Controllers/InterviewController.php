@@ -716,7 +716,7 @@ class InterviewController extends Controller
  || ($previousAnswerSignature !== null
  && hash_equals($previousAnswerSignature, $this->interviewAnswerTurnSignature($answer))
  && (int) ($session->current_question_index?? 0) > $currentQuestionIndex))
- && (! in_array($existingNextQuestion->source_type, ['local_question_fallback', 'local_follow_up_fallback'], true)
+  && (! in_array($existingNextQuestion->source_type, ['local_question_fallback', 'local_follow_up_fallback', 'validated_local_follow_up'], true)
  || $nextQuestionAlreadyAnswered)) {
  return $this->nextQuestionResponse($existingNextQuestion);
  }
@@ -822,12 +822,23 @@ class InterviewController extends Controller
  }
 
  $followUpText = trim((string) $followUpText);
- if ($followUpText === '' || ! $usedProvider || ! AIService::providerIsConfigured($usedProvider)) {
-  return $this->aiInterviewFollowUpUnavailableResponse();
+ $usingLocalFollowUp = $followUpText === '' || ! $usedProvider || ! AIService::providerIsConfigured($usedProvider);
+ if ($usingLocalFollowUp) {
+  $followUpText = $this->localInterviewFollowUpText(
+   $session, $history, $interviewerInputText, $isFinal, $requiredQuestionType, $spokenQuestionTexts
+  ) ?? '';
+  if ($followUpText === '') {
+   return $this->aiInterviewFollowUpUnavailableResponse();
+  }
+  Log::warning('AI interview follow-up used a validated local backup question.', [
+   'session_id' => $session->id,
+   'question_id' => $question->id,
+   'required_type' => $requiredQuestionType,
+  ]);
  }
 
  try {
- return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $requiredQuestionType) {
+ return DB::transaction(function () use ($session, $question, $followUpText, $provider, $targetQuestionCount, $requiredQuestionType, $usingLocalFollowUp) {
  $lockedSession = InterviewSession::with('category')
  ->where('user_id', Auth::id())
  ->where('status', 'in_progress')
@@ -856,19 +867,21 @@ class InterviewController extends Controller
  ]);
  }
 
- // 4. Save the AI next question. Unanswered future drafts are replaced below.
+  // 4. Save the next question. Unanswered future drafts are replaced below.
  $existingQuestionTexts = $questionSequence->take($currentQuestionIndex + 1)->pluck('question_text')
  ->map(fn ($text) => $this->normalizedQuestionText((string) $text))->all();
  $safeFollowUpText = $followUpText;
  if (in_array($this->normalizedQuestionText($safeFollowUpText), $existingQuestionTexts, true)) {
- return $this->aiInterviewFollowUpUnavailableResponse(
-  'The AI providers returned a repeated question. Please try again so a new answer-based question can be generated.'
-  );
+  return $this->aiInterviewFollowUpUnavailableResponse(
+   'The next question repeated an earlier question. Please try again.'
+   );
  }
  $nextQuestionIndex = min($currentQuestionIndex + 1, $targetQuestionCount - 1);
  $this->deleteUnansweredFutureQuestions($lockedSession, $question);
 
- $questionMetadata = $this->aiGeneratedQuestionSourceMetadata($provider);
+ $questionMetadata = $usingLocalFollowUp
+   ? ['source_name' => 'SpeakReady backup interview question', 'source_type' => 'validated_local_follow_up']
+  : $this->aiGeneratedQuestionSourceMetadata($provider);
  if ($requiredQuestionType !== null) {
  $questionMetadata['question_type'] = $requiredQuestionType;
  }
@@ -880,7 +893,7 @@ class InterviewController extends Controller
  $this->decodeQuestionTypes($lockedSession->question_types),
  $nextQuestionIndex,
  $questionMetadata,
-  true
+   ! $usingLocalFollowUp
  );
 
  if (! $newQuestion) {
@@ -5123,6 +5136,201 @@ return response()->json([
  'error_code' => 'ai_interview_follow_up_unavailable',
  'error' => $message,
  ], 503);
+ }
+
+ private function localInterviewFollowUpText(
+  InterviewSession $session,
+  array $history,
+  string $latestAnswer,
+  bool $isFinal,
+  ?string $requiredQuestionType,
+  array $spokenQuestionTexts
+ ): ?string {
+  $position = trim((string) $session->target_position);
+  if ($position === '') {
+   return null;
+  }
+
+  $reply = AIService::fallbackInterviewReply($session, $history, $latestAnswer, $isFinal, $requiredQuestionType);
+  $baseQuestion = preg_replace('/^For my final question,\s*/i', '', $this->interviewQuestionClause($reply)) ?? '';
+  $baseQuestion = trim($baseQuestion, " \t\n\r\0\x0B?");
+  $lead = $isFinal ? 'For my final question, ' : '';
+  $candidates = [];
+  $alignment = app(InterviewQuestionAlignmentService::class);
+  $languageCode = (string) ($this->currentLanguageConfig()['code'] ?? 'en');
+  $answerDriftsFromRole = $alignment->answerDescribesUnrelatedSpecializedTask(
+   $latestAnswer, $position, (string) ($session->job_description ?? '')
+  );
+   // A local question cannot safely connect an unrelated specialized answer
+   // to this role without guessing at the candidate's experience.
+   if ($answerDriftsFromRole && ! $this->unavailableInterviewAnswerText($latestAnswer)) {
+    return null;
+   }
+
+  // The local conversation probe uses the saved answer to choose its intent.
+  // Keep a short answer detail in the question clause when possible.
+  $excerpt = '';
+  if ($baseQuestion !== '' && ! $answerDriftsFromRole && ! $this->unavailableInterviewAnswerText($latestAnswer)) {
+   $answerText = trim(preg_replace('/\s+/u', ' ', strip_tags($latestAnswer)) ?? '');
+   if (preg_match('/[\p{L}\p{N}][^.!?;]{0,120}/u', $answerText, $match) === 1) {
+    $words = preg_split('/\s+/u', trim($match[0])) ?: [];
+    $excerpt = trim(implode(' ', array_slice($words, 0, 10)), " \t\n\r\0\x0B\"“”");
+    $excerpt = trim(preg_replace('/["“”]+/u', '', $excerpt) ?? '');
+   }
+  }
+  $localized = $this->localizedLocalInterviewFollowUpText(
+   $position, $excerpt, $requiredQuestionType, $isFinal, $languageCode
+  );
+  if ($localized !== null) {
+   $candidates[] = $localized;
+  }
+  if ($excerpt !== '') {
+   $candidates[] = $lead."Considering ‘{$excerpt}’ for the {$position} role, ".lcfirst($baseQuestion).'?';
+  }
+
+  $roleQuestion = $alignment->fallbackQuestion(
+   $position, $requiredQuestionType, $answerDriftsFromRole ? '' : $latestAnswer, $isFinal
+  );
+  if ($roleQuestion !== null) {
+   $candidates[] = $roleQuestion;
+  }
+  if ($baseQuestion !== '' && ! $answerDriftsFromRole) {
+   $candidates[] = $lead."For the {$position} role, ".lcfirst($baseQuestion).'?';
+  }
+  $candidates[] = $lead.match ($requiredQuestionType) {
+   'Behavioral' => "Can you describe a specific experience from work, school, or training relevant to the {$position} role?",
+   'Situational' => "If you faced an unfamiliar task in the {$position} role, what would you do first?",
+   'Technical' => "What procedure would you use to check your work in the {$position} role?",
+   'Personal' => "Which strength would help you succeed in the {$position} role?",
+   default => "What specific experience would help you succeed in the {$position} role?",
+  };
+
+  $rejectionGates = [];
+  foreach ($candidates as $candidate) {
+   $candidate = $this->uniqueQuestionTextForSession(
+    $session, $candidate, $spokenQuestionTexts, $requiredQuestionType, $latestAnswer
+   );
+   if (in_array($this->normalizedQuestionText($candidate), $spokenQuestionTexts, true)) {
+    continue;
+   }
+   if ($requiredQuestionType !== null && ! $this->questionMatchesSelectedType($candidate, $requiredQuestionType)) {
+    continue;
+   }
+   $gate = null;
+    if ($this->isReliableInterviewFollowUpText(
+     $candidate, $session, $latestAnswer, $history, false,
+     ! $this->unavailableInterviewAnswerText($latestAnswer), $gate
+    )) {
+    return $candidate;
+   }
+   $rejectionGates[$gate ?? 'unknown'] = ($rejectionGates[$gate ?? 'unknown'] ?? 0) + 1;
+  }
+
+  // A long interview can outlast the small conversational probe pool when
+  // answers are repeatedly skipped. These controlled prompts have distinct
+  // competencies and never claim the candidate performed an unstated task.
+  $maritimeRole = $alignment->fallbackQuestion($position, $requiredQuestionType, '') !== null;
+  $focuses = $maritimeRole
+   ? ['a safety check', 'a crew handover', 'a mooring task', 'an equipment issue', 'a weather change',
+      'a watch duty', 'a cargo concern', 'an emergency drill', 'a maintenance task', 'a navigation instruction']
+   : ['a new task', 'a team handover', 'a quality concern', 'a change in priorities', 'a stakeholder request',
+      'an unfamiliar process', 'a deadline', 'a communication gap', 'a resource constraint', 'a decision under pressure'];
+  $contexts = ['at the start of a shift', 'during a handover', 'when plans change'];
+  foreach ($contexts as $context) {
+   foreach ($focuses as $focus) {
+    $workContext = $maritimeRole ? "{$context} on a vessel" : $context;
+    $candidate = $lead.match ($requiredQuestionType) {
+     'Behavioral' => "Can you describe an experience involving {$focus} {$workContext} that would prepare you for the {$position} role?",
+     'Situational' => "If you encountered {$focus} {$workContext} in the {$position} role, what would you do first?",
+     'Technical' => "What procedure would you use to assess {$focus} {$workContext} in the {$position} role?",
+     'Personal' => "Which strength would help you address {$focus} {$workContext} in the {$position} role?",
+     default => "What experience or training would help you address {$focus} {$workContext} in the {$position} role?",
+    };
+    if (! $this->safeLocalInterviewFollowUpTemplate($candidate, $session, $requiredQuestionType, $spokenQuestionTexts)) {
+     continue;
+    }
+    // The similarity heuristic can mistake a fresh competency prompt for an
+    // earlier skipped one. Exact text and role/type safety still apply here.
+     if ($this->unavailableInterviewAnswerText($latestAnswer)
+     || $this->isReliableInterviewFollowUpText($candidate, $session, $latestAnswer, $history)) {
+     return $candidate;
+    }
+   }
+  }
+
+  Log::warning('Local interview follow-up candidates exhausted.', [
+   'session_id' => $session->id,
+   'required_type' => $requiredQuestionType,
+   'rejection_gates' => $rejectionGates,
+  ]);
+  return null;
+ }
+
+ private function localizedLocalInterviewFollowUpText(
+  string $position,
+  string $excerpt,
+  ?string $requiredQuestionType,
+  bool $isFinal,
+  string $languageCode
+ ): ?string {
+  $detail = $excerpt === '' ? '' : "‘{$excerpt}’";
+  if (in_array($languageCode, ['fil', 'tl'], true)) {
+   $lead = $isFinal ? 'Para sa huling tanong, ' : '';
+   return $lead.ucfirst(match ($requiredQuestionType) {
+    'Behavioral' => $detail !== ''
+     ? "batay sa {$detail}, maaari mo bang ikuwento ang isang kaugnay na karanasan sa {$position} role?"
+     : "maaari mo bang ikuwento ang isang karanasan sa trabaho o pagsasanay na mahalaga sa {$position} role?",
+    'Situational' => $detail !== ''
+     ? "kung may sitwasyong katulad ng {$detail} sa {$position} role, ano ang una mong gagawin?"
+     : "kung may bagong gawain sa {$position} role, ano ang una mong gagawin?",
+    'Technical' => $detail !== ''
+     ? "batay sa {$detail}, paano mo susuriin ang susunod na hakbang sa {$position} role?"
+     : "paano mo susuriin ang gawain sa {$position} role?",
+    'Personal' => $detail !== ''
+     ? "batay sa {$detail}, alin sa iyong mga lakas ang makakatulong sa {$position} role?"
+     : "alin sa iyong mga lakas ang makakatulong sa {$position} role?",
+    default => "anong karanasan ang makakatulong sa iyo sa {$position} role?",
+   });
+  }
+  if ($languageCode === 'ceb') {
+   $lead = $isFinal ? 'Alang sa katapusang pangutana, ' : '';
+   return $lead.ucfirst(match ($requiredQuestionType) {
+    'Behavioral' => $detail !== ''
+     ? "base sa {$detail}, unsa nga kasinatian ang makatabang nimo sa {$position} role?"
+     : "unsa nga kasinatian sa trabaho o pagbansay ang makatabang nimo sa {$position} role?",
+    'Situational' => $detail !== ''
+     ? "kon adunay kahimtang nga may kalabotan sa {$detail} sa {$position} role, unsa ang una nimong buhaton?"
+     : "kon adunay bag-ong buluhaton sa {$position} role, unsa ang una nimong buhaton?",
+    'Technical' => $detail !== ''
+     ? "base sa {$detail}, unsa nga pamaagi ang imong gamiton sa pagsusi sa buluhaton sa {$position} role?"
+     : "unsa nga pamaagi ang imong gamiton sa pagsusi sa buluhaton sa {$position} role?",
+    'Personal' => $detail !== ''
+     ? "base sa {$detail}, unsa nga kusog nimo ang makatabang sa {$position} role?"
+     : "unsa nga kusog nimo ang makatabang sa {$position} role?",
+    default => "unsa nga kasinatian ang makatabang nimo sa {$position} role?",
+   });
+  }
+
+  return null;
+ }
+
+ private function safeLocalInterviewFollowUpTemplate(
+  string $candidate,
+  InterviewSession $session,
+  ?string $requiredQuestionType,
+  array $spokenQuestionTexts
+ ): bool {
+  if (substr_count($candidate, '?') !== 1
+   || TranscriptService::wordCount($candidate) < 5
+   || TranscriptService::wordCount($candidate) > 75
+   || app(InterviewConversationService::class)->hasInterviewerMetaCommentary($candidate)
+   || in_array($this->normalizedQuestionText($candidate), $spokenQuestionTexts, true)) {
+   return false;
+  }
+
+  return app(InterviewQuestionAlignmentService::class)->isRoleRelevant(
+   $candidate, (string) $session->target_position, (string) ($session->job_description ?? '')
+  ) && ($requiredQuestionType === null || $this->questionMatchesSelectedType($candidate, $requiredQuestionType));
  }
 
  private function isReliableInterviewFollowUpText(

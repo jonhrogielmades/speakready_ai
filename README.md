@@ -438,7 +438,7 @@ OPENAI_API_KEY=
 ```
 
 Provider URLs and model names are already listed in `.env.example`. Configure at least one provider key for AI generation, coaching, and feedback features.
-For Dokploy, set provider keys in the deployment environment; the Docker image does not include the local `.env`. Leave `OPENAI_FEEDBACK_MODEL` blank to use the compact `gpt-4o-mini` default for feedback, including the overall session summary. If the feedback model is rejected as unavailable, feedback retries once with `OPENAI_MODEL` before trying another provider. Redeploy after changing these values so Laravel rebuilds its cached configuration.
+For Dokploy, set provider keys in the deployment environment; the Docker image does not include the local `.env`. The default Gemini model is `gemini-3.5-flash-lite`; update an existing `GEMINI_MODEL` value in Dokploy if it points to a model your API project cannot access. Leave `OPENAI_FEEDBACK_MODEL` blank to use the compact `gpt-4o-mini` default for feedback, including the overall session summary. If the feedback model is rejected as unavailable, feedback retries once with `OPENAI_MODEL` before trying another provider. Redeploy after changing these values so Laravel rebuilds its cached configuration.
 
 Recommended hosted AI runtime limits:
 
@@ -484,7 +484,7 @@ AI Coach chat uses a low temperature for more consistent guidance, bounded provi
 
 ### Feedback Reliability And Fallbacks
 
-Interview follow-ups use the latest saved answer and recent connected turns. Both hosted replies and local fallbacks check for repeated questions and already-supplied outcomes. Local probes quote a real answer detail, preserve uncertainty, and continue the same example while respecting the selected question type and role.
+Interview follow-ups use the latest saved answer and recent connected turns. When every hosted provider fails or returns an unusable question, the interview tries a validated local backup so a saved answer can advance. The backup is labeled separately and is not saved to the AI question bank. Both hosted replies and local backups check for repeated questions and already-supplied outcomes. Local probes use a real answer detail when available, preserve uncertainty, and continue the same example while respecting the selected question type and role. An unsafe off-topic answer can still leave the next question unavailable rather than invent a connection to the target role.
 
 For ordinary interviews, questions and answers are saved in the database as the interview progresses; finishing marks the session complete before queuing AI review. Detailed Review shows an overall summary, strengths, weaknesses, and next steps while the full report is pending or has failed. A compact provider request can supply those four fields independently of per-answer reviews, using a 2,048-output-token limit and up to 12,000 saved-answer text characters shared across the session. When the provider summary is ready, the final report reuses it after the full saved-answer validation gate instead of requesting the same summary again. Until then, a clearly labeled local preview remains available. Local and provider previews are stored in separate database tables with saved-input fingerprints; the verified Feedback and Score rows are written only after final validation. The answer cards keep the saved answer visible, with Feedback and Possible Answer buttons for the review text.
 
@@ -660,7 +660,7 @@ OPENAI_API_KEY=
 AI_TRANSCRIPTION_PROVIDER_PRIORITY=openai,gemini
 AI_TRANSCRIBE_RATE_LIMIT_PER_MINUTE=20
 OPENAI_TRANSCRIPTION_MODEL=gpt-transcribe
-GEMINI_TRANSCRIPTION_MODEL=gemini-4-argon
+GEMINI_TRANSCRIPTION_MODEL=gemini-3.5-flash-lite
 AI_TRANSCRIPTION_TIMEOUT=90
 AI_TRANSCRIPTION_CONNECT_TIMEOUT=10
 AI_TRANSCRIPTION_HTTP_ATTEMPTS=3

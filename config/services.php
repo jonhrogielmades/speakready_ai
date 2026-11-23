@@ -119,11 +119,11 @@ return [
  'gemini' => [
  'api_key' => env('GEMINI_API_KEY'),
  'api_endpoint' => env('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta'),
- 'model' => env('GEMINI_MODEL', 'gemini-4-argon'),
+ 'model' => env('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
  'tts_model' => env('GEMINI_TTS_MODEL', 'gemini-3.1-flash-tts-preview'),
  'tts_voice' => env('GEMINI_TTS_VOICE', 'Leda'),
  'tts_style' => env('GEMINI_TTS_STYLE', 'Say in a warm, clear, professional female interviewer voice with natural English pronunciation and medium, measured pacing'),
- 'transcription_model' => env('GEMINI_TRANSCRIPTION_MODEL', env('GEMINI_MODEL', 'gemini-4-argon')),
+ 'transcription_model' => env('GEMINI_TRANSCRIPTION_MODEL', env('GEMINI_MODEL', 'gemini-3.5-flash-lite')),
  'thinking_level' => env('GEMINI_THINKING_LEVEL', 'high'),
  ],
 
