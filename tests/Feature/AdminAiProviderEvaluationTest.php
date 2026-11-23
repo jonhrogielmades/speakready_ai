@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Jobs\GenerateInterviewFeedback;
-use App\Jobs\RunAiProviderEvaluationCase;
 use App\Models\AiProvider;
 use App\Models\AiProviderEvaluationResult;
 use App\Models\AiProviderEvaluationRun;
@@ -17,7 +16,6 @@ use App\Services\AiProviderEvaluationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class AdminAiProviderEvaluationTest extends TestCase
@@ -627,15 +625,9 @@ class AdminAiProviderEvaluationTest extends TestCase
   )), 200);
   });
 
-  Queue::fake();
   $this->actingAs($admin)
   ->post(route('admin.ai.evaluation.run'))
   ->assertRedirect();
-
-  Queue::assertPushed(RunAiProviderEvaluationCase::class, 6);
-  $this->assertDatabaseHas('ai_provider_evaluation_runs', ['status' => 'running', 'case_count' => 6]);
-  Http::assertNothingSent();
-  $this->processQueuedComparisonCases();
 
   $this->assertDatabaseHas('ai_provider_evaluation_results', [
   'provider_key' => 'openai',
@@ -719,39 +711,9 @@ class AdminAiProviderEvaluationTest extends TestCase
  )), 200);
  });
 
-  Queue::fake();
  $this->actingAs($admin)
  ->post(route('admin.ai.evaluation.run'))
  ->assertRedirect();
-
-  Queue::assertPushed(RunAiProviderEvaluationCase::class, 6);
-  $running = AiProviderEvaluationRun::latest('id')->firstOrFail();
-  $this->assertSame('running', $running->status);
-  $this->actingAs($admin)
-      ->getJson(route('admin.ai.evaluation.realtime', ['run' => $running->id]))
-      ->assertOk()
-      ->assertJsonPath('run_status', 'running')
-      ->assertJsonPath('run_completed_cases', 0)
-      ->assertJsonPath('run_total_cases', 6);
-  Http::assertNothingSent();
-  // A later answer must not change the request already selected for this run.
-  InterviewAnswer::create([
-  'interview_session_id' => $answer->interview_session_id,
-  'question_id' => $answer->question_id,
-  'answer_text' => 'A later unrelated answer arrived after the comparison was queued.',
-  ]);
-  $this->processQueuedComparisonCases();
-
-  $this->actingAs($admin)
-      ->getJson(route('admin.ai.evaluation.realtime', ['run' => $running->id]))
-      ->assertOk()
-      ->assertJsonPath('run_status', 'completed')
-      ->assertJsonPath('run_completed_cases', 6)
-      ->assertJsonPath('run_total_cases', 6);
-  $requestsAfterCompletion = Http::recorded()->count();
-  Queue::pushed(RunAiProviderEvaluationCase::class)->first()->handle(app(AiProviderEvaluationService::class));
-  $this->assertDatabaseCount('ai_provider_evaluation_results', 6);
-  $this->assertSame($requestsAfterCompletion, Http::recorded()->count());
 
  $this->assertDatabaseHas('ai_provider_evaluation_runs', [
  'benchmark_version' => 'user-request-provider-comparison-v2',
@@ -833,47 +795,6 @@ class AdminAiProviderEvaluationTest extends TestCase
  ->assertSee('Rank #1')
  ->assertSee('Rank #2')
  ->assertSee('Rank #3');
- }
-
- public function test_exhausted_comparison_case_marks_run_failed(): void
- {
-  \App\Support\AiProviderEvaluationSchema::ensure();
-  $run = AiProviderEvaluationRun::create([
-   'benchmark_version' => AiProviderEvaluationService::USER_REQUEST_COMPARISON_VERSION,
-   'status' => 'running',
-   'started_at' => now(),
-   'provider_count' => 3,
-   'case_count' => 6,
-   'summary' => ['providers' => [], 'cases' => []],
-  ]);
-
-  (new RunAiProviderEvaluationCase($run->id, 'openai', 'question_case'))
-   ->failed(new \RuntimeException('Provider case exhausted retries.'));
-
-  $run->refresh();
-  $this->assertSame('failed', $run->status);
-  $this->assertNotNull($run->completed_at);
-  $this->assertStringContainsString('stopped', $run->summary['note']);
- }
-
- public function test_stale_queued_comparison_is_marked_failed_when_dashboard_is_read(): void
- {
-  \App\Support\AiProviderEvaluationSchema::ensure();
-  $run = AiProviderEvaluationRun::create([
-   'benchmark_version' => AiProviderEvaluationService::USER_REQUEST_COMPARISON_VERSION,
-   'status' => 'running',
-   'started_at' => now()->subHours(3),
-   'provider_count' => 3,
-   'case_count' => 6,
-   'summary' => ['providers' => [], 'cases' => []],
-  ]);
-  $run->timestamps = false;
-  $run->updated_at = now()->subHours(3);
-  $run->save();
-
-  app(AiProviderEvaluationService::class)->dashboard(30, $run->id);
-
-  $this->assertSame('failed', $run->fresh()->status);
  }
 
  public function test_interview_provider_selector_uses_highest_ranked_question_and_feedback_results(): void
@@ -1348,15 +1269,7 @@ class AdminAiProviderEvaluationTest extends TestCase
  return $run->fresh(['results']);
  }
 
-  private function processQueuedComparisonCases(): void
-  {
-  $evaluation = app(AiProviderEvaluationService::class);
-  foreach (Queue::pushed(RunAiProviderEvaluationCase::class) as $queued) {
-  $queued->handle($evaluation);
-  }
-  }
-
-  private function seedProductionProviderOutputs(): void
+ private function seedProductionProviderOutputs(): void
  {
  $user = User::factory()->create(['is_admin' => false, 'status' => 'active']);
  $category = Category::create([

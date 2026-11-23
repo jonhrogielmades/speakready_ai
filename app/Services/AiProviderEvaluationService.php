@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Jobs\RunAiProviderEvaluationCase;
 use App\Models\AiProvider;
 use App\Models\AiProviderEvaluationResult;
 use App\Models\AiProviderEvaluationRun;
@@ -14,10 +13,7 @@ use App\Support\AiProviderEvaluationSchema;
 use App\Support\InterviewAnswerSchema;
 use App\Support\QuestionSchema;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Throwable;
 
 class AiProviderEvaluationService
 {
@@ -28,7 +24,6 @@ class AiProviderEvaluationService
     private const INTERVIEW_RANKING_TASKS = ['question_generation', 'feedback_generation'];
     private const INTERVIEW_RANKING_LOOKBACK_DAYS = 30;
     private const INTERVIEW_RANKING_RUN_LIMIT = 5;
-    private const QUEUED_COMPARISON_STALE_HOURS = 2;
     public const EXPORT_COLUMNS = [
         'Row Type',
         'Provider',
@@ -328,12 +323,11 @@ class AiProviderEvaluationService
         QuestionSchema::ensure();
         InterviewAnswerSchema::ensure();
 
-        $selectedAnswer = $this->latestAnsweredUserRequest();
         $providers = array_values(array_filter(
             $this->configuredProviders(),
             fn (array $provider): bool => $provider['is_configured'] && $provider['status'] === 'active'
         ));
-        $cases = $this->userRequestComparisonCases($selectedAnswer?->id);
+        $cases = $this->userRequestComparisonCases();
         $startedAt = now();
 
         $run = AiProviderEvaluationRun::create([
@@ -343,12 +337,6 @@ class AiProviderEvaluationService
             'provider_count' => count($providers),
             'case_count' => count($providers) * count($cases),
             'created_by' => $adminId,
-            'summary' => [
-                'comparison_answer_id' => $selectedAnswer?->id,
-                'comparison_session_id' => $selectedAnswer?->interview_session_id,
-                'providers' => $providers,
-                'cases' => $cases,
-            ],
         ]);
 
         if (count($providers) < self::PANELIST_MIN_PROVIDER_COUNT || $cases === []) {
@@ -377,90 +365,20 @@ class AiProviderEvaluationService
             return $run->fresh();
         }
 
-        try {
-            foreach ($providers as $provider) {
-                foreach ($cases as $case) {
-                    RunAiProviderEvaluationCase::dispatch(
-                        $run->id,
-                        (string) $provider['provider_key'],
-                        (string) $case['case_key']
-                    );
-                }
+        foreach ($providers as $provider) {
+            foreach ($cases as $case) {
+                AiProviderEvaluationResult::create($this->runCase($run, $provider, $case));
             }
-        } catch (Throwable $error) {
-            Log::error('AI provider comparison could not queue its cases.', [
-                'run_id' => $run->id,
-                'error_type' => $error::class,
-            ]);
-            $this->failQueuedUserRequestComparison($run->id);
         }
+
+        $results = $run->results()->get();
+        $run->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+            'summary' => $this->summaryFromResults($results, self::USER_REQUEST_COMPARISON_VERSION),
+        ]);
 
         return $run->fresh(['results']);
-    }
-
-    public function runQueuedUserRequestComparisonCase(int $runId, string $providerKey, string $caseKey): void
-    {
-        $run = AiProviderEvaluationRun::find($runId);
-        if (! $run || $run->status !== 'running') {
-            return;
-        }
-
-        if ($run->results()->where('provider_key', $providerKey)->where('case_key', $caseKey)->exists()) {
-            return;
-        }
-
-        $snapshot = (array) ($run->summary ?? []);
-        $provider = collect((array) ($snapshot['providers'] ?? []))->firstWhere('provider_key', $providerKey);
-        $case = collect((array) ($snapshot['cases'] ?? []))->firstWhere('case_key', $caseKey);
-        if (! is_array($provider) || ! is_array($case)) {
-            $this->failQueuedUserRequestComparison($runId);
-            return;
-        }
-
-        $payload = $this->runCase($run, $provider, $case);
-        DB::transaction(function () use ($runId, $providerKey, $caseKey, $payload): void {
-            $lockedRun = AiProviderEvaluationRun::query()->lockForUpdate()->find($runId);
-            if (! $lockedRun || $lockedRun->status !== 'running') {
-                return;
-            }
-
-            $exists = AiProviderEvaluationResult::query()
-                ->where('run_id', $runId)
-                ->where('provider_key', $providerKey)
-                ->where('case_key', $caseKey)
-                ->exists();
-            if (! $exists) {
-                AiProviderEvaluationResult::create($payload);
-            }
-
-            $results = $lockedRun->results()->get();
-            $lockedRun->touch();
-            if ($results->count() >= $lockedRun->case_count) {
-                $lockedRun->update([
-                    'status' => 'completed',
-                    'completed_at' => now(),
-                    'summary' => $this->summaryFromResults($results, self::USER_REQUEST_COMPARISON_VERSION),
-                ]);
-            }
-        }, 3);
-    }
-
-    public function failQueuedUserRequestComparison(int $runId): void
-    {
-        DB::transaction(function () use ($runId): void {
-            $run = AiProviderEvaluationRun::query()->lockForUpdate()->find($runId);
-            if (! $run || $run->status !== 'running') {
-                return;
-            }
-
-            $run->update([
-                'status' => 'failed',
-                'completed_at' => now(),
-                'summary' => array_merge((array) ($run->summary ?? []), [
-                    'note' => 'The comparison stopped before every case finished. Please run it again.',
-                ]),
-            ]);
-        }, 3);
     }
 
     public function benchmarkCaseSummary(): array
@@ -505,9 +423,9 @@ class AiProviderEvaluationService
         ];
     }
 
-    private function userRequestComparisonCases(?int $answerId = null): array
+    private function userRequestComparisonCases(): array
     {
-        $answer = $this->latestAnsweredUserRequest($answerId);
+        $answer = $this->latestAnsweredUserRequest();
 
         if (! $answer || ! $answer->question || ! $answer->interviewSession) {
             return [];
@@ -531,7 +449,7 @@ class AiProviderEvaluationService
         );
         $questionTypes = $this->parseQuestionTypes($session->question_types ?: $question->type);
         $questionTypes = $questionTypes !== [] ? $questionTypes : ['behavioral', 'situational'];
-        $answersData = $this->userRequestAnswersData($session, $answerId);
+        $answersData = $this->userRequestAnswersData($session);
 
         if ($answersData === []) {
             return [];
@@ -588,18 +506,16 @@ class AiProviderEvaluationService
         ];
     }
 
-    private function latestAnsweredUserRequest(?int $answerId = null): ?InterviewAnswer
+    private function latestAnsweredUserRequest(): ?InterviewAnswer
     {
-        $query = InterviewAnswer::query()
+        return InterviewAnswer::query()
             ->with(['question.category', 'interviewSession.category'])
             ->whereHas('question')
             ->whereHas('interviewSession')
             ->whereNotNull('answer_text')
-            ->where('answer_text', '!=', '');
-
-        return $answerId !== null
-            ? $query->whereKey($answerId)->first()
-            : $query->latest('id')->first();
+            ->where('answer_text', '!=', '')
+            ->latest('id')
+            ->first();
     }
 
     private function userRequestContext(?AiProviderEvaluationRun $run): array
@@ -634,11 +550,6 @@ class AiProviderEvaluationService
     private function selectedUserRequestSessionId(?AiProviderEvaluationRun $run): ?int
     {
         if ($this->isUserRequestComparisonRun($run)) {
-            $queuedSessionId = (int) data_get($run?->summary, 'comparison_session_id', 0);
-            if ($queuedSessionId > 0) {
-                return $queuedSessionId;
-            }
-
             $caseKey = collect($run?->results ?? [])
                 ->pluck('case_key')
                 ->first(fn ($key): bool => preg_match('/user_request_(?:questions|feedback)_session_(\d+)/', (string) $key) === 1);
@@ -651,14 +562,13 @@ class AiProviderEvaluationService
         return $this->latestAnsweredUserRequest()?->interview_session_id;
     }
 
-    private function userRequestAnswersData(InterviewSession $session, ?int $throughAnswerId = null): array
+    private function userRequestAnswersData(InterviewSession $session): array
     {
         return InterviewAnswer::query()
             ->with('question')
             ->where('interview_session_id', $session->id)
             ->whereNotNull('answer_text')
             ->where('answer_text', '!=', '')
-            ->when($throughAnswerId !== null, fn ($query) => $query->where('id', '<=', $throughAnswerId))
             ->latest('id')
             ->limit(3)
             ->get()
@@ -2248,19 +2158,11 @@ class AiProviderEvaluationService
 
     private function selectedRun(?int $runId): ?AiProviderEvaluationRun
     {
-        $run = $runId
-            ? AiProviderEvaluationRun::with('results')->find($runId)
-            : AiProviderEvaluationRun::with('results')->latest('id')->first();
-
-        if ($run
-            && $run->benchmark_version === self::USER_REQUEST_COMPARISON_VERSION
-            && $run->status === 'running'
-            && $run->updated_at?->lt(now()->subHours(self::QUEUED_COMPARISON_STALE_HOURS))) {
-            $this->failQueuedUserRequestComparison($run->id);
-            $run->refresh();
+        if ($runId) {
+            return AiProviderEvaluationRun::with('results')->find($runId);
         }
 
-        return $run;
+        return AiProviderEvaluationRun::with('results')->latest('id')->first();
     }
 
     private function interviewRoutingRecommendations(): array

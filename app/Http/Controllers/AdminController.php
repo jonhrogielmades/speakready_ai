@@ -575,7 +575,6 @@ class AdminController extends Controller
 
  public function generateAiQuestion(Request $request)
  {
-  $generationDeadlineAt = microtime(true) + 50;
  $request->merge([
  'position' => trim((string) $request->input('position')),
  'ai_provider' => strtolower(trim((string) $request->input('ai_provider', 'local'))),
@@ -630,10 +629,6 @@ class AdminController extends Controller
    'timeout_seconds' => 10,
    'attempts' => 1,
    'generation_attempts' => 1,
-    'request_deadline_at' => $generationDeadlineAt,
-    // The selected dataset is already included in the prompt. A second
-    // Python retrieval pass delays a single-question browser request.
-    'skip_retrieval' => true,
   ]
  );
 

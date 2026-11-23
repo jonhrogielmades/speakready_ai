@@ -1918,6 +1918,7 @@ Begin Interview <i class="fa-solid fa-play"></i>
  }
 
  let setupLoadingProgressTimer = null;
+ let setupLoadingChecklistTimers = [];
 let setupLoadingReady = false;
 let setupLoadingSubmitStarted = false;
 
@@ -2031,7 +2032,13 @@ cancelButton.classList.toggle('is-ready', setupLoadingReady && !setupLoadingSubm
 }
 }
 
+ function clearSetupLoadingChecklistTimers() {
+ setupLoadingChecklistTimers.forEach(timerId => window.clearTimeout(timerId));
+ setupLoadingChecklistTimers = [];
+ }
+
  function resetSetupLoadingChecklist() {
+ clearSetupLoadingChecklistTimers();
  setupTransitionOverlay?.querySelectorAll('.interview-prep-check-row').forEach(row => {
  row.classList.remove('is-checking', 'is-complete');
  row.querySelector('.interview-prep-row-check')?.setAttribute('aria-label', 'Pending');
@@ -2039,6 +2046,7 @@ cancelButton.classList.toggle('is-ready', setupLoadingReady && !setupLoadingSubm
  }
 
 function completeSetupLoadingChecklist() {
+clearSetupLoadingChecklistTimers();
 setupTransitionOverlay?.querySelectorAll('.interview-prep-check-row').forEach(row => {
 row.classList.remove('is-checking');
 row.classList.add('is-complete');
@@ -2046,29 +2054,50 @@ row.querySelector('.interview-prep-row-check')?.setAttribute('aria-label', 'Comp
 });
 }
 
+ function startSetupLoadingChecklist() {
+ resetSetupLoadingChecklist();
+ const rows = Array.from(setupTransitionOverlay?.querySelectorAll('.interview-prep-check-row') || []);
+ rows.forEach((row, index) => {
+ const checkingTimer = window.setTimeout(() => {
+ row.classList.add('is-checking');
+ row.querySelector('.interview-prep-row-check')?.setAttribute('aria-label', 'Checking');
+
+ const completeTimer = window.setTimeout(() => {
+ row.classList.remove('is-checking');
+ row.classList.add('is-complete');
+ row.querySelector('.interview-prep-row-check')?.setAttribute('aria-label', 'Complete');
+ }, 260);
+
+ setupLoadingChecklistTimers.push(completeTimer);
+ }, 180 + (index * 430));
+
+ setupLoadingChecklistTimers.push(checkingTimer);
+ });
+ }
+
  function startSetupLoadingProgress() {
  window.clearInterval(setupLoadingProgressTimer);
 setSetupLoadingActionsReady(false);
  let progress = 19;
  setSetupLoadingProgress(progress);
  setupLoadingProgressTimer = window.setInterval(() => {
-const step = progress < 48? 7: (progress < 78? 4: 2);
-progress = Math.min(94, progress + step);
+const step = progress < 48? 7: (progress < 78? 4: (progress < 94? 2: 1));
+progress = Math.min(100, progress + step);
  setSetupLoadingProgress(progress);
-if (progress >= 94) {
+if (progress >= 100) {
  window.clearInterval(setupLoadingProgressTimer);
  setupLoadingProgressTimer = null;
+completeSetupLoadingChecklist();
+setSetupLoadingActionsReady(true);
+document.getElementById('setupPrepBeginButton')?.focus();
  }
  }, 260);
  }
 
  function prepareSetupTransitionOverlay() {
  updateSetupTransitionDetails();
- setupTransitionOverlay.querySelector('#setupLoadingTitle').innerHTML = 'Review Your <span>Interview Setup</span>';
- setupTransitionOverlay.querySelector('#setupLoadingDescription').textContent = 'Check your choices, then begin the interview.';
- setSetupLoadingProgress(100);
- completeSetupLoadingChecklist();
- setSetupLoadingActionsReady(true);
+ startSetupLoadingProgress();
+ startSetupLoadingChecklist();
  }
 
  function resetSetupTransitionOverlay() {
@@ -2115,11 +2144,9 @@ exitSetupBrowserFullscreen();
 function beginPreparedInterview() {
 if (!setupLoadingReady || setupLoadingSubmitStarted) return;
 setSetupLoadingSubmitting(true);
-setupTransitionOverlay.querySelector('#setupLoadingTitle').innerHTML = 'Preparing Your <span>Interview...</span>';
-setupTransitionOverlay.querySelector('#setupLoadingDescription').textContent = 'Your AI interviewer is preparing the opening question.';
-startSetupLoadingProgress();
-requestSetupBrowserFullscreen();
+requestSetupBrowserFullscreen().finally(() => {
 submitSetupFormAfterLoadingFrame();
+});
  }
 
  if (setupForm && setupTransitionOverlay) {
@@ -2141,7 +2168,6 @@ submitSetupFormAfterLoadingFrame();
  ensureSetupTransitionFullscreenOverlay();
  prepareSetupTransitionOverlay();
  setupTransitionOverlay.classList.add('active');
- document.getElementById('setupPrepBeginButton')?.focus();
  document.documentElement.classList.add('finish-transition-active');
  document.body.classList.add('finish-transition-active');
  requestSetupBrowserFullscreen();
