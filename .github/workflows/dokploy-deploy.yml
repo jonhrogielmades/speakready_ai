@@ -95,8 +95,7 @@ jobs:
                   for result in case:
                       if result.tag not in ('failure', 'error'):
                           continue
-                      message = result.get('message') or (result.text or '').strip().splitlines()[0]
-                      message = ' '.join(message.split())[:500]
+                      message = ' '.join((result.text or result.get('message') or '').split())[:1000]
                       failures.append(f"{case.get('name', 'Unknown test')}: {message}")
               if not failures:
                   failures = ['The test process failed before writing a JUnit failure.']
