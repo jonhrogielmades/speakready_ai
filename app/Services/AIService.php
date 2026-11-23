@@ -4134,10 +4134,18 @@ PROMPT;
 
  public static function synthesizeSpeech(string $text, array|string|null $targetLanguage = null, array $options = []):?array
  {
- if (array_key_exists('interviewer_avatar', $options)
+ $interviewerSpeech = array_key_exists('interviewer_avatar', $options);
+ if ($interviewerSpeech
   ? ! self::interviewerSpeechEnabled()
   : ! self::speechSynthesisEnabled()) {
  return null;
+ }
+
+ // Interview avatars use OpenAI voices exclusively. An explicit request for
+ // another provider cannot silently change the voice during a session.
+ if ($interviewerSpeech && array_key_exists('provider', $options)
+  && self::normalizeSpeechProviderName($options['provider']) !== 'openai') {
+  return null;
  }
 
  $text = trim(preg_replace('/\s+/', ' ', $text)?? $text);
@@ -4150,9 +4158,11 @@ PROMPT;
  ? microtime(true) + max(1, min(60, (int) $options['deadline_seconds']))
  : null;
  $attempts = isset($options['attempts']) ? max(1, min(3, (int) $options['attempts'])) : null;
- $requestedProviders = array_key_exists('provider', $options)
-  ? [$options['provider']]
-  : ($options['providers'] ?? self::speechSynthesisProviderPriority());
+ $requestedProviders = $interviewerSpeech
+  ? ['openai']
+  : (array_key_exists('provider', $options)
+   ? [$options['provider']]
+   : ($options['providers'] ?? self::speechSynthesisProviderPriority()));
  $providers = collect(is_array($requestedProviders) ? $requestedProviders : [])
   ->map(fn ($provider): string => self::normalizeSpeechProviderName($provider))
   ->filter(fn (string $provider): bool => in_array($provider, ['gemini', 'openai', 'elevenlabs'], true))
@@ -4174,7 +4184,9 @@ PROMPT;
  // provider retries. Fast failures can still continue to the next provider.
  $providerAttempts = $deadlineAt === null ? $attempts : 1;
  $providerOptions = $options;
- if (! array_key_exists('provider', $options) && is_array($options['provider_voices'] ?? null)
+ if ($interviewerSpeech) {
+  $providerOptions['voice'] = InterviewerAvatar::openAiVoice($options['interviewer_avatar']);
+ } elseif (! array_key_exists('provider', $options) && is_array($options['provider_voices'] ?? null)
   && isset($options['provider_voices'][$provider])) {
   $providerOptions['voice'] = $options['provider_voices'][$provider];
  }
@@ -5192,20 +5204,9 @@ PROMPT;
  return false;
  }
 
- if ($pinnedProvider === null) {
-  return self::openAiSpeechCredentials() !== null
-   || self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== ''
-   || self::elevenLabsSpeechCredentials(false) !== null;
- }
-
- $provider = self::normalizeSpeechProviderName($pinnedProvider);
-
- return match ($provider) {
- 'openai' => self::openAiSpeechCredentials() !== null,
- 'gemini' => self::providerCredentials('gemini', (string) config('services.gemini.tts_model', 'gemini-3.1-flash-tts-preview'))['api_key'] !== '',
- 'elevenlabs' => self::elevenLabsSpeechCredentials(false) !== null,
- default => false,
- };
+ // Legacy sessions pinned to another provider are moved to their OpenAI
+ // avatar voice by the interview speech endpoint on the next request.
+ return self::openAiSpeechCredentials() !== null;
  }
 
  public static function speechSynthesisCacheSignature(): array

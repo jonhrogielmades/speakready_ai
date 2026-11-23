@@ -979,6 +979,46 @@ return response()->json([
 ]);
 }
 
+ private function pinSuccessfulOpenAiInterviewerVoice(
+  InterviewSession $session,
+  string $avatar,
+  string $model,
+  string $voice
+ ): ?InterviewSession
+ {
+  if ($model === '' || $voice !== InterviewerAvatar::openAiVoice($avatar)) {
+   return null;
+  }
+
+  // Pin only after OpenAI returned audio. Compare all old fields so a
+  // concurrent request cannot overwrite an OpenAI voice that already won.
+  for ($attempt = 0; $attempt < 3; $attempt++) {
+   $current = $session->fresh();
+   if (! $current || $current->status !== 'in_progress') {
+    return null;
+   }
+
+   if ($current->tts_provider === 'openai'
+    && trim((string) $current->tts_model) !== ''
+    && $current->tts_voice === $voice) {
+    return $current;
+   }
+
+   $query = InterviewSession::query()->whereKey($session->id)->where('status', 'in_progress');
+   foreach (['tts_provider', 'tts_model', 'tts_voice'] as $column) {
+    $observed = $current->getAttribute($column);
+    $query = $observed === null ? $query->whereNull($column) : $query->where($column, $observed);
+   }
+   $query->update(['tts_provider' => 'openai', 'tts_model' => $model, 'tts_voice' => $voice]);
+  }
+
+  $current = $session->fresh();
+  return $current && $current->status === 'in_progress'
+   && $current->tts_provider === 'openai'
+   && trim((string) $current->tts_model) !== ''
+   && $current->tts_voice === $voice ? $current : null;
+ }
+
  public function speech(Request $request)
  {
  if (! Auth::check()) {
@@ -1009,34 +1049,25 @@ return response()->json([
  }
 
   $avatar = InterviewerAvatar::normalize($session->interviewer_avatar);
+  $currentPin = $session->fresh();
+  if (! $currentPin || $currentPin->status !== 'in_progress') {
+   return response()->json(['error' => 'AI speech is not available.'], 503);
+  }
+  $avatarVoice = InterviewerAvatar::openAiVoice($avatar);
+  $currentModel = trim((string) $currentPin->tts_model);
+  $model = $currentPin->tts_provider === 'openai' && $currentModel !== ''
+   ? $currentModel
+   : (trim((string) config('services.openai.tts_model', 'gpt-4o-mini-tts')) ?: 'gpt-4o-mini-tts');
+
   $speechOptions = [
-   'providers' => ['openai', 'gemini', 'elevenlabs'],
-   'provider_voices' => [
-    'openai' => InterviewerAvatar::openAiVoice($avatar),
-    'gemini' => InterviewerAvatar::voice($avatar),
-   ],
+   'provider' => 'openai',
+   'model' => $model,
+   'voice' => $avatarVoice,
    'interviewer_avatar' => $avatar,
    'style' => InterviewerAvatar::voiceStyle($avatar),
    'deadline_seconds' => 40,
    'attempts' => 1,
   ];
-  $originalProvider = $session->tts_provider === null ? null : trim((string) $session->tts_provider);
-  if ($originalProvider !== null) {
-   if ($originalProvider === '' || trim((string) $session->tts_model) === ''
-    || trim((string) $session->tts_voice) === '') {
-    return response()->json(['error' => 'AI speech is not available.'], 503);
-   }
-
-   if (! in_array($originalProvider, $speechOptions['providers'], true)) {
-    return response()->json(['error' => 'AI speech is not available.'], 503);
-   }
-
-   // Once a session has spoken, its provider, model, and voice are fixed.
-   // An unavailable pinned voice must fail instead of introducing another voice.
-   $speechOptions['provider'] = $originalProvider;
-   $speechOptions['model'] = $session->tts_model;
-   $speechOptions['voice'] = $session->tts_voice;
-  }
 
   $language = $this->currentLanguageConfig();
   $speechStartedAt = microtime(true);
@@ -1048,25 +1079,14 @@ return response()->json([
   $provider = trim((string) ($speech['provider'] ?? ''));
   $model = trim((string) ($speech['model'] ?? ''));
   $voice = trim((string) ($speech['voice'] ?? ''));
-  if ($provider === '' || $model === '' || $voice === '') {
+  if ($provider !== 'openai' || $model === '' || $voice !== $avatarVoice) {
    return response()->json(['error' => 'AI speech is not available.'], 503);
   }
 
-  if ($originalProvider === null) {
-   InterviewSession::query()
-    ->whereKey($session->id)
-    ->where('status', 'in_progress')
-    ->whereNull('tts_provider')
-    ->update(['tts_provider' => $provider, 'tts_model' => $model, 'tts_voice' => $voice]);
-  }
-
-  // A concurrent first request may have selected the session voice.
-  // Return only audio that matches the voice currently pinned to the session.
-  $winner = $session->fresh();
-  if (! $winner || $winner->status !== 'in_progress'
-   || trim((string) $winner->tts_provider) === ''
-   || trim((string) $winner->tts_model) === ''
-   || trim((string) $winner->tts_voice) === '') {
+  // A request from an older deployment may have pinned a different provider
+  // while OpenAI was responding. Repair that pin before returning any audio.
+  $winner = $this->pinSuccessfulOpenAiInterviewerVoice($session, $avatar, $model, $voice);
+  if (! $winner) {
    return response()->json(['error' => 'AI speech is not available.'], 503);
   }
 
@@ -1116,10 +1136,9 @@ return response()->json([
    'Hello. I am your AI interviewer. Tell me about yourself.',
    $this->currentLanguageConfig(),
    [
-    'providers' => ['openai', 'gemini', 'elevenlabs'],
+    'providers' => ['openai'],
     'provider_voices' => [
      'openai' => InterviewerAvatar::openAiVoice($avatar),
-     'gemini' => InterviewerAvatar::voice($avatar),
     ],
     'interviewer_avatar' => $avatar,
     'style' => InterviewerAvatar::voiceStyle($avatar),
@@ -1128,13 +1147,8 @@ return response()->json([
    ]
   );
 
-  $expectedVoice = match ($speech['provider'] ?? null) {
-   'openai' => InterviewerAvatar::openAiVoice($avatar),
-   'gemini' => InterviewerAvatar::voice($avatar),
-   'elevenlabs' => trim((string) config('services.elevenlabs.tts_voice_id', '')),
-   default => null,
-  };
-  if (! $speech || $expectedVoice === null || $speech['voice'] !== $expectedVoice) {
+  if (! $speech || ($speech['provider'] ?? null) !== 'openai'
+   || ($speech['voice'] ?? null) !== InterviewerAvatar::openAiVoice($avatar)) {
    return response()->json(['error' => 'AI voice preview is not available.'], 503);
   }
 
