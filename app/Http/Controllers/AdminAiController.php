@@ -144,7 +144,7 @@ class AdminAiController extends Controller
  'generated_feedback_count' => $generatedOutputs->sum(fn (array $group): int => count($group['feedback']?? [])),
   'run_status' => $selectedRun?->status,
   'run_completed_cases' => $selectedRun?->results?->count()?? 0,
-  'run_total_cases' => $selectedRun?->case_count?? 0,
+  'run_total_cases' => $selectedRun === null ? 0 : $selectedRun->case_count,
  'poll_ms' => 8000,
  ])->header('Cache-Control', 'no-store, no-cache, must-revalidate');
  }

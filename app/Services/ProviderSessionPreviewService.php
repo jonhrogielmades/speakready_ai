@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\InterviewAnswer;
 use App\Models\InterviewSession;
 use App\Models\InterviewSessionProviderPreview;
+use App\Models\Question;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -93,12 +94,24 @@ class ProviderSessionPreviewService
                 || $this->hasCurrentFullReport($currentSession)) {
                 return false;
             }
-            $currentAnswers = InterviewAnswer::with('question')
+            $currentAnswers = InterviewAnswer::query()
                 ->where('interview_session_id', $currentSession->id)
                 ->whereNull('retry_of_answer_id')
                 ->orderBy('id')
                 ->lockForUpdate()
                 ->get();
+            $questions = Question::query()
+                ->whereIn('id', $currentAnswers->pluck('question_id')->filter()->all())
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+            foreach ($currentAnswers as $answer) {
+                $question = $questions->get($answer->question_id);
+                if (! $question) {
+                    return false;
+                }
+                $answer->setRelation('question', $question);
+            }
             if ($currentAnswers->isEmpty()
                 || ! hash_equals($fingerprint, $this->fingerprintFor($currentSession, $currentAnswers))
                 || $this->validatedFields($feedback, $currentAnswers) === null) {

@@ -3357,7 +3357,7 @@ EOT;
  $validationDetails[$provider] = array_slice($validationErrors, 0, 8);
  }
  if ($error instanceof RequestException) {
- $status = (int) ($error->response?->status() ?? 0);
+ $status = $error->response->status();
  if ($status >= 100 && $status <= 599) {
  $httpStatuses[$provider] = [$status];
  }

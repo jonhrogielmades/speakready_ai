@@ -789,11 +789,11 @@ class AiProviderEvaluationService
                 );
                 $providerUsed = $generation['provider'] ?? null;
                 $questions = $providerUsed === $provider['provider_key']
-                    ? (array) ($generation['questions'] ?? [])
+                    ? $generation['questions']
                     : [];
 
                 $score = $this->scoreQuestionGeneration($questions, $case);
-                $score['evidence']['attempted_providers'] = $generation['attempted_providers'] ?? [];
+                $score['evidence']['attempted_providers'] = $generation['attempted_providers'];
                 $score['evidence']['provider_used'] = $providerUsed;
                 $output = json_encode(['questions' => $questions], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             } else {

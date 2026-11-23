@@ -22,16 +22,6 @@ final class LocalFeedbackReportPresenter
         return self::forReport($session)['session_feedback'] ?? null;
     }
 
-    /** @return array{ai_feedback:string,better_sample_answer:string,is_too_short:bool,is_skipped:bool}|null */
-    public static function forAnswer(InterviewSession $session, InterviewAnswer $answer): ?array
-    {
-        if ((int) $answer->interview_session_id !== (int) $session->id) {
-            return null;
-        }
-
-        return self::forReport($session)['answer_feedback'][(string) $answer->id] ?? null;
-    }
-
     /** @return array{session_feedback:array<string,string>,answer_feedback:array<string,array<string,mixed>>}|null */
     public static function forReport(InterviewSession $session): ?array
     {
@@ -136,7 +126,8 @@ final class LocalFeedbackReportPresenter
                     'error_type' => $error::class,
                 ]);
                 try {
-                    if (! self::inputsStillCurrent($session, $fingerprint, $prepared)) {
+                    $freshSession = InterviewSession::find($session->id);
+                    if (! $freshSession || ! self::inputsStillCurrent($freshSession, $fingerprint, $prepared)) {
                         return null;
                     }
                 } catch (\Throwable) {
